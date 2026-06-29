@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -19,7 +20,7 @@ public sealed class RecordArrPrintProviderTests
     [Fact]
     public async Task GeneratePdfAsync_creates_recordarr_copy_without_internal_record_ids()
     {
-        var store = new RecordArrStore();
+        var store = CreateStore();
         var provider = new RecordArrPrintableProvider(
             store,
             new StlPlainTextPdfRenderer(),
@@ -64,7 +65,7 @@ public sealed class RecordArrPrintProviderTests
     [Fact]
     public async Task ArchiveOfficialAsync_creates_generated_pdf_record_in_recordarr()
     {
-        var store = new RecordArrStore();
+        var store = CreateStore();
         var tempDirectory = Path.Combine(Path.GetTempPath(), $"recordarr-print-tests-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
 
@@ -204,5 +205,15 @@ public sealed class RecordArrPrintProviderTests
 
         public IFileProvider ContentRootFileProvider { get; set; } = new PhysicalFileProvider(contentRootPath);
     }
+
+    private static RecordArrStore CreateStore()
+    {
+        var options = new DbContextOptionsBuilder<RecordArrDbContext>()
+            .UseInMemoryDatabase($"recordarr-print-tests-{Guid.NewGuid():N}")
+            .Options;
+
+        return new RecordArrStore(new RecordArrDbContext(options));
+    }
 }
+
 

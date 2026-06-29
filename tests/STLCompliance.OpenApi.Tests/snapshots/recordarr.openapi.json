@@ -137,6 +137,94 @@
         }
       }
     },
+    "/api/integrations/access-history-seals": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessHistorySeals/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessHistorySeal/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessHistorySealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-history-seals/{accessHistorySealId}/verify": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAccessHistorySeal/api/integrations",
+        "parameters": [
+          {
+            "name": "accessHistorySealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/access-integrity": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAccessHistoryIntegrity/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/access-logs": {
       "get": {
         "tags": [
@@ -219,6 +307,171 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-events": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAuditEvents/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-governance": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditGovernance/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-integrity": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditIntegrity/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-seals": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAuditSeals/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAuditSeal/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-seals/{auditSealId}/anchor": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AnchorRecordArrIntegrationAuditSeal/api/integrations",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/audit-seals/{auditSealId}/verify": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditSeal/api/integrations",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -942,6 +1195,94 @@
         }
       }
     },
+    "/api/integrations/destruction-certificates": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDestructionCertificates/api/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/disaster-recovery-backup-verifications": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationDisasterRecoveryBackupVerification/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryBackupVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/disaster-recovery-runs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDisasterRecoveryRuns/api/integrations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationDisasterRecoveryRestore/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryRestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -1414,6 +1755,110 @@
         }
       }
     },
+    "/api/integrations/file-integrity-checks": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFileIntegrityChecks/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/file-malware-scan-dead-letters": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DeadLetterRecordArrIntegrationFileMalwareScans/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeadLetterFileMalwareScansRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/file-malware-scan-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationFileMalwareScanProvider/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunFileMalwareScanProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/file-malware-scans": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFileMalwareScans/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/files": {
       "post": {
         "tags": [
@@ -1503,6 +1948,105 @@
         }
       }
     },
+    "/api/integrations/files/{fileId}/integrity-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFileIntegrityCheck/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileIntegrityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/files/{fileId}/malware-scans": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFileMalwareScan/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileMalwareScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/files/{fileId}/object-store-lifecycle-verifications": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationObjectStoreLifecycle/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyObjectStoreLifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/legal-holds": {
       "post": {
         "tags": [
@@ -1563,6 +2107,85 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/object-store-fixity-observations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationObjectStoreFixityObservations/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reconciliationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/object-store-objects": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationObjectStoreObjects/api/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -2131,6 +2754,42 @@
         }
       }
     },
+    "/api/integrations/redaction-provider-jobs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRedactionProviderJobs/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/redaction-provider-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationRedactionProviderJobManifest/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRedactionProviderJobManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/redactions": {
       "post": {
         "tags": [
@@ -2165,12 +2824,241 @@
         }
       }
     },
+    "/api/integrations/redactions/{redactionId}/overlay-reviews": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReviewRecordArrIntegrationRedactionOverlay/api/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRedactionOverlayRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/redactions/{redactionId}/provider-jobs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SubmitRecordArrIntegrationRedactionProviderJob/api/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRedactionProviderJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/redactions/{redactionId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReconcileRecordArrIntegrationRedactionProviderStatus/api/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileRedactionProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/reminders": {
       "get": {
         "tags": [
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationReminders/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-disposition-leases": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerLeases/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-disposition-outbox": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-disposition-outbox/escalate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "EscalateRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalateRetentionSchedulerOutboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-disposition-outbox/process": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/integrations",
+        "parameters": [
+          {
+            "name": "deliveryChannel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalProviderRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxMessages",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/retention-disposition-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationRetentionDispositionScheduler/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RunRetentionDispositionSchedulerRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerRuns/api/integrations",
         "responses": {
           "200": {
             "description": "OK"
@@ -2204,6 +3092,42 @@
         }
       }
     },
+    "/api/integrations/signature-trust-service-jobs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationSignatureTrustServiceJobs/api/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/signature-trust-service-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationSignatureTrustServiceManifest/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessSignatureTrustServiceManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/signatures": {
       "post": {
         "tags": [
@@ -2227,6 +3151,72 @@
         }
       }
     },
+    "/api/integrations/signatures/{signatureRecordId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReconcileRecordArrIntegrationSignatureProviderStatus/api/integrations",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileSignatureProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/signatures/{signatureRecordId}/trust-service-jobs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SubmitRecordArrIntegrationSignatureTrustServiceJob/api/integrations",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSignatureTrustServiceJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/integrations/smart-import/source-files": {
       "post": {
         "tags": [
@@ -2238,6 +3228,82 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SmartImportRetainSourceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/storage-reconciliations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationStorageReconciliations/api/integrations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationStorageReconciliation/api/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunStorageReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/integrations/storage-reconciliations/{reconciliationId}/remediation": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RemediateRecordArrIntegrationStorageReconciliation/api/integrations",
+        "parameters": [
+          {
+            "name": "reconciliationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemediateStorageReconciliationRequest"
               }
             }
           },
@@ -2759,6 +3825,94 @@
         }
       }
     },
+    "/api/v1/integrations/access-history-seals": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAccessHistorySeals/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAccessHistorySeal/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessHistorySealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-history-seals/{accessHistorySealId}/verify": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAccessHistorySeal/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "accessHistorySealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/access-integrity": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAccessHistoryIntegrity/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/access-logs": {
       "get": {
         "tags": [
@@ -2841,6 +3995,171 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-events": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAuditEvents/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-governance": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditGovernance/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-integrity": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditIntegrity/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-seals": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationAuditSeals/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationAuditSeal/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-seals/{auditSealId}/anchor": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "AnchorRecordArrIntegrationAuditSeal/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/audit-seals/{auditSealId}/verify": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationAuditSeal/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -3564,6 +4883,94 @@
         }
       }
     },
+    "/api/v1/integrations/destruction-certificates": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDestructionCertificates/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/disaster-recovery-backup-verifications": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationDisasterRecoveryBackupVerification/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryBackupVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/disaster-recovery-runs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationDisasterRecoveryRuns/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationDisasterRecoveryRestore/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryRestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/disposal-reviews": {
       "get": {
         "tags": [
@@ -4036,6 +5443,110 @@
         }
       }
     },
+    "/api/v1/integrations/file-integrity-checks": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFileIntegrityChecks/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/file-malware-scan-dead-letters": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "DeadLetterRecordArrIntegrationFileMalwareScans/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeadLetterFileMalwareScansRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/file-malware-scan-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationFileMalwareScanProvider/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunFileMalwareScanProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/file-malware-scans": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationFileMalwareScans/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/files": {
       "post": {
         "tags": [
@@ -4125,6 +5636,105 @@
         }
       }
     },
+    "/api/v1/integrations/files/{fileId}/integrity-checks": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFileIntegrityCheck/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileIntegrityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/files/{fileId}/malware-scans": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "CreateRecordArrIntegrationFileMalwareScan/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileMalwareScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/files/{fileId}/object-store-lifecycle-verifications": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "VerifyRecordArrIntegrationObjectStoreLifecycle/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyObjectStoreLifecycleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/legal-holds": {
       "post": {
         "tags": [
@@ -4185,6 +5795,85 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/object-store-fixity-observations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationObjectStoreFixityObservations/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reconciliationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/object-store-objects": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationObjectStoreObjects/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -4753,6 +6442,42 @@
         }
       }
     },
+    "/api/v1/integrations/redaction-provider-jobs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRedactionProviderJobs/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/redaction-provider-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationRedactionProviderJobManifest/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRedactionProviderJobManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/redactions": {
       "post": {
         "tags": [
@@ -4780,6 +6505,105 @@
           "Integrations"
         ],
         "operationId": "ListRecordArrIntegrationRedactions/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/redactions/{redactionId}/overlay-reviews": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReviewRecordArrIntegrationRedactionOverlay/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRedactionOverlayRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/redactions/{redactionId}/provider-jobs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SubmitRecordArrIntegrationRedactionProviderJob/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRedactionProviderJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/redactions/{redactionId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReconcileRecordArrIntegrationRedactionProviderStatus/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileRedactionProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -4890,6 +6714,136 @@
         }
       }
     },
+    "/api/v1/integrations/retention-disposition-leases": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerLeases/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/retention-disposition-outbox": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/retention-disposition-outbox/escalate": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "EscalateRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalateRetentionSchedulerOutboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/retention-disposition-outbox/process": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationRetentionDispositionSchedulerOutbox/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "deliveryChannel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalProviderRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxMessages",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/retention-disposition-runs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationRetentionDispositionScheduler/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RunRetentionDispositionSchedulerRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationRetentionDispositionSchedulerRuns/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/retention-policies": {
       "get": {
         "tags": [
@@ -4916,6 +6870,42 @@
         }
       }
     },
+    "/api/v1/integrations/signature-trust-service-jobs": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationSignatureTrustServiceJobs/api/v1/integrations",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/signature-trust-service-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ProcessRecordArrIntegrationSignatureTrustServiceManifest/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessSignatureTrustServiceManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/integrations/signatures": {
       "post": {
         "tags": [
@@ -4927,6 +6917,72 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateSignatureRecordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/signatures/{signatureRecordId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ReconcileRecordArrIntegrationSignatureProviderStatus/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileSignatureProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/signatures/{signatureRecordId}/trust-service-jobs": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "SubmitRecordArrIntegrationSignatureTrustServiceJob/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSignatureTrustServiceJobRequest"
               }
             }
           },
@@ -5016,6 +7072,82 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SmartImportDestinationValidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/storage-reconciliations": {
+      "get": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "ListRecordArrIntegrationStorageReconciliations/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RunRecordArrIntegrationStorageReconciliation/api/v1/integrations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunStorageReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/integrations/storage-reconciliations/{reconciliationId}/remediation": {
+      "post": {
+        "tags": [
+          "Integrations"
+        ],
+        "operationId": "RemediateRecordArrIntegrationStorageReconciliation/api/v1/integrations",
+        "parameters": [
+          {
+            "name": "reconciliationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemediateStorageReconciliationRequest"
               }
             }
           },
@@ -5475,6 +7607,94 @@
         }
       }
     },
+    "/api/v1/workspace/access-history-seals": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrAccessHistorySeals",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrAccessHistorySeal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccessHistorySealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-history-seals/{accessHistorySealId}/verify": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrAccessHistorySeal",
+        "parameters": [
+          {
+            "name": "accessHistorySealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/access-integrity": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrAccessHistoryIntegrity",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/access-logs": {
       "get": {
         "tags": [
@@ -5557,6 +7777,171 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-events": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrAuditEvents",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-governance": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrAuditGovernance",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-integrity": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrAuditIntegrity",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-seals": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrAuditSeals",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrAuditSeal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-seals/{auditSealId}/anchor": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "AnchorRecordArrAuditSeal",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnchorAuditSealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/audit-seals/{auditSealId}/verify": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrAuditSeal",
+        "parameters": [
+          {
+            "name": "auditSealId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -6120,6 +8505,94 @@
         }
       }
     },
+    "/api/v1/workspace/destruction-certificates": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrDestructionCertificates",
+        "parameters": [
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/disaster-recovery-backup-verifications": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RunRecordArrDisasterRecoveryBackupVerification",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryBackupVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/disaster-recovery-runs": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrDisasterRecoveryRuns",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RunRecordArrDisasterRecoveryRestore",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunDisasterRecoveryRestoreRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/disposal-reviews": {
       "get": {
         "tags": [
@@ -6538,6 +9011,110 @@
         }
       }
     },
+    "/api/v1/workspace/file-integrity-checks": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrFileIntegrityChecks",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/file-malware-scan-dead-letters": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "DeadLetterRecordArrFileMalwareScans",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeadLetterFileMalwareScansRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/file-malware-scan-runs": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RunRecordArrFileMalwareScanProvider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunFileMalwareScanProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/file-malware-scans": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrFileMalwareScans",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/files": {
       "post": {
         "tags": [
@@ -6549,6 +9126,105 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateFileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/files/{fileId}/integrity-checks": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrFileIntegrityCheck",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileIntegrityCheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/files/{fileId}/malware-scans": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "CreateRecordArrFileMalwareScan",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFileMalwareScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/files/{fileId}/object-store-lifecycle-verifications": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "VerifyRecordArrObjectStoreLifecycle",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyObjectStoreLifecycleRequest"
               }
             }
           },
@@ -6644,6 +9320,85 @@
           },
           "required": true
         },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/object-store-fixity-observations": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrObjectStoreFixityObservations",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reconciliationId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/object-store-objects": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrObjectStoreObjects",
+        "parameters": [
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recordId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -7201,6 +9956,42 @@
         }
       }
     },
+    "/api/v1/workspace/redaction-provider-jobs": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRedactionProviderJobs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/redaction-provider-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ProcessRecordArrRedactionProviderJobManifest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRedactionProviderJobManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/redactions": {
       "get": {
         "tags": [
@@ -7214,12 +10005,241 @@
         }
       }
     },
+    "/api/v1/workspace/redactions/{redactionId}/overlay-reviews": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ReviewRecordArrRedactionOverlay",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewRedactionOverlayRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/redactions/{redactionId}/provider-jobs": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "SubmitRecordArrRedactionProviderJob",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRedactionProviderJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/redactions/{redactionId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ReconcileRecordArrRedactionProviderStatus",
+        "parameters": [
+          {
+            "name": "redactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileRedactionProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/workspace/reminders": {
       "get": {
         "tags": [
           "Workspace"
         ],
         "operationId": "ListRecordArrReminders",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-disposition-leases": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRetentionDispositionSchedulerLeases",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-disposition-outbox": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRetentionDispositionSchedulerOutbox",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-disposition-outbox/escalate": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "EscalateRecordArrRetentionDispositionSchedulerOutbox",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EscalateRetentionSchedulerOutboxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-disposition-outbox/process": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ProcessRecordArrRetentionDispositionSchedulerOutbox",
+        "parameters": [
+          {
+            "name": "deliveryChannel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "externalProviderRef",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "maxMessages",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/retention-disposition-runs": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RunRecordArrRetentionDispositionScheduler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RunRetentionDispositionSchedulerRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrRetentionDispositionSchedulerRuns",
         "responses": {
           "200": {
             "description": "OK"
@@ -7246,6 +10266,184 @@
           "Workspace"
         ],
         "operationId": "RecalculateRecordArrRetentionStatuses",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/signature-trust-service-jobs": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrSignatureTrustServiceJobs",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/signature-trust-service-jobs/provider-manifests": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ProcessRecordArrSignatureTrustServiceManifest",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessSignatureTrustServiceManifestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/signatures/{signatureRecordId}/provider-reconciliations": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ReconcileRecordArrSignatureProviderStatus",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconcileSignatureProviderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/signatures/{signatureRecordId}/trust-service-jobs": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "SubmitRecordArrSignatureTrustServiceJob",
+        "parameters": [
+          {
+            "name": "signatureRecordId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitSignatureTrustServiceJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/storage-reconciliations": {
+      "get": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "ListRecordArrStorageReconciliations",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RunRecordArrStorageReconciliation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunStorageReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/workspace/storage-reconciliations/{reconciliationId}/remediation": {
+      "post": {
+        "tags": [
+          "Workspace"
+        ],
+        "operationId": "RemediateRecordArrStorageReconciliation",
+        "parameters": [
+          {
+            "name": "reconciliationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemediateStorageReconciliationRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -7418,6 +10616,39 @@
   },
   "components": {
     "schemas": {
+      "AnchorAuditSealRequest": {
+        "required": [
+          "anchorProviderName",
+          "anchorReference",
+          "anchoredAt",
+          "anchoredSealHash"
+        ],
+        "type": "object",
+        "properties": {
+          "anchorProviderName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "anchorReference": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "anchoredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "anchoredSealHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CompleteDisposalReviewRequest": {
         "required": [
           "status",
@@ -7535,6 +10766,20 @@
           }
         }
       },
+      "CreateAccessHistorySealRequest": {
+        "required": [
+          "recordId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateAccessPolicyRequest": {
         "required": [
           "recordId",
@@ -7593,6 +10838,20 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "CreateAuditSealRequest": {
+        "required": [
+          "recordId"
+        ],
+        "type": "object",
+        "properties": {
+          "recordId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7887,6 +11146,73 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "CreateFileIntegrityCheckRequest": {
+        "required": [
+          "observedChecksumSha256",
+          "checkMethod"
+        ],
+        "type": "object",
+        "properties": {
+          "observedChecksumSha256": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "checkMethod": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateFileMalwareScanRequest": {
+        "required": [
+          "status",
+          "scannerName",
+          "scannerVersion",
+          "signatureVersion",
+          "threatName",
+          "failureReason"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "scannerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scannerVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "signatureVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "threatName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8319,6 +11645,24 @@
               "null",
               "string"
             ]
+          },
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerEnvelopeRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateFingerprintSha256": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8357,6 +11701,23 @@
           }
         }
       },
+      "DeadLetterFileMalwareScansRequest": {
+        "required": [
+          "maxFiles"
+        ],
+        "type": "object",
+        "properties": {
+          "maxFiles": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "DisposeRecordRequest": {
         "required": [
           "actorPersonId"
@@ -8365,6 +11726,27 @@
         "properties": {
           "actorPersonId": {
             "type": "string"
+          }
+        }
+      },
+      "EscalateRetentionSchedulerOutboxRequest": {
+        "required": [
+          "escalationRecipientRef",
+          "maxMessages"
+        ],
+        "type": "object",
+        "properties": {
+          "escalationRecipientRef": {
+            "type": "string"
+          },
+          "maxMessages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -8409,6 +11791,104 @@
           }
         }
       },
+      "ProcessRedactionProviderJobManifestRequest": {
+        "required": [
+          "providerName",
+          "providerJobRef",
+          "providerCallbackStatus",
+          "providerCallbackRef",
+          "providerPackageHash"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerJobRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerPackageHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ProcessSignatureTrustServiceManifestRequest": {
+        "required": [
+          "providerName",
+          "providerEnvelopeRef",
+          "providerCallbackStatus",
+          "providerCallbackRef",
+          "certificateFingerprintSha256",
+          "trustTimestampAuthorityRef",
+          "longTermValidationStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerEnvelopeRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateFingerprintSha256": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trustTimestampAuthorityRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "longTermValidationStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "PromoteControlledDocumentVersionRequest": {
         "required": [
           "effectiveAt"
@@ -8421,6 +11901,104 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "ReconcileRedactionProviderRequest": {
+        "required": [
+          "providerName",
+          "providerJobRef",
+          "providerCallbackStatus",
+          "providerCallbackRef",
+          "providerPackageHash"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerJobRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerPackageHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReconcileSignatureProviderRequest": {
+        "required": [
+          "providerName",
+          "providerEnvelopeRef",
+          "providerCallbackStatus",
+          "providerCallbackRef",
+          "certificateFingerprintSha256",
+          "trustTimestampAuthorityRef",
+          "longTermValidationStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerEnvelopeRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerCallbackRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "certificateFingerprintSha256": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "trustTimestampAuthorityRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "longTermValidationStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -8528,6 +12106,63 @@
           }
         }
       },
+      "RemediateStorageReconciliationRequest": {
+        "required": [
+          "restoredFileIds",
+          "acceptedMissingFileIds",
+          "recheckedCorruptFileIds",
+          "releasedQuarantinedFileIds",
+          "scannedPendingFileIds"
+        ],
+        "type": "object",
+        "properties": {
+          "restoredFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "acceptedMissingFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "recheckedCorruptFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "releasedQuarantinedFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "scannedPendingFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ReviewExtractionResultRequest": {
         "required": [
           "status",
@@ -8543,6 +12178,40 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "ReviewRedactionOverlayRequest": {
+        "required": [
+          "overlayReviewStatus",
+          "overlayEvidenceRefs",
+          "overlayIssueRefs"
+        ],
+        "type": "object",
+        "properties": {
+          "overlayReviewStatus": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "overlayEvidenceRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "overlayIssueRefs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -8585,6 +12254,275 @@
         "properties": {
           "reason": {
             "type": "string"
+          }
+        }
+      },
+      "RunDisasterRecoveryBackupVerificationRequest": {
+        "required": [
+          "backupProviderName",
+          "backupJobRef",
+          "backupManifestHash",
+          "recoveryPointId",
+          "recoveryPointCreatedAt",
+          "rpoTargetMinutes",
+          "recordIds",
+          "missingFileIds",
+          "corruptFileIds"
+        ],
+        "type": "object",
+        "properties": {
+          "backupProviderName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backupJobRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backupManifestHash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recoveryPointId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recoveryPointCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rpoTargetMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "recordIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "corruptFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RunDisasterRecoveryRestoreRequest": {
+        "required": [
+          "recoveryPointId",
+          "recoveryPointCreatedAt",
+          "rpoTargetMinutes",
+          "rtoTargetMinutes",
+          "recordIds",
+          "missingFileIds",
+          "corruptFileIds"
+        ],
+        "type": "object",
+        "properties": {
+          "recoveryPointId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recoveryPointCreatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rpoTargetMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rtoTargetMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "recordIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "corruptFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RunFileMalwareScanProviderRequest": {
+        "required": [
+          "scannerName",
+          "scannerVersion",
+          "signatureVersion",
+          "infectedFileIds",
+          "failedFileIds",
+          "skippedFileIds"
+        ],
+        "type": "object",
+        "properties": {
+          "scannerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "scannerVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "signatureVersion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "infectedFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "failedFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "skippedFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RunRetentionDispositionSchedulerRequest": {
+        "required": [
+          "executionPolicy"
+        ],
+        "type": "object",
+        "properties": {
+          "executionPolicy": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RunStorageReconciliationRequest": {
+        "required": [
+          "scope",
+          "recordId",
+          "checkedFileIds",
+          "missingFileIds",
+          "corruptFileIds"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "recordId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "checkedFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "missingFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "corruptFileIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -8929,6 +12867,48 @@
           }
         }
       },
+      "SubmitRedactionProviderJobRequest": {
+        "required": [
+          "providerName",
+          "providerJobRef"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerJobRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SubmitSignatureTrustServiceJobRequest": {
+        "required": [
+          "providerName",
+          "providerEnvelopeRef"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "providerEnvelopeRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SupersedeControlledDocumentRequest": {
         "required": [
           "supersededByDocumentRef",
@@ -9054,6 +13034,53 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "VerifyObjectStoreLifecycleRequest": {
+        "required": [
+          "providerName",
+          "policyRef",
+          "retentionMode",
+          "retainUntil",
+          "encryptionKeyRef",
+          "evidenceRef"
+        ],
+        "type": "object",
+        "properties": {
+          "providerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "policyRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "retentionMode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "retainUntil": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "encryptionKeyRef": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "evidenceRef": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       }

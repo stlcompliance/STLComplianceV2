@@ -17,7 +17,7 @@
 
 RecordArr is the suite document, evidence, and records system of record. It owns record metadata, file objects and renditions, capture/scan/OCR/extraction processing, controlled document versions and distribution, evidence mapping, packages/manifests, access/sharing/redaction/signature, retention/disposition/legal holds, and access audit. Domain products own the business record that a document supports and reference RecordArr IDs rather than storing duplicate files.
 
-> **Implementation reality — Scaffold:** RecordArr has an extensive in-memory domain and UI/API contract covering records, files, renditions, upload sessions, capture requests, scans, OCR, extraction, evidence mapping/coverage, packages, metadata, links, comments, retention, disposal, legal holds, controlled documents/versions/reviews/distributions/acknowledgements, access policies/grants, external shares, redactions, signatures, photo evidence, and access logs. The EF context does not expose a durable records domain. Durable object storage, database persistence, immutable audit, content scanning, encryption, retention enforcement, and disaster recovery are production prerequisites.
+> **Implementation reality — Partial durable migration:** RecordArr now persists core record, file-version, file-integrity check, file-malware scan, storage-reconciliation, object-store object index, object-store fixity observation, disaster-recovery restore run, audit-event, audit-seal, record metadata, record link, record comment, upload-session, capture-request, scan-processing, OCR-result, extraction-result, evidence-mapping, package, package-manifest, retention-status, disposal-review, destruction-certificate, legal-hold, retention-scheduler run, retention-scheduler lease, retention-scheduler outbox, controlled-document, controlled-document-version, document-review, document-distribution, document-acknowledgement, access-policy, access-grant, external-share, access-log, access-history seal, redaction, redaction-provider job, signature-record, signature trust-service job, and photo-evidence metadata through EF-backed tables, with filesystem-backed object storage keys for inline uploads, generated scan PDFs, generated package files, controlled-document versions, signatures, photos, and redacted copies. Evidence coverage is derived tenant-safely from durable mappings, package/manifests are tenant-scoped through their parent records, retention/hold/disposal reads and mutations are tenant-scoped through the owning record or hold row, retention-disposition runs can acquire/release durable tenant-scoped scheduler leases, idempotently create pending archive/purge disposal reviews while skipping records blocked by active legal hold, persist pending outbox notification records for the owning RecordArr review task without auto-disposing records, execute already-approved disposal reviews through an explicit `execute_approved_reviews` policy that revalidates tenant scope, active legal holds, and retention eligibility before applying archive/purge outcomes, leave held or ineligible reviews unexecuted with denied access evidence, mark executed reviews completed, remain idempotent on retry, process in-app outbox messages into delivered/failed states, fail explicitly requested external delivery channels truthfully until a provider reference is supplied, retry failed messages when a provider is configured, and escalate unresolved messages with recipient/escalation evidence. Unsupported automatic disposition execution policies now fail as durable scheduler runs, release their scheduler lease, write denied access/audit evidence against eligible records, and create no disposal reviews, outbox messages, destruction certificates, archive actions, or purge actions. Approved purge disposition now creates durable tenant-scoped destruction certificates with file tombstone refs and hash evidence, direct archive/purge disposition is blocked and denial-logged under active legal hold, active legal holds block core record-attached file replacement, status changes, metadata/link/comment mutation, redaction, signature, photo-evidence capture, package lock/archive/create, controlled-document lifecycle mutation, document distribution/acknowledgement/review mutation, access-policy/grant mutation, external-share create/revoke/expire mutation, passive access-grant/external-share expiry or expired-share replay mutation, passive controlled-document periodic-review/acknowledgement-overdue refresh mutation, and passive retention-status legal-hold block/restore refresh mutation with denied or allowed audit evidence, controlled-document lifecycle reads/mutations are tenant-scoped through the owning backing record, and access/share/redaction/signature/photo/fixity-check/object-store-index/malware-scan/storage-reconciliation/disaster-recovery/audit-event/audit-seal/access-history-seal/scheduler-evidence reads and mutations are tenant-scoped through the owning record or tenant-scoped audit/reconciliation/scheduler/restore row. New files remain unavailable until malware scan evidence releases them; a tenant-scoped provider-run contract can process pending files idempotently, quarantine infected/failed files, release clean/skipped files, and dead-letter repeated failed scans with durable access/audit evidence while preserving clean-scan recovery. A disabled-by-default hosted malware worker can now poll configured tenant IDs, consume explicit external scanner verdict manifests, apply only clean/infected/failed verdicts for pending tenant files, and leave files pending when no verdict exists instead of creating fake clean results. Storage reconciliation findings can now be remediated through tenant-scoped workspace/integration actions that resolve restored missing/corrupt, released quarantined, and scanned pending issue refs with durable fixity, malware, access-log, reconciliation evidence, object-store index snapshots, and fixity observation history. Disaster-recovery restore verification now persists tenant-scoped restore runs with recovery point, RPO/RTO targets, restored/blocked record refs, verified/failed file refs, durable fixity observations, access evidence, and truthful failure states for stale recovery points, cross-tenant records, missing objects, corrupt checksums, and RTO misses. Backup verification now requires explicit provider/job/manifest/recovery-point evidence before claiming provider backup coverage and persists tenant-scoped backup verification runs with provider, job, manifest hash, verified/failed file refs, fixity observations, and access evidence. Signature captures now persist locked signature evidence hashes, truthfully distinguish local-only captures from provider-verified envelopes, require provider envelope and certificate fingerprint evidence before claiming provider verification, expose provider evidence through the integration contract, reconcile explicit provider callbacks only when provider/envelope/certificate evidence matches the stored signature, persist durable trust-service job submissions/manifests only when provider envelope and certificate evidence match, and include a disabled-by-default signature trust-service worker that consumes explicit provider manifests for configured tenants without fabricating callbacks. Redactions now require explicit redaction rules, persist locked package hashes, review actor/time, approval reason evidence for the generated redacted copy, explicit rendered-overlay review evidence, durable provider job submission evidence, provider manifest reconciliation only when provider-supplied package hashes match the locked RecordArr redaction package hash, and include a disabled-by-default redaction provider worker that consumes explicit provider manifests for configured tenants without fabricating provider approval. A disabled-by-default hosted object-store reconciliation worker can now poll configured tenant IDs, consume explicit external object-store inventory manifests, reconcile only provider-verified/missing/corrupt file refs, ignore cross-tenant manifest rows, and apply explicit restore/recheck remediation evidence without fabricating a clean pass when provider evidence is absent. Access logs and audit events are hash-chained and expose tenant-scoped integrity verification; audit and access-history seals can detect tampering within sealed ranges. The broader DMS domain remains scaffolded: provider-grade immutable audit storage/notarization beyond hash-chain seals, durable seal checkpoints, audit-governance reports, and explicit audit-anchor evidence, encryption governance, provider-backed object-storage lifecycle/backup automation beyond the durable object index, fixity trail, lifecycle-verification evidence, restore-run and backup-verification evidence, external trust-service webhook ingestion/provider scheduling and provider-managed timestamp/long-term-validation automation beyond explicit signature trust-service jobs/manifests plus the disabled manifest worker, external redaction-provider webhook ingestion/provider scheduling/delivery orchestration beyond explicit provider jobs/manifests plus the disabled manifest worker, and automated visual redaction overlay UI/worker orchestration beyond explicit overlay review evidence still require owned provider workflows before full production reliance.
 
 ## Source-of-truth boundary
 
@@ -70,7 +70,7 @@ RecordArr is the suite document, evidence, and records system of record. It owns
 ## Product principles
 
 - A file is stored once and referenced; products do not maintain shadow attachment stores.
-- The current in-memory implementation is a prototype. Durable object storage, metadata persistence, audit, retention, and disaster recovery are release blockers.
+- The current implementation is a partial durable migration over a broad prototype domain. Durable object-storage provider control-plane operationalization beyond explicit lifecycle evidence, remaining metadata persistence, provider-grade immutable audit storage/notarization beyond explicit audit-anchor evidence, retention depth, and provider-backed disaster-recovery job orchestration beyond explicit restore and backup-verification evidence are release blockers.
 - Controlled-document acknowledgement is distinct from TrainArr competence/qualification.
 - Disposition is an approval workflow with holds and source-record checks, never a simple delete button.
 
@@ -78,17 +78,17 @@ RecordArr is the suite document, evidence, and records system of record. It owns
 
 | Static indicator | Count |
 | --- | --- |
-| Persistent DbSet declarations | 0 |
-| Discovered server classes | 101 |
-| Discovered HTTP route declarations | 186 |
+| Persistent DbSet declarations | 43 |
+| Discovered server type declarations | 213 |
+| Discovered HTTP route declarations | 270 |
 | Frontend source files | 10 |
 | Frontend page files | 1 |
 | Documentation headings | 90 |
 
 ### Evidence used for the current-state classification
 
-- recordarr-api contains an in-memory RecordArrStore covering records/files/renditions, upload/capture/scan/OCR/extraction, evidence mappings/coverage/packages, metadata/links/comments, retention/disposal/legal holds, controlled docs/versions/reviews/distributions/acknowledgements, access/grants/shares/redactions/signatures/photo evidence/access logs.
-- The RecordArr EF context does not expose durable operational entities; state is not production-durable across restart.
+- recordarr-api contains a RecordArrStore covering records/files/renditions, upload/capture/scan/OCR/extraction, evidence mappings/coverage/packages, metadata/links/comments, retention/disposal/legal holds, controlled docs/versions/reviews/distributions/acknowledgements, access/grants/shares/redactions/signatures/photo evidence/access logs.
+- The RecordArr EF context exposes durable core record, file, file-integrity check, file-malware scan, storage-reconciliation, object-store object index, object-store fixity observation, disaster-recovery restore run, audit-event, audit-seal, metadata, link, comment, upload-session, capture-request, scan-processing, OCR-result, extraction-result, evidence-mapping, package, package-manifest, retention-status, disposal-review, destruction-certificate, legal-hold, retention-scheduler run, retention-scheduler lease, retention-scheduler outbox, controlled-document, controlled-document-version, document-review, document-distribution, document-acknowledgement, access-policy, access-grant, external-share, access-log, access-history seal, redaction, redaction-provider job, signature-record, signature trust-service job, and photo-evidence entities. Audit-event hashes, audit seals, access-history hashes, access-history seals, destruction-certificate evidence, scheduler-created disposal-review runs, scheduler leases/outbox evidence, storage-reconciliation remediation outcomes, durable object-store index/fixity observations, disaster-recovery restore evidence, backup-verification evidence, signature trust-service job evidence, configured external object-store inventory manifest worker outcomes, and configured signature trust-service manifest worker outcomes can be verified or retrieved through tenant-scoped workspace/integration routes. Provider-grade immutable audit storage/notarization beyond hash-chain seals, durable seal checkpoints, audit-governance reports, and explicit audit-anchor evidence and provider-backed backup/restore job orchestration remain incomplete.
 - recordarr-frontend routes cover records, capture, controlled docs, reviews, distributions, acknowledgements, packages, retention/disposal/legal holds, access/shares/redactions/logs/settings.
 - Canonical product docs define record/file/document, capture/scan/OCR, evidence/package/retention, controlled-document/access, and workflow/API contracts.
 
@@ -96,7 +96,7 @@ RecordArr is the suite document, evidence, and records system of record. It owns
 
 ## Mandatory migration or refactor work
 
-- Replace the process-local RecordArrStore with durable metadata plus approved object storage; add versioning, hashing, retention, hold, access, malware processing, and immutable audit.
+- Continue replacing the process-local RecordArrStore domain with durable metadata plus approved object storage; add versioning, hashing, retention, hold, access, provider-grade immutable audit storage/notarization beyond explicit audit-anchor evidence, and provider-backed object-storage/backup operational controls beyond the durable object index, fixity trail, lifecycle-verification evidence, restore-run and backup-verification evidence.
 
 ## Feature catalog
 
@@ -106,18 +106,18 @@ These capabilities have repository evidence. Their state follows the product-lev
 
 | Feature ID | Capability | Class | State | Required behavior / evidence |
 | --- | --- | --- | --- | --- |
-| RE-CUR-001 | Record and file prototype | CURRENT | Partial | In-memory record/file/version/rendition structures and the capture workflow demonstrate intended behavior, including defaulting capture taxonomy from active vocabulary terms. |
-| RE-CUR-002 | Upload-session and capture-request prototype | CURRENT | Scaffold | Contracts support secure upload and requested capture flows. |
-| RE-CUR-003 | Scan, OCR, and extraction prototype | CURRENT | Partial | Scan/image/OCR/extraction review concepts and routes are present, including queued processing output. |
-| RE-CUR-004 | Metadata, links, and comments prototype | CURRENT | Scaffold | Records can be classified and related to domain records. |
-| RE-CUR-005 | Controlled document/version prototype | CURRENT | Partial | Draft/review/approval/publication/supersession concepts are represented, including authoring and review routes. |
-| RE-CUR-006 | Distribution and acknowledgement prototype | CURRENT | Partial | Controlled distribution and recipient acknowledgement are modeled, including workspace creation flows. |
-| RE-CUR-007 | Evidence mapping and coverage prototype | CURRENT | Partial | Evidence-to-requirement linkage and coverage concepts are present, with record-detail mapping creation and coverage visibility. |
-| RE-CUR-008 | Package and manifest prototype | CURRENT | Partial | Packages can group records/evidence for audit or handoff, and the package workspace can create and inspect manifests. |
-| RE-CUR-009 | Retention, disposal, and legal-hold prototype | CURRENT | Partial | Retention/disposition/hold concepts exist in the in-memory domain, including legal-hold management workflows and retention workspace review flows. |
-| RE-CUR-010 | Access policy, grant, and external-share prototype | CURRENT | Partial | Scoped access, access policies, access grants, expiring shares, and access logging are represented from the workspace. |
-| RE-CUR-011 | Redaction and signature prototype | CURRENT | Partial | Redaction and electronic-signature concepts are present, and the workspace can create redacted copies. |
-| RE-CUR-012 | Photo evidence prototype | CURRENT | Partial | Record detail capture can create photo evidence with subject, provenance, and notes. |
+| RE-CUR-001 | Record and file prototype | CURRENT | Partial | Core created record, file-version metadata, file safety status, and durable malware scan/quarantine decisions persist through EF tables; new files remain scan-pending and unavailable until an explicit scan result, tenant-scoped provider run, or configured hosted worker consuming external verdicts releases or quarantines them; files without external verdicts remain pending, infected/failed files remain quarantined until a later clean/skipped scan releases them, while rendition structures and the capture workflow still demonstrate intended behavior through scaffolded state, including defaulting capture taxonomy from active vocabulary terms. |
+| RE-CUR-002 | Upload-session and capture-request prototype | CURRENT | Partial | Upload sessions and capture requests are tenant-scoped and durable through EF tables; tokening, external capture, upload processing, retry, audit trail, and provider-backed file workflow depth remain incomplete. |
+| RE-CUR-003 | Scan, OCR, and extraction prototype | CURRENT | Partial | Scan processing, generated PDF file metadata, OCR results, extraction results, manual correction, and extraction review state persist through EF tables; provider queues, bounding-box review depth, correction reuse, and production OCR worker orchestration remain incomplete. |
+| RE-CUR-004 | Metadata, links, and comments prototype | CURRENT | Partial | Created record metadata, source links, and comments persist through EF tables; richer verification, cross-product link semantics, audit, and workflow enforcement remain incomplete. |
+| RE-CUR-005 | Controlled document/version prototype | CURRENT | Partial | Controlled documents, document versions, review state, publication/effective status, supersession references, audit trail snapshots, and generated version file metadata persist through EF tables with tenant-scoped workspace/integration reads and mutations; immutable audit depth, policy enforcement, and deeper review automation remain incomplete. |
+| RE-CUR-006 | Distribution and acknowledgement prototype | CURRENT | Partial | Controlled distributions and recipient acknowledgements persist through EF tables with tenant-scoped create/revoke/expire/acknowledge paths; signature-record enforcement, training/qualification impact, delegated recipient scopes, and audit-grade access history remain incomplete. |
+| RE-CUR-007 | Evidence mapping and coverage prototype | CURRENT | Partial | Evidence-to-requirement mappings persist through EF tables and coverage is rebuilt tenant-safely from durable mappings; Compliance Core satisfaction logic, stale evidence evaluation, and package-grade audit history remain incomplete. |
+| RE-CUR-008 | Package and manifest prototype | CURRENT | Partial | Packages and manifests persist through EF tables with tenant-scoped list/get/lock/archive access, restart-safe checksums, and generated package PDF/ZIP file metadata; deeper package-grade audit history, immutable export sealing, retention linkage, and external delivery controls remain incomplete. |
+| RE-CUR-009 | Retention, disposal, and legal-hold prototype | CURRENT | Partial | Retention statuses, disposal reviews, destruction certificates, legal holds, retention-scheduler runs, retention-scheduler leases, and retention-scheduler outbox messages persist through EF tables with tenant-scoped list/get/create/activate/release/complete paths; retention-disposition runs acquire and release durable tenant scheduler leases, idempotently create pending archive/purge disposal reviews from eligible retention statuses, skip legal-held records, persist pending outbox notification records for each new review, process in-app outbox messages into delivered/failed states, fail explicitly requested external delivery channels truthfully until a provider reference is supplied, retry failed messages when a provider is configured, escalate unresolved outbox messages with recipient/escalation evidence, and support `create_pending_reviews_only` plus `execute_approved_reviews`; approved-review execution revalidates tenant scope, active legal holds, and current retention eligibility before archive/purge side effects, leaves held or ineligible reviews unexecuted with denied access evidence, marks executed reviews completed, and remains idempotent on retry; unsupported execution policies fail as durable scheduler runs with released leases, denied access/audit evidence, and no review/outbox/certificate/archive/purge side effects; approved purge reviews create durable destruction certificates with deleted-file refs, tombstone evidence, certificate hash, and access/audit evidence; active legal holds block disposal-review outcomes, direct archive/purge actions, core record-attached file/status/metadata/link/comment/redaction/signature/photo mutations, package create/lock/archive, controlled-document lifecycle/review/distribution/acknowledgement mutations, access-policy/grant mutations, external-share create/revoke/expire mutations, passive access-grant/external-share expiry or expired-share replay mutations, passive controlled-document periodic-review/acknowledgement-overdue refresh mutations, and passive retention-status legal-hold block/restore refresh mutations, preserve files and held workflow/access state, and write denied or restoration access/audit evidence. Immutable audit depth remains incomplete. |
+| RE-CUR-010 | Access policy, grant, and external-share prototype | CURRENT | Partial | Access policies, access grants, external shares, access logs, and access-history seals persist through EF tables with tenant-scoped list/mutation paths, narrow external-share allowed-action enforcement, restart-safe access/share log history, hash-chain access-history integrity verification, and sealed access-history range verification for the migrated workflows; deeper policy evaluation, watermark/download controls, recipient authentication, and external portal depth remain incomplete. |
+| RE-CUR-011 | Redaction and signature prototype | CURRENT | Partial | Redactions, redaction-provider jobs, signature records, and signature trust-service jobs persist through EF tables with tenant-scoped create/read paths, durable generated files, redacted-copy records, copied access controls, restart-safe metadata, locked signature evidence hashes, local-vs-provider verification status, provider envelope/certificate evidence when supplied, explicit provider callback reconciliation, durable signature trust-service job submission/manifest reconciliation, a disabled-by-default signature trust-service manifest worker for configured tenants, explicit redaction rules, locked redaction package hashes, durable redaction-provider job submission/manifest reconciliation, a disabled-by-default redaction provider manifest worker for configured tenants, explicit redaction provider reconciliation, rendered-overlay review evidence, and review/approval evidence; external trust-service webhook ingestion/provider scheduling, provider-managed timestamp/long-term-validation automation beyond explicit jobs/manifests and the disabled manifest worker, automated visual overlay UI/worker orchestration, external redaction-provider webhook ingestion/provider scheduling/delivery orchestration beyond explicit jobs/manifests and the disabled manifest worker, and provider-grade immutable audit storage/notarization beyond explicit audit-anchor evidence remain incomplete. |
+| RE-CUR-012 | Photo evidence prototype | CURRENT | Partial | Photo evidence records persist through EF tables with tenant-scoped create/read paths, durable generated image file metadata, source refs, location/device snapshots, and notes; offline encrypted capture, media integrity checks, provider-backed scanning depth, and immutable chain-of-custody remain incomplete. |
 | RE-CUR-013 | Comprehensive DMS navigation scaffold | CURRENT | Partial | Frontend routes cover the expected document and records operating model, including capture, packages, holds, access, redaction, and retention workspaces. |
 
 ### B. Common category baseline
@@ -222,9 +222,53 @@ These are commonly found only in enterprise tiers, specialist products, or expen
 ## Repository object inventory
 
 <details>
-<summary>Persistent entity sets (0)</summary>
+<summary>Persistent entity sets (43)</summary>
 
-_No persistent product DbSet declarations were found in the static inventory._
+| DbSet |
+| --- |
+| `RecordArrRecords` |
+| `RecordArrFiles` |
+| `RecordArrFileIntegrityChecks` |
+| `RecordArrFileMalwareScans` |
+| `RecordArrStorageReconciliations` |
+| `RecordArrObjectStoreObjects` |
+| `RecordArrObjectStoreFixityObservations` |
+| `RecordArrDisasterRecoveryRuns` |
+| `RecordArrRecordMetadata` |
+| `RecordArrRecordLinks` |
+| `RecordArrRecordComments` |
+| `RecordArrUploadSessions` |
+| `RecordArrCaptureRequests` |
+| `RecordArrScanProcessing` |
+| `RecordArrOcrResults` |
+| `RecordArrExtractionResults` |
+| `RecordArrEvidenceMappings` |
+| `RecordArrPackages` |
+| `RecordArrPackageManifests` |
+| `RecordArrRetentionStatuses` |
+| `RecordArrDisposalReviews` |
+| `RecordArrDestructionCertificates` |
+| `RecordArrRetentionSchedulerRuns` |
+| `RecordArrRetentionSchedulerLeases` |
+| `RecordArrRetentionSchedulerOutboxMessages` |
+| `RecordArrLegalHolds` |
+| `RecordArrControlledDocuments` |
+| `RecordArrControlledDocumentVersions` |
+| `RecordArrDocumentReviews` |
+| `RecordArrDocumentDistributions` |
+| `RecordArrDocumentAcknowledgements` |
+| `RecordArrAccessPolicies` |
+| `RecordArrAccessGrants` |
+| `RecordArrExternalShares` |
+| `RecordArrRedactions` |
+| `RecordArrRedactionProviderJobs` |
+| `RecordArrSignatureRecords` |
+| `RecordArrSignatureTrustServiceJobs` |
+| `RecordArrPhotoEvidence` |
+| `RecordArrAccessLogs` |
+| `RecordArrAccessHistorySeals` |
+| `RecordArrAuditEvents` |
+| `RecordArrAuditSeals` |
 
 </details>
 
@@ -242,8 +286,8 @@ _No persistent product DbSet declarations were found in the static inventory._
 
 | Endpoint source file | Discovered route declarations |
 | --- | --- |
-| RecordArrIntegrationEndpoints.cs | 94 |
-| WorkspaceEndpoints.cs | 82 |
+| RecordArrIntegrationEndpoints.cs | 136 |
+| WorkspaceEndpoints.cs | 124 |
 | AuthEndpoints.cs | 6 |
 | ReferenceIntegrationEndpoints.cs | 4 |
 

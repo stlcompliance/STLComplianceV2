@@ -164,21 +164,21 @@ public sealed class RecordArrPrintableProvider(
                 404);
         }
 
-        var retention = store.GetRetentionStatus(record.RecordId);
+        var retention = store.GetRetentionStatus(context.TenantId.ToString(), record.RecordId);
         var files = store.GetFiles(context.Principal, record.RecordId);
-        var packages = store.GetPackages()
+        var packages = store.GetPackages(context.TenantId.ToString())
             .Where(package => package.RecordRefs.Contains(record.RecordId, StringComparer.OrdinalIgnoreCase))
             .OrderByDescending(package => package.CreatedAt)
             .ToArray();
-        var controlledDocuments = store.GetControlledDocuments()
+        var controlledDocuments = store.GetControlledDocuments(context.TenantId.ToString())
             .Where(document => string.Equals(document.RecordId, record.RecordId, StringComparison.OrdinalIgnoreCase))
             .OrderBy(document => document.DocumentNumber)
             .ToArray();
-        var legalHold = store.GetLegalHolds()
+        var legalHold = store.GetLegalHolds(context.TenantId.ToString())
             .FirstOrDefault(hold =>
                 string.Equals(hold.Status, "active", StringComparison.OrdinalIgnoreCase)
                 && hold.RecordRefs.Contains(record.RecordId, StringComparer.OrdinalIgnoreCase));
-        var redactions = store.GetRedactions()
+        var redactions = store.GetRedactions(context.TenantId.ToString())
             .Where(redaction =>
                 string.Equals(redaction.SourceRecordId, record.RecordId, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(redaction.RedactedRecordId, record.RecordId, StringComparison.OrdinalIgnoreCase))
@@ -186,7 +186,7 @@ public sealed class RecordArrPrintableProvider(
             .ToArray();
         var links = store.GetRecordLinks(record.RecordId);
         var comments = store.GetRecordComments(record.RecordId);
-        var accessLogs = store.GetAccessLogs(record.RecordId)
+        var accessLogs = store.GetAccessLogs(context.TenantId.ToString(), record.RecordId)
             .OrderByDescending(log => log.OccurredAt)
             .Take(12)
             .ToArray();

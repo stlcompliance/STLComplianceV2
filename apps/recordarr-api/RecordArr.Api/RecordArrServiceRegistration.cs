@@ -11,10 +11,22 @@ public static class RecordArrServiceRegistration
 {
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
-        builder.Services.AddSingleton<RecordArrStore>();
+        builder.Services.AddScoped<RecordArrStore>();
         builder.Services.AddSingleton<RecordArrDocumentStorageService>();
         builder.Services.AddSingleton<IPdfRenderer, StlPlainTextPdfRenderer>();
         builder.Services.Configure<DocumentStorageOptions>(builder.Configuration.GetSection(DocumentStorageOptions.SectionName));
+        builder.Services.Configure<MalwareScanWorkerOptions>(builder.Configuration.GetSection(MalwareScanWorkerOptions.SectionName));
+        builder.Services.Configure<ObjectStoreReconciliationWorkerOptions>(builder.Configuration.GetSection(ObjectStoreReconciliationWorkerOptions.SectionName));
+        builder.Services.Configure<SignatureTrustServiceWorkerOptions>(builder.Configuration.GetSection(SignatureTrustServiceWorkerOptions.SectionName));
+        builder.Services.Configure<RedactionProviderWorkerOptions>(builder.Configuration.GetSection(RedactionProviderWorkerOptions.SectionName));
+        builder.Services.AddSingleton<IRecordArrMalwareScanVerdictProvider, ManifestRecordArrMalwareScanVerdictProvider>();
+        builder.Services.AddSingleton<IRecordArrObjectStoreInventoryProvider, ManifestRecordArrObjectStoreInventoryProvider>();
+        builder.Services.AddSingleton<IRecordArrSignatureTrustServiceManifestProvider, ManifestRecordArrSignatureTrustServiceManifestProvider>();
+        builder.Services.AddSingleton<IRecordArrRedactionProviderManifestProvider, ManifestRecordArrRedactionProviderManifestProvider>();
+        builder.Services.AddHostedService<RecordArrMalwareScanWorker>();
+        builder.Services.AddHostedService<RecordArrObjectStoreReconciliationWorker>();
+        builder.Services.AddHostedService<RecordArrSignatureTrustServiceWorker>();
+        builder.Services.AddHostedService<RecordArrRedactionProviderWorker>();
         builder.Services.AddStlNexArrHandoffClient(builder.Configuration);
         builder.Services.AddScoped<RecordArrTokenService>();
         builder.Services.AddScoped<HandoffAuthService>();
