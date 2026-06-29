@@ -135,9 +135,9 @@ export function PricingLeadTimePanel({
       isApprovedAndActive,
       needsApprovalReason:
         link.vendorApprovalStatus !== 'approved'
-          ? `Vendor approval is ${link.vendorApprovalStatus}.`
+          ? `Supplier approval is ${link.vendorApprovalStatus}.`
           : link.vendorStatus !== 'active'
-            ? `Vendor status is ${link.vendorStatus}.`
+            ? `Supplier status is ${link.vendorStatus}.`
             : null,
     }
   })
@@ -182,7 +182,7 @@ export function PricingLeadTimePanel({
       link: recommendedLink,
       reason: recommendedLink
         ? recommendedLink.isApprovedAndActive
-          ? 'Balanced price, lead time, and preferred-vendor status.'
+          ? 'Balanced price, lead time, and preferred-source status.'
           : 'Best current score, but compliance approval is still needed.'
         : 'No source links available.',
     },
@@ -205,20 +205,20 @@ export function PricingLeadTimePanel({
         : 'No lead-time data available.',
     },
     {
-      label: 'Preferred vendor',
+      label: 'Preferred source',
       link: preferredLink,
       reason: preferredLink
         ? preferredLink.isApprovedAndActive
-          ? 'Preferred vendor with the strongest current source score.'
-          : 'Preferred vendor, but approval is still needed.'
-        : 'No preferred vendor source is available.',
+          ? 'Preferred source with the strongest current source score.'
+          : 'Preferred source, but approval is still needed.'
+        : 'No preferred source is available.',
     },
     {
       label: 'Compliance safest',
       link: complianceSafeLink,
       reason: complianceSafeLink
-        ? 'Approved and active vendor source with acceptable current metrics.'
-        : 'No approved active vendor source is available.',
+        ? 'Approved and active supplier source with acceptable current metrics.'
+        : 'No approved active supplier source is available.',
     },
     {
       label: 'Emergency option',
@@ -259,7 +259,7 @@ export function PricingLeadTimePanel({
     >
       <h2 className="text-lg font-medium text-white">Pricing &amp; lead time</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Record vendor part link unit price and lead-time history with effective dates.
+        Record supplier source unit price and lead-time history with effective dates.
       </p>
 
       <label htmlFor="pricing-lead-time-current-only-filter" className="mt-4 flex items-center gap-2 text-sm text-slate-400">
@@ -354,7 +354,7 @@ export function PricingLeadTimePanel({
                 Recommended source for {selectedPart.partKey} · {selectedPart.displayName}
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                Based on current price, current lead time, preferred-vendor status, and vendor approval.
+                Based on current price, current lead time, preferred-source status, and supplier approval.
               </p>
             </div>
             <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-200">
@@ -385,7 +385,7 @@ export function PricingLeadTimePanel({
                 </div>
                 {item.link ? (
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <Metric label="Vendor" value={`${item.link.vendorPartyKey} · ${item.link.vendorDisplayName}`} />
+                    <Metric label="Supplier" value={`${item.link.vendorPartyKey} · ${item.link.vendorDisplayName}`} />
                     <Metric label="Part source" value={item.link.vendorPartNumber} />
                     <Metric label="Unit price" value={formatMoney(item.link.unitPrice)} />
                     <Metric label="Lead time" value={formatDays(item.link.leadTimeDays)} />
@@ -450,11 +450,11 @@ export function PricingLeadTimePanel({
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
           <div>
             <label className="mb-1 block text-sm text-slate-400" htmlFor="pricing-lead-time-vendor-link">
-              Vendor part link
+              Supplier source link
             </label>
             <StaticSearchPicker
               id="pricing-lead-time-vendor-link"
-              placeholder="Search vendor part links…"
+              placeholder="Search supplier source links…"
               value={selectedVendorLinkId}
               options={vendorLinkOptions}
               onChange={onSelectedVendorLinkIdChange}

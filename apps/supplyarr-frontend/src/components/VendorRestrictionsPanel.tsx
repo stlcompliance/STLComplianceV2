@@ -64,7 +64,7 @@ export function VendorRestrictionsPanel({
     () =>
       restrictableParties.map((party) => ({
         value: party.partyId,
-        label: `${party.partyType} · ${party.partyKey} · ${party.displayName}`,
+        label: `${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'} · ${party.partyKey} · ${party.displayName}`,
       })),
     [restrictableParties],
   )
@@ -112,9 +112,9 @@ export function VendorRestrictionsPanel({
       className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
       data-testid="vendor-restrictions-panel"
     >
-      <h2 className="text-lg font-semibold text-slate-50">Vendor restrictions</h2>
+      <h2 className="text-lg font-semibold text-slate-50">Supplier restrictions</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Block procurement activity by scope for vendor or supplier parties. Enforcement applies to purchase
+        Block procurement activity by scope for supplier identities or sub-units. Enforcement applies to purchase
         requests, purchase orders, RFQ invitations, and receiving.
       </p>
 
@@ -127,12 +127,12 @@ export function VendorRestrictionsPanel({
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <StaticSearchPicker
           id="vendor-restriction-party"
-          label="Vendor or supplier party"
+          label="Supplier identity or sub-unit"
           value={selectedPartyId}
           onChange={setSelectedPartyId}
           options={partyOptions}
           selectedOption={selectedPartyOption}
-          placeholder="Search vendors or suppliers…"
+          placeholder="Search supplier identities or sub-units…"
           testId="vendor-restriction-party-picker"
         />
 

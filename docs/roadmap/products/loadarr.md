@@ -77,6 +77,8 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.LoadArr.Auth.Tests/STLCompliance.LoadArr.Auth.Tests.csproj --filter "FullyQualifiedName~LoadArrAuthEndpointsTests|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Session_bootstrap_allows_warehouse_manager_after_non_loadarr_launch_context|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Tenant_settings_get_allows_warehouse_manager_after_non_loadarr_launch_context|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Tenant_settings_get_seeds_defaults_and_audit_without_internal_ids" --logger "console;verbosity=minimal"` — passed 10 tests.
 - `npm test -- client.test.ts mutationMessages.test.ts App.test.tsx` from `apps/loadarr-frontend` — passed 3 files / 51 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.LoadArr.Auth.Tests/STLCompliance.LoadArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~LoadArrAuthEndpointsTests|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Session_bootstrap_allows_warehouse_manager_after_non_loadarr_launch_context|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Tenant_settings_get_allows_warehouse_manager_after_non_loadarr_launch_context|FullyQualifiedName=STLCompliance.LoadArr.Auth.Tests.LoadArrTenantSettingsTests.Tenant_settings_get_seeds_defaults_and_audit_without_internal_ids" --logger "console;verbosity=minimal"` — passed 10 tests in 12s.
+- Current repo-state rerun: `npm test -- --run client.test.ts mutationMessages.test.ts App.test.tsx` from `apps/loadarr-frontend` — passed 3 files / 51 tests in 24.56s.
 
 ## R1 Foundation spine pass
 

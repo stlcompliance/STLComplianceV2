@@ -116,13 +116,13 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendors'] })
     },
     onError: (error: unknown) => {
-      setSyncError(error instanceof Error ? error.message : 'Failed to sync vendor catalog feed.')
+      setSyncError(error instanceof Error ? error.message : 'Failed to sync supplier catalog feed.')
     },
   })
 
   const handleSync = () => {
     if (!selectedVendor) {
-      setSyncError('Select a vendor before syncing vendor catalog data.')
+      setSyncError('Select a supplier unit before syncing source data.')
       return
     }
 
@@ -150,7 +150,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
       }))
 
       if (normalizedItems.length === 0) {
-        setSyncError('Payload must include at least one vendor catalog row.')
+        setSyncError('Payload must include at least one supplier catalog row.')
         return
       }
 
@@ -168,9 +168,9 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="vendor-catalog-api-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-medium text-white">Vendor catalog APIs</h2>
+          <h2 className="text-lg font-medium text-white">Supplier catalog APIs</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Sync catalog facts from external vendor APIs while keeping the catalog current.
+            Sync catalog facts from external supplier APIs while keeping sourcing facts attached to the right supplier unit.
           </p>
         </div>
         <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-wide text-slate-400">
@@ -182,7 +182,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
         <div className="space-y-4">
           <StaticSearchPicker
             id="vendor-catalog-api-vendor"
-            label="Vendor"
+            label="Supplier unit"
             value={selectedVendorId}
             onChange={(value) => {
               setSelectedVendorId(value)
@@ -190,14 +190,14 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
             }}
             options={vendorOptions}
             selectedOption={selectedVendorOption}
-            placeholder="Select vendor"
+            placeholder="Select supplier unit"
             testId="vendor-catalog-api-vendor-picker"
           />
 
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
             <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Current feed status</div>
             <div className="mt-2 space-y-1 text-sm text-slate-300">
-              <div>Selected vendor: {selectedVendor?.displayName ?? 'Not selected'}</div>
+              <div>Selected supplier unit: {selectedVendor?.displayName ?? 'Not selected'}</div>
               <div>Linked parts in view: {currentEntries.length}</div>
               <div>Sync mode: JSON API payload</div>
             </div>
@@ -206,7 +206,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
 
         <div className="space-y-3">
           <label htmlFor="vendor-catalog-api-payload" className="block text-sm text-slate-400">
-            Vendor catalog JSON payload
+            Supplier source JSON payload
             <textarea
               id="vendor-catalog-api-payload"
               className="mt-1 min-h-[14rem] w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs text-slate-100"
@@ -238,7 +238,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
           </div>
 
           {!canManage ? (
-            <p className="text-sm text-[var(--color-text-muted)]">Read-only access: vendor catalog API sync requires manage permission.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">Read-only access: supplier catalog API sync requires manage permission.</p>
           ) : null}
 
           {syncError ? (
@@ -272,22 +272,22 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
 
       <div className="mt-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="text-sm font-medium text-slate-300">Current vendor catalog links</h3>
+          <h3 className="text-sm font-medium text-slate-300">Current supplier catalog links</h3>
           <span className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
-            Derived from the live part catalog and vendor links
+            Derived from the live part catalog and supplier source links
           </span>
         </div>
 
         {currentEntries.length === 0 ? (
-          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No vendor catalog links found for this filter.</p>
+          <p className="mt-3 text-sm text-[var(--color-text-muted)]">No supplier catalog links found for this filter.</p>
         ) : (
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="border-b border-slate-800 px-3 py-2">Part</th>
-                  <th className="border-b border-slate-800 px-3 py-2">Vendor</th>
-                  <th className="border-b border-slate-800 px-3 py-2">Vendor part #</th>
+                  <th className="border-b border-slate-800 px-3 py-2">Supplier unit</th>
+                  <th className="border-b border-slate-800 px-3 py-2">Supplier part #</th>
                   <th className="border-b border-slate-800 px-3 py-2">Price</th>
                   <th className="border-b border-slate-800 px-3 py-2">Lead time</th>
                   <th className="border-b border-slate-800 px-3 py-2">Availability</th>

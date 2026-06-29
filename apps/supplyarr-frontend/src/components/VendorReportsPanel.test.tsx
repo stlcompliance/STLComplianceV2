@@ -296,7 +296,7 @@ vi.mock('../api/client', () => ({
 }))
 
 describe('VendorReportsPanel', () => {
-  it('renders vendor report summary rows', async () => {
+  it('renders supplier report summary rows', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
@@ -310,7 +310,7 @@ describe('VendorReportsPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /ACME · Acme Supply/i }))
 
-    expect(await screen.findByText(/Vendor scorecard/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Supplier scorecard/i)).toBeInTheDocument()
     expect(screen.getAllByText(/Healthy/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Recent fill rate/i)).toBeInTheDocument()
     expect(screen.getAllByText(/86%/i).length).toBeGreaterThan(0)

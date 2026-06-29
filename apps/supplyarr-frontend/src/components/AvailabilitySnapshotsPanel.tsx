@@ -83,9 +83,9 @@ export function AvailabilitySnapshotsPanel({
       data-testid="availability-snapshots-panel"
       className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg lg:col-span-2"
     >
-      <h2 className="text-lg font-medium text-white">Vendor availability</h2>
+      <h2 className="text-lg font-medium text-white">Supplier availability</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Record vendor part link quantity and availability status history with effective dates.
+        Record supplier source availability and quantity history with effective dates.
       </p>
 
       <label htmlFor="availability-current-only-filter" className="mt-4 flex items-center gap-2 text-sm text-slate-400">
@@ -136,10 +136,10 @@ export function AvailabilitySnapshotsPanel({
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
           <label htmlFor="availability-vendor-link" className="block text-sm text-slate-400">
-            Vendor part link
+            Supplier source link
             <StaticSearchPicker
               id="availability-vendor-link"
-              placeholder="Search vendor part links…"
+              placeholder="Search supplier source links…"
               value={selectedVendorLinkId}
               options={vendorLinkOptions}
               selectedOption={selectedVendorLinkOption}

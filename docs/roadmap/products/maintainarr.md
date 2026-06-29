@@ -60,7 +60,8 @@ Tests run:
 
 - `npm test -- ProductWorkspaceLayout.test.tsx AssetProfilePage.test.tsx AssetCreatePage.test.tsx DefectCreatePage.test.tsx WorkOrderCreatePage.test.tsx PmProgramCreatePage.test.tsx PartsKitCreatePage.test.tsx` from `apps/maintainarr-frontend` - passed 7 files / 15 tests.
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.MaintainArr.Auth.Tests.MaintainArrHandoffApiTests.Asset_registry_crud_happy_path" --logger "console;verbosity=minimal"` - passed 1 test after the asset manage gate fix.
-- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~MaintainArrHandoffApiTests" --logger "console;verbosity=minimal"` - passed 10 tests.
+- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrHandoffApiTests" --logger "console;verbosity=minimal"` - now passes 10 tests in the current repo state (2m 6s).
+- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrAssetReadinessTests|FullyQualifiedName~MaintainArrMaintenanceHistoryTests|FullyQualifiedName~MaintainArrNotificationTests|FullyQualifiedName~MaintainArrAssetBulkImportTests" --logger "console;verbosity=minimal"` - passed 34 focused R0 trust-gate tests covering tenant isolation, server-side permission denial, truthful validation/no-persist validation paths, and notification authorization (3m 37s).
 
 Remaining blockers: None identified in this R0 slice.
 

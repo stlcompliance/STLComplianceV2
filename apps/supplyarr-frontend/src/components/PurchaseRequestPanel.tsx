@@ -176,7 +176,7 @@ export function PurchaseRequestPanel({
           <div className="mt-1 text-sm text-slate-300">{selected.title}</div>
           {selected.notes ? <p className="mt-1 text-sm text-slate-400">{selected.notes}</p> : null}
           {selected.vendorDisplayName ? (
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Vendor: {selected.vendorDisplayName}</p>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Supplier: {selected.vendorDisplayName}</p>
           ) : null}
           <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-request-line-list">
             {selected.lines.map((line) => (
@@ -311,12 +311,12 @@ export function PurchaseRequestPanel({
             </label>
             <StaticSearchPicker
               id="purchase-request-create-vendor"
-              label="Vendor (optional)"
+              label="Supplier unit (optional)"
               value={selectedVendorId}
               onChange={onSelectedVendorIdChange}
               options={vendorOptions}
               selectedOption={selectedVendorOption}
-              placeholder="Search vendors…"
+              placeholder="Search supplier units…"
               testId="purchase-request-create-vendor"
             />
             <div className="grid gap-2 sm:grid-cols-3">

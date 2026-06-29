@@ -214,10 +214,19 @@ public static class ReferenceIntegrationEndpoints
                     normalizedType,
                     new CreateTypedExternalPartyRequest(
                         string.IsNullOrWhiteSpace(partyKey) ? Slugify(displayName) : partyKey,
+                        null,
+                        null,
                         displayName,
                         FirstValue(request.Values, "legalName", "displayName", "name"),
                         NullIfWhiteSpace(GetValue(request.Values, "taxIdentifier", "taxId")),
-                        FirstValue(request.Values, "notes")),
+                        FirstValue(request.Values, "notes"),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null),
                     cancellationToken);
 
                 return Results.Created(

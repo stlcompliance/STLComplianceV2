@@ -62,7 +62,7 @@ Files touched:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 3 tests.
+- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - now passes 4 tests in the current repo state after repairing a stale `CreateSignatureRecord(...)` auth-test call to match the tenant-scoped overload shape.
 - `npm test -- App.test.tsx` from `apps/recordarr-frontend` - passed 1 file / 10 tests.
 
 Remaining blockers: The deferred durable-store and tenant-scope blockers above remain active R0 blockers. RecordArr may be revisited during the R0 suite stage before any R1 work begins if the rollout owner decides deferred blockers must be resolved rather than carried.

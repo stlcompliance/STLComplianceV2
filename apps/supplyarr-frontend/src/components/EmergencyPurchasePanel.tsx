@@ -155,7 +155,7 @@ export function EmergencyPurchasePanel({
     >
       <h2 className="text-lg font-medium text-white">Emergency purchase</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Urgent procurement with expedited submit, administrator manager override, and linked PO issue.
+        Urgent procurement from a supplier unit with expedited submit, manager override, and linked PO issue.
       </p>
 
       {canOverrideApprove && (pendingQuery.data?.length ?? 0) > 0 ? (
@@ -210,13 +210,13 @@ export function EmergencyPurchasePanel({
             />
           </label>
           <StaticSearchPicker
-            label="Vendor"
+            label="Supplier unit"
             id="emergency-purchase-vendor"
             value={vendorId}
             options={vendorOptions}
             selectedOption={selectedVendorOption}
             onChange={setVendorId}
-            placeholder="Search vendors…"
+            placeholder="Search supplier units…"
             testId="emergency-purchase-vendor-picker"
           />
           <StaticSearchPicker

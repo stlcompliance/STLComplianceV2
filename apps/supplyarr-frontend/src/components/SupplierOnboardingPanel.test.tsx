@@ -116,6 +116,7 @@ describe('SupplierOnboardingPanel', () => {
               partyId: 'p1',
               partyKey: 'V-1',
               partyType: 'vendor',
+              unitKind: 'identity',
               displayName: 'Vendor One',
               legalName: '',
               taxIdentifier: null,
@@ -163,6 +164,7 @@ describe('SupplierOnboardingPanel', () => {
               partyId: 'p1',
               partyKey: 'V-1',
               partyType: 'vendor',
+              unitKind: 'identity',
               displayName: 'Vendor One',
               legalName: '',
               taxIdentifier: null,
@@ -203,6 +205,7 @@ describe('SupplierOnboardingPanel', () => {
               partyId: 'p1',
               partyKey: 'V-1',
               partyType: 'vendor',
+              unitKind: 'identity',
               displayName: 'Vendor One',
               legalName: '',
               taxIdentifier: null,
@@ -217,6 +220,7 @@ describe('SupplierOnboardingPanel', () => {
               partyId: 'p2',
               partyKey: 'S-1',
               partyType: 'supplier',
+              unitKind: 'sub_unit',
               displayName: 'Supplier Two',
               legalName: '',
               taxIdentifier: null,
@@ -234,10 +238,10 @@ describe('SupplierOnboardingPanel', () => {
 
     expect(await screen.findByTestId('supplier-onboarding-panel')).toBeInTheDocument()
     expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
-      'Vendor One (vendor)',
+      'Vendor One (supplier identity)',
     )
     expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
-      'Supplier Two (supplier)',
+      'Supplier Two (sub-unit)',
     )
 
     fireEvent.change(screen.getByTestId('supplier-onboarding-party-picker'), {

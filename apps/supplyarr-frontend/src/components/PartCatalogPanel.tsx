@@ -20,7 +20,7 @@ const PART_SOURCE_TYPE_OPTIONS = [
   { value: 'transfer', label: 'Transfer' },
   { value: 'kit_assembly', label: 'Kit assembly' },
   { value: 'manufacturer', label: 'Manufacturer direct' },
-  { value: 'vendor', label: 'Vendor / supplier' },
+  { value: 'vendor', label: 'Supplier source' },
 ]
 
 interface PartCatalogPanelProps {
@@ -176,7 +176,7 @@ export function PartCatalogPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2">
       <h2 className="text-lg font-medium text-white">Part master</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Canonical tenant-owned parts with optional operational sources and optional vendor sourcing overlays.
+        Canonical tenant-owned parts with optional operational sources and optional supplier sourcing overlays.
       </p>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -245,7 +245,7 @@ export function PartCatalogPanel({
                   ) : null}
                   {part.vendorLinks.length > 0 ? (
                     <p className="mt-2 text-slate-400">
-                      Vendor source: {part.vendorLinks.find((v) => v.isPreferred)?.partyDisplayName ?? part.vendorLinks[0].partyDisplayName}
+                      Supplier source: {part.vendorLinks.find((v) => v.isPreferred)?.partyDisplayName ?? part.vendorLinks[0].partyDisplayName}
                       {part.vendorLinks[0].vendorPartNumber
                         ? ` (${part.vendorLinks[0].vendorPartNumber})`
                         : ''}
@@ -306,7 +306,7 @@ export function PartCatalogPanel({
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Create part</h3>
             <p className="text-sm text-slate-400">
-              Create the canonical part first. Source and vendor information can be added later.
+              Create the canonical part first. Source and supplier information can be added later.
             </p>
             <StaticSearchPicker
               id="part-catalog-select"
@@ -450,7 +450,7 @@ export function PartCatalogPanel({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-slate-300">Add vendor source</h3>
+            <h3 className="text-sm font-medium text-slate-300">Add supplier source</h3>
             <StaticSearchPicker
               id="vendor-link-part"
               label="Part to link"
@@ -463,20 +463,20 @@ export function PartCatalogPanel({
             />
             <StaticSearchPicker
               id="vendor-link-vendor"
-              label="Vendor or supplier"
+              label="Supplier unit"
               value={selectedVendorId}
               onChange={onSelectedVendorIdChange}
               options={vendorOptions}
               selectedOption={selectedVendorOption}
-              placeholder="Select vendor"
+              placeholder="Select supplier unit"
               testId="vendor-link-vendor-picker"
             />
             <label htmlFor="vendor-part-number" className="block text-sm text-slate-400">
-              Vendor part number
+              Supplier part number
               <input
                 id="vendor-part-number"
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
-                placeholder="Vendor part number"
+                placeholder="Supplier part number"
                 value={vendorPartNumber}
                 onChange={(e) => onVendorPartNumberChange(e.target.value)}
               />
@@ -489,7 +489,7 @@ export function PartCatalogPanel({
               }
               onClick={onLinkVendor}
             >
-              {isLinkingVendor ? 'Linking…' : 'Add vendor source'}
+              {isLinkingVendor ? 'Linking…' : 'Add supplier source'}
             </button>
           </div>
         </div>

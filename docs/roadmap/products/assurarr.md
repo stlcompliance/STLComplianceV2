@@ -64,6 +64,8 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --filter "FullyQualifiedName~AssurArrAuthEndpointsTests|FullyQualifiedName~AssurArrAuthorizationTests" --logger "console;verbosity=minimal"` — passed 13 tests.
 - `npm test -- client.test.ts App.test.tsx sessionStorage.test.ts` from `apps/assurarr-frontend` — passed 3 files / 7 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --no-build --filter "FullyQualifiedName~AssurArrAuthEndpointsTests|FullyQualifiedName~AssurArrAuthorizationTests" --logger "console;verbosity=minimal"` — passed 13 tests in 14s.
+- Current repo-state rerun: `npm test -- --run client.test.ts App.test.tsx sessionStorage.test.ts` from `apps/assurarr-frontend` — passed 3 files / 8 tests in 4.71s.
 
 Remaining blockers:
 

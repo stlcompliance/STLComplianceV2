@@ -7,15 +7,7 @@ import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 type Props = { state: SupplyArrWorkspaceState }
 
 function uniqueParties(state: SupplyArrWorkspaceState) {
-  const parties = [...state.vendors, ...(state.suppliersQuery.data ?? []), ...(state.dealersQuery.data ?? [])]
-  const seen = new Set<string>()
-  return parties.filter((party) => {
-    if (seen.has(party.partyId)) {
-      return false
-    }
-    seen.add(party.partyId)
-    return true
-  })
+  return state.supplierDirectory
 }
 
 export function OnboardingSection({ state: s }: Props) {

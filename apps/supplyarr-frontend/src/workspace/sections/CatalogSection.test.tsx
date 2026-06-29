@@ -22,6 +22,7 @@ const state = {
   catalogsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [] },
+  supplierDirectory: [],
   vendorsQuery: { data: [] },
   createCatalogMutation: { isPending: false, mutate: vi.fn() },
   createPartMutation: { isPending: false, mutate: vi.fn() },

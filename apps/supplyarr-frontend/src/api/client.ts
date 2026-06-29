@@ -1,4 +1,5 @@
 import type {
+  CreateExternalPartyRequest,
   CreatePartCatalogRequest,
   CreatePartRequest,
   CreatePartSourceRequest,
@@ -321,7 +322,7 @@ export async function createVendor(
 
 export async function createSupplier(
   accessToken: string,
-  request: CreateTypedExternalPartyRequest,
+  request: CreateExternalPartyRequest,
 ): Promise<ExternalPartyResponse> {
   const response = await fetch(`${apiBase}/api/suppliers`, {
     method: 'POST',
@@ -329,6 +330,65 @@ export async function createSupplier(
     body: JSON.stringify(request),
   })
   return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create supplier')
+}
+
+export async function updateSupplier(
+  accessToken: string,
+  partyId: string,
+  request: UpdateExternalPartyRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${partyId}`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier')
+}
+
+export async function updateSupplierApprovalStatus(
+  accessToken: string,
+  partyId: string,
+  request: UpdateExternalPartyApprovalStatusRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/approval-status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier approval status')
+}
+
+export async function updateSupplierStatus(
+  accessToken: string,
+  partyId: string,
+  request: UpdateExternalPartyStatusRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/status`, {
+    method: 'PATCH',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier status')
+}
+
+export async function createSupplierContact(
+  accessToken: string,
+  partyId: string,
+  request: CreatePartyContactRequest,
+): Promise<ExternalPartyResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/contacts`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to add supplier contact')
+  }
+
+  const listResponse = await fetch(`${apiBase}/api/suppliers/${partyId}`, {
+    headers: authHeaders(accessToken),
+  })
+  return parseJsonResponse<ExternalPartyResponse>(listResponse, 'Failed to reload supplier after contact add')
 }
 
 export async function createDealer(

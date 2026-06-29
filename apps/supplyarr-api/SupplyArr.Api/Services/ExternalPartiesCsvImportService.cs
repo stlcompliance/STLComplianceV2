@@ -90,10 +90,19 @@ public sealed class ExternalPartiesCsvImportService(
                 new CreateExternalPartyRequest(
                     row.PartyKey,
                     row.PartyType,
+                    null,
+                    null,
                     row.DisplayName,
                     row.LegalName,
                     row.TaxIdentifier,
-                    row.Notes),
+                    row.Notes,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null),
                 cancellationToken);
 
             if (!string.Equals(row.ApprovalStatus, "pending", StringComparison.OrdinalIgnoreCase))

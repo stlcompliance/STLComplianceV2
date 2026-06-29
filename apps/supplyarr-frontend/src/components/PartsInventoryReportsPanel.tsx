@@ -222,7 +222,7 @@ export function PartsInventoryReportsPanel({
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
                       On hand {part.quantityOnHand} · Reserved {part.quantityReserved} · Available{' '}
-                      {part.quantityAvailable} · {part.vendorLinkCount} vendor links
+                      {part.quantityAvailable} · {part.vendorLinkCount} supplier links
                     </p>
                   </button>
                 </li>

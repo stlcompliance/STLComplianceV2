@@ -22,7 +22,7 @@
 
 ## R0 Trust Gate pass
 
-Status: Clear for R0 with one test-runtime follow-up noted below.
+Status: Clear for R0.
 
 Pass notes:
 
@@ -50,12 +50,11 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "TenantLifecycle|LaunchDestinationReconciliation|WorkerHealthOrchestration"` — passed, 39 tests.
 - `npm test -- TenantLifecycleSettingsPanel.test.tsx` from `apps/suite-frontend` — passed, 2 tests.
-- `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj` — attempted twice and timed out at 4 minutes and 7 minutes before returning a result; focused R0 coverage above passed.
+- `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` — passed, 421 tests in 10m 57s.
 
 Remaining blockers:
 
 - No known NexArr R0 production-truth blocker remains in the audited launch/session/tenant lifecycle slice.
-- Follow-up: investigate full `STLCompliance.NexArr.Auth.Tests` project runtime so future product passes can use the complete suite without timeout.
 
 ## R1 Foundation spine pass
 
@@ -116,7 +115,7 @@ Tests run:
 Remaining blockers:
 
 - Advanced R12 IAM scope remains deferred until implementation-ready: access review/certification campaigns, temporary privileged access and break-glass use, identity incident response, permission simulator, external collaborator identity, adaptive authentication, identity threat detection, policy-as-code, BYO IdP production cutover, SCIM provisioning, lifecycle automation, credentialless workload identity, and managed-service delegation.
-- Full project test runtime remains a known follow-up from earlier NexArr passes; focused R12/R0/R1 identity and integration coverage passed.
+- Full `STLCompliance.NexArr.Auth.Tests` runtime now completes successfully in the current repo state; focused R12/R0/R1 identity and integration coverage remains available for faster targeted passes.
 
 R12 product result: NexArr is clear for the R12 suite gate with the advanced target backlog explicitly deferred.
 

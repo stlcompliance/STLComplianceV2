@@ -30,9 +30,7 @@ import {
   createPurchaseRequestFromDemandRef,
   getDemandRefs,
 
-  createVendor,
   createSupplier,
-  createDealer,
   updateParty,
   updatePartyApprovalStatus,
   updatePartyStatus,
@@ -44,8 +42,6 @@ import {
   approvePurchaseOrder,
 
   cancelPurchaseOrder,
-
-  getDealers,
 
   getMe,
 
@@ -61,8 +57,6 @@ import {
   getSuppliers,
 
   issuePurchaseOrder,
-
-  getVendors,
 
   rejectPurchaseRequest,
 
@@ -105,32 +99,19 @@ export function useSupplyArrWorkspaceState() {
 
   const queryClient = useQueryClient()
 
-
-
-  const [vendorKey, setVendorKey] = useState('')
-
-  const [vendorName, setVendorName] = useState('')
-
-  const [vendorLegalName, setVendorLegalName] = useState('')
-
-  const [vendorTaxId, setVendorTaxId] = useState('')
-
-  const [vendorNotes, setVendorNotes] = useState('')
-
   const [supplierKey, setSupplierKey] = useState('')
   const [supplierName, setSupplierName] = useState('')
   const [supplierLegalName, setSupplierLegalName] = useState('')
   const [supplierTaxId, setSupplierTaxId] = useState('')
   const [supplierNotes, setSupplierNotes] = useState('')
-
-  const [dealerKey, setDealerKey] = useState('')
-  const [dealerName, setDealerName] = useState('')
-  const [dealerLegalName, setDealerLegalName] = useState('')
-  const [dealerTaxId, setDealerTaxId] = useState('')
-  const [dealerNotes, setDealerNotes] = useState('')
-
-
-
+  const [supplierParentPartyId, setSupplierParentPartyId] = useState('')
+  const [supplierUnitKind, setSupplierUnitKind] = useState('identity')
+  const [supplierServiceTypes, setSupplierServiceTypes] = useState('products,parts')
+  const [supplierAddressLine1, setSupplierAddressLine1] = useState('')
+  const [supplierLocality, setSupplierLocality] = useState('')
+  const [supplierRegionCode, setSupplierRegionCode] = useState('')
+  const [supplierPostalCode, setSupplierPostalCode] = useState('')
+  const [supplierCountryCode, setSupplierCountryCode] = useState('US')
   const [catalogKey, setCatalogKey] = useState('')
 
   const [catalogName, setCatalogName] = useState('')
@@ -258,20 +239,6 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
-
-
-  const vendorsQuery = useQuery({
-
-    queryKey: ['supplyarr-vendors', session?.accessToken],
-
-    queryFn: () => getVendors(session!.accessToken),
-
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
-
   const suppliersQuery = useQuery({
 
     queryKey: ['supplyarr-suppliers', session?.accessToken],
@@ -281,20 +248,6 @@ export function useSupplyArrWorkspaceState() {
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
 
   })
-
-
-
-  const dealersQuery = useQuery({
-
-    queryKey: ['supplyarr-dealers', session?.accessToken],
-
-    queryFn: () => getDealers(session!.accessToken),
-
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
-
-  })
-
-
 
   const catalogsQuery = useQuery({
 
@@ -438,52 +391,26 @@ export function useSupplyArrWorkspaceState() {
 
   })
 
-
-
-  const createVendorMutation = useMutation({
-
-    mutationFn: () =>
-
-      createVendor(session!.accessToken, {
-
-        partyKey: vendorKey,
-
-        displayName: vendorName,
-
-        legalName: vendorLegalName,
-
-        taxIdentifier: vendorTaxId || null,
-
-        notes: vendorNotes,
-
-      }),
-
-    onSuccess: async () => {
-
-      setVendorKey('')
-
-      setVendorName('')
-
-      setVendorLegalName('')
-
-      setVendorTaxId('')
-
-      setVendorNotes('')
-
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendors'] })
-
-    },
-
-  })
-
   const createSupplierMutation = useMutation({
     mutationFn: () =>
       createSupplier(session!.accessToken, {
         partyKey: supplierKey,
+        partyType: 'supplier',
+        parentPartyId: supplierParentPartyId || null,
+        unitKind: supplierUnitKind,
         displayName: supplierName,
         legalName: supplierLegalName,
         taxIdentifier: supplierTaxId || null,
         notes: supplierNotes,
+        serviceTypes: supplierServiceTypes
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean),
+        addressLine1: supplierAddressLine1 || null,
+        locality: supplierLocality || null,
+        regionCode: supplierRegionCode || null,
+        postalCode: supplierPostalCode || null,
+        countryCode: supplierCountryCode || null,
       }),
     onSuccess: async () => {
       setSupplierKey('')
@@ -491,29 +418,17 @@ export function useSupplyArrWorkspaceState() {
       setSupplierLegalName('')
       setSupplierTaxId('')
       setSupplierNotes('')
+      setSupplierParentPartyId('')
+      setSupplierUnitKind('identity')
+      setSupplierServiceTypes('products,parts')
+      setSupplierAddressLine1('')
+      setSupplierLocality('')
+      setSupplierRegionCode('')
+      setSupplierPostalCode('')
+      setSupplierCountryCode('US')
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
-
-  const createDealerMutation = useMutation({
-    mutationFn: () =>
-      createDealer(session!.accessToken, {
-        partyKey: dealerKey,
-        displayName: dealerName,
-        legalName: dealerLegalName,
-        taxIdentifier: dealerTaxId || null,
-        notes: dealerNotes,
-      }),
-    onSuccess: async () => {
-      setDealerKey('')
-      setDealerName('')
-      setDealerLegalName('')
-      setDealerTaxId('')
-      setDealerNotes('')
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-dealers'] })
-    },
-  })
-
   const updatePartyMutation = useMutation({
     mutationFn: ({
       route,
@@ -1186,8 +1101,7 @@ export function useSupplyArrWorkspaceState() {
       (po) => po.status === 'issued' && po.lines.some((l) => l.quantityRemaining > 0),
 
     ) ?? []
-
-  const vendors = vendorsQuery.data ?? []
+  const supplierDirectory = suppliersQuery.data ?? []
 
   return {
     handoffRedirect,
@@ -1197,21 +1111,19 @@ export function useSupplyArrWorkspaceState() {
     session: session!,
     accessToken,
     apiError,
-    vendorKey,
-    vendorName,
-    vendorLegalName,
-    vendorTaxId,
-    vendorNotes,
     supplierKey,
     supplierName,
     supplierLegalName,
     supplierTaxId,
     supplierNotes,
-    dealerKey,
-    dealerName,
-    dealerLegalName,
-    dealerTaxId,
-    dealerNotes,
+    supplierParentPartyId,
+    supplierUnitKind,
+    supplierServiceTypes,
+    supplierAddressLine1,
+    supplierLocality,
+    supplierRegionCode,
+    supplierPostalCode,
+    supplierCountryCode,
     catalogKey,
     catalogName,
     catalogDescription,
@@ -1272,9 +1184,8 @@ export function useSupplyArrWorkspaceState() {
     demandPrTitle,
     demandPrNotes,
     meQuery,
-    vendorsQuery,
     suppliersQuery,
-    dealersQuery,
+    supplierDirectory,
     catalogsQuery,
     partsQuery,
     substitutionsQuery,
@@ -1288,9 +1199,7 @@ export function useSupplyArrWorkspaceState() {
     reorderEvaluationQuery,
     contractsQuery,
     demandRefsQuery,
-    createVendorMutation,
     createSupplierMutation,
-    createDealerMutation,
     updatePartyMutation,
     updatePartyApprovalMutation,
     updatePartyStatusMutation,
@@ -1330,22 +1239,19 @@ export function useSupplyArrWorkspaceState() {
     canReadSupplyReadiness,
     approvedPurchaseRequests,
     issuedPurchaseOrders,
-    vendors,
-    setVendorKey,
-    setVendorName,
-    setVendorLegalName,
-    setVendorTaxId,
-    setVendorNotes,
     setSupplierKey,
     setSupplierName,
     setSupplierLegalName,
     setSupplierTaxId,
     setSupplierNotes,
-    setDealerKey,
-    setDealerName,
-    setDealerLegalName,
-    setDealerTaxId,
-    setDealerNotes,
+    setSupplierParentPartyId,
+    setSupplierUnitKind,
+    setSupplierServiceTypes,
+    setSupplierAddressLine1,
+    setSupplierLocality,
+    setSupplierRegionCode,
+    setSupplierPostalCode,
+    setSupplierCountryCode,
     setCatalogKey,
     setCatalogName,
     setCatalogDescription,

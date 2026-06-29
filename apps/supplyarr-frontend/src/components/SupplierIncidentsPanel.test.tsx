@@ -142,6 +142,7 @@ describe('SupplierIncidentsPanel', () => {
               partyKey: 'V-1',
               displayName: 'Acme Supply',
               partyType: 'vendor',
+              unitKind: 'identity',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Acme Supply LLC',
@@ -156,7 +157,7 @@ describe('SupplierIncidentsPanel', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.change(screen.getByLabelText(/Vendor or supplier party/i), {
+    fireEvent.change(screen.getByLabelText(/Supplier identity or sub-unit/i), {
       target: { value: 'party-1' },
     })
 
@@ -181,6 +182,7 @@ describe('SupplierIncidentsPanel', () => {
               partyKey: 'V-1',
               displayName: 'Acme Supply',
               partyType: 'vendor',
+              unitKind: 'identity',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Acme Supply LLC',
@@ -195,6 +197,7 @@ describe('SupplierIncidentsPanel', () => {
               partyKey: 'S-1',
               displayName: 'Bravo Logistics',
               partyType: 'supplier',
+              unitKind: 'sub_unit',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Bravo Logistics Inc',
@@ -211,10 +214,10 @@ describe('SupplierIncidentsPanel', () => {
 
     expect(screen.getByTestId('supplier-incidents-panel')).toBeInTheDocument()
     expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
-      'vendor · V-1 · Acme Supply',
+      'supplier identity · V-1 · Acme Supply',
     )
     expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
-      'supplier · S-1 · Bravo Logistics',
+      'sub-unit · S-1 · Bravo Logistics',
     )
 
     fireEvent.change(screen.getByTestId('supplier-incident-party-picker'), {

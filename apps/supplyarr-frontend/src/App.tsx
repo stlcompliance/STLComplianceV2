@@ -9,7 +9,6 @@ import { DocumentsPage } from './pages/documents/DocumentsPage'
 import { OnboardingPage } from './pages/onboarding/OnboardingPage'
 import { PerformancePage } from './pages/performance/PerformancePage'
 import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage'
-import { PartiesPage } from './pages/parties/PartiesPage'
 import { QuotesPage } from './pages/quotes/QuotesPage'
 import { RfqsPage } from './pages/rfqs/RfqsPage'
 import { RiskPage } from './pages/risk/RiskPage'
@@ -51,10 +50,10 @@ export default function App() {
             <Route path="/suppliers/details" element={<SuppliersPage />} />
             <Route path="/suppliers/create" element={<SuppliersPage />} />
             <Route path="/imports" element={<ImportsPage />} />
-            <Route path="/parties" element={<PartiesPage />} />
-            <Route path="/parties/drawer" element={<PartiesPage />} />
-            <Route path="/parties/details" element={<PartiesPage />} />
-            <Route path="/parties/create" element={<PartiesPage />} />
+            <Route path="/parties" element={<Navigate to="/suppliers" replace />} />
+            <Route path="/parties/drawer" element={<Navigate to="/suppliers/drawer" replace />} />
+            <Route path="/parties/details" element={<Navigate to="/suppliers/details" replace />} />
+            <Route path="/parties/create" element={<Navigate to="/suppliers/create" replace />} />
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/rfqs" element={<RfqsPage />} />
             <Route path="/quotes" element={<QuotesPage />} />

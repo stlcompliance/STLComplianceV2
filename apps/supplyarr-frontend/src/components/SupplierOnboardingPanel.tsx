@@ -109,7 +109,7 @@ export function SupplierOnboardingPanel({
     () =>
       onboardableParties.map((party) => ({
         value: party.partyId,
-        label: `${party.displayName} (${party.partyType})`,
+        label: `${party.displayName} (${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'})`,
       })),
     [onboardableParties],
   )
@@ -207,7 +207,7 @@ export function SupplierOnboardingPanel({
     >
       <h2 className="text-lg font-medium text-white">Supplier onboarding</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Register compliance documents, submit for review, and approve vendor or supplier parties.
+        Register compliance documents, submit supplier identities or sub-units for review, and approve them for sourcing.
       </p>
       {requirementsQuery.isError ? (
         <div className="mt-3">
@@ -267,7 +267,7 @@ export function SupplierOnboardingPanel({
           onChange={setSelectedPartyId}
           options={partyOptions}
           selectedOption={selectedPartyOption}
-          placeholder="Search vendors or suppliers…"
+          placeholder="Search supplier identities or sub-units…"
           testId="supplier-onboarding-party-picker"
         />
         <label htmlFor="supplier-onboarding-notes" className="text-sm text-slate-400">
@@ -349,12 +349,12 @@ export function SupplierOnboardingPanel({
 
           {documentsQuery.isError ? (
             <div className="mt-3">
-              <ApiErrorCallout
-                title="Unable to load compliance documents"
-                message={getErrorMessage(documentsQuery.error, 'Failed to load vendor compliance documents.')}
-                onRetry={() => void documentsQuery.refetch()}
-                retryLabel="Retry documents"
-              />
+          <ApiErrorCallout
+            title="Unable to load compliance documents"
+            message={getErrorMessage(documentsQuery.error, 'Failed to load supplier compliance documents.')}
+            onRetry={() => void documentsQuery.refetch()}
+            retryLabel="Retry documents"
+          />
             </div>
           ) : null}
 

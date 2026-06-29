@@ -257,9 +257,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Vendor reports</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Supplier reports</h2>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-            Procurement activity, catalog links, lead time, and receipt rollups per vendor.
+            Procurement activity, catalog links, lead time, and receipt rollups per supplier identity or sub-unit.
           </p>
         </div>
         {canExport ? (
@@ -276,7 +276,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
         <label htmlFor="vendor-report-approval-filter" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
-          Vendor approval filter
+          Supplier approval filter
           <select
             id="vendor-report-approval-filter"
             className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
@@ -296,19 +296,19 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             checked={activeOnly}
             onChange={(event) => setActiveOnly(event.target.checked)}
           />
-          Active vendors only
+          Active suppliers only
         </label>
       </div>
 
       {summaryQuery.isLoading && (
-        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading vendor report summary…</p>
+        <p className="mt-3 text-sm text-[var(--color-text-muted)]">Loading supplier report summary…</p>
       )}
 
       {summaryQuery.isError && (
         <div className="mt-3">
           <ApiErrorCallout
-            title="Vendor report unavailable"
-            message={getErrorMessage(summaryQuery.error, 'Failed to load vendor report summary.')}
+            title="Supplier report unavailable"
+            message={getErrorMessage(summaryQuery.error, 'Failed to load supplier report summary.')}
             retryLabel="Retry summary"
             onRetry={() => {
               void summaryQuery.refetch()
@@ -321,7 +321,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
         <div className="mt-3">
           <ApiErrorCallout
             title="CSV export failed"
-            message={getErrorMessage(exportMutation.error, 'Unable to export vendor report CSV.')}
+            message={getErrorMessage(exportMutation.error, 'Unable to export supplier report CSV.')}
           />
         </div>
       )}
@@ -340,7 +340,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           </div>
 
           {summaryQuery.data.vendors.length === 0 ? (
-            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No vendors match the current filters.</p>
+            <p className="mt-4 text-sm text-[var(--color-text-muted)]">No suppliers match the current filters.</p>
           ) : (
             <ul className="mt-4 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] text-sm">
               {summaryQuery.data.vendors.map((vendor) => (
@@ -365,7 +365,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                         </div>
                       </div>
                       <span className="text-xs text-[var(--color-text-muted)]">
-                        {vendor.partVendorLinkCount} catalog links
+                          {vendor.partVendorLinkCount} source links
                       </span>
                     </div>
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">
@@ -394,13 +394,13 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-semibold uppercase tracking-wide text-[var(--color-text-muted)]">
-                    Vendor scorecard
+                    Supplier scorecard
                   </h4>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                     {scorecard.status} · {scorecard.score}/100
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                    Built from catalog coverage, recent fulfillment, return, warranty, and approval signals.
+                    Built from source coverage, recent fulfillment, return, warranty, and approval signals.
                   </p>
                 </div>
                 <span
@@ -417,7 +417,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <Metric label="Catalog coverage" value={`${scorecard.catalogCoverage}%`} />
+                <Metric label="Source coverage" value={`${scorecard.catalogCoverage}%`} />
                 <Metric label="Recent fill rate" value={formatPercent(scorecard.recentFillRate)} />
                 <Metric label="Fully received PO rate" value={formatPercent(scorecard.fullyReceivedOrderRate)} />
                 <Metric label="Average lead time" value={formatDays(scorecard.averageLeadTimeDays)} />
@@ -458,7 +458,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   </ul>
                 </div>
               ) : (
-                <p className="mt-4 text-xs text-[var(--color-text-muted)]">No linked compliance documents found for this vendor.</p>
+                <p className="mt-4 text-xs text-[var(--color-text-muted)]">No linked compliance documents found for this supplier.</p>
               )}
 
               <p className="mt-3 text-xs text-[var(--color-text-muted)]">
@@ -486,7 +486,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           {detailQuery.data.partLinks.length > 0 && (
             <div className="mt-4">
               <h4 className="text-xs font-medium uppercase tracking-wide text-[var(--color-text-muted)]">
-                Catalog links
+                Supplier source links
               </h4>
               <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]">
                 {detailQuery.data.partLinks.map((row) => (

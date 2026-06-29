@@ -62,7 +62,7 @@ export function ContractsImportPanel({ accessToken, canManage, onComplete }: Con
           <div>
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Contract import</h2>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              Paste or upload a contracts CSV, validate it, and import vendor agreements with dry-run support.
+              Paste or upload a contracts CSV, validate it, and import supplier agreements with dry-run support.
             </p>
           </div>
         </div>

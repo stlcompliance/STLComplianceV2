@@ -34,7 +34,7 @@ export function ForgivingSearchBar({ accessToken, canSearch }: ForgivingSearchBa
             label: `${item.primaryKey} · ${item.title}`,
           }))
         }}
-        placeholder="Search vendors, parts, SKUs, PR/PO…"
+        placeholder="Search suppliers, parts, SKUs, PR/PO…"
         testId="forgiving-search-picker"
       />
     </div>

@@ -57,9 +57,14 @@ Tests run:
 - `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.StaffArr.Auth.Tests.StaffArrHandoffApiTests.Handoff_redeem_succeeds_after_legacy_product_access_revocation" --logger "console;verbosity=normal"`
 - `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName=STLCompliance.StaffArr.Auth.Tests.StaffArrHandoffApiTests.Handoff_redeem_happy_path_returns_session_and_me_works|FullyQualifiedName=STLCompliance.StaffArr.Auth.Tests.StaffArrHandoffApiTests.V1_handoff_session_and_me_aliases_work|FullyQualifiedName=STLCompliance.StaffArr.Auth.Tests.StaffArrHandoffApiTests.Me_allows_users_after_non_staffarr_launch_context|FullyQualifiedName=STLCompliance.StaffArr.Auth.Tests.StaffArrHandoffApiTests.Session_bootstrap_returns_claim_backed_identity" --logger "console;verbosity=minimal"`
 - `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~StaffArrPersonAccountAccessTests" --logger "console;verbosity=normal"`
+- `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~StaffArrHandoffApiTests" --logger "console;verbosity=minimal"` — passed, 56 tests in 7m 16s.
+- `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --logger "console;verbosity=minimal"` — timed out after 20 minutes in the current repo state.
 - `npm test -- ProductWorkspaceLayout.test.tsx MeSelfServicePortalPanel.test.tsx` from `apps/staffarr-frontend`
 
-Remaining blockers: none identified for StaffArr R0 in this pass. A broad `StaffArrHandoffApiTests` class-level run was not used as completion evidence because the class is large and exceeded the local command timeout; the changed R0 handoff/session tests were run by exact method filters instead.
+Remaining blockers:
+
+- Deferred R0 blocker: the full `STLCompliance.StaffArr.Auth.Tests` project still does not complete in the current repo state within a 20-minute local `dotnet test --no-build` window, so StaffArr R0 remains documented against focused trust-gate coverage rather than a clean full-project pass.
+- `StaffArrHandoffApiTests` is no longer the blocker by itself; a full class-level run now passes locally (`56` tests in `7m 16s`), which narrows the remaining runtime investigation to the broader StaffArr auth suite.
 
 ## R1 Foundation spine pass
 

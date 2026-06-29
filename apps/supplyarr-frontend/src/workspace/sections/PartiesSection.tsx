@@ -1,825 +1,569 @@
-import {
-  DetailBadge as Badge,
-  DetailEmptyState as EmptyPanel,
-  ProfileDetailsLayout,
-  type DetailTone,
-} from '@stl/shared-ui'
+import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  AlertTriangle,
-  Boxes,
-  Building2,
-  CalendarClock,
-  CheckCircle2,
-  CircleCheck,
-  DollarSign,
-  FileText,
-  History,
-  Mail,
-  MapPin,
-  MoreHorizontal,
-  PackagePlus,
-  Pencil,
-  Phone,
-  Plus,
-  ShieldCheck,
-  Star,
-  Truck,
-  Users,
-} from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
-import { useMemo } from 'react'
-import {
-  getPartyVendorRestrictionEnforcement,
-  getPartyRegistryMetadata,
-  getSupplierOnboardingByParty,
-  getVendorSupplyReadiness,
-  listAuditHistory,
-  listPartyComplianceDocuments,
-  listPartySupplierIncidents,
-  listPartyVendorRestrictions,
-} from '../../api/client'
-import type {
-  CreatePartyContactRequest,
-  ExternalPartyResponse,
-  PartyComplianceDocumentResponse,
-  UpdateExternalPartyRequest,
-} from '../../api/types'
-import { PartyRegistryPanel } from '../../components/PartyRegistryPanel'
+  ApiErrorCallout,
+  ControlledSelect,
+  getErrorMessage,
+  type PickerOption,
+} from '@stl/shared-ui'
+
+import { getPartyRegistryMetadata } from '../../api/client'
+import type { ExternalPartyResponse } from '../../api/types'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
-type PartiesViewMode = 'drawer' | 'details' | 'create'
-type Tone = DetailTone
+type SuppliersViewMode = 'drawer' | 'details' | 'create'
 
-const detailTabs = [
-  'Overview',
-  'Contacts',
-  'Locations',
-  'Approvals',
-  'Catalog',
-  'Pricing',
-  'RFQs',
-  'Purchase Orders',
-  'Contracts',
-  'Documents',
-  'Compliance',
-  'Risk',
-  'Performance',
-  'Exceptions',
-  'Corrective Actions',
-  'Messages',
-  'Quotes',
-  'History',
+const fallbackUnitKindOptions: PickerOption[] = [
+  { value: 'identity', label: 'Supplier identity' },
+  { value: 'sub_unit', label: 'Supplier sub-unit' },
 ]
 
-function partyRegistryHandlers(
-  s: SupplyArrWorkspaceState,
-  route: 'vendors' | 'suppliers' | 'dealers',
-) {
-  return {
-    onUpdateParty: (partyId: string, request: UpdateExternalPartyRequest) =>
-      s.updatePartyMutation.mutate({ route, partyId, request }),
-    onUpdateApprovalStatus: (partyId: string, approvalStatus: string) =>
-      s.updatePartyApprovalMutation.mutate({ route, partyId, approvalStatus }),
-    onUpdateStatus: (partyId: string, status: string) =>
-      s.updatePartyStatusMutation.mutate({ route, partyId, status }),
-    onAddContact: (partyId: string, request: CreatePartyContactRequest) =>
-      s.addPartyContactMutation.mutate({ route, partyId, request }),
-    isUpdating: s.updatePartyMutation.isPending,
-    isUpdatingApproval: s.updatePartyApprovalMutation.isPending,
-    isUpdatingStatus: s.updatePartyStatusMutation.isPending,
-    isAddingContact: s.addPartyContactMutation.isPending,
-  }
-}
+const fallbackServiceTypeOptions: PickerOption[] = [
+  { value: 'products', label: 'Products' },
+  { value: 'parts', label: 'Parts' },
+  { value: 'maintenance', label: 'Maintenance' },
+  { value: 'repair', label: 'Repair' },
+  { value: 'warranty', label: 'Warranty' },
+  { value: 'field_service', label: 'Field service' },
+  { value: 'logistics', label: 'Logistics' },
+]
 
 function humanize(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-function formatDate(value: string | null | undefined): string {
+function formatAddress(party: ExternalPartyResponse | null): string {
+  if (!party) return 'Not recorded'
+  const parts = [
+    party.addressLine1,
+    party.locality,
+    party.regionCode,
+    party.postalCode,
+    party.countryCode,
+  ].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : 'Not recorded'
+}
+
+function formatServiceCoverage(serviceTypes: string[] | undefined): string {
+  if (!serviceTypes || serviceTypes.length === 0) return 'Not recorded'
+  return serviceTypes.map((serviceType) => humanize(serviceType)).join(', ')
+}
+
+function formatTimestamp(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'Not recorded'
-  return date.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })
+  return Number.isNaN(date.getTime())
+    ? 'Not recorded'
+    : date.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })
 }
 
-function daysUntil(value: string | null | undefined): number | null {
-  if (!value) return null
-  const timestamp = Date.parse(value)
-  if (!Number.isFinite(timestamp)) return null
-  return Math.ceil((timestamp - Date.now()) / 86_400_000)
-}
-
-function formatCurrency(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) return 'Not tracked'
-  return new Intl.NumberFormat(undefined, {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: value >= 1000 ? 0 : 2,
-  }).format(value)
-}
-
-function statusTone(value: string | null | undefined): Tone {
-  const normalized = value?.toLowerCase() ?? ''
-  if (['approved', 'active', 'current', 'satisfied', 'ready'].includes(normalized)) return 'good'
-  if (['pending', 'review', 'submitted', 'expiring_soon'].includes(normalized)) return 'warn'
-  if (['restricted', 'inactive', 'blocked', 'rejected', 'expired', 'not_ready'].includes(normalized)) return 'bad'
-  return 'neutral'
-}
-
-function normalizeDocumentStatus(document: PartyComplianceDocumentResponse): string {
-  if (document.reviewStatus === 'approved' && document.expiresAt) {
-    const remaining = daysUntil(document.expiresAt)
-    if (remaining != null && remaining < 0) return 'Expired'
-    if (remaining != null && remaining <= 60) return 'Review'
-  }
-  return humanize(document.reviewStatus)
-}
-
-function PartiesRegistryWorkspace({ state: s, mode }: { state: SupplyArrWorkspaceState; mode: PartiesViewMode }) {
-  const vendorHandlers = partyRegistryHandlers(s, 'vendors')
-  const supplierHandlers = partyRegistryHandlers(s, 'suppliers')
-  const dealerHandlers = partyRegistryHandlers(s, 'dealers')
-  const metadataQuery = useQuery({
-    queryKey: ['supplyarr-party-registry-metadata', s.accessToken],
-    queryFn: () => getPartyRegistryMetadata(s.accessToken),
-    enabled: Boolean(s.accessToken && s.canReadParties),
-  })
-  const metadata = metadataQuery.data
-
+function EmptyPanel({ title, description }: { title: string; description: string }) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-party-registry-workspace">
-      <PartyRegistryPanel
-        mode={mode}
-        title="Vendors"
-        partyType="vendors"
-        parties={s.vendors}
-        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
-        statusOptions={metadata?.statusOptions ?? []}
-        canManage={s.canManage}
-        isLoading={s.vendorsQuery.isLoading}
-        partyKey={s.vendorKey}
-        displayName={s.vendorName}
-        legalName={s.vendorLegalName}
-        taxIdentifier={s.vendorTaxId}
-        notes={s.vendorNotes}
-        onPartyKeyChange={s.setVendorKey}
-        onDisplayNameChange={s.setVendorName}
-        onLegalNameChange={s.setVendorLegalName}
-        onTaxIdentifierChange={s.setVendorTaxId}
-        onNotesChange={s.setVendorNotes}
-        onCreate={() => s.createVendorMutation.mutate()}
-        isCreating={s.createVendorMutation.isPending}
-        {...vendorHandlers}
-      />
-      <PartyRegistryPanel
-        mode={mode}
-        title="Suppliers"
-        partyType="suppliers"
-        parties={s.suppliersQuery.data ?? []}
-        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
-        statusOptions={metadata?.statusOptions ?? []}
-        canManage={s.canManage}
-        isLoading={s.suppliersQuery.isLoading}
-        partyKey={s.supplierKey}
-        displayName={s.supplierName}
-        legalName={s.supplierLegalName}
-        taxIdentifier={s.supplierTaxId}
-        notes={s.supplierNotes}
-        onPartyKeyChange={s.setSupplierKey}
-        onDisplayNameChange={s.setSupplierName}
-        onLegalNameChange={s.setSupplierLegalName}
-        onTaxIdentifierChange={s.setSupplierTaxId}
-        onNotesChange={s.setSupplierNotes}
-        onCreate={() => s.createSupplierMutation.mutate()}
-        isCreating={s.createSupplierMutation.isPending}
-        {...supplierHandlers}
-      />
-      <PartyRegistryPanel
-        mode={mode}
-        title="Dealers"
-        partyType="dealers"
-        parties={s.dealersQuery.data ?? []}
-        approvalStatusOptions={metadata?.approvalStatusOptions ?? []}
-        statusOptions={metadata?.statusOptions ?? []}
-        canManage={s.canManage}
-        isLoading={s.dealersQuery.isLoading}
-        partyKey={s.dealerKey}
-        displayName={s.dealerName}
-        legalName={s.dealerLegalName}
-        taxIdentifier={s.dealerTaxId}
-        notes={s.dealerNotes}
-        onPartyKeyChange={s.setDealerKey}
-        onDisplayNameChange={s.setDealerName}
-        onLegalNameChange={s.setDealerLegalName}
-        onTaxIdentifierChange={s.setDealerTaxId}
-        onNotesChange={s.setDealerNotes}
-        onCreate={() => s.createDealerMutation.mutate()}
-        isCreating={s.createDealerMutation.isPending}
-        {...dealerHandlers}
-      />
+    <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-5">
+      <p className="text-sm font-semibold text-[var(--color-text-primary)]">{title}</p>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{description}</p>
     </div>
   )
 }
 
-function PartiesProfile({ state: s, parties }: { state: SupplyArrWorkspaceState; parties: ExternalPartyResponse[] }) {
-  const location = useLocation()
-  const requestedPartyId = useMemo(() => new URLSearchParams(location.search).get('partyId') ?? '', [location.search])
-  const selectedParty = useMemo(() => {
-    if (requestedPartyId) {
-      const requested = parties.find((party) => party.partyId === requestedPartyId)
-      if (requested) return requested
-    }
-
-    return (
-      parties.find((party) => party.approvalStatus === 'approved' && party.status === 'active') ??
-      parties.find((party) => party.status === 'active') ??
-      parties[0] ??
-      null
-    )
-  }, [parties, requestedPartyId])
-
-  const selectedPartyId = selectedParty?.partyId ?? ''
-  const hasSelectedParty = Boolean(selectedParty && selectedPartyId)
-  const detailQueriesEnabled = Boolean(s.accessToken && hasSelectedParty)
-
-  const readinessQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-readiness', s.accessToken, selectedPartyId],
-    queryFn: () => getVendorSupplyReadiness(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canReadSupplyReadiness,
-  })
-  const documentsQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-documents', s.accessToken, selectedPartyId],
-    queryFn: () => listPartyComplianceDocuments(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canReadParties,
-  })
-  const onboardingQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-onboarding', s.accessToken, selectedPartyId],
-    queryFn: () => getSupplierOnboardingByParty(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && (s.canManage || s.canApprovePr),
-    retry: false,
-  })
-  const restrictionsQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-restrictions', s.accessToken, selectedPartyId],
-    queryFn: () => listPartyVendorRestrictions(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canManage,
-  })
-  const enforcementQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-enforcement', s.accessToken, selectedPartyId],
-    queryFn: () => getPartyVendorRestrictionEnforcement(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canManage,
-  })
-  const incidentsQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-incidents', s.accessToken, selectedPartyId],
-    queryFn: () => listPartySupplierIncidents(s.accessToken, selectedPartyId),
-    enabled: detailQueriesEnabled && s.canManage,
-  })
-  const auditQuery = useQuery({
-    queryKey: ['supplyarr-party-profile-audit', s.accessToken, selectedPartyId],
-    queryFn: () => listAuditHistory(s.accessToken, { targetId: selectedPartyId, limit: 5 }),
-    enabled: detailQueriesEnabled && s.canReadAuditHistory,
-  })
-
-  if (!selectedParty) {
-    return (
-      <div className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8 text-center">
-        <Building2 className="mx-auto h-10 w-10 text-[var(--color-accent)]" />
-        <h1 className="mt-4 text-2xl font-bold text-[var(--color-text-primary)]">No supplier profile selected</h1>
-        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Create or load a vendor, supplier, or dealer to view its profile.</p>
-        <Link
-          to="/suppliers/create"
-          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
-        >
-          <Plus className="h-4 w-4" />
-          Add party
-        </Link>
-      </div>
-    )
+function sortSupplierDirectory(parties: ExternalPartyResponse[]): ExternalPartyResponse[] {
+  const roots = parties
+    .filter((party) => !party.parentPartyId)
+    .sort((left, right) => left.displayName.localeCompare(right.displayName))
+  const childrenByParent = new Map<string, ExternalPartyResponse[]>()
+  for (const party of parties.filter((item) => item.parentPartyId)) {
+    const siblings = childrenByParent.get(party.parentPartyId!) ?? []
+    siblings.push(party)
+    childrenByParent.set(party.parentPartyId!, siblings)
+  }
+  for (const siblings of childrenByParent.values()) {
+    siblings.sort((left, right) => left.displayName.localeCompare(right.displayName))
   }
 
-  const primaryContact = selectedParty.contacts.find((contact) => contact.isPrimary) ?? selectedParty.contacts[0] ?? null
-  const parts = s.partsQuery?.data ?? []
-  const partyPartLinks = parts.flatMap((part) =>
+  const ordered: ExternalPartyResponse[] = []
+  for (const root of roots) {
+    ordered.push(root)
+    ordered.push(...(childrenByParent.get(root.partyId) ?? []))
+  }
+
+  const orphanChildren = parties
+    .filter((party) => party.parentPartyId && !parties.some((candidate) => candidate.partyId === party.parentPartyId))
+    .sort((left, right) => left.displayName.localeCompare(right.displayName))
+  for (const orphan of orphanChildren) {
+    if (!ordered.some((candidate) => candidate.partyId === orphan.partyId)) {
+      ordered.push(orphan)
+    }
+  }
+
+  return ordered
+}
+
+function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorkspaceState; mode: SuppliersViewMode }) {
+  const metadataQuery = useQuery({
+    queryKey: ['supplyarr-supplier-directory-metadata', s.accessToken],
+    queryFn: () => getPartyRegistryMetadata(s.accessToken),
+    enabled: Boolean(s.accessToken && s.canReadParties),
+  })
+
+  const parties = useMemo(
+    () => sortSupplierDirectory(s.suppliersQuery.data ?? []),
+    [s.suppliersQuery.data],
+  )
+  const [selectedSupplierId, setSelectedSupplierId] = useState('')
+  const selectedSupplier = useMemo(
+    () => parties.find((party) => party.partyId === selectedSupplierId)
+      ?? parties.find((party) => !party.parentPartyId)
+      ?? parties[0]
+      ?? null,
+    [parties, selectedSupplierId],
+  )
+  const childUnits = useMemo(
+    () => parties.filter((party) => party.parentPartyId === selectedSupplier?.partyId),
+    [parties, selectedSupplier?.partyId],
+  )
+  const rootSupplierOptions = parties
+    .filter((party) => !party.parentPartyId)
+    .map<PickerOption>((party) => ({ value: party.partyId, label: party.displayName }))
+  const unitKindOptions = (metadataQuery.data?.unitKindOptions ?? fallbackUnitKindOptions)
+    .map<PickerOption>((option) => ({ value: option.value, label: option.label }))
+  const serviceTypeOptions = (metadataQuery.data?.serviceTypeOptions ?? fallbackServiceTypeOptions)
+    .map<PickerOption>((option) => ({ value: option.value, label: option.label }))
+  const selectedPartyContracts = (s.contractsQuery.data ?? []).filter(
+    (contract) => contract.vendorPartyId === selectedSupplier?.partyId,
+  )
+  const linkedItems = (s.partsQuery.data ?? []).flatMap((part) =>
     part.vendorLinks
-      .filter((link) => link.partyId === selectedParty.partyId)
+      .filter((link) => link.partyId === selectedSupplier?.partyId)
       .map((link) => ({ part, link })),
   )
-  const purchaseOrders = (s.purchaseOrdersQuery?.data ?? []).filter((order) => order.vendorPartyId === selectedParty.partyId)
-  const purchaseRequests = (s.purchaseRequestsQuery?.data ?? []).filter(
-    (request) => request.vendorPartyId === selectedParty.partyId,
-  )
-  const contractRecords = (s.contractsQuery?.data ?? []).filter(
-    (contract) => contract.vendorPartyId === selectedParty.partyId,
-  )
-  const activeContract =
-    contractRecords.find((contract) => contract.status === 'active') ??
-    contractRecords.find((contract) => contract.status === 'expiring_soon') ??
-    contractRecords[0] ??
-    null
-  const openOrders = purchaseOrders.filter((order) => !['cancelled', 'received', 'closed'].includes(order.status))
-  const waitingShipmentCount = purchaseOrders.filter((order) =>
-    order.lines.some((line) => line.quantityRemaining > 0),
-  ).length
-  const orderedQuantity = purchaseOrders.reduce(
-    (total, order) => total + order.lines.reduce((lineTotal, line) => lineTotal + line.quantityOrdered, 0),
-    0,
-  )
-  const receivedQuantity = purchaseOrders.reduce(
-    (total, order) => total + order.lines.reduce((lineTotal, line) => lineTotal + line.quantityReceived, 0),
-    0,
-  )
-  const fillRate = orderedQuantity > 0 ? Math.round((receivedQuantity / orderedQuantity) * 100) : null
-  const leadTimes = partyPartLinks
-    .map(({ link }) => link.catalogLeadTimeDays)
-    .filter((value): value is number => typeof value === 'number')
-  const averageLeadTime = leadTimes.length
-    ? leadTimes.reduce((total, value) => total + value, 0) / leadTimes.length
-    : null
-  const ytdSpend = purchaseOrders.reduce((total, order) => {
-    const createdYear = new Date(order.createdAt).getFullYear()
-    if (createdYear !== new Date().getFullYear()) return total
-    return total + order.lines.reduce((lineTotal, line) => {
-      const pricedLink = partyPartLinks.find(({ part, link }) => part.partId === line.partId && link.catalogUnitPrice != null)
-      return lineTotal + line.quantityOrdered * (pricedLink?.link.catalogUnitPrice ?? 0)
-    }, 0)
-  }, 0)
-  const linkedPartCount = partyPartLinks.length
-  const preferredPartLinkCount = partyPartLinks.filter(({ link }) => link.isPreferred).length
-  const rawDocuments = documentsQuery.data ?? []
-  const documents = rawDocuments.map((document) => ({
-    id: document.documentId,
-    title: document.title,
-    status: normalizeDocumentStatus(document),
-    tone: statusTone(normalizeDocumentStatus(document)),
-    subtitle: document.expiresAt ? `Expires ${formatDate(document.expiresAt)}` : `Uploaded ${formatDate(document.createdAt)}`,
-    expiresAt: document.expiresAt,
-    isAttention: normalizeDocumentStatus(document) !== 'Approved',
-  }))
-  const activeRestrictions = (restrictionsQuery.data ?? []).filter((restriction) => restriction.status === 'active')
-  const openIncidents = (incidentsQuery.data ?? []).filter(
-    (incident) => !['resolved', 'closed', 'cancelled'].includes(incident.status),
-  )
-  const onboardingRequirements = onboardingQuery.data?.documentRequirements ?? []
-  const unsatisfiedOnboarding = onboardingRequirements.filter((requirement) => requirement.isRequired && !requirement.isSatisfied)
-  const readiness = readinessQuery.data
-  const enforcement = enforcementQuery.data
-  const isBlocked =
-    selectedParty.status !== 'active' ||
-    selectedParty.approvalStatus === 'restricted' ||
-    readiness?.readinessStatus === 'not_ready' ||
-    Boolean(enforcement?.isBlocked) ||
-    activeRestrictions.length > 0
-  const hasWatchItems =
-    selectedParty.approvalStatus !== 'approved' ||
-    documents.some((document) => document.isAttention) ||
-    unsatisfiedOnboarding.length > 0 ||
-    openIncidents.length > 0
-  const decisionTone: Tone = isBlocked ? 'bad' : hasWatchItems ? 'warn' : 'good'
-  const decisionLabel = isBlocked ? 'Blocked' : hasWatchItems ? 'Approved with watch' : 'Approved'
-  const decisionTitle = isBlocked
-    ? 'Purchasing blocked'
-    : hasWatchItems
-      ? 'Purchasing allowed, review watch items'
-      : 'Purchasing allowed'
-  const decisionDetail = isBlocked
-    ? enforcement?.blockReason ?? activeRestrictions[0]?.reason ?? 'Active restriction or readiness blocker prevents normal purchasing.'
-    : hasWatchItems
-      ? 'Normal purchasing may continue while open documents, onboarding, or incident checks are monitored.'
-      : 'Supplier checks allow normal purchasing and receiving activity.'
-  const blockedChecks = [
-    selectedParty.status !== 'active',
-    selectedParty.approvalStatus === 'restricted',
-    Boolean(enforcement?.isBlocked),
-    activeRestrictions.length > 0,
-    readiness?.readinessStatus === 'not_ready',
-  ].filter(Boolean).length
-  const allowedChecks = [
-    selectedParty.status === 'active',
-    selectedParty.approvalStatus === 'approved',
-    !enforcement?.isBlocked,
-    activeRestrictions.length === 0,
-    readiness?.readinessStatus !== 'not_ready',
-    Boolean(primaryContact),
-    linkedPartCount > 0,
-    documents.every((document) => document.tone !== 'bad'),
-    openIncidents.length === 0,
-  ].filter(Boolean).length
-  const documentWatchLabel = documents.some((document) => document.isAttention) ? 'Document watch' : null
-  const upcomingRequirements = [
-    ...documents
-      .filter((document) => document.isAttention)
-      .slice(0, 2)
-      .map((document) => ({
-        title: `${document.title} review`,
-        detail: document.subtitle,
-        badge: document.expiresAt && daysUntil(document.expiresAt) != null
-          ? `Due in ${Math.max(daysUntil(document.expiresAt) ?? 0, 0)} days`
-          : document.status,
-        tone: document.tone,
-      })),
-    ...unsatisfiedOnboarding.slice(0, 2).map((requirement) => ({
-      title: requirement.label,
-      detail: 'Required supplier onboarding document',
-      badge: 'Required',
-      tone: 'warn' as Tone,
-    })),
-    ...openIncidents.slice(0, 1).map((incident) => ({
-      title: incident.title,
-      detail: humanize(incident.severity),
-      badge: humanize(incident.status),
-      tone: 'bad' as Tone,
-    })),
-  ].slice(0, 3)
-  const recentPurchaseOrders = [...purchaseOrders]
-    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
-    .slice(0, 3)
-    .map((order) => ({
-      id: order.purchaseOrderId,
-      key: order.orderKey,
-      title: order.title,
-      status: order.status,
-      detail: order.lines.length > 0
-        ? `${order.lines.length} line${order.lines.length === 1 ? '' : 's'} - ${order.lines.reduce((total, line) => total + line.quantityReceived, 0)}/${order.lines.reduce((total, line) => total + line.quantityOrdered, 0)} received`
-        : 'No lines',
-    }))
-  const recentActivity = auditQuery.data?.items.map((item) => ({
-    id: item.id,
-    category: humanize(item.action.split('.').slice(-1)[0]),
-    title: humanize(item.action),
-    detail: `${formatDate(item.occurredAt)} - ${item.result}`,
-  })) ?? [
-    ...recentPurchaseOrders.slice(0, 2).map((order) => ({
-      id: order.id,
-      category: 'Purchase order',
-      title: `${order.key} ${humanize(order.status)}`,
-      detail: order.detail,
-    })),
-    ...documents.slice(0, 2).map((document) => ({
-      id: document.id,
-      category: 'Document',
-      title: `${document.title} ${document.status}`,
-      detail: document.subtitle,
-    })),
-  ]
+  const selectedServiceValues = s.supplierServiceTypes
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
 
   return (
-    <ProfileDetailsLayout
-      testId="supplyarr-party-profile"
-      backLabel="Suppliers"
-      backTo="/suppliers/drawer"
-      breadcrumbs={[humanize(selectedParty.partyType), selectedParty.displayName]}
-      icon={<Building2 className="h-9 w-9" />}
-      title={selectedParty.displayName}
-      subtitle={(
-        <span className="flex flex-wrap items-center gap-2">
-          <MapPin className="h-4 w-4 text-[var(--color-text-muted)]" />
-          <span>{selectedParty.legalName || 'Legal name not recorded'}</span>
-          <span className="text-[var(--color-text-muted)]">-</span>
-          <span>{humanize(selectedParty.partyType)}</span>
-        </span>
-      )}
-      badges={[
-        { label: selectedParty.partyKey.toUpperCase(), tone: 'info' },
-        { label: humanize(selectedParty.approvalStatus), tone: statusTone(selectedParty.approvalStatus) },
-        ...(documentWatchLabel ? [{ label: documentWatchLabel, tone: 'warn' as Tone }] : []),
-      ]}
-      actions={(
-        <>
-          <Link
-            to="/purchase-orders"
-            className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
-          >
-            <PackagePlus className="h-4 w-4" />
-            Create PO
-          </Link>
-          <Link
-            to="/rfqs"
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
-          >
-            <Plus className="h-4 w-4" />
-            Start RFQ
-          </Link>
-          <Link
-            to={`/suppliers/drawer?partyId=${selectedParty.partyId}`}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit supplier
-          </Link>
-          <button
-            type="button"
-            className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] text-[var(--color-text-secondary)] hover:border-[var(--color-accent-border)] hover:bg-[var(--color-bg-control-hover)]"
-            aria-label="More supplier actions"
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </button>
-        </>
-      )}
-      metrics={[
-        {
-          label: 'Approval state',
-          value: humanize(selectedParty.approvalStatus),
-          hint: documents.some((document) => document.isAttention) ? 'Document watch active' : 'No document blockers',
-          icon: <ShieldCheck className="h-5 w-5" />,
-          tone: statusTone(selectedParty.approvalStatus),
-        },
-        {
-          label: 'Open orders',
-          value: openOrders.length,
-          hint: `${waitingShipmentCount} waiting shipment - ${purchaseRequests.length} request${purchaseRequests.length === 1 ? '' : 's'}`,
-          icon: <Boxes className="h-5 w-5" />,
-          tone: 'neutral',
-        },
-        {
-          label: 'YTD spend',
-          value: formatCurrency(ytdSpend),
-          hint: linkedPartCount > 0 ? `${linkedPartCount} linked item${linkedPartCount === 1 ? '' : 's'}` : 'No linked catalog spend',
-          icon: <DollarSign className="h-5 w-5" />,
-          tone: 'good',
-        },
-        {
-          label: 'Fill rate',
-          value: fillRate == null ? 'Not tracked' : `${fillRate}%`,
-          hint: orderedQuantity > 0 ? 'Based on received quantities' : 'No received quantity data',
-          icon: <CircleCheck className="h-5 w-5" />,
-          tone: 'good',
-        },
-      ]}
-      tabs={detailTabs}
-      snapshotTitle="Supplier snapshot"
-      snapshotSubtitle="Supplier identity, approval state, terms, documents, and activity."
-      snapshotFields={[
-        { label: 'Supplier ID', value: selectedParty.partyId, source: 'Supplier profile' },
-        { label: 'Legal name', value: selectedParty.legalName || selectedParty.displayName, source: 'Supplier profile' },
-        { label: 'Supplier category', value: humanize(selectedParty.partyType), source: 'Catalog details' },
-        { label: 'Primary site', value: 'Not recorded', source: 'Profile details' },
-        { label: 'Supplier owner', value: 'Not assigned', source: 'Profile details' },
-        { label: 'Payment terms', value: activeContract?.paymentTerms || 'Not recorded', source: 'Agreement details' },
-        { label: 'Freight terms', value: activeContract?.freightTerms || 'Not recorded', source: 'Agreement details' },
-        { label: 'Warranty', value: activeContract?.warrantyTerms || 'Not recorded', source: 'Approved terms' },
-        { label: 'Minimum spend', value: activeContract?.minimumSpend == null ? 'Not recorded' : formatCurrency(activeContract.minimumSpend), source: 'Approved terms' },
-        { label: 'Contract records', value: contractRecords.length > 0 ? contractRecords.length : 'None', source: 'Contract registry' },
-        { label: 'Tax status', value: selectedParty.taxIdentifier ? 'Tax identifier on file' : 'Not recorded', source: 'Document evidence' },
-        { label: 'Insurance', value: documents.some((document) => document.title.toLowerCase().includes('insurance')) ? 'Document on file' : 'Not recorded', source: 'Document watch' },
-        { label: 'Risk tier', value: isBlocked ? 'High' : hasWatchItems ? 'Medium' : 'Low', source: 'Supplier review' },
-        { label: 'Phone', value: primaryContact?.phone || 'Not recorded', source: 'Primary contact' },
-        { label: 'Email', value: primaryContact?.email || 'Not recorded', source: 'Primary contact' },
-        { label: 'Website', value: 'Not recorded', source: 'Supplier profile' },
-      ]}
-      mainContent={(
-        <div className="grid gap-4 lg:grid-cols-3">
-          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Supplied items</h3>
-              <Badge label="Related items" tone="info" />
-            </div>
-            <div className="space-y-3">
-              {partyPartLinks.length > 0 ? partyPartLinks.slice(0, 3).map(({ part, link }) => (
-                <div key={link.linkId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">{part.displayName}</h4>
-                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                        {humanize(part.categoryKey)} - {link.catalogLeadTimeDays ?? 'untracked'} days lead time
-                      </p>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">Vendor part {link.vendorPartNumber || 'not recorded'}</p>
-                    </div>
-                    <Badge label={link.isPreferred ? 'Preferred' : 'Approved'} tone={link.isPreferred ? 'good' : 'neutral'} />
-                  </div>
-                </div>
-              )) : <EmptyPanel text="No linked items yet." />}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Recent purchase orders</h3>
-              <Link to="/purchase-orders" className="text-sm font-semibold text-[var(--color-accent)] hover:text-[var(--color-accent-hover)]">View all</Link>
-            </div>
-            <div className="space-y-3">
-              {recentPurchaseOrders.length > 0 ? recentPurchaseOrders.slice(0, 3).map((order) => (
-                <div key={order.id} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">{order.key}</h4>
-                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{order.title}</p>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">{order.detail}</p>
-                    </div>
-                    <Badge label={humanize(order.status)} tone={statusTone(order.status)} />
-                  </div>
-                </div>
-              )) : <EmptyPanel text="No purchase orders yet." />}
-            </div>
-          </section>
-
-          <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Contracts & purchasing terms</h3>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">Current vendor agreements and commercial terms.</p>
-              </div>
-              <Badge label={`${contractRecords.length} record${contractRecords.length === 1 ? '' : 's'}`} tone={contractRecords.length > 0 ? 'info' : 'neutral'} />
-            </div>
-            <div className="space-y-3">
-              {contractRecords.length > 0 ? contractRecords.slice(0, 3).map((contract) => (
-                <div key={contract.contractId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</h4>
-                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
-                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                        {humanize(contract.contractType)} · {formatDate(contract.effectiveAt)} to {contract.expiresAt ? formatDate(contract.expiresAt) : 'open-ended'}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge label={humanize(contract.status)} tone={statusTone(contract.status)} />
-                      <Badge label={humanize(contract.approvalStatus)} tone={statusTone(contract.approvalStatus)} />
-                    </div>
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Payment terms</p>
-                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.paymentTerms || 'Not recorded'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Freight terms</p>
-                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.freightTerms || 'Not recorded'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Warranty</p>
-                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.warrantyTerms || 'Not recorded'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Minimum spend</p>
-                      <p className="mt-1 text-sm text-[var(--color-text-primary)]">{contract.minimumSpend == null ? 'Not recorded' : formatCurrency(contract.minimumSpend)}</p>
-                    </div>
-                  </div>
-                  {contract.serviceLevelAgreement ? (
-                    <p className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] px-3 py-2 text-xs text-[var(--color-text-secondary)]">
-                      SLA: {contract.serviceLevelAgreement}
-                    </p>
-                  ) : null}
-                </div>
-              )) : <EmptyPanel text="No contract records on file." />}
-            </div>
-          </section>
+    <div className="space-y-6" data-testid="supplyarr-supplier-directory">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Supplier directory</h1>
+          <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-secondary)]">
+            Manage supplier identities and their sub-units in one hierarchy. Service coverage and site context live on each supplier unit so sourcing, maintenance, and purchasing can work from the same supplier record.
+          </p>
         </div>
-      )}
-      decisionTitle="Supplier decision"
-      decisionBadge={{ label: decisionLabel, tone: decisionTone }}
-      decisionIcon={decisionTone === 'good' ? (
-        <CheckCircle2 className="h-5 w-5 text-[var(--color-success-text)]" />
-      ) : (
-        <AlertTriangle className={`h-5 w-5 ${decisionTone === 'bad' ? 'text-[var(--tone-danger-text)]' : 'text-[var(--color-warning-text)]'}`} />
-      )}
-      decisionSummary={decisionTitle}
-      decisionDetail={decisionDetail}
-      allowedChecks={allowedChecks}
-      blockedChecks={blockedChecks}
-      railSections={[
-        {
-          title: 'Primary contacts',
-          icon: <Users className="h-5 w-5" />,
-          content: (
-            <div className="space-y-3">
-              {selectedParty.contacts.length > 0 ? selectedParty.contacts.slice(0, 3).map((contact) => (
-                <div key={contact.contactId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)]">{contact.contactName}</h3>
-                      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{contact.roleLabel || 'Contact'}</p>
-                    </div>
-                    {contact.isPrimary ? <Badge label="Primary" tone="info" /> : null}
-                  </div>
-                  {contact.email ? (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                      <Mail className="h-4 w-4" />
-                      {contact.email}
-                    </p>
-                  ) : null}
-                  {contact.phone ? (
-                    <p className="mt-2 flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
-                      <Phone className="h-4 w-4" />
-                      {contact.phone}
-                    </p>
-                  ) : null}
-                </div>
-              )) : <EmptyPanel text="No contacts on file." />}
+        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+          {parties.filter((party) => !party.parentPartyId).length} supplier identities
+          {' · '}
+          {parties.filter((party) => party.parentPartyId).length} sub-units
+        </div>
+      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Directory</h2>
+              <span className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
+                Root first
+              </span>
             </div>
-          ),
-        },
-        {
-          title: 'Performance',
-          icon: <Star className="h-5 w-5" />,
-          content: (
-            <>
-              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                <p className="text-sm font-semibold text-[var(--color-text-primary)]">Fill rate</p>
-                <div className="mt-3 h-2 rounded-full bg-[var(--color-bg-control-hover)]">
-                  <div
-                    className="h-2 rounded-full bg-[var(--color-accent)]"
-                    style={{ width: `${Math.min(Math.max(fillRate ?? 0, 0), 100)}%` }}
+
+            {s.suppliersQuery.isLoading ? (
+              <p className="mt-4 text-sm text-[var(--color-text-secondary)]">Loading suppliers…</p>
+            ) : null}
+            {s.suppliersQuery.isError ? (
+              <ApiErrorCallout
+                className="mt-4"
+                message={getErrorMessage(s.suppliersQuery.error, 'Failed to load supplier directory.')}
+                onRetry={() => void s.suppliersQuery.refetch()}
+                retryLabel="Retry"
+              />
+            ) : null}
+            {!s.suppliersQuery.isLoading && parties.length === 0 ? (
+              <div className="mt-4">
+                <EmptyPanel
+                  title="No suppliers yet"
+                  description="Create a supplier identity first, then add sub-units for location-specific sourcing, maintenance, or service coverage."
+                />
+              </div>
+            ) : null}
+            <div className="mt-4 space-y-2">
+              {parties.map((party) => {
+                const active = selectedSupplier?.partyId === party.partyId
+                const isChild = Boolean(party.parentPartyId)
+                return (
+                  <button
+                    key={party.partyId}
+                    type="button"
+                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                      active
+                        ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]'
+                        : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:border-[var(--color-accent-border)]'
+                    }`}
+                    onClick={() => setSelectedSupplierId(party.partyId)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className={isChild ? 'pl-5' : ''}>
+                        <p className="text-sm font-semibold text-[var(--color-text-primary)]">
+                          {isChild ? 'Sub-unit · ' : 'Identity · '}
+                          {party.displayName}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                          {party.parentPartyDisplayName ? `${party.parentPartyDisplayName} · ` : ''}
+                          {formatServiceCoverage(party.serviceTypes)}
+                        </p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(party)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-medium text-[var(--color-text-secondary)]">{humanize(party.approvalStatus)}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{humanize(party.status)}</p>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
+              {mode === 'create' ? 'Create supplier unit' : 'Add supplier or sub-unit'}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+              Start with a supplier identity, then create sub-units for regional branches, dealer locations, maintenance shops, or other site-specific sourcing nodes.
+            </p>
+
+            <div className="mt-4 grid gap-3">
+              <ControlledSelect
+                label="Record kind"
+                value={s.supplierUnitKind}
+                onChange={s.setSupplierUnitKind}
+                options={unitKindOptions}
+                emptyLabel="Select record kind"
+              />
+              {s.supplierUnitKind === 'sub_unit' ? (
+                <ControlledSelect
+                  label="Parent supplier identity"
+                  value={s.supplierParentPartyId}
+                  onChange={s.setSupplierParentPartyId}
+                  options={rootSupplierOptions}
+                  emptyLabel="Select supplier identity"
+                />
+              ) : null}
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Supplier key
+                <input
+                  className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={s.supplierKey}
+                  onChange={(event) => s.setSupplierKey(event.target.value)}
+                  placeholder="midwest-fleet"
+                />
+              </label>
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Display name
+                <input
+                  className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={s.supplierName}
+                  onChange={(event) => s.setSupplierName(event.target.value)}
+                  placeholder={s.supplierUnitKind === 'sub_unit' ? 'Midwest Fleet - Kansas City' : 'Midwest Fleet'}
+                />
+              </label>
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Legal name
+                <input
+                  className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={s.supplierLegalName}
+                  onChange={(event) => s.setSupplierLegalName(event.target.value)}
+                  placeholder="Midwest Fleet LLC"
+                />
+              </label>
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Service coverage
+                <select
+                  multiple
+                  className="mt-1 min-h-32 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={selectedServiceValues}
+                  onChange={(event) => {
+                    const values = Array.from(event.target.selectedOptions).map((option) => option.value)
+                    s.setSupplierServiceTypes(values.join(','))
+                  }}
+                >
+                  {serviceTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  Address line
+                  <input
+                    className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                    value={s.supplierAddressLine1}
+                    onChange={(event) => s.setSupplierAddressLine1(event.target.value)}
+                    placeholder="1200 Westport Rd"
                   />
-                </div>
-                <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                  {fillRate == null ? 'No received quantity data' : `${fillRate}% based on current purchase orders`}
+                </label>
+                <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  City
+                  <input
+                    className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                    value={s.supplierLocality}
+                    onChange={(event) => s.setSupplierLocality(event.target.value)}
+                    placeholder="Kansas City"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  Region
+                  <input
+                    className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                    value={s.supplierRegionCode}
+                    onChange={(event) => s.setSupplierRegionCode(event.target.value)}
+                    placeholder="MO"
+                  />
+                </label>
+                <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  Postal code
+                  <input
+                    className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                    value={s.supplierPostalCode}
+                    onChange={(event) => s.setSupplierPostalCode(event.target.value)}
+                    placeholder="64111"
+                  />
+                </label>
+                <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  Country
+                  <input
+                    className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                    value={s.supplierCountryCode}
+                    onChange={(event) => s.setSupplierCountryCode(event.target.value)}
+                    placeholder="US"
+                  />
+                </label>
+              </div>
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Tax identifier
+                <input
+                  className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={s.supplierTaxId}
+                  onChange={(event) => s.setSupplierTaxId(event.target.value)}
+                  placeholder="12-3456789"
+                />
+              </label>
+              <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                Notes
+                <textarea
+                  className="mt-1 min-h-24 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  value={s.supplierNotes}
+                  onChange={(event) => s.setSupplierNotes(event.target.value)}
+                  placeholder="Use notes for sourcing context or unit-specific operating details."
+                />
+              </label>
+              <button
+                type="button"
+                className="rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-60"
+                disabled={
+                  s.createSupplierMutation.isPending
+                  || !s.supplierKey.trim()
+                  || !s.supplierName.trim()
+                  || (s.supplierUnitKind === 'sub_unit' && !s.supplierParentPartyId)
+                }
+                onClick={() => s.createSupplierMutation.mutate()}
+              >
+                {s.createSupplierMutation.isPending ? 'Saving supplier…' : s.supplierUnitKind === 'sub_unit' ? 'Create sub-unit' : 'Create supplier identity'}
+              </button>
+              {s.createSupplierMutation.isError ? (
+                <ApiErrorCallout
+                  message={getErrorMessage(s.createSupplierMutation.error, 'Failed to create supplier record.')}
+                />
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="space-y-4" data-testid="supplyarr-supplier-profile">
+          <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Supplier snapshot</p>
+                <h2 className="mt-2 text-2xl font-semibold text-[var(--color-text-primary)]">
+                  {selectedSupplier?.displayName ?? 'No supplier selected'}
+                </h2>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  {selectedSupplier
+                    ? `${humanize(selectedSupplier.unitKind)} · ${formatServiceCoverage(selectedSupplier.serviceTypes)}`
+                    : 'Choose a supplier identity or sub-unit from the directory.'}
                 </p>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <Truck className="h-5 w-5 text-[var(--color-accent)]" />
-                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">Avg lead time</p>
-                  <p className="font-bold text-[var(--color-text-primary)]">{averageLeadTime == null ? 'Not tracked' : `${averageLeadTime.toFixed(1)} days`}</p>
+              {selectedSupplier ? (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
+                    onClick={() =>
+                      s.updatePartyApprovalMutation.mutate({
+                        route: 'suppliers',
+                        partyId: selectedSupplier.partyId,
+                        approvalStatus: selectedSupplier.approvalStatus === 'approved' ? 'pending' : 'approved',
+                      })
+                    }
+                  >
+                    {selectedSupplier.approvalStatus === 'approved' ? 'Mark review' : 'Approve'}
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
+                    onClick={() =>
+                      s.updatePartyStatusMutation.mutate({
+                        route: 'suppliers',
+                        partyId: selectedSupplier.partyId,
+                        status: selectedSupplier.status === 'active' ? 'inactive' : 'active',
+                      })
+                    }
+                  >
+                    {selectedSupplier.status === 'active' ? 'Deactivate' : 'Activate'}
+                  </button>
                 </div>
-                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <DollarSign className="h-5 w-5 text-[var(--color-accent)]" />
-                  <p className="mt-3 text-xs text-[var(--color-text-muted)]">Preferred items</p>
-                  <p className="font-bold text-[var(--color-text-primary)]">{preferredPartLinkCount}</p>
-                </div>
+              ) : null}
+            </div>
+
+            {!selectedSupplier ? (
+              <div className="mt-4">
+                <EmptyPanel
+                  title="No supplier selected"
+                  description="Select a supplier identity or sub-unit from the directory to inspect hierarchy, sourcing fit, and site context."
+                />
               </div>
-            </>
-          ),
-        },
-        {
-          title: 'Documents',
-          icon: <FileText className="h-5 w-5" />,
-          content: (
-            <div className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)]">
-              {documents.length > 0 ? documents.slice(0, 4).map((document, index) => (
-                <div
-                  key={document.id}
-                  className={`flex items-center justify-between gap-3 p-4 ${index > 0 ? 'border-t border-[var(--color-border-subtle)]' : ''}`}
-                >
-                  <div>
-                    <h3 className="font-semibold text-[var(--color-text-primary)]">{document.title}</h3>
-                    <p className="mt-1 text-xs text-[var(--color-text-muted)]">{document.subtitle}</p>
-                  </div>
-                  <Badge label={document.status} tone={document.tone} />
-                </div>
-              )) : <div className="p-4"><EmptyPanel text="No compliance documents on file." /></div>}
-            </div>
-          ),
-        },
-        {
-          title: 'Upcoming requirements',
-          icon: <CalendarClock className="h-5 w-5" />,
-          content: (
-            <div className="space-y-3">
-              {upcomingRequirements.length > 0 ? upcomingRequirements.map((requirement) => (
-                <div key={`${requirement.title}-${requirement.badge}`} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-[var(--color-text-primary)]">{requirement.title}</h3>
-                      <p className="mt-2 text-xs text-[var(--color-text-muted)]">{requirement.detail}</p>
+            ) : (
+              <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <DetailCard label="Supplier key" value={selectedSupplier.partyKey} />
+                <DetailCard label="Legal name" value={selectedSupplier.legalName || selectedSupplier.displayName} />
+                <DetailCard label="Parent supplier" value={selectedSupplier.parentPartyDisplayName || 'Root supplier identity'} />
+                <DetailCard label="Service coverage" value={formatServiceCoverage(selectedSupplier.serviceTypes)} />
+                <DetailCard label="Address" value={formatAddress(selectedSupplier)} />
+                <DetailCard label="Sub-units" value={String(selectedSupplier.childUnitCount ?? childUnits.length)} />
+                <DetailCard label="Approval state" value={humanize(selectedSupplier.approvalStatus)} />
+                <DetailCard label="Lifecycle status" value={humanize(selectedSupplier.status)} />
+                <DetailCard label="Updated" value={formatTimestamp(selectedSupplier.updatedAt)} />
+              </div>
+            )}
+          </div>
+
+          {selectedSupplier ? (
+            <div className="grid gap-4 xl:grid-cols-2">
+              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sub-units</h3>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  Location-specific supplier nodes for sourcing, service, or maintenance coverage.
+                </p>
+                <div className="mt-4 space-y-3">
+                  {childUnits.length > 0 ? childUnits.map((party) => (
+                    <div key={party.partyId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-[var(--color-text-primary)]">{party.displayName}</p>
+                          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{formatServiceCoverage(party.serviceTypes)}</p>
+                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(party)}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className="text-sm font-medium text-[var(--color-accent)]"
+                          onClick={() => setSelectedSupplierId(party.partyId)}
+                        >
+                          View
+                        </button>
+                      </div>
                     </div>
-                    <Badge label={requirement.badge} tone={requirement.tone} />
-                  </div>
+                  )) : (
+                    <EmptyPanel
+                      title="No sub-units yet"
+                      description="Add regional branches or site-level supplier nodes so sourcing can prefer the closest capable location."
+                    />
+                  )}
                 </div>
-              )) : <EmptyPanel text="No upcoming supplier requirements." />}
-            </div>
-          ),
-        },
-        {
-          title: 'Recent activity',
-          icon: <History className="h-5 w-5" />,
-          content: (
-            <div className="space-y-4">
-              {recentActivity.length > 0 ? recentActivity.slice(0, 5).map((activity) => (
-                <div key={activity.id} className="relative pl-7">
-                  <span className="absolute left-0 top-1.5 h-3 w-3 rounded-full bg-[var(--color-accent)] shadow-lg shadow-[var(--color-accent-soft)]" />
-                  <p className="text-xs font-bold uppercase tracking-normal text-[var(--color-accent)]">{activity.category}</p>
-                  <h3 className="mt-1 font-semibold text-[var(--color-text-primary)]">{activity.title}</h3>
-                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">{activity.detail}</p>
+              </section>
+
+              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Primary contacts</h3>
+                <div className="mt-4 space-y-3">
+                  {selectedSupplier.contacts.length > 0 ? selectedSupplier.contacts.map((contact) => (
+                    <div key={contact.contactId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                      <p className="font-semibold text-[var(--color-text-primary)]">
+                        {contact.contactName}
+                        {contact.isPrimary ? ' · Primary' : ''}
+                      </p>
+                      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{contact.roleLabel || 'Contact'}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {[contact.email, contact.phone].filter(Boolean).join(' · ') || 'No direct contact details'}
+                      </p>
+                    </div>
+                  )) : (
+                    <EmptyPanel title="No contacts recorded" description="Add contacts to each supplier identity or sub-unit as procurement ownership becomes clearer." />
+                  )}
                 </div>
-              )) : <EmptyPanel text="No recent supplier activity." />}
+              </section>
+
+              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Linked items</h3>
+                <div className="mt-4 space-y-3">
+                  {linkedItems.length > 0 ? linkedItems.slice(0, 5).map(({ part, link }) => (
+                    <div key={link.linkId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                      <p className="font-semibold text-[var(--color-text-primary)]">{part.displayName}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        {link.vendorPartNumber || 'Supplier part not recorded'} · {link.catalogLeadTimeDays ?? 'Untracked'} day lead time
+                      </p>
+                    </div>
+                  )) : (
+                    <EmptyPanel title="No linked items" description="Attach parts and catalog lines to a specific supplier identity or sub-unit for location-aware sourcing." />
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Contracts & terms</h3>
+                <div className="mt-4 space-y-3">
+                  {selectedPartyContracts.length > 0 ? selectedPartyContracts.slice(0, 4).map((contract) => (
+                    <div key={contract.contractId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                      <p className="font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</p>
+                      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
+                      <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {contract.paymentTerms || 'Terms not recorded'} · {contract.freightTerms || 'Freight terms not recorded'}
+                      </p>
+                    </div>
+                  )) : (
+                    <EmptyPanel title="No contracts on file" description="Contracts will appear here once they are linked to this supplier identity or sub-unit." />
+                  )}
+                </div>
+              </section>
             </div>
-          ),
-        },
-      ]}
-    />
+          ) : null}
+        </section>
+      </div>
+    </div>
+  )
+}
+
+function DetailCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+      <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">{label}</p>
+      <p className="mt-2 text-sm font-semibold text-[var(--color-text-primary)]">{value}</p>
+    </div>
   )
 }
 
 export function PartiesSection({ state: s }: Props) {
   const location = useLocation()
-  const mode: PartiesViewMode = location.pathname.startsWith('/parties/create')
-    || location.pathname.startsWith('/suppliers/create')
+  const mode: SuppliersViewMode = location.pathname.startsWith('/suppliers/create')
     ? 'create'
-    : location.pathname.startsWith('/parties/details')
-      || location.pathname.startsWith('/suppliers/details')
+    : location.pathname.startsWith('/suppliers/details')
       ? 'details'
       : 'drawer'
-  const parties = [
-    ...(s.suppliersQuery?.data ?? []),
-    ...(s.vendors ?? []),
-    ...(s.dealersQuery?.data ?? []),
-  ]
 
-  if (mode === 'details') {
-    return <PartiesProfile state={s} parties={parties} />
-  }
-
-  return <PartiesRegistryWorkspace state={s} mode={mode} />
+  return <SupplierDirectoryWorkspace state={s} mode={mode} />
 }

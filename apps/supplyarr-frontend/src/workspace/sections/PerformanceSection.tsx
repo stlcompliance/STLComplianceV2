@@ -31,7 +31,7 @@ export function PerformanceSection({ state: s }: Props) {
       <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 lg:col-span-2">
         <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Performance lens</h2>
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-          Supplier performance is evaluated through vendor scorecards, purchasing trend reports,
+          Supplier performance is evaluated through supplier scorecards, purchasing trend reports,
           and inventory coverage signals. This surface stays read-only and does not alter source
           records.
         </p>

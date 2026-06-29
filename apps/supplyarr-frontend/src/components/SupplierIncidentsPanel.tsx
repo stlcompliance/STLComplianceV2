@@ -78,7 +78,7 @@ export function SupplierIncidentsPanel({
     () =>
       incidentParties.map((party) => ({
         value: party.partyId,
-        label: `${party.partyType} · ${party.partyKey} · ${party.displayName}`,
+        label: `${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'} · ${party.partyKey} · ${party.displayName}`,
       })),
     [incidentParties],
   )
@@ -176,8 +176,8 @@ export function SupplierIncidentsPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Supplier incidents</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Track quality, delivery, and compliance issues for vendors and suppliers. Apply procurement
-        holds via vendor restrictions when needed.
+        Track quality, delivery, and compliance issues for supplier identities and sub-units. Apply procurement
+        holds via supplier restrictions when needed.
       </p>
 
       {openQuery.data && (
@@ -189,12 +189,12 @@ export function SupplierIncidentsPanel({
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <StaticSearchPicker
           id="supplier-incident-party"
-          label="Vendor or supplier party"
+          label="Supplier identity or sub-unit"
           value={selectedPartyId}
           onChange={setSelectedPartyId}
           options={partyOptions}
           selectedOption={selectedPartyOption}
-          placeholder="Search vendors or suppliers…"
+          placeholder="Search supplier identities or sub-units…"
           testId="supplier-incident-party-picker"
         />
 

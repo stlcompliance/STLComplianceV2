@@ -33,8 +33,8 @@ export function VendorOrderSettingsPanel({
   if (settingsQuery.isLoading || !settingsQuery.data) {
     return (
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5">
-        <h2 className="text-lg font-semibold text-white">Vendor-order portal settings</h2>
-        <p className="mt-3 text-sm text-slate-400">Loading vendor-order settings…</p>
+        <h2 className="text-lg font-semibold text-white">Supplier-order portal settings</h2>
+        <p className="mt-3 text-sm text-slate-400">Loading supplier-order settings…</p>
       </section>
     )
   }
@@ -45,9 +45,9 @@ export function VendorOrderSettingsPanel({
     <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="vendor-order-settings-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-white">Vendor-order portal settings</h2>
+          <h2 className="text-lg font-semibold text-white">Supplier-order portal settings</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Control destination visibility in the vendor portal and the default magic-link lifetime.
+            Control destination visibility in the supplier portal and the default magic-link lifetime.
           </p>
         </div>
         {settings.updatedAt ? (
@@ -67,7 +67,7 @@ export function VendorOrderSettingsPanel({
               })
             }
           />
-          <span>Allow destination summary in the vendor portal.</span>
+          <span>Allow destination summary in the supplier portal.</span>
         </label>
 
         <label className="block text-sm text-slate-300">
@@ -89,7 +89,7 @@ export function VendorOrderSettingsPanel({
       </div>
 
       {mutation.error instanceof Error ? (
-        <p className="mt-3 text-sm text-red-300">Unable to save vendor-order settings. Please try again.</p>
+        <p className="mt-3 text-sm text-red-300">Unable to save supplier-order settings. Please try again.</p>
       ) : null}
     </section>
   )

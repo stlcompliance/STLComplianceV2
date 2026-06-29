@@ -158,7 +158,7 @@ describe('PurchaseRequestPanel', () => {
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByTestId('purchase-request-line-line-1')).toHaveTextContent('6 each requested')
     expect(screen.getByTestId('purchase-request-create-form')).toBeInTheDocument()
-    expect(screen.getByLabelText('Vendor (optional)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Supplier unit (optional)')).toBeInTheDocument()
     expect(screen.getByLabelText('Part for first line')).toBeInTheDocument()
   })
 

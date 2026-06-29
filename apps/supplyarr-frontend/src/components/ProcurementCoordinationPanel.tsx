@@ -77,7 +77,7 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
                         {item.documentKey} · {item.title}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
-                        {item.vendorDisplayName || 'No vendor'} · {item.documentStatus}
+                        {item.vendorDisplayName || 'No supplier'} · {item.documentStatus}
                       </div>
                     </div>
                     <span className="rounded bg-sky-950 px-2 py-0.5 text-xs uppercase tracking-wide text-sky-300">

@@ -57,18 +57,31 @@ export interface PartyRegistryCatalogOptionResponse {
 export interface PartyRegistryMetadataResponse {
   approvalStatusOptions: PartyRegistryCatalogOptionResponse[]
   statusOptions: PartyRegistryCatalogOptionResponse[]
+  unitKindOptions?: PartyRegistryCatalogOptionResponse[]
+  serviceTypeOptions?: PartyRegistryCatalogOptionResponse[]
 }
 
 export interface ExternalPartyResponse {
   partyId: string
   partyKey: string
   partyType: 'vendor' | 'dealer' | 'supplier' | string
+  parentPartyId?: string | null
+  parentPartyDisplayName?: string | null
+  unitKind?: string
   displayName: string
   legalName: string
   taxIdentifier: string | null
   approvalStatus: string
   status: string
   notes: string
+  serviceTypes?: string[]
+  addressLine1?: string
+  addressLine2?: string
+  locality?: string
+  regionCode?: string
+  postalCode?: string
+  countryCode?: string
+  childUnitCount?: number
   contacts: PartyContactResponse[]
   createdAt: string
   updatedAt: string
@@ -76,17 +89,39 @@ export interface ExternalPartyResponse {
 
 export interface CreateTypedExternalPartyRequest {
   partyKey: string
+  parentPartyId?: string | null
+  unitKind?: string | null
   displayName: string
   legalName: string
   taxIdentifier?: string | null
   notes: string
+  serviceTypes?: string[] | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  locality?: string | null
+  regionCode?: string | null
+  postalCode?: string | null
+  countryCode?: string | null
+}
+
+export interface CreateExternalPartyRequest extends CreateTypedExternalPartyRequest {
+  partyType: string
 }
 
 export interface UpdateExternalPartyRequest {
+  parentPartyId?: string | null
+  unitKind?: string | null
   displayName: string
   legalName: string
   taxIdentifier?: string | null
   notes: string
+  serviceTypes?: string[] | null
+  addressLine1?: string | null
+  addressLine2?: string | null
+  locality?: string | null
+  regionCode?: string | null
+  postalCode?: string | null
+  countryCode?: string | null
 }
 
 export interface UpdateExternalPartyApprovalStatusRequest {

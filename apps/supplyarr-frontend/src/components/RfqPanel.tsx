@@ -283,7 +283,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
     >
       <h2 className="text-lg font-semibold text-slate-50">RFQs &amp; quote comparison</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Request vendor quotes, compare pricing and lead time, award a winner, and create a purchase request.
+        Request supplier quotes, compare pricing and lead time, award a winner, and create a purchase request.
       </p>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -362,11 +362,11 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
           {selectedRfq.status === 'submitted' && (
             <div className="flex flex-wrap items-end gap-2">
               <ControlledSelect
-                label="Invite vendor"
+                label="Invite supplier unit"
                 value={inviteVendorId}
                 onChange={setInviteVendorId}
                 options={vendorPickerOptions}
-                emptyLabel="Invite vendor"
+                emptyLabel="Invite supplier unit"
               />
               <button
                 type="button"
@@ -382,11 +382,11 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
           {selectedRfq.status === 'submitted' && selectedRfq.invitations.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-4">
               <ControlledSelect
-                label="Quote vendor"
+                label="Quote supplier unit"
                 value={quoteVendorId}
                 onChange={setQuoteVendorId}
                 options={quoteVendorPickerOptions}
-                emptyLabel="Quote vendor"
+                emptyLabel="Quote supplier unit"
               />
               <ControlledSelect
                 label="Currency"
@@ -457,7 +457,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <table className="mt-2 w-full text-left text-xs">
                 <thead>
                   <tr className="text-[var(--color-text-muted)]">
-                    <th className="py-1">Vendor</th>
+                    <th className="py-1">Supplier unit</th>
                     <th>Total</th>
                     <th>Lead (max days)</th>
                     <th>Lines</th>
@@ -538,7 +538,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
 
           {vendorPortalLinks.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase text-slate-400">Vendor portal access</h3>
+              <h3 className="text-xs font-semibold uppercase text-slate-400">Supplier portal access</h3>
               <ul className="mt-2 grid gap-2">
                 {vendorPortalLinks.map((invite) => (
                   <li key={invite.invitationId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
@@ -580,7 +580,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                           target="_blank"
                           rel="noreferrer"
                         >
-                          Open vendor portal
+                          Open supplier portal
                         </a>
                       </div>
                     )}

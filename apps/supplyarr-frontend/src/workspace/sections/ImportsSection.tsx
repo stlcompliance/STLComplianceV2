@@ -52,9 +52,7 @@ export function ImportsSection({ state }: Props) {
 
   const refreshImportedData = () => {
     void Promise.all([
-      state.vendorsQuery.refetch(),
       state.suppliersQuery.refetch(),
-      state.dealersQuery.refetch(),
       state.catalogsQuery.refetch(),
       state.partsQuery.refetch(),
       state.purchaseRequestsQuery.refetch(),

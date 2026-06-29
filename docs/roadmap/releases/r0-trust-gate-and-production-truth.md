@@ -63,13 +63,21 @@ Deferred R0 blockers:
 - LoadArr: authoritative movement/balance and receiving completion variants remain blocked where owner-backed traceability, quality/hold, and balance truth are incomplete.
 - OrdArr: singleton process-local store remains a production-trust blocker.
 - ReportArr: singleton scaffold BI store and launch-key-based source-product policy checks remain blockers for durable reporting, row/column security, lineage, schedules, exports, and retained outputs.
+- StaffArr: full `STLCompliance.StaffArr.Auth.Tests` project still does not complete in the current repo state within a 20-minute local `dotnet test --no-build` window; focused R0 coverage passed and `StaffArrHandoffApiTests` now passes as a full class run.
 - Field Companion: mobile execution depends on NexArr and owning-product APIs for durable offline intents, submissions, sync outcomes, and final validation; legacy test compatibility rows should be retired during remaining NexArr launch cleanup.
 - LedgArr: converted `501` finance placeholders remain blockers until implemented durably for dimension mappings, posting-rule management, financial-packet rejection, integration account mapping, AP disputes, AR credit memos/statements, and inventory valuation item/movement lists.
-- NexArr: full `STLCompliance.NexArr.Auth.Tests` project still needs runtime investigation after prior full-suite timeouts; focused R0 coverage passed.
 
 Tests run:
 
 - Focused backend R0 tests across affected product auth/session, tenant settings, authorization, mobile, and finance slices.
+- Full `STLCompliance.NexArr.Auth.Tests` suite now passes in the current repo state (421 tests, 10m 57s), clearing the prior NexArr runtime-investigation note.
+- `STLCompliance.StaffArr.Auth.Tests` still times out as a full-project run in the current repo state, but `StaffArrHandoffApiTests` now passes as a full class run (56 tests, 7m 16s), narrowing the remaining StaffArr runtime investigation.
+- MaintainArr's focused R0 backend verification still passes in the current repo state: `MaintainArrHandoffApiTests` passed 10 tests in 2m 6s, and a permission/tenant-isolation/no-persist cluster across readiness, maintenance history, notifications, and bulk import passed 34 tests in 3m 37s.
+- TrainArr's focused R0 verification still passes in the current repo state: `TrainArrHandoffApiTests` passed 4 tests in 32s, a TrainArr qualification/evidence/signoff cluster passed 24 tests in 2m 7s, and the TrainArr frontend `client.test.ts` plus `ProductWorkspaceLayout.test.tsx` suite passed 6 tests.
+- SupplyArr's focused R0 verification still passes in the current repo state: the handoff/session/me/bootstrap trust-gate cluster passed 5 tests in 49s, and the SupplyArr frontend `client.test.ts`, `ProductWorkspaceLayout.test.tsx`, and `sessionStorage.test.ts` suite passed 47 tests across 3 files in 3.05s. A full-class `SupplyArrHandoffApiTests` rerun still exceeded the local command timeout, so the focused cluster remains the documented R0 verification slice.
+- LoadArr's focused R0 verification still passes in the current repo state: the auth/session/tenant-settings trust-gate cluster passed 10 tests in 12s, and the LoadArr frontend `client.test.ts`, `mutationMessages.test.ts`, and `App.test.tsx` suite passed 51 tests across 3 files in 24.56s.
+- AssurArr's focused R0 verification still passes in the current repo state: the auth/session/startup-guard cluster passed 13 tests in 14s, and the AssurArr frontend `client.test.ts`, `App.test.tsx`, and `sessionStorage.test.ts` suite passed 8 tests across 3 files in 4.71s.
+- CustomArr's focused R0 verification still passes in the current repo state: the auth/session/startup-guard and tenant-scoped workspace/settings cluster passed 18 tests in 7s, and the CustomArr frontend `App.test.tsx` plus `sessionStorage.test.ts` suite passed 5 tests across 2 files in 16.50s.
 - Focused frontend R0 tests across affected product session storage, API client normalization, shell/layout, app, offline queue, and settings slices.
 - Known warnings remain in several .NET test runs: existing NuGet pruning warnings, EF Core version-conflict warnings, and existing xUnit analyzer warnings.
 

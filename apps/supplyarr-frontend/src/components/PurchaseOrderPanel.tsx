@@ -104,7 +104,7 @@ export function PurchaseOrderPanel({
     >
       <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Purchase orders</h2>
       <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-        Create POs from approved purchase requests, approve, issue to vendors, or cancel draft and
+        Create POs from approved purchase requests, approve, issue to suppliers, or cancel draft and
         approved orders.
       </p>
 
@@ -185,7 +185,7 @@ export function PurchaseOrderPanel({
                 onClick={onIssue}
                 disabled={isIssuing}
               >
-                {isIssuing ? 'Issuing…' : 'Issue to vendor'}
+                {isIssuing ? 'Issuing…' : 'Issue to supplier'}
               </button>
             ) : null}
             {canCancelSelected ? (
@@ -232,7 +232,7 @@ export function PurchaseOrderPanel({
             />
             {selectedPr ? (
               <p className="text-xs text-[var(--color-text-muted)]">
-                Vendor: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
+                Supplier: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
               </p>
             ) : null}
             <GeneratedKeyFieldGroup

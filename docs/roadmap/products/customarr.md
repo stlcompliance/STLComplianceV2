@@ -65,6 +65,8 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.CustomArr.Api.Tests/STLCompliance.CustomArr.Api.Tests.csproj --filter "FullyQualifiedName~CustomArrAuthEndpointsTests|FullyQualifiedName~CustomArrCrmWorkspaceServiceTests|FullyQualifiedName~CustomArrTenantSettingsServiceTests" --logger "console;verbosity=minimal"` — passed 17 tests.
 - `npm test -- App.test.tsx sessionStorage.test.ts` from `apps/customarr-frontend` — passed 2 files / 5 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.CustomArr.Api.Tests/STLCompliance.CustomArr.Api.Tests.csproj --no-build --filter "FullyQualifiedName~CustomArrAuthEndpointsTests|FullyQualifiedName~CustomArrCrmWorkspaceServiceTests|FullyQualifiedName~CustomArrTenantSettingsServiceTests" --logger "console;verbosity=minimal"` — passed 18 tests in 7s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` from `apps/customarr-frontend` — passed 2 files / 5 tests in 16.50s.
 
 Remaining blockers:
 

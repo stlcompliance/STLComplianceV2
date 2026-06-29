@@ -261,11 +261,11 @@ describe('RfqPanel', () => {
 
     fireEvent.change(screen.getByTestId('rfq-picker'), { target: { value: 'rfq-1' } })
     expect(await screen.findByText(/Quote analytics/i)).toBeInTheDocument()
-    const inviteVendorSelect = screen.getByLabelText(/Invite vendor/i)
+    const inviteVendorSelect = screen.getByLabelText(/Invite supplier unit/i)
     expect(within(inviteVendorSelect).getByRole('option', { name: /Acme Supply \(ACME\)/i })).not.toBeDisabled()
     expect(within(inviteVendorSelect).getByRole('option', { name: /Beta Parts \(BETA\) \(inactive\)/i })).toBeDisabled()
 
-    const quoteVendorSelect = screen.getByLabelText(/Quote vendor/i)
+    const quoteVendorSelect = screen.getByLabelText(/Quote supplier unit/i)
     expect(within(quoteVendorSelect).getByRole('option', { name: /Acme Supply \(approved · active\)/i })).not.toBeDisabled()
     expect(within(quoteVendorSelect).getByRole('option', { name: /Beta Parts \(restricted · active\) \(inactive\)/i })).toBeDisabled()
     expect(screen.getByText(/Quote Q-ACME-1/i)).toBeInTheDocument()
@@ -275,7 +275,7 @@ describe('RfqPanel', () => {
     expect(screen.getByText(/Response time 4 days/i)).toBeInTheDocument()
     expect(screen.getByText(/Approved source/i)).toBeInTheDocument()
     expect(screen.getByText(/Source attention: restricted/i)).toBeInTheDocument()
-    expect(screen.getByText(/Vendor portal access/i)).toBeInTheDocument()
+    expect(screen.getByText(/Supplier portal access/i)).toBeInTheDocument()
     expect(screen.getByDisplayValue('portal-code-1')).toBeInTheDocument()
   })
 

@@ -185,7 +185,7 @@ export function PurchasingReportsPanel({
           <div className="mt-5">
             <div className="text-sm font-semibold text-slate-100">Procurement analytics</div>
             <p className="mt-1 text-xs text-slate-400">
-              Derived from the current purchase, receiving, compliance, exception, and vendor data.
+              Derived from the current purchase, receiving, compliance, exception, and supplier data.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               <MetricCard
@@ -214,26 +214,26 @@ export function PurchasingReportsPanel({
                 detail="Warranty claims that are still in flight."
               />
               <MetricCard
-                label="Vendor docs expiring"
+                label="Supplier docs expiring"
                 value={String(summaryQuery.data.analytics.vendorDocumentExpiringSoonCount)}
-                detail="Approved vendor compliance documents expiring in the next 30 days."
+                detail="Approved supplier compliance documents expiring in the next 30 days."
               />
               <MetricCard
-                label="Blocked vendors"
+                label="Blocked suppliers"
                 value={String(summaryQuery.data.analytics.blockedVendorCount)}
-                detail="Active vendor or supplier parties blocked by approval status."
+                detail="Active supplier identities or sub-units blocked by approval status."
               />
               <MetricCard
                 label="Average lead time"
                 value={summaryQuery.data.analytics.averageLeadTimeDays == null
                   ? '—'
                   : `${summaryQuery.data.analytics.averageLeadTimeDays} days`}
-                detail="Average lead time across active vendor links."
+                detail="Average lead time across active supplier links."
               />
               <MetricCard
                 label="Estimated spend this month"
                 value={formatCurrency(summaryQuery.data.analytics.estimatedSpendThisMonth)}
-                detail="Estimated from issued purchase orders and current vendor pricing."
+                detail="Estimated from issued purchase orders and current supplier pricing."
               />
             </div>
           </div>
@@ -263,7 +263,7 @@ export function PurchasingReportsPanel({
                           {formatDocumentType(doc.documentType)} {doc.documentKey} · {doc.title}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
-                          {doc.vendorDisplayName || 'No vendor'} · {doc.status}
+                          {doc.vendorDisplayName || 'No supplier'} · {doc.status}
                         </div>
                       </div>
                       <span className="text-xs text-slate-400">{doc.lineCount} lines</span>

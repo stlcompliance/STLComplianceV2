@@ -127,6 +127,6 @@ describe('AvailabilitySnapshotsPanel', () => {
     expect(within(panel).getByText('avail-2026-q2')).toBeInTheDocument()
     expect(within(panel).getByText(/qty 120/)).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Record availability' })).toBeInTheDocument()
-    expect(screen.getByLabelText('Search vendor part links…')).toBeInTheDocument()
+    expect(screen.getByLabelText('Search supplier source links…')).toBeInTheDocument()
   })
 })

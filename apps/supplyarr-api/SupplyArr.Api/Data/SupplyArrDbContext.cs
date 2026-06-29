@@ -202,16 +202,29 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.HasKey(x => x.Id);
             entity.Property(x => x.PartyKey).HasMaxLength(128).IsRequired();
             entity.Property(x => x.PartyType).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.UnitKind).HasMaxLength(32).HasDefaultValue("identity").IsRequired();
             entity.Property(x => x.DisplayName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.LegalName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.TaxIdentifier).HasMaxLength(64);
             entity.Property(x => x.ApprovalStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(32).IsRequired();
             entity.Property(x => x.Notes).HasMaxLength(1024).IsRequired();
+            entity.Property(x => x.ServiceTypesJson).HasMaxLength(2048).HasDefaultValue("[]").IsRequired();
+            entity.Property(x => x.AddressLine1).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.AddressLine2).HasMaxLength(256).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.Locality).HasMaxLength(128).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.RegionCode).HasMaxLength(64).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.PostalCode).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(x => x.CountryCode).HasMaxLength(2).HasDefaultValue(string.Empty).IsRequired();
             entity.HasIndex(x => x.TenantId);
             entity.HasIndex(x => new { x.TenantId, x.PartyKey }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.PartyType, x.Status });
             entity.HasIndex(x => new { x.TenantId, x.ApprovalStatus });
+            entity.HasIndex(x => new { x.TenantId, x.ParentExternalPartyId });
+            entity.HasOne(x => x.ParentExternalParty)
+                .WithMany(x => x.ChildExternalParties)
+                .HasForeignKey(x => x.ParentExternalPartyId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<PartyContact>(entity =>

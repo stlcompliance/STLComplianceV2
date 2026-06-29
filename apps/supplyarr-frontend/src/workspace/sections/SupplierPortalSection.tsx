@@ -46,15 +46,15 @@ export function SupplierPortalSection({ state: s }: Props) {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <PortalCard
-          title="Vendor portal"
-          description="Supplier-side onboarding, quote submission, and message exchange live in the vendor portal experience."
+          title="Supplier portal"
+          description="Supplier-side onboarding, quote submission, and message exchange live in the supplier portal experience."
           actionLabel="Open portal"
           to="/vendor-portal"
         />
         <PortalCard
-          title="Vendor order portal"
-          description="Magic-link order status for suppliers and carriers is handled on the vendor order portal surfaces."
-          actionLabel="Review vendor orders"
+          title="Supplier order portal"
+          description="Magic-link order status for suppliers and carriers is handled on the supplier order portal surfaces."
+          actionLabel="Review supplier orders"
           to="/purchasing/vendor-orders"
         />
         <PortalCard

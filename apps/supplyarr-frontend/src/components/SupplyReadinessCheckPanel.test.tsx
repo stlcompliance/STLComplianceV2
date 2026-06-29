@@ -110,7 +110,7 @@ describe('SupplyReadinessCheckPanel', () => {
     expect(screen.getByText('not_ready')).toBeInTheDocument()
   })
 
-  it('renders searchable vendor picker in vendor mode', async () => {
+  it('renders searchable supplier picker in supplier mode', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -139,7 +139,7 @@ describe('SupplyReadinessCheckPanel', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Vendor' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Supplier' }))
 
     expect(await screen.findByTestId('readiness-check-vendor-picker')).toBeInTheDocument()
     expect(screen.getByTestId('readiness-check-vendor-picker-options')).toHaveTextContent(

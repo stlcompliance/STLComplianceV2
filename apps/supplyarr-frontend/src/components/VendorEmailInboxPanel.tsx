@@ -40,7 +40,7 @@ function MessageCard({ message }: { message: VendorEmailInboxMessageResponse }) 
       </div>
       <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-muted)]">
         <span>Received {formatDate(message.receivedAt)}</span>
-        {message.vendorPartyKey ? <span>Vendor {message.vendorPartyKey}</span> : null}
+        {message.vendorPartyKey ? <span>Supplier {message.vendorPartyKey}</span> : null}
         {message.linkedReferenceType && message.linkedReferenceKey ? (
           <span>
             Linked {message.linkedReferenceType.toUpperCase()} {message.linkedReferenceKey}
@@ -106,7 +106,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
     <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm" data-testid="vendor-email-inbox-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Vendor email inbox</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Supplier email inbox</h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
             Capture quote and order-confirmation emails, then auto-link them to RFQs or purchase orders.
           </p>
@@ -124,7 +124,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
             className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             value={messageKey}
             onChange={(event) => setMessageKey(event.target.value)}
-            placeholder="vendor-mail-001"
+            placeholder="supplier-mail-001"
           />
         </label>
         <label className="text-sm text-[var(--color-text-secondary)]">
@@ -147,7 +147,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
             className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             value={senderEmail}
             onChange={(event) => setSenderEmail(event.target.value)}
-            placeholder="vendor@example.com"
+            placeholder="supplier@example.com"
           />
         </label>
         <label className="text-sm text-[var(--color-text-secondary)]">
@@ -156,7 +156,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
             className="mt-1 w-full rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
             value={senderName}
             onChange={(event) => setSenderName(event.target.value)}
-            placeholder="Vendor Logistics"
+            placeholder="Supplier Logistics"
           />
         </label>
         <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
@@ -210,7 +210,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
           {messages.map((message) => (
             <MessageCard key={message.messageId} message={message} />
           ))}
-          {messages.length === 0 ? <li className="text-sm text-[var(--color-text-muted)]">No vendor email messages yet.</li> : null}
+          {messages.length === 0 ? <li className="text-sm text-[var(--color-text-muted)]">No supplier email messages yet.</li> : null}
         </ul>
       </div>
     </section>

@@ -32,7 +32,7 @@ export function CatalogSection({ state: s }: Props) {
         vendorPartNumber={s.vendorPartNumber}
         selectedPartId={s.selectedPartId}
         selectedVendorId={s.selectedVendorId}
-        vendors={[...(s.vendorsQuery.data ?? []), ...(s.suppliersQuery.data ?? [])].map((v) => ({
+        vendors={s.supplierDirectory.map((v) => ({
           partyId: v.partyId,
           displayName: v.displayName,
           partyKey: v.partyKey,
@@ -78,7 +78,7 @@ export function CatalogSection({ state: s }: Props) {
         accessToken={s.accessToken}
         canManage={s.canManageCatalog}
         parts={s.partsQuery.data ?? []}
-        vendors={s.vendors.map((v) => ({
+        vendors={s.supplierDirectory.map((v) => ({
           partyId: v.partyId,
           displayName: v.displayName,
           partyKey: v.partyKey,

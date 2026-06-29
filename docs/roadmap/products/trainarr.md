@@ -54,8 +54,9 @@ Files touched:
 Tests run:
 
 - `dotnet build apps/trainarr-api/TrainArr.Api/TrainArr.Api.csproj --no-restore` - passed with existing warnings.
-- `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --filter "FullyQualifiedName~TrainArrHandoffApiTests" --logger "console;verbosity=minimal"` - passed 4 tests.
-- `npm test -- client.test.ts ProductWorkspaceLayout.test.tsx` from `apps/trainarr-frontend` - passed 2 files / 6 tests.
+- `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~TrainArrHandoffApiTests" --logger "console;verbosity=minimal"` - now passes 4 tests in the current repo state (32s).
+- `dotnet test tests/STLCompliance.StaffArr.Auth.Tests/STLCompliance.StaffArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~StaffArrTrainArrProgramEvidenceTests|FullyQualifiedName~StaffArrTrainArrQualificationCheckTests|FullyQualifiedName~StaffArrTrainArrSignoffsEvaluationsTests" --logger "console;verbosity=minimal"` - passed 24 focused R0 trust-gate tests covering evidence persistence, qualification permission/tenant checks, and evaluator/signoff authorization flows (2m 7s).
+- `npm test -- --run client.test.ts ProductWorkspaceLayout.test.tsx` from `apps/trainarr-frontend` - passed 2 files / 6 tests in the current repo state.
 
 Remaining blockers: None identified in this R0 slice.
 

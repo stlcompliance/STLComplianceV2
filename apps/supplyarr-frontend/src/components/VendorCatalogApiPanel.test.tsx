@@ -119,7 +119,7 @@ function renderPanel() {
 }
 
 describe('VendorCatalogApiPanel', () => {
-  it('syncs a vendor catalog api payload and refreshes the workspace caches', async () => {
+  it('syncs a supplier source payload and refreshes the workspace caches', async () => {
     mockSyncVendorCatalogApi.mockResolvedValue({
       syncType: 'vendor_catalog_api',
       dryRun: true,
@@ -135,7 +135,7 @@ describe('VendorCatalogApiPanel', () => {
     expect(screen.getByTestId('vendor-catalog-api-panel')).toBeInTheDocument()
     expect(screen.getByText('1 current link')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Vendor catalog JSON payload'), {
+    fireEvent.change(screen.getByLabelText('Supplier source JSON payload'), {
       target: {
         value: JSON.stringify(
           [

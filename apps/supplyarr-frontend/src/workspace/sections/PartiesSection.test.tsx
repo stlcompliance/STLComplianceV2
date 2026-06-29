@@ -1,26 +1,31 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { PartiesSection } from './PartiesSection'
-
-vi.mock('../../components/PartyRegistryPanel', () => ({
-  PartyRegistryPanel: ({ title }: { title: string }) => (
-    <div data-testid={`party-registry-panel-${title.toLowerCase()}`} />
-  ),
-}))
 
 const supplier = {
   partyId: 'supplier-1',
   partyKey: 'sup-2048',
   partyType: 'supplier',
+  parentPartyId: null,
+  parentPartyDisplayName: null,
+  unitKind: 'identity',
   displayName: 'Midwest Fleet Parts & Service',
   legalName: 'Midwest Fleet Parts & Service LLC',
   taxIdentifier: '12-3456789',
   approvalStatus: 'approved',
   status: 'active',
   notes: '',
+  serviceTypes: ['products', 'parts'],
+  addressLine1: '1200 Westport Rd',
+  addressLine2: '',
+  locality: 'Kansas City',
+  regionCode: 'MO',
+  postalCode: '64111',
+  countryCode: 'US',
+  childUnitCount: 1,
   contacts: [
     {
       contactId: 'contact-1',
@@ -34,6 +39,18 @@ const supplier = {
   ],
   createdAt: '2026-01-03T00:00:00Z',
   updatedAt: '2026-06-01T00:00:00Z',
+}
+
+const subUnit = {
+  ...supplier,
+  partyId: 'supplier-2',
+  partyKey: 'sup-2048-kc',
+  parentPartyId: 'supplier-1',
+  parentPartyDisplayName: 'Midwest Fleet Parts & Service',
+  unitKind: 'sub_unit',
+  displayName: 'Midwest Fleet Parts & Service - Kansas City',
+  childUnitCount: 0,
+  serviceTypes: ['parts', 'maintenance'],
 }
 
 const contract = {
@@ -70,6 +87,7 @@ const baseState = {
   vendors: [],
   vendorsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [], isLoading: false },
+  supplierDirectory: [],
   dealersQuery: { data: [], isLoading: false },
   contractsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
@@ -85,6 +103,14 @@ const baseState = {
   supplierLegalName: '',
   supplierTaxId: '',
   supplierNotes: '',
+  supplierParentPartyId: '',
+  supplierUnitKind: 'identity',
+  supplierServiceTypes: 'products,parts',
+  supplierAddressLine1: '',
+  supplierLocality: '',
+  supplierRegionCode: '',
+  supplierPostalCode: '',
+  supplierCountryCode: 'US',
   dealerKey: '',
   dealerName: '',
   dealerLegalName: '',
@@ -100,6 +126,14 @@ const baseState = {
   setSupplierLegalName: () => {},
   setSupplierTaxId: () => {},
   setSupplierNotes: () => {},
+  setSupplierParentPartyId: () => {},
+  setSupplierUnitKind: () => {},
+  setSupplierServiceTypes: () => {},
+  setSupplierAddressLine1: () => {},
+  setSupplierLocality: () => {},
+  setSupplierRegionCode: () => {},
+  setSupplierPostalCode: () => {},
+  setSupplierCountryCode: () => {},
   setDealerKey: () => {},
   setDealerName: () => {},
   setDealerLegalName: () => {},
@@ -131,28 +165,29 @@ function renderPartiesSection(path = '/parties/drawer', state: unknown = baseSta
 }
 
 describe('PartiesSection', () => {
-  it('renders party registry workspace with vendor, supplier, and dealer panels', () => {
+  it('renders the unified supplier directory workspace', () => {
     renderPartiesSection()
-    expect(screen.getByTestId('supplyarr-party-registry-workspace')).toBeInTheDocument()
-    expect(screen.getByTestId('party-registry-panel-vendors')).toBeInTheDocument()
-    expect(screen.getByTestId('party-registry-panel-suppliers')).toBeInTheDocument()
-    expect(screen.getByTestId('party-registry-panel-dealers')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-supplier-directory')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Supplier directory' })).toBeInTheDocument()
+    expect(screen.getByText('0 supplier identities · 0 sub-units')).toBeInTheDocument()
   })
 
   it('renders the replacement supplier profile detail view', () => {
-    renderPartiesSection('/parties/details', {
+    const view = renderPartiesSection('/suppliers/details', {
       ...baseState,
-      suppliersQuery: { data: [supplier], isLoading: false },
+      suppliersQuery: { data: [supplier, subUnit], isLoading: false },
+      supplierDirectory: [supplier, subUnit],
       contractsQuery: { data: [contract], isLoading: false },
     } as never)
 
-    expect(screen.getByTestId('supplyarr-party-profile')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Midwest Fleet Parts & Service' })).toBeInTheDocument()
-    expect(screen.getByText('Supplier snapshot')).toBeInTheDocument()
-    expect(screen.getByText('Contracts & purchasing terms')).toBeInTheDocument()
-    expect(screen.getByText('SC-2048')).toBeInTheDocument()
-    expect(screen.getAllByText('Net 30')).toHaveLength(2)
-    expect(screen.getByText('Supplier decision')).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveAttribute('aria-selected', 'true')
+    const page = within(view.container)
+    expect(page.getAllByTestId('supplyarr-supplier-profile').at(-1)).toBeInTheDocument()
+    expect(page.getByRole('heading', { name: 'Midwest Fleet Parts & Service' })).toBeInTheDocument()
+    expect(page.getAllByText('Supplier snapshot').at(-1)).toBeInTheDocument()
+    expect(page.getByText('Contracts & terms')).toBeInTheDocument()
+    expect(page.getByText('SC-2048')).toBeInTheDocument()
+    expect(page.getAllByText('Sub-units').at(-1)).toBeInTheDocument()
+    expect(page.getByText('Midwest Fleet Parts & Service - Kansas City')).toBeInTheDocument()
+    expect(page.getAllByText(/Products, Parts/i).length).toBeGreaterThan(0)
   })
 })

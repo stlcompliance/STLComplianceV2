@@ -76,7 +76,7 @@ export function AvailabilitySnapshotSettingsPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Availability snapshot worker</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Automatically capture vendor catalog availability into availability snapshot history when catalog quantity or
+        Automatically capture supplier catalog availability into availability snapshot history when catalog quantity or
         status drifts from the current effective snapshot.
       </p>
 
@@ -140,7 +140,7 @@ export function AvailabilitySnapshotSettingsPanel({
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">Loading pending preview…</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length === 0 && (
-          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No vendor links currently due for availability snapshot capture.</p>
+          <p className="mt-2 text-sm text-[var(--color-text-muted)]">No supplier links currently due for availability snapshot capture.</p>
         )}
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
@@ -183,4 +183,3 @@ export function AvailabilitySnapshotSettingsPanel({
     </section>
   )
 }
-

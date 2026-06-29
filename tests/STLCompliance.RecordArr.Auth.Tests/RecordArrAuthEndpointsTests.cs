@@ -268,18 +268,18 @@ public sealed class RecordArrAuthEndpointsTests : IAsyncLifetime
                 "restart-persistence").AccessLogId;
 
             var signature = store.CreateSignatureRecord(
-                DemoTenantId.ToString(),
-                recordId,
-                "proof_of_delivery",
-                DemoPersonId.ToString(),
-                null,
-                "Route lead",
-                "Signed route packet.",
-                DemoPersonId.ToString(),
-                "routarr",
-                "routarr:trip:trip-persist-100",
-                "38.6270,-90.1994",
-                "field-device:demo");
+                tenantId: DemoTenantId.ToString(),
+                recordId: recordId,
+                signaturePurpose: "proof_of_delivery",
+                signerPersonId: DemoPersonId.ToString(),
+                signerExternalName: null,
+                signerTitle: "Route lead",
+                attestationText: "Signed route packet.",
+                capturedByPersonId: DemoPersonId.ToString(),
+                sourceProduct: "routarr",
+                sourceObjectRef: "routarr:trip:trip-persist-100",
+                geoCoordinates: "38.6270,-90.1994",
+                deviceSnapshot: "field-device:demo");
             signatureRecordId = signature.SignatureRecordId;
             signatureFileId = signature.SignatureFileRef;
 

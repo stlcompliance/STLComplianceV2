@@ -114,7 +114,7 @@ export function SupplyReadinessCheckPanel({
     >
       <h2 className="text-lg font-semibold text-slate-50">Readiness check</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Evaluate part availability, vendor approval, and procurement path blockers with stable reason
+        Evaluate part availability, supplier approval, and procurement path blockers with stable reason
         codes for related workflows.
       </p>
 
@@ -130,7 +130,7 @@ export function SupplyReadinessCheckPanel({
             }`}
             onClick={() => setCheckMode(mode)}
           >
-            {mode === 'part' ? 'Part' : mode === 'vendor' ? 'Vendor' : 'Procurement path'}
+            {mode === 'part' ? 'Part' : mode === 'vendor' ? 'Supplier' : 'Procurement path'}
           </button>
         ))}
       </div>
@@ -152,12 +152,12 @@ export function SupplyReadinessCheckPanel({
         {(checkMode === 'vendor' || checkMode === 'path') && (
           <StaticSearchPicker
             id="readiness-check-vendor"
-            label="Vendor or supplier"
+            label="Supplier identity or sub-unit"
             value={selectedVendorId}
             onChange={setSelectedVendorId}
             options={vendorOptions}
             selectedOption={selectedVendorOption}
-            placeholder="Search vendors…"
+            placeholder="Search supplier identities or sub-units…"
             testId="readiness-check-vendor-picker"
           />
         )}

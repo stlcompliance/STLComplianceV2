@@ -73,6 +73,7 @@ describe('VendorRestrictionsPanel', () => {
               partyId: 'party-1',
               partyKey: 'V-1',
               partyType: 'vendor',
+              unitKind: 'identity',
               displayName: 'Test Vendor',
               legalName: '',
               taxIdentifier: null,
@@ -88,10 +89,10 @@ describe('VendorRestrictionsPanel', () => {
       </QueryClientProvider>,
     )
     expect(await screen.findByTestId('vendor-restrictions-panel')).toBeInTheDocument()
-    expect(screen.getByText('Vendor restrictions')).toBeInTheDocument()
+    expect(screen.getByText('Supplier restrictions')).toBeInTheDocument()
   })
 
-  it('uses a searchable picker for vendor selection', async () => {
+  it('uses a searchable picker for supplier hierarchy selection', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
@@ -103,6 +104,7 @@ describe('VendorRestrictionsPanel', () => {
               partyId: 'party-1',
               partyKey: 'V-1',
               partyType: 'vendor',
+              unitKind: 'identity',
               displayName: 'Test Vendor',
               legalName: '',
               taxIdentifier: null,
@@ -117,6 +119,7 @@ describe('VendorRestrictionsPanel', () => {
               partyId: 'party-2',
               partyKey: 'S-1',
               partyType: 'supplier',
+              unitKind: 'sub_unit',
               displayName: 'Second Supplier',
               legalName: '',
               taxIdentifier: null,
@@ -134,10 +137,10 @@ describe('VendorRestrictionsPanel', () => {
 
     expect(await screen.findByTestId('vendor-restrictions-panel')).toBeInTheDocument()
     expect(screen.getByTestId('vendor-restriction-party-picker-options')).toHaveTextContent(
-      'vendor · V-1 · Test Vendor',
+      'supplier identity · V-1 · Test Vendor',
     )
     expect(screen.getByTestId('vendor-restriction-party-picker-options')).toHaveTextContent(
-      'supplier · S-1 · Second Supplier',
+      'sub-unit · S-1 · Second Supplier',
     )
 
     fireEvent.change(screen.getByTestId('vendor-restriction-party-picker'), {

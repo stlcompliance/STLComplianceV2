@@ -22,7 +22,7 @@ export function PurchasingSection({ state: s }: Props) {
     : location.pathname.startsWith('/purchasing/approvals')
       ? 'approvals'
       : 'procurement'
-  const vendors = s.vendors.map((v) => ({
+  const suppliers = s.supplierDirectory.map((v) => ({
     partyId: v.partyId,
     displayName: v.displayName,
     partyKey: v.partyKey,
@@ -33,9 +33,9 @@ export function PurchasingSection({ state: s }: Props) {
       <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="text-lg font-semibold text-white">Vendor-order readiness</h2>
+            <h2 className="text-lg font-semibold text-white">Supplier order readiness</h2>
             <p className="mt-1 text-sm text-slate-400">
-              Manage vendor confirmations, partial decisions, magic links, and dispatch readiness.
+              Manage supplier confirmations, location-aware sourcing decisions, magic links, and dispatch readiness.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -43,14 +43,14 @@ export function PurchasingSection({ state: s }: Props) {
               to="/purchasing/vendor-orders"
               className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
             >
-              Open vendor orders
+              Open supplier orders
             </Link>
             {s.canCreatePr ? (
               <Link
                 to="/purchasing/vendor-orders/create"
                 className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
               >
-                Create vendor order
+                Create supplier order
               </Link>
             ) : null}
           </div>
@@ -67,21 +67,21 @@ export function PurchasingSection({ state: s }: Props) {
         canCreate={s.canCreateEmergencyPurchase}
         canOverrideApprove={s.canManagerOverrideEmergencyPurchase}
         parts={s.partsQuery.data ?? []}
-        vendors={vendors}
+        vendors={suppliers}
       />
       <RfqPanel
         accessToken={s.accessToken}
         canManage={s.canCreatePr}
         canAward={s.canApprovePr}
         parts={s.partsQuery.data ?? []}
-        vendors={vendors}
-        vendorDirectory={s.vendorsQuery.data ?? []}
+        vendors={suppliers}
+        vendorDirectory={s.supplierDirectory}
       />
       <VendorEmailInboxPanel accessToken={s.accessToken} canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo} />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}
         parts={s.partsQuery.data ?? []}
-        vendors={vendors}
+        vendors={suppliers}
         canCreate={s.canCreatePr}
         canApprove={s.canApprovePr}
         isLoading={s.purchaseRequestsQuery.isLoading}
