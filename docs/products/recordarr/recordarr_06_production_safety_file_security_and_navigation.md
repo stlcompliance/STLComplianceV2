@@ -125,7 +125,39 @@ Stale recovery points, missing recovery point IDs, cross-tenant or missing recor
 
 Backup verification runs are also tenant-scoped durable disaster-recovery evidence records. They require explicit backup provider name, backup job reference, backup manifest hash, recovery point ID, and RPO target before RecordArr can claim backup coverage. Missing provider/job/manifest/recovery-point evidence fails truthfully. Passing runs write `backup_verification` evidence with provider/job/manifest details, verified/failed file refs, fixity observations, and access-log evidence through the same workspace and integration route family.
 
-Backup verification proves that a provider-supplied manifest covers known RecordArr files at a recovery point. It is not a full managed backup orchestrator. Provider scheduling, backup job execution, immutable backup retention, storage-tier lifecycle policy enforcement, and external provider reconciliation remain operational/provider controls until explicitly implemented.
+The disabled-by-default `BackupVerificationWorker` can poll explicit provider backup manifest files only for configured tenant IDs. It must be configured with:
+
+- `BackupVerificationWorker:Enabled`
+- `BackupVerificationWorker:TenantIds`
+- `BackupVerificationWorker:ManifestPath`
+- `BackupVerificationWorker:RequestedByPersonId`
+- `BackupVerificationWorker:DefaultRpoTargetMinutes`
+- `BackupVerificationWorker:PollIntervalSeconds`
+
+Manifest rows must include the tenant, provider name, backup job reference, manifest hash, recovery point, recovery-point creation time, RPO target, and at least one known tenant record ID:
+
+```json
+{
+  "manifests": [
+    {
+      "tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "backupProviderName": "backup-vault",
+      "backupJobRef": "job-123",
+      "backupManifestHash": "sha256-manifest",
+      "recoveryPointId": "rp-2026-06-29T04:15Z",
+      "recoveryPointCreatedAt": "2026-06-29T04:15:00Z",
+      "rpoTargetMinutes": 60,
+      "recordIds": ["rec-bol-001"],
+      "missingFileIds": [],
+      "corruptFileIds": []
+    }
+  ]
+}
+```
+
+Missing manifest paths, missing rows, cross-tenant rows, missing provider/job/manifest/recovery-point evidence, unknown record IDs, and unknown file IDs must not create passing backup verification evidence. The worker must never synthesize provider backup coverage; it only runs the same durable backup-verification path when the manifest scopes a known tenant record and supplies explicit provider evidence.
+
+Backup verification proves that a provider-supplied manifest covers known RecordArr records at a recovery point. It is not a full managed backup orchestrator. Provider scheduling, backup job execution, immutable backup retention, storage-tier lifecycle policy enforcement, and external provider reconciliation beyond explicit backup manifests and the configured manifest worker remain operational/provider controls until explicitly implemented.
 
 ## Signature and redaction evidence
 
@@ -211,7 +243,34 @@ Rendered redaction overlay review is explicit and tenant-scoped through:
 
 Overlay review is allowed only for generated redactions with a locked RecordArr redaction package hash. The request must include a review status of `approved`, `changes_requested`, or `rejected` and at least one rendered overlay evidence reference. Evidence and issue references are normalized and deduplicated before the review hash is calculated. `approved` reviews persist overlay evidence refs, review actor/time, review hash, and approval reason evidence. `changes_requested` and `rejected` reviews persist truthful failure state, issue refs when supplied, and denial access-log evidence without claiming redaction approval.
 
-These controls provide durable RecordArr-owned signature/redaction evidence plus explicit signature trust-service job submission/manifest reconciliation, a disabled-by-default trust-service manifest worker, direct signature callback reconciliation, redaction provider job submission/manifest reconciliation, a disabled-by-default redaction provider manifest worker, direct redaction provider callback reconciliation, and rendered redaction overlay review evidence. External trust-service webhook ingestion, provider scheduling, provider-managed timestamp/long-term-validation automation beyond explicit trust-service jobs/manifests and the configured manifest worker, automated visual overlay UI/worker orchestration, external redaction-provider webhook ingestion/provider scheduling/delivery orchestration beyond explicit provider jobs/manifests and the configured manifest worker, and managed rendered-overlay automation remain future provider-orchestration work and must not be represented as complete.
+The disabled-by-default `RedactionOverlayReviewWorker` can poll explicit rendered-overlay review manifest files only for configured tenant IDs. It must be configured with:
+
+- `RedactionOverlayReviewWorker:Enabled`
+- `RedactionOverlayReviewWorker:TenantIds`
+- `RedactionOverlayReviewWorker:ManifestPath`
+- `RedactionOverlayReviewWorker:RequestedByPersonId`
+- `RedactionOverlayReviewWorker:PollIntervalSeconds`
+
+Manifest rows must include the tenant, redaction ID, locked redaction package hash, review status, and at least one rendered overlay evidence ref:
+
+```json
+{
+  "manifests": [
+    {
+      "tenantId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      "redactionId": "red-abc123",
+      "redactionPackageHash": "locked-package-hash",
+      "overlayReviewStatus": "approved",
+      "overlayEvidenceRefs": ["rendered-page-1-overlay"],
+      "overlayIssueRefs": []
+    }
+  ]
+}
+```
+
+Missing manifest paths, missing rows, cross-tenant rows, already-reviewed redactions, stale package hashes, and missing rendered-overlay evidence must leave redactions unreviewed. The worker must never synthesize rendered evidence or claim overlay approval without a matching locked package hash and explicit rendered overlay refs.
+
+These controls provide durable RecordArr-owned signature/redaction evidence plus explicit signature trust-service job submission/manifest reconciliation, a disabled-by-default trust-service manifest worker, direct signature callback reconciliation, redaction provider job submission/manifest reconciliation, a disabled-by-default redaction provider manifest worker, direct redaction provider callback reconciliation, rendered redaction overlay review evidence, and a disabled-by-default rendered-overlay review manifest worker. External trust-service webhook ingestion, provider scheduling, provider-managed timestamp/long-term-validation automation beyond explicit trust-service jobs/manifests and the configured manifest worker, external redaction-provider webhook ingestion/provider scheduling/delivery orchestration beyond explicit provider jobs/manifests and the configured manifest worker, rendered-overlay generation/provider scheduling beyond explicit overlay manifests and the configured manifest worker, and broader managed rendered-overlay automation remain future provider-orchestration work and must not be represented as complete.
 
 ## Retention and access
 

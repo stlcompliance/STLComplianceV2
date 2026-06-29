@@ -1622,6 +1622,350 @@ public sealed class RecordArrStoreTests
     }
 
     [Fact]
+    public async Task Backup_verification_manifest_provider_returns_only_tenant_record_scoped_manifests()
+    {
+        var databaseName = $"recordarr-backup-provider-{Guid.NewGuid():N}";
+        using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string recordId;
+        string fileId;
+        string otherTenantRecordId;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var record = store.CreateRecord(
+                DefaultTenantId,
+                "Backup provider scope",
+                "Validates provider backup manifest filtering.",
+                "evidence_package",
+                "operations",
+                "disaster_recovery",
+                "backup",
+                "internal",
+                "recordarr",
+                "disaster_recovery",
+                "backup-provider-test",
+                "Backup Provider Test",
+                "person-record-owner",
+                "person-record-owner",
+                "backup-provider.pdf",
+                "application/pdf",
+                "recordarr",
+                "tenant/backup-provider.pdf",
+                4096);
+            var file = store.CreateFile(
+                record.RecordId,
+                "backup-provider-attachment.pdf",
+                "application/pdf",
+                "person-record-owner",
+                "recordarr",
+                "tenant/backup-provider-attachment.pdf",
+                2048);
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other backup provider scope",
+                "Must not leak into the default tenant backup worker.",
+                "evidence_package",
+                "operations",
+                "disaster_recovery",
+                "backup",
+                "internal",
+                "recordarr",
+                "disaster_recovery",
+                "backup-provider-other-tenant-test",
+                "Other Backup Provider Test",
+                "person-other-owner",
+                "person-other-owner",
+                "backup-provider-other.pdf",
+                "application/pdf",
+                "recordarr",
+                "tenant/backup-provider-other.pdf",
+                4096);
+
+            recordId = record.RecordId;
+            fileId = file.FileId;
+            otherTenantRecordId = otherTenantRecord.RecordId;
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-backup-provider-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                backupProviderName = "backup-vault",
+                                backupJobRef = "job-other-tenant",
+                                backupManifestHash = "sha256-other-manifest",
+                                recoveryPointId = "rp-other",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { otherTenantRecordId },
+                                missingFileIds = Array.Empty<string>(),
+                                corruptFileIds = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                backupProviderName = "",
+                                backupJobRef = "job-missing-provider",
+                                backupManifestHash = "sha256-missing-provider",
+                                recoveryPointId = "rp-missing-provider",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { recordId },
+                                missingFileIds = Array.Empty<string>(),
+                                corruptFileIds = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                backupProviderName = "backup-vault",
+                                backupJobRef = "job-unknown-record",
+                                backupManifestHash = "sha256-unknown-record",
+                                recoveryPointId = "rp-unknown-record",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { "unknown-record" },
+                                missingFileIds = new[] { fileId },
+                                corruptFileIds = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                backupProviderName = "backup-vault",
+                                backupJobRef = "job-valid-record",
+                                backupManifestHash = "sha256-valid-record",
+                                recoveryPointId = "rp-valid-record",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { recordId },
+                                missingFileIds = new[] { "unknown-file" },
+                                corruptFileIds = Array.Empty<string>()
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            using var verifyScope = provider.CreateScope();
+            var store = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var options = new StaticOptionsMonitor<BackupVerificationWorkerOptions>(new BackupVerificationWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath,
+                DefaultRpoTargetMinutes = 60
+            });
+            var manifestProvider = new ManifestRecordArrBackupVerificationManifestProvider(
+                options,
+                NullLogger<ManifestRecordArrBackupVerificationManifestProvider>.Instance);
+
+            var manifests = await manifestProvider.GetManifestsAsync(
+                DefaultTenantId,
+                store.GetStorageReconciliationCandidateFiles(DefaultTenantId),
+                CancellationToken.None);
+
+            var manifest = Assert.Single(manifests);
+            Assert.Equal("backup-vault", manifest.BackupProviderName);
+            Assert.Equal("job-valid-record", manifest.BackupJobRef);
+            Assert.Equal("sha256-valid-record", manifest.BackupManifestHash);
+            Assert.Equal("rp-valid-record", manifest.RecoveryPointId);
+            Assert.Equal([recordId], manifest.RecordIds);
+            Assert.Empty(manifest.MissingFileIds);
+            Assert.Empty(manifest.CorruptFileIds);
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Backup_verification_worker_requires_explicit_manifest_and_processes_only_matching_tenant_records()
+    {
+        var databaseName = $"recordarr-backup-worker-{Guid.NewGuid():N}";
+        await using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string recordId;
+        string fileId;
+        string otherTenantRecordId;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var record = store.CreateRecord(
+                DefaultTenantId,
+                "Backup worker scope",
+                "Validates backup verification worker persistence.",
+                "evidence_package",
+                "operations",
+                "disaster_recovery",
+                "backup",
+                "internal",
+                "recordarr",
+                "disaster_recovery",
+                "backup-worker-test",
+                "Backup Worker Test",
+                "person-record-owner",
+                "person-record-owner",
+                "backup-worker.pdf",
+                "application/pdf",
+                "recordarr",
+                "tenant/backup-worker.pdf",
+                4096);
+            var file = store.CreateFile(
+                record.RecordId,
+                "backup-worker-attachment.pdf",
+                "application/pdf",
+                "person-record-owner",
+                "recordarr",
+                "tenant/backup-worker-attachment.pdf",
+                2048);
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other backup worker scope",
+                "Must not leak into the default tenant backup worker.",
+                "evidence_package",
+                "operations",
+                "disaster_recovery",
+                "backup",
+                "internal",
+                "recordarr",
+                "disaster_recovery",
+                "backup-worker-other-tenant-test",
+                "Other Backup Worker Test",
+                "person-other-owner",
+                "person-other-owner",
+                "backup-worker-other.pdf",
+                "application/pdf",
+                "recordarr",
+                "tenant/backup-worker-other.pdf",
+                4096);
+
+            recordId = record.RecordId;
+            fileId = file.FileId;
+            otherTenantRecordId = otherTenantRecord.RecordId;
+        }
+
+        var missingManifestOptions = new StaticOptionsMonitor<BackupVerificationWorkerOptions>(new BackupVerificationWorkerOptions
+        {
+            Enabled = true,
+            TenantIds = [DefaultTenantId],
+            RequestedByPersonId = "recordarr-backup-verification-worker"
+        });
+        var missingWorker = new RecordArrBackupVerificationWorker(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            new ManifestRecordArrBackupVerificationManifestProvider(
+                missingManifestOptions,
+                NullLogger<ManifestRecordArrBackupVerificationManifestProvider>.Instance),
+            missingManifestOptions,
+            NullLogger<RecordArrBackupVerificationWorker>.Instance);
+
+        await missingWorker.RunOnceAsync();
+
+        using (var missingVerifyScope = provider.CreateScope())
+        {
+            var store = missingVerifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            Assert.Empty(store.GetDisasterRecoveryRuns(DefaultTenantId));
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-backup-worker-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                backupProviderName = "backup-vault",
+                                backupJobRef = "job-other-tenant",
+                                backupManifestHash = "sha256-other-manifest",
+                                recoveryPointId = "rp-other",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { otherTenantRecordId },
+                                missingFileIds = Array.Empty<string>(),
+                                corruptFileIds = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                backupProviderName = "backup-vault",
+                                backupJobRef = "job-worker",
+                                backupManifestHash = "sha256-worker",
+                                recoveryPointId = "rp-worker",
+                                recoveryPointCreatedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+                                rpoTargetMinutes = 60,
+                                recordIds = new[] { recordId },
+                                missingFileIds = Array.Empty<string>(),
+                                corruptFileIds = Array.Empty<string>()
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            var options = new BackupVerificationWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath,
+                RequestedByPersonId = "recordarr-backup-verification-worker",
+                DefaultRpoTargetMinutes = 60
+            };
+            var optionsMonitor = new StaticOptionsMonitor<BackupVerificationWorkerOptions>(options);
+            var worker = new RecordArrBackupVerificationWorker(
+                provider.GetRequiredService<IServiceScopeFactory>(),
+                new ManifestRecordArrBackupVerificationManifestProvider(
+                    optionsMonitor,
+                    NullLogger<ManifestRecordArrBackupVerificationManifestProvider>.Instance),
+                optionsMonitor,
+                NullLogger<RecordArrBackupVerificationWorker>.Instance);
+
+            await worker.RunOnceAsync();
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+
+        using var verifyScope = provider.CreateScope();
+        var verifyStore = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+        var run = Assert.Single(verifyStore.GetDisasterRecoveryRuns(DefaultTenantId));
+
+        Assert.Equal("backup_verification", run.RunType);
+        Assert.Equal("passed", run.Status);
+        Assert.Equal("backup-vault", run.BackupProviderName);
+        Assert.Equal("job-worker", run.BackupJobRef);
+        Assert.Equal("sha256-worker", run.BackupManifestHash);
+        Assert.Contains(recordId, run.RestoredRecordRefs);
+        Assert.Contains(fileId, run.VerifiedFileRefs);
+        Assert.Empty(verifyStore.GetDisasterRecoveryRuns(otherTenantId));
+        Assert.Contains(
+            verifyStore.GetAccessLogs(DefaultTenantId, recordId),
+            log => log.Action == "disaster_recovery.backup_verified" &&
+                   log.Result == "allowed" &&
+                   log.ReasonCode == run.DisasterRecoveryRunId);
+    }
+
+    [Fact]
     public async Task Object_store_inventory_worker_requires_explicit_manifest_evidence()
     {
         var databaseName = $"recordarr-object-store-worker-empty-{Guid.NewGuid():N}";
@@ -3481,6 +3825,312 @@ public sealed class RecordArrStoreTests
             verifyStore.GetRedactions("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
             redaction => redaction.RedactionId == approvedRedactionId ||
                          redaction.RedactionId == changesRequestedRedactionId);
+    }
+
+    [Fact]
+    public async Task Redaction_overlay_manifest_provider_returns_only_reviewable_tenant_manifests()
+    {
+        var databaseName = $"recordarr-redaction-overlay-provider-{Guid.NewGuid():N}";
+        using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string reviewableRedactionId;
+        string reviewablePackageHash;
+        string alreadyReviewedRedactionId;
+        string alreadyReviewedPackageHash;
+        string otherTenantRedactionId;
+        string otherTenantPackageHash;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var reviewable = store.CreateRedaction(
+                DefaultTenantId,
+                "rec-bol-001",
+                "rec-bol-001-redacted-overlay-provider",
+                "privacy",
+                "person-doc-controller",
+                ["mask:phone"]);
+            var alreadyReviewed = store.CreateRedaction(
+                DefaultTenantId,
+                "rec-bol-001",
+                "rec-bol-001-redacted-overlay-provider-reviewed",
+                "security",
+                "person-doc-controller",
+                ["mask:driver_license"]);
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other tenant overlay source",
+                "Validates tenant filtering for redaction overlay manifests.",
+                "document",
+                "operations",
+                "safety",
+                "incident",
+                "internal",
+                "recordarr",
+                "record",
+                "other-tenant-overlay-source",
+                "Other Tenant Overlay Source",
+                "person-other-owner",
+                "person-other-owner",
+                "other-overlay-source.pdf",
+                "application/pdf");
+            var otherTenantRedaction = store.CreateRedaction(
+                otherTenantId,
+                otherTenantRecord.RecordId,
+                "other-tenant-redacted-overlay-provider",
+                "privacy",
+                "person-other-owner",
+                ["mask:phone"]);
+
+            store.ReviewRedactionOverlay(
+                DefaultTenantId,
+                alreadyReviewed.RedactionId,
+                "person-doc-controller",
+                "approved",
+                ["already-rendered-overlay"],
+                []);
+
+            reviewableRedactionId = reviewable.RedactionId;
+            reviewablePackageHash = reviewable.RedactionPackageHash;
+            alreadyReviewedRedactionId = alreadyReviewed.RedactionId;
+            alreadyReviewedPackageHash = alreadyReviewed.RedactionPackageHash;
+            otherTenantRedactionId = otherTenantRedaction.RedactionId;
+            otherTenantPackageHash = otherTenantRedaction.RedactionPackageHash;
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-redaction-overlay-provider-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                redactionId = otherTenantRedactionId,
+                                redactionPackageHash = otherTenantPackageHash,
+                                overlayReviewStatus = "approved",
+                                overlayEvidenceRefs = new[] { "wrong-tenant-rendered-overlay" },
+                                overlayIssueRefs = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                redactionId = alreadyReviewedRedactionId,
+                                redactionPackageHash = alreadyReviewedPackageHash,
+                                overlayReviewStatus = "approved",
+                                overlayEvidenceRefs = new[] { "already-reviewed-rendered-overlay" },
+                                overlayIssueRefs = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                redactionId = reviewableRedactionId,
+                                redactionPackageHash = "stale-package-hash",
+                                overlayReviewStatus = "approved",
+                                overlayEvidenceRefs = new[] { "stale-rendered-overlay" },
+                                overlayIssueRefs = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                redactionId = reviewableRedactionId,
+                                redactionPackageHash = reviewablePackageHash,
+                                overlayReviewStatus = "changes_requested",
+                                overlayEvidenceRefs = new[] { " rendered-page-1-overlay ", "rendered-page-1-overlay" },
+                                overlayIssueRefs = new[] { "unmasked-footer" }
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            using var verifyScope = provider.CreateScope();
+            var store = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var options = new StaticOptionsMonitor<RedactionOverlayReviewWorkerOptions>(new RedactionOverlayReviewWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath
+            });
+            var manifestProvider = new ManifestRecordArrRedactionOverlayReviewManifestProvider(
+                options,
+                NullLogger<ManifestRecordArrRedactionOverlayReviewManifestProvider>.Instance);
+
+            var manifests = await manifestProvider.GetManifestsAsync(
+                DefaultTenantId,
+                store.GetRedactions(DefaultTenantId),
+                CancellationToken.None);
+
+            var manifest = Assert.Single(manifests);
+            Assert.Equal(reviewableRedactionId, manifest.RedactionId);
+            Assert.Equal(reviewablePackageHash, manifest.RedactionPackageHash);
+            Assert.Equal("changes_requested", manifest.OverlayReviewStatus);
+            Assert.Equal(["rendered-page-1-overlay"], manifest.OverlayEvidenceRefs);
+            Assert.Equal(["unmasked-footer"], manifest.OverlayIssueRefs);
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Redaction_overlay_worker_requires_explicit_manifest_and_processes_only_matching_tenant_redactions()
+    {
+        var databaseName = $"recordarr-redaction-overlay-worker-{Guid.NewGuid():N}";
+        await using var provider = CreateStoreProvider(databaseName);
+        var otherTenantId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
+        string redactionId;
+        string redactionPackageHash;
+        string otherTenantRedactionId;
+        string otherTenantPackageHash;
+
+        using (var seedScope = provider.CreateScope())
+        {
+            var store = seedScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var redaction = store.CreateRedaction(
+                DefaultTenantId,
+                "rec-bol-001",
+                "rec-bol-001-redacted-overlay-worker",
+                "privacy",
+                "person-doc-controller",
+                ["mask:phone"]);
+            var otherTenantRecord = store.CreateRecord(
+                otherTenantId,
+                "Other tenant overlay worker source",
+                "Validates tenant filtering for redaction overlay worker.",
+                "document",
+                "operations",
+                "safety",
+                "incident",
+                "internal",
+                "recordarr",
+                "record",
+                "other-tenant-overlay-worker-source",
+                "Other Tenant Overlay Worker Source",
+                "person-other-owner",
+                "person-other-owner",
+                "other-overlay-worker-source.pdf",
+                "application/pdf");
+            var otherTenantRedaction = store.CreateRedaction(
+                otherTenantId,
+                otherTenantRecord.RecordId,
+                "other-tenant-redacted-overlay-worker",
+                "privacy",
+                "person-other-owner",
+                ["mask:phone"]);
+
+            redactionId = redaction.RedactionId;
+            redactionPackageHash = redaction.RedactionPackageHash;
+            otherTenantRedactionId = otherTenantRedaction.RedactionId;
+            otherTenantPackageHash = otherTenantRedaction.RedactionPackageHash;
+        }
+
+        var missingManifestOptions = new StaticOptionsMonitor<RedactionOverlayReviewWorkerOptions>(new RedactionOverlayReviewWorkerOptions
+        {
+            Enabled = true,
+            TenantIds = [DefaultTenantId],
+            RequestedByPersonId = "recordarr-redaction-overlay-worker"
+        });
+        var missingWorker = new RecordArrRedactionOverlayReviewWorker(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            new ManifestRecordArrRedactionOverlayReviewManifestProvider(
+                missingManifestOptions,
+                NullLogger<ManifestRecordArrRedactionOverlayReviewManifestProvider>.Instance),
+            missingManifestOptions,
+            NullLogger<RecordArrRedactionOverlayReviewWorker>.Instance);
+
+        await missingWorker.RunOnceAsync();
+
+        using (var missingVerifyScope = provider.CreateScope())
+        {
+            var store = missingVerifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+            var redaction = Assert.Single(store.GetRedactions(DefaultTenantId), item => item.RedactionId == redactionId);
+            Assert.Null(redaction.OverlayReviewStatus);
+        }
+
+        var manifestPath = Path.Combine(Path.GetTempPath(), $"recordarr-redaction-overlay-worker-{Guid.NewGuid():N}.json");
+        try
+        {
+            await File.WriteAllTextAsync(
+                manifestPath,
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        manifests = new object[]
+                        {
+                            new
+                            {
+                                tenantId = otherTenantId,
+                                redactionId = otherTenantRedactionId,
+                                redactionPackageHash = otherTenantPackageHash,
+                                overlayReviewStatus = "approved",
+                                overlayEvidenceRefs = new[] { "wrong-tenant-rendered-overlay" },
+                                overlayIssueRefs = Array.Empty<string>()
+                            },
+                            new
+                            {
+                                tenantId = DefaultTenantId,
+                                redactionId,
+                                redactionPackageHash,
+                                overlayReviewStatus = "approved",
+                                overlayEvidenceRefs = new[] { "rendered-overlay-page-1", "rendered-overlay-page-2" },
+                                overlayIssueRefs = Array.Empty<string>()
+                            }
+                        }
+                    },
+                    JsonOptions));
+
+            var options = new RedactionOverlayReviewWorkerOptions
+            {
+                Enabled = true,
+                TenantIds = [DefaultTenantId],
+                ManifestPath = manifestPath,
+                RequestedByPersonId = "recordarr-redaction-overlay-worker"
+            };
+            var optionsMonitor = new StaticOptionsMonitor<RedactionOverlayReviewWorkerOptions>(options);
+            var worker = new RecordArrRedactionOverlayReviewWorker(
+                provider.GetRequiredService<IServiceScopeFactory>(),
+                new ManifestRecordArrRedactionOverlayReviewManifestProvider(
+                    optionsMonitor,
+                    NullLogger<ManifestRecordArrRedactionOverlayReviewManifestProvider>.Instance),
+                optionsMonitor,
+                NullLogger<RecordArrRedactionOverlayReviewWorker>.Instance);
+
+            await worker.RunOnceAsync();
+        }
+        finally
+        {
+            if (File.Exists(manifestPath))
+            {
+                File.Delete(manifestPath);
+            }
+        }
+
+        using var verifyScope = provider.CreateScope();
+        var verifyStore = verifyScope.ServiceProvider.GetRequiredService<RecordArrStore>();
+        var reviewedRedaction = Assert.Single(verifyStore.GetRedactions(DefaultTenantId), item => item.RedactionId == redactionId);
+        var verifiedOtherTenantRedaction = Assert.Single(verifyStore.GetRedactions(otherTenantId), item => item.RedactionId == otherTenantRedactionId);
+
+        Assert.Equal("approved", reviewedRedaction.OverlayReviewStatus);
+        Assert.Equal("recordarr-redaction-overlay-worker", reviewedRedaction.OverlayReviewedByPersonId);
+        Assert.Equal(["rendered-overlay-page-1", "rendered-overlay-page-2"], reviewedRedaction.OverlayEvidenceRefs);
+        Assert.False(string.IsNullOrWhiteSpace(reviewedRedaction.OverlayReviewHash));
+        Assert.Null(reviewedRedaction.OverlayFailureReason);
+
+        Assert.Null(verifiedOtherTenantRedaction.OverlayReviewStatus);
+        Assert.Contains(
+            verifyStore.GetAccessLogs(DefaultTenantId, "rec-bol-001"),
+            log => log.Action == "redaction.overlay_reviewed" &&
+                   log.Result == "allowed" &&
+                   log.ReasonCode == "approved");
     }
 
     [Fact]
