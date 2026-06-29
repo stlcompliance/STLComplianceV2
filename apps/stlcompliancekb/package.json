@@ -12,10 +12,10 @@
     "test:theme": "npm run audit:theme"
   },
   "dependencies": {
-    "lucide-react": "^1.16.0",
+    "lucide-react": "^1.22.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.18.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",
@@ -24,10 +24,10 @@
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.0.3",
     "jsdom": "^29.1.1",
     "typescript": "~6.0.2",
-    "vite": "^8.0.12",
+    "vite": "^8.1.0",
     "vitest": "^4.1.7"
   }
 }
