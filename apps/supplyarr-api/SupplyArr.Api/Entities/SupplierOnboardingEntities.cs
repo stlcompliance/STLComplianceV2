@@ -70,7 +70,7 @@ public static class SupplierOnboardingStatuses
     };
 }
 
-public static class SupplierOnboardingPartyTypes
+public static class SupplierIdentityRecordTypes
 {
     public static readonly HashSet<string> Allowed = new(StringComparer.OrdinalIgnoreCase)
     {

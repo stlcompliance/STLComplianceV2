@@ -50,9 +50,7 @@ vi.mock('../../components/ContractsImportPanel', () => ({
 
 const baseState = {
   accessToken: 'token',
-  vendors: [],
   supplierDirectory: [],
-  vendorsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   purchaseRequestsQuery: { data: [], isLoading: false },
   purchaseOrdersQuery: { data: [], isLoading: false },
@@ -70,7 +68,7 @@ const baseState = {
   prRequestKey: '',
   prTitle: '',
   prNotes: '',
-  prVendorId: '',
+  prSupplierUnitId: '',
   prPartId: '',
   prLineQty: '',
   prLineNotes: '',
@@ -83,7 +81,7 @@ const baseState = {
   setPrRequestKey: () => {},
   setPrTitle: () => {},
   setPrNotes: () => {},
-  setPrVendorId: () => {},
+  setPrSupplierUnitId: () => {},
   setPrPartId: () => {},
   setPrLineQty: () => {},
   setPrLineNotes: () => {},

@@ -6,21 +6,28 @@ import {
   formatProcurementReason,
   PROCUREMENT_REJECTION_REASON_OPTIONS,
   toPartPickerOptions,
-  toPartyPickerOptions,
+  toSupplierUnitPickerOptions,
+  type SupplierUnitPickerSource,
 } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 interface PurchaseRequestPanelProps {
   purchaseRequests: PurchaseRequestResponse[]
   parts: PartResponse[]
-  vendors: { partyId: string; displayName: string; partyKey: string }[]
+  suppliers: SupplierUnitPickerSource[]
   canCreate: boolean
   canApprove: boolean
   isLoading: boolean
   requestKey: string
   title: string
   notes: string
-  selectedVendorId: string
+  selectedSupplierUnitId: string
   selectedPartId: string
   lineQuantity: string
   lineNotes: string
@@ -29,7 +36,7 @@ interface PurchaseRequestPanelProps {
   onRequestKeyChange: (value: string) => void
   onTitleChange: (value: string) => void
   onNotesChange: (value: string) => void
-  onSelectedVendorIdChange: (value: string) => void
+  onSelectedSupplierUnitIdChange: (value: string) => void
   onSelectedPartIdChange: (value: string) => void
   onLineQuantityChange: (value: string) => void
   onLineNotesChange: (value: string) => void
@@ -70,14 +77,14 @@ function formatTimestamp(value: string | null | undefined): string | null {
 export function PurchaseRequestPanel({
   purchaseRequests,
   parts,
-  vendors,
+  suppliers,
   canCreate,
   canApprove,
   isLoading,
   requestKey,
   title,
   notes,
-  selectedVendorId,
+  selectedSupplierUnitId,
   selectedPartId,
   lineQuantity,
   lineNotes,
@@ -86,7 +93,7 @@ export function PurchaseRequestPanel({
   onRequestKeyChange,
   onTitleChange,
   onNotesChange,
-  onSelectedVendorIdChange,
+  onSelectedSupplierUnitIdChange,
   onSelectedPartIdChange,
   onLineQuantityChange,
   onLineNotesChange,
@@ -110,12 +117,15 @@ export function PurchaseRequestPanel({
 
   const selected = purchaseRequests.find((pr) => pr.purchaseRequestId === selectedPurchaseRequestId)
   const existingRequestKeys = purchaseRequests.map((pr) => pr.requestKey)
-  const vendorOptions = toPartyPickerOptions(vendors)
+  const supplierOptions = toSupplierUnitPickerOptions(suppliers)
   const partOptions = toPartPickerOptions(parts)
-  const selectedVendorOption = vendorOptions.find((option) => option.value === selectedVendorId)
-    ?? (selectedVendorId ? { value: selectedVendorId, label: selectedVendorId } : undefined)
+  const selectedSupplierUnitOption = supplierOptions.find((option) => option.value === selectedSupplierUnitId)
+    ?? (selectedSupplierUnitId ? { value: selectedSupplierUnitId, label: selectedSupplierUnitId } : undefined)
   const selectedPartOption = partOptions.find((option) => option.value === selectedPartId)
     ?? (selectedPartId ? { value: selectedPartId, label: selectedPartId } : undefined)
+  const selectedSupplierUnit = suppliers.find(
+    (supplier) => resolveSupplierId(supplier) === selectedSupplierUnitId,
+  )
 
   return (
     <section
@@ -157,7 +167,9 @@ export function PurchaseRequestPanel({
               <div className="mt-1 text-slate-400">{pr.title}</div>
               <div className="mt-1 text-xs text-[var(--color-text-muted)]">
                 {pr.lines.length} line{pr.lines.length === 1 ? '' : 's'}
-                {pr.vendorDisplayName ? ` · ${pr.vendorDisplayName}` : ''}
+                {pr.supplierDisplayName
+                  ? ` · ${formatSupplierIdentityLabel(pr)}`
+                  : ''}
               </div>
             </button>
           </li>
@@ -175,8 +187,14 @@ export function PurchaseRequestPanel({
           <h3 className="text-sm font-medium text-slate-200">Request detail</h3>
           <div className="mt-1 text-sm text-slate-300">{selected.title}</div>
           {selected.notes ? <p className="mt-1 text-sm text-slate-400">{selected.notes}</p> : null}
-          {selected.vendorDisplayName ? (
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">Supplier: {selected.vendorDisplayName}</p>
+          {selected.supplierDisplayName ? (
+            <div className="mt-2 space-y-1 text-xs text-[var(--color-text-muted)]">
+              <p>Supplier: {formatSupplierIdentityLabel(selected)}</p>
+              <p>
+                {humanizeSupplierUnitKind(selected.supplierUnitKind)} ·{' '}
+                {formatSupplierServiceTypes(selected.supplierServiceTypes)}
+              </p>
+            </div>
           ) : null}
           <ul className="mt-2 space-y-1 text-sm text-slate-400" data-testid="purchase-request-line-list">
             {selected.lines.map((line) => (
@@ -311,14 +329,24 @@ export function PurchaseRequestPanel({
             </label>
             <StaticSearchPicker
               id="purchase-request-create-vendor"
-              label="Supplier unit (optional)"
-              value={selectedVendorId}
-              onChange={onSelectedVendorIdChange}
-              options={vendorOptions}
-              selectedOption={selectedVendorOption}
-              placeholder="Search supplier units…"
+              label="Supplier identity or sub-unit (optional)"
+              value={selectedSupplierUnitId}
+              onChange={onSelectedSupplierUnitIdChange}
+              options={supplierOptions}
+              selectedOption={selectedSupplierUnitOption}
+              placeholder="Search supplier identities or sub-units…"
               testId="purchase-request-create-vendor"
             />
+            {selectedSupplierUnit ? (
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {humanizeSupplierUnitKind(selectedSupplierUnit.unitKind)} ·{' '}
+                {formatSupplierIdentityLabel({
+                  supplierDisplayName: selectedSupplierUnit.displayName,
+                  parentSupplierDisplayName: selectedSupplierUnit.parentSupplierDisplayName,
+                  supplierUnitKind: selectedSupplierUnit.unitKind,
+                })}
+              </p>
+            ) : null}
             <div className="grid gap-2 sm:grid-cols-3">
               <div className="sm:col-span-2">
                 <StaticSearchPicker

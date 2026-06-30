@@ -159,7 +159,7 @@ public sealed class VendorEmailInboxService(
             .Include(x => x.Contacts)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId
-                    && x.PartyType == "vendor"
+                    && x.PartyType == "supplier"
                     && x.Contacts.Any(c => c.Email.ToLower() == senderEmail.ToLower()),
                 cancellationToken);
     }
@@ -202,7 +202,7 @@ public sealed class VendorEmailInboxService(
             linked = FindByVendorParty(messageKind, vendorParty.Id, matches);
             if (linked is not null)
             {
-                reason = "matched sender email to vendor reference";
+                reason = "matched sender email to supplier reference";
             }
         }
 
@@ -235,6 +235,9 @@ public sealed class VendorEmailInboxService(
             linked?.LinkedReferenceType,
             linked?.LinkedReferenceId,
             linked?.ReferenceKey,
+            vendorPartyId,
+            vendorPartyKey,
+            vendorDisplayName,
             vendorPartyId,
             vendorPartyKey,
             vendorDisplayName);
@@ -301,6 +304,9 @@ public sealed class VendorEmailInboxService(
             x.BodyPreview,
             x.MatchStatus,
             x.MatchReason,
+            x.VendorPartyId,
+            x.VendorPartyKey,
+            x.VendorDisplayName,
             x.VendorPartyId,
             x.VendorPartyKey,
             x.VendorDisplayName,
@@ -382,6 +388,9 @@ public sealed class VendorEmailInboxService(
         string? LinkedReferenceType,
         Guid? LinkedReferenceId,
         string? LinkedReferenceKey,
+        Guid? SupplierId,
+        string? SupplierKey,
+        string? SupplierDisplayName,
         Guid? VendorPartyId,
         string? VendorPartyKey,
         string? VendorDisplayName);

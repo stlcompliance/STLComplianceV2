@@ -16,7 +16,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
     [
         "order_key",
         "request_key",
-        "vendor_party_key",
+        "supplier_key",
         "part_key",
         "quantity_ordered",
         "title",
@@ -38,7 +38,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, 0, issues);
         }
 
-        var vendorsByKey = await db.ExternalParties
+        var suppliersByKey = await db.ExternalParties
             .Where(x => x.TenantId == tenantId
                 && (x.PartyType == "vendor" || x.PartyType == "supplier"))
             .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
@@ -62,7 +62,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
         var seenRequestKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var group in grouped)
         {
-            ValidateGroup(group.ToList(), vendorsByKey, partsByKey, existingOrderKeys, existingRequestKeys, seenOrderKeys, seenRequestKeys, issues);
+            ValidateGroup(group.ToList(), suppliersByKey, partsByKey, existingOrderKeys, existingRequestKeys, seenOrderKeys, seenRequestKeys, issues);
             acceptedLineCount += group.Count(row => issues.All(issue => issue.LineNumber != row.LineNumber));
         }
 
@@ -81,11 +81,11 @@ public sealed class OpenPurchaseOrdersCsvImportService(
                 tenantId,
                 actorUserId,
                 new CreatePurchaseRequestRequest(
-                    first.RequestKey,
-                    first.Title,
-                    first.OrderNotes,
-                    vendorsByKey[first.VendorPartyKey],
-                    orderRows
+                    RequestKey: first.RequestKey,
+                    Title: first.Title,
+                    Notes: first.OrderNotes,
+                    SupplierId: suppliersByKey[first.SupplierKey],
+                    Lines: orderRows
                         .Select(row => new CreatePurchaseRequestLineRequest(
                             partsByKey[row.PartKey],
                             row.QuantityOrdered,
@@ -154,9 +154,12 @@ public sealed class OpenPurchaseOrdersCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
+        var normalizedHeaders = headerFields
+            .Select(header => string.Equals(header, "vendor_party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
+            .ToArray();
+        if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new OpenPurchaseOrdersCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
+            issues.Add(new OpenPurchaseOrdersCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy vendor_party_key remains accepted."));
             return [];
         }
 
@@ -190,7 +193,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
 
     private static void ValidateGroup(
         IReadOnlyList<ImportRow> rows,
-        IReadOnlyDictionary<string, Guid> vendorsByKey,
+        IReadOnlyDictionary<string, Guid> suppliersByKey,
         IReadOnlyDictionary<string, Guid> partsByKey,
         ISet<string> existingOrderKeys,
         ISet<string> existingRequestKeys,
@@ -201,7 +204,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
         var first = rows[0];
         ValidateLength(first.LineNumber, "order_key", first.OrderKey, 1, 128, issues);
         ValidateLength(first.LineNumber, "request_key", first.RequestKey, 1, 128, issues);
-        ValidateLength(first.LineNumber, "vendor_party_key", first.VendorPartyKey, 2, 128, issues);
+        ValidateLength(first.LineNumber, "supplier_key", first.SupplierKey, 2, 128, issues);
         ValidateLength(first.LineNumber, "title", first.Title, 1, 256, issues);
 
         if (existingOrderKeys.Contains(first.OrderKey))
@@ -224,9 +227,9 @@ public sealed class OpenPurchaseOrdersCsvImportService(
             issues.Add(new OpenPurchaseOrdersCsvImportIssue(first.LineNumber, "purchase_request.duplicate_in_file", "Request key appears in multiple import groups."));
         }
 
-        if (!vendorsByKey.ContainsKey(first.VendorPartyKey))
+        if (!suppliersByKey.ContainsKey(first.SupplierKey))
         {
-            issues.Add(new OpenPurchaseOrdersCsvImportIssue(first.LineNumber, "vendor.not_found", "Vendor or supplier party key was not found."));
+            issues.Add(new OpenPurchaseOrdersCsvImportIssue(first.LineNumber, "supplier.not_found", "supplier_key was not found."));
         }
 
         foreach (var row in rows)
@@ -236,9 +239,9 @@ public sealed class OpenPurchaseOrdersCsvImportService(
                 issues.Add(new OpenPurchaseOrdersCsvImportIssue(row.LineNumber, "purchase_request.mismatch", "Rows for the same order key must use the same request key."));
             }
 
-            if (!string.Equals(row.VendorPartyKey, first.VendorPartyKey, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(row.SupplierKey, first.SupplierKey, StringComparison.OrdinalIgnoreCase))
             {
-                issues.Add(new OpenPurchaseOrdersCsvImportIssue(row.LineNumber, "vendor.mismatch", "Rows for the same order key must use the same vendor party key."));
+                issues.Add(new OpenPurchaseOrdersCsvImportIssue(row.LineNumber, "supplier.mismatch", "Rows for the same order key must use the same supplier key."));
             }
 
             ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
@@ -341,7 +344,7 @@ public sealed class OpenPurchaseOrdersCsvImportService(
         int LineNumber,
         string OrderKey,
         string RequestKey,
-        string VendorPartyKey,
+        string SupplierKey,
         string PartKey,
         decimal QuantityOrdered,
         string Title,

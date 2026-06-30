@@ -7,7 +7,7 @@ public static class VendorPortalEndpoints
 {
     public static void MapSupplyArrVendorPortalEndpoints(this WebApplication app)
     {
-        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix, string canonicalRoutePrefix)
         {
             group = group.WithTags("VendorPortal");
 
@@ -31,7 +31,7 @@ public static class VendorPortalEndpoints
             {
                 var created = await service.CreateVendorPortalQuoteAsync(rfqId, accessCode, request, cancellationToken);
                 return Results.Created(
-                    $"/api/vendor-portal/rfqs/{rfqId}/quotes/{created.VendorQuoteId}?accessCode={Uri.EscapeDataString(accessCode)}",
+                    $"{canonicalRoutePrefix}/rfqs/{rfqId}/quotes/{created.VendorQuoteId}?accessCode={Uri.EscapeDataString(accessCode)}",
                     created);
             })
             .AllowAnonymous()
@@ -72,7 +72,9 @@ public static class VendorPortalEndpoints
             .WithName($"SubmitVendorPortalQuote{nameSuffix}");
         }
 
-        MapRoutes(app.MapGroup("/api/vendor-portal"), string.Empty);
-        MapRoutes(app.MapGroup("/api/v1/vendor-portal"), "V1");
+        MapRoutes(app.MapGroup("/api/supplier-portal"), "Supplier", "/api/v1/supplier-portal");
+        MapRoutes(app.MapGroup("/api/v1/supplier-portal"), "SupplierV1", "/api/v1/supplier-portal");
+        MapRoutes(app.MapGroup("/api/vendor-portal"), string.Empty, "/api/v1/vendor-portal");
+        MapRoutes(app.MapGroup("/api/v1/vendor-portal"), "V1", "/api/v1/vendor-portal");
     }
 }

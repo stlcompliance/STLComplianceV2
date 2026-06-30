@@ -15,11 +15,11 @@ import { RiskPage } from './pages/risk/RiskPage'
 import { ReportsPage } from './pages/reports/ReportsPage'
 import { SupplierPortalPage } from './pages/supplier-portal/SupplierPortalPage'
 import { SuppliersPage } from './pages/suppliers/SuppliersPage'
-import { VendorPortalPage } from './pages/vendor-portal/VendorPortalPage'
-import { VendorOrderCreatePage } from './pages/vendor-orders/VendorOrderCreatePage'
-import { VendorOrderDetailPage } from './pages/vendor-orders/VendorOrderDetailPage'
-import { VendorOrderPortalPage } from './pages/vendor-orders/VendorOrderPortalPage'
-import { VendorOrdersPage } from './pages/vendor-orders/VendorOrdersPage'
+import { SupplierQuotePortalPage } from './pages/vendor-portal/VendorPortalPage'
+import { SupplierOrderCreatePage } from './pages/vendor-orders/VendorOrderCreatePage'
+import { SupplierOrderDetailPage } from './pages/vendor-orders/VendorOrderDetailPage'
+import { SupplierOrderPortalPage } from './pages/vendor-orders/VendorOrderPortalPage'
+import { SupplierOrdersPage } from './pages/vendor-orders/VendorOrdersPage'
 import { SettingsPage } from './pages/settings/SettingsPage'
 import { ImportsPage } from './pages/imports/ImportsPage'
 import { LaunchPage } from './pages/LaunchPage'
@@ -40,8 +40,10 @@ export default function App() {
         <Routes>
           <Route path="/launch" element={<LaunchPage />} />
           <Route path="/auth/nexarr/callback" element={<LaunchPage />} />
-          <Route path="/vendor-portal" element={<VendorPortalPage />} />
-          <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
+          <Route path="/supplier-quote-portal" element={<SupplierQuotePortalPage />} />
+          <Route path="/vendor-portal" element={<SupplierQuotePortalPage />} />
+          <Route path="/vendor-portal/orders/:token" element={<SupplierOrderPortalPage />} />
+          <Route path="/supplier-order-portal/orders/:token" element={<SupplierOrderPortalPage />} />
           <Route element={<ProductWorkspaceLayout />}>
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -70,9 +72,12 @@ export default function App() {
             <Route path="/purchasing/procurement" element={<PurchaseOrdersPage />} />
             <Route path="/purchasing/approvals" element={<PurchaseOrdersPage />} />
             <Route path="/purchasing/exceptions" element={<PurchaseOrdersPage />} />
-            <Route path="/purchasing/vendor-orders" element={<VendorOrdersPage />} />
-            <Route path="/purchasing/vendor-orders/create" element={<VendorOrderCreatePage />} />
-            <Route path="/purchasing/vendor-orders/:vendorOrderId" element={<VendorOrderDetailPage />} />
+            <Route path="/purchasing/supplier-orders" element={<SupplierOrdersPage />} />
+            <Route path="/purchasing/supplier-orders/create" element={<SupplierOrderCreatePage />} />
+            <Route path="/purchasing/supplier-orders/:vendorOrderId" element={<SupplierOrderDetailPage />} />
+            <Route path="/purchasing/vendor-orders" element={<Navigate to="/purchasing/supplier-orders" replace />} />
+            <Route path="/purchasing/vendor-orders/create" element={<Navigate to="/purchasing/supplier-orders/create" replace />} />
+            <Route path="/purchasing/vendor-orders/:vendorOrderId" element={<SupplierOrderDetailPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

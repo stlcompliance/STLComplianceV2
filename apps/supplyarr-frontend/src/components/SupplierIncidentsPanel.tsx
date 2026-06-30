@@ -7,14 +7,20 @@ import {
   cancelSupplierIncident,
   closeSupplierIncident,
   createSupplierIncident,
-  listPartySupplierIncidents,
+  listSupplierIncidentsForSupplier,
   listSupplierIncidents,
   reopenSupplierIncident,
   resolveSupplierIncident,
   startSupplierIncidentInvestigation,
 } from '../api/client'
-import type { ExternalPartyResponse } from '../api/types'
+import type { SupplierResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 const INCIDENT_TYPES = ['quality', 'delivery', 'compliance', 'safety', 'other'] as const
 const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const
@@ -22,7 +28,7 @@ const SEVERITIES = ['low', 'medium', 'high', 'critical'] as const
 interface SupplierIncidentsPanelProps {
   accessToken: string
   canManage: boolean
-  incidentParties: ExternalPartyResponse[]
+  supplierUnits: SupplierResponse[]
 }
 
 function statusTone(status: string): string {
@@ -45,10 +51,10 @@ function statusTone(status: string): string {
 export function SupplierIncidentsPanel({
   accessToken,
   canManage,
-  incidentParties,
+  supplierUnits,
 }: SupplierIncidentsPanelProps) {
   const queryClient = useQueryClient()
-  const [selectedPartyId, setSelectedPartyId] = useState('')
+  const [selectedSupplierId, setSelectedSupplierId] = useState('')
   const [incidentKey, setIncidentKey] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -64,51 +70,56 @@ export function SupplierIncidentsPanel({
     enabled: canManage,
   })
 
-  const partyIncidentsQuery = useQuery({
-    queryKey: ['supplyarr-party-supplier-incidents', accessToken, selectedPartyId],
-    queryFn: () => listPartySupplierIncidents(accessToken, selectedPartyId),
-    enabled: Boolean(selectedPartyId),
+  const supplierIncidentsQuery = useQuery({
+    queryKey: ['supplyarr-supplier-unit-incidents', accessToken, selectedSupplierId],
+    queryFn: () => listSupplierIncidentsForSupplier(accessToken, selectedSupplierId),
+    enabled: Boolean(selectedSupplierId),
   })
 
-  const selectedParty = useMemo(
-    () => incidentParties.find((p) => p.partyId === selectedPartyId),
-    [incidentParties, selectedPartyId],
+  const selectedSupplier = useMemo(
+    () => supplierUnits.find((supplier) => resolveSupplierId(supplier) === selectedSupplierId),
+    [supplierUnits, selectedSupplierId],
   )
-  const partyOptions = useMemo<PickerOption[]>(
+  const supplierOptions = useMemo<PickerOption[]>(
     () =>
-      incidentParties.map((party) => ({
-        value: party.partyId,
-        label: `${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'} · ${party.partyKey} · ${party.displayName}`,
+      supplierUnits.map((supplier) => ({
+        value: supplier.supplierId,
+        label: `${formatSupplierIdentitySummary({
+          supplierDisplayName: supplier.displayName,
+          supplierKey: supplier.supplierKey,
+          parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+          supplierUnitKind: supplier.unitKind,
+        })} · ${humanizeSupplierUnitKind(supplier.unitKind)}`,
       })),
-    [incidentParties],
+    [supplierUnits],
   )
-  const selectedPartyOption = useMemo<PickerOption | undefined>(
-    () => partyOptions.find((option) => option.value === selectedPartyId),
-    [partyOptions, selectedPartyId],
+  const selectedSupplierOption = useMemo<PickerOption | undefined>(
+    () => supplierOptions.find((option) => option.value === selectedSupplierId),
+    [supplierOptions, selectedSupplierId],
   )
   const incidentKeySource = useMemo(() => {
-    const partyLabel = selectedParty?.displayName ?? ''
+    const supplierLabel = selectedSupplier?.displayName ?? ''
     const titleLabel = title.trim()
     if (titleLabel) {
-      return `${partyLabel} ${titleLabel}`
+      return `${supplierLabel} ${titleLabel}`
     }
-    if (!partyLabel) {
+    if (!supplierLabel) {
       return ''
     }
-    return `${partyLabel} ${incidentType} incident`
-  }, [incidentType, selectedParty, title])
+    return `${supplierLabel} ${incidentType} incident`
+  }, [incidentType, selectedSupplier, title])
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-incidents-open', accessToken] })
     void queryClient.invalidateQueries({
-      queryKey: ['supplyarr-party-supplier-incidents', accessToken, selectedPartyId],
+      queryKey: ['supplyarr-supplier-unit-incidents', accessToken, selectedSupplierId],
     })
   }
 
   const createMutation = useMutation({
     mutationFn: () =>
       createSupplierIncident(accessToken, {
-        externalPartyId: selectedPartyId,
+        supplierId: selectedSupplierId,
         incidentKey,
         title,
         description,
@@ -133,7 +144,7 @@ export function SupplierIncidentsPanel({
       }
       if (action.type === 'resolve') {
         return resolveSupplierIncident(accessToken, action.incidentId, {
-          resolutionNotes: resolutionNotes || 'Resolved from parties workspace',
+          resolutionNotes: resolutionNotes || 'Resolved from supplier directory',
         })
       }
       if (action.type === 'close') {
@@ -143,17 +154,17 @@ export function SupplierIncidentsPanel({
         return reopenSupplierIncident(accessToken, action.incidentId, {
           reason:
             reopenReason ||
-            'Reopened from parties workspace after mistaken cancellation.',
+            'Reopened from supplier directory after mistaken cancellation.',
         })
       }
       if (action.type === 'cancel') {
         return cancelSupplierIncident(accessToken, action.incidentId, {
-          reason: cancelReason || 'Cancelled from parties workspace',
+          reason: cancelReason || 'Cancelled from supplier directory',
         })
       }
       return applySupplierIncidentProcurementRestriction(accessToken, action.incidentId, {
         restrictionKey: buildSemanticKey({
-          domain: 'vendor',
+          domain: 'supplier',
           kind: 'restriction',
           title: `${incidentKey || action.incidentId.slice(0, 8)} procurement hold`,
           maxLength: 128,
@@ -188,21 +199,39 @@ export function SupplierIncidentsPanel({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <StaticSearchPicker
-          id="supplier-incident-party"
+          id="supplier-incident-supplier"
           label="Supplier identity or sub-unit"
-          value={selectedPartyId}
-          onChange={setSelectedPartyId}
-          options={partyOptions}
-          selectedOption={selectedPartyOption}
+          value={selectedSupplierId}
+          onChange={setSelectedSupplierId}
+          options={supplierOptions}
+          selectedOption={selectedSupplierOption}
           placeholder="Search supplier identities or sub-units…"
-          testId="supplier-incident-party-picker"
+          testId="supplier-incident-supplier-picker"
         />
+        {selectedSupplier ? (
+          <p className="md:col-span-2 text-xs text-[var(--color-text-muted)]">
+            {formatSupplierIdentitySummary({
+              supplierDisplayName: selectedSupplier.displayName,
+              supplierKey: selectedSupplier.supplierKey,
+              parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+              supplierUnitKind: selectedSupplier.unitKind,
+            })}{' '}
+            · {humanizeSupplierUnitKind(selectedSupplier.unitKind)} ·{' '}
+            {formatSupplierOperationalContext({
+              supplierServiceTypes: selectedSupplier.serviceTypes,
+              addressLine1: selectedSupplier.addressLine1,
+              locality: selectedSupplier.locality,
+              regionCode: selectedSupplier.regionCode,
+              postalCode: selectedSupplier.postalCode,
+            })}
+          </p>
+        ) : null}
 
-        {selectedPartyId && (
+        {selectedSupplierId && (
           <>
             <GeneratedKeyFieldGroup
               sourceLabel={incidentKeySource}
-              existingKeys={partyIncidentsQuery.data?.map((incident) => incident.incidentKey) ?? []}
+              existingKeys={supplierIncidentsQuery.data?.map((incident) => incident.incidentKey) ?? []}
               onKeyChange={setIncidentKey}
               domain="incident"
               kind="supplier"
@@ -297,9 +326,9 @@ export function SupplierIncidentsPanel({
         )}
       </div>
 
-      {partyIncidentsQuery.data && partyIncidentsQuery.data.length > 0 && (
+      {supplierIncidentsQuery.data && supplierIncidentsQuery.data.length > 0 && (
         <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
-          {partyIncidentsQuery.data.map((item) => (
+          {supplierIncidentsQuery.data.map((item) => (
             <li
               key={item.incidentId}
               className="px-3 py-3"
@@ -312,7 +341,7 @@ export function SupplierIncidentsPanel({
                   </div>
                   <div className="text-xs text-[var(--color-text-muted)]">
                     {item.incidentType} · {item.severity}
-                    {item.vendorRestrictionId ? ' · restriction applied' : ''}
+                    {item.supplierRestrictionId ? ' · restriction applied' : ''}
                     {item.reopenCount > 0 ? ` · reopened ${item.reopenCount}×` : ''}
                   </div>
                 </div>
@@ -397,7 +426,7 @@ export function SupplierIncidentsPanel({
                     Reopen
                   </button>
                 )}
-                {!item.vendorRestrictionId &&
+                {!item.supplierRestrictionId &&
                   (item.status === 'open' || item.status === 'investigating') &&
                   (item.severity === 'high' || item.severity === 'critical') && (
                     <button
@@ -417,8 +446,17 @@ export function SupplierIncidentsPanel({
         </ul>
       )}
 
-      {selectedParty && partyIncidentsQuery.data?.length === 0 && (
-        <p className="mt-4 text-sm text-[var(--color-text-muted)]">No incidents recorded for {selectedParty.displayName}.</p>
+      {selectedSupplier && supplierIncidentsQuery.data?.length === 0 && (
+        <p className="mt-4 text-sm text-[var(--color-text-muted)]">
+          No incidents recorded for{' '}
+          {formatSupplierIdentitySummary({
+            supplierDisplayName: selectedSupplier.displayName,
+            supplierKey: selectedSupplier.supplierKey,
+            parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+            supplierUnitKind: selectedSupplier.unitKind,
+          })}
+          .
+        </p>
       )}
     </section>
   )

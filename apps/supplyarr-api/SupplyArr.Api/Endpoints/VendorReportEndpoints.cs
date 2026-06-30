@@ -3,19 +3,19 @@ using STLCompliance.Shared.Auth;
 
 namespace SupplyArr.Api.Endpoints;
 
-public static class VendorReportEndpoints
+public static class SupplierReportEndpoints
 {
-    public static void MapSupplyArrVendorReportEndpoints(this WebApplication app)
+    public static void MapSupplyArrSupplierReportEndpoints(this WebApplication app)
     {
-        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        static void MapSupplierRoutes(RouteGroupBuilder group, string nameSuffix)
         {
-            group = group.WithTags("VendorReports").RequireAuthorization();
+            group = group.WithTags("SupplierReports").RequireAuthorization();
 
             group.MapGet("/summary", async (
                 string? approvalStatus,
                 bool? activeOnly,
                 SupplyArrAuthorizationService authorization,
-                VendorReportService reportService,
+                SupplierReportService reportService,
                 ISupplyArrAuditService audit,
                 HttpContext context,
                 CancellationToken cancellationToken) =>
@@ -23,7 +23,94 @@ public static class VendorReportEndpoints
                 authorization.RequireVendorReportRead(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                var summary = await reportService.GetSummaryAsync(
+                var summary = await reportService.GetSupplierSummaryAsync(
+                    tenantId,
+                    approvalStatus,
+                    activeOnly,
+                    cancellationToken);
+                await audit.WriteAsync(
+                    "supplyarr.reports.supplier.summary",
+                    tenantId,
+                    actorUserId,
+                    "supplier_report",
+                    null,
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(summary);
+            })
+            .WithName($"GetSupplyArrSupplierReportSummary{nameSuffix}");
+
+            group.MapGet("/{supplierId:guid}", async (
+                Guid supplierId,
+                SupplyArrAuthorizationService authorization,
+                SupplierReportService reportService,
+                ISupplyArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireVendorReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var detail = await reportService.GetSupplierDetailAsync(tenantId, supplierId, cancellationToken);
+                await audit.WriteAsync(
+                    "supplyarr.reports.supplier.detail",
+                    tenantId,
+                    actorUserId,
+                    "supplier_report",
+                    supplierId.ToString(),
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.Ok(detail);
+            })
+            .WithName($"GetSupplyArrSupplierReportDetail{nameSuffix}");
+
+            group.MapGet("/summary/export", async (
+                string? approvalStatus,
+                bool? activeOnly,
+                SupplyArrAuthorizationService authorization,
+                SupplierReportService reportService,
+                ISupplyArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireVendorReportExport(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var export = await reportService.ExportSupplierSummaryCsvAsync(
+                    tenantId,
+                    approvalStatus,
+                    activeOnly,
+                    cancellationToken);
+                await audit.WriteAsync(
+                    "supplyarr.reports.supplier.export",
+                    tenantId,
+                    actorUserId,
+                    "supplier_report",
+                    "summary",
+                    "success",
+                    cancellationToken: cancellationToken);
+                return Results.File(export.Content, export.ContentType, export.FileName);
+            })
+            .WithName($"ExportSupplyArrSupplierReportSummary{nameSuffix}");
+        }
+
+        static void MapVendorAliasRoutes(RouteGroupBuilder group, string nameSuffix)
+        {
+            group = group.WithTags("VendorReports").RequireAuthorization();
+
+            group.MapGet("/summary", async (
+                string? approvalStatus,
+                bool? activeOnly,
+                SupplyArrAuthorizationService authorization,
+                SupplierReportService reportService,
+                ISupplyArrAuditService audit,
+                HttpContext context,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireVendorReportRead(context.User);
+                var tenantId = context.User.GetTenantId();
+                var actorUserId = context.User.GetUserId();
+                var summary = await reportService.GetVendorSummaryAsync(
                     tenantId,
                     approvalStatus,
                     activeOnly,
@@ -43,7 +130,7 @@ public static class VendorReportEndpoints
             group.MapGet("/{vendorPartyId:guid}", async (
                 Guid vendorPartyId,
                 SupplyArrAuthorizationService authorization,
-                VendorReportService reportService,
+                SupplierReportService reportService,
                 ISupplyArrAuditService audit,
                 HttpContext context,
                 CancellationToken cancellationToken) =>
@@ -51,7 +138,7 @@ public static class VendorReportEndpoints
                 authorization.RequireVendorReportRead(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                var detail = await reportService.GetDetailAsync(tenantId, vendorPartyId, cancellationToken);
+                var detail = await reportService.GetVendorDetailAsync(tenantId, vendorPartyId, cancellationToken);
                 await audit.WriteAsync(
                     "supplyarr.reports.vendor.detail",
                     tenantId,
@@ -68,7 +155,7 @@ public static class VendorReportEndpoints
                 string? approvalStatus,
                 bool? activeOnly,
                 SupplyArrAuthorizationService authorization,
-                VendorReportService reportService,
+                SupplierReportService reportService,
                 ISupplyArrAuditService audit,
                 HttpContext context,
                 CancellationToken cancellationToken) =>
@@ -76,7 +163,7 @@ public static class VendorReportEndpoints
                 authorization.RequireVendorReportExport(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                var export = await reportService.ExportSummaryCsvAsync(
+                var export = await reportService.ExportVendorSummaryCsvAsync(
                     tenantId,
                     approvalStatus,
                     activeOnly,
@@ -94,7 +181,15 @@ public static class VendorReportEndpoints
             .WithName($"ExportSupplyArrVendorReportSummary{nameSuffix}");
         }
 
-        MapRoutes(app.MapGroup("/api/reports/vendors"), string.Empty);
-        MapRoutes(app.MapGroup("/api/v1/reports/vendors"), "V1");
+        MapSupplierRoutes(app.MapGroup("/api/reports/suppliers"), string.Empty);
+        MapSupplierRoutes(app.MapGroup("/api/v1/reports/suppliers"), "V1");
+        MapVendorAliasRoutes(app.MapGroup("/api/reports/vendors"), string.Empty);
+        MapVendorAliasRoutes(app.MapGroup("/api/v1/reports/vendors"), "V1");
     }
+}
+
+public static class VendorReportEndpoints
+{
+    public static void MapSupplyArrVendorReportEndpoints(this WebApplication app)
+        => app.MapSupplyArrSupplierReportEndpoints();
 }

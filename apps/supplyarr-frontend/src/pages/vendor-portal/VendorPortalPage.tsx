@@ -3,13 +3,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import {
-  createVendorPortalQuote,
-  getVendorPortalRfq,
-  submitVendorPortalQuote,
-  upsertVendorPortalQuoteLine,
+  createSupplierPortalQuote,
+  getSupplierPortalRfq,
+  submitSupplierPortalQuote,
+  upsertSupplierPortalQuoteLine,
 } from '../../api/client'
 import type { VendorPortalRfqLineResponse } from '../../api/types'
 import { CURRENCY_OPTIONS } from '../../forms/controlledFormHelpers'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../../utils/supplierPresentation'
 
 type LineDraft = {
   unitPrice: string
@@ -18,7 +23,7 @@ type LineDraft = {
   notes: string
 }
 
-export function VendorPortalPage() {
+export function SupplierQuotePortalPage() {
   const [searchParams] = useSearchParams()
   const queryClient = useQueryClient()
   const rfqId = searchParams.get('rfqId') ?? ''
@@ -29,12 +34,19 @@ export function VendorPortalPage() {
   const [lineDrafts, setLineDrafts] = useState<Record<string, LineDraft>>({})
 
   const portalQuery = useQuery({
-    queryKey: ['supplyarr-vendor-portal', rfqId, accessCode],
-    queryFn: () => getVendorPortalRfq(rfqId, accessCode),
+    queryKey: ['supplyarr-supplier-quote-portal', rfqId, accessCode],
+    queryFn: () => getSupplierPortalRfq(rfqId, accessCode),
     enabled: Boolean(rfqId && accessCode),
   })
 
   const portal = portalQuery.data
+  const supplierIdentityLabel = portal
+    ? formatSupplierIdentityLabel({
+        vendorDisplayName: portal.vendorDisplayName,
+        parentSupplierDisplayName: portal.parentSupplierDisplayName,
+        supplierUnitKind: portal.supplierUnitKind,
+      })
+    : 'Supplier not recorded'
   const currentQuote = portal?.vendorQuoteId ?? null
 
   useEffect(() => {
@@ -73,14 +85,14 @@ export function VendorPortalPage() {
       if (!rfqId || !accessCode) {
         throw new Error('RFQ id and access code are required')
       }
-      return createVendorPortalQuote(rfqId, accessCode, {
+      return createSupplierPortalQuote(rfqId, accessCode, {
         quoteKey,
         currencyCode,
         notes,
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-portal', rfqId, accessCode] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-quote-portal', rfqId, accessCode] })
     },
   })
 
@@ -91,7 +103,7 @@ export function VendorPortalPage() {
       }
 
       const draft = lineDrafts[line.rfqLineId] ?? createLineDraft(line)
-      return upsertVendorPortalQuoteLine(rfqId, portal.vendorQuoteId, accessCode, {
+      return upsertSupplierPortalQuoteLine(rfqId, portal.vendorQuoteId, accessCode, {
         rfqLineId: line.rfqLineId,
         unitPrice: Number(draft.unitPrice),
         quantityQuoted: Number(draft.quantityQuoted) || line.quantityRequested,
@@ -100,7 +112,7 @@ export function VendorPortalPage() {
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-portal', rfqId, accessCode] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-quote-portal', rfqId, accessCode] })
     },
   })
 
@@ -109,10 +121,10 @@ export function VendorPortalPage() {
       if (!portal?.vendorQuoteId) {
         throw new Error('Create a quote first')
       }
-      return submitVendorPortalQuote(rfqId, portal.vendorQuoteId, accessCode)
+      return submitSupplierPortalQuote(rfqId, portal.vendorQuoteId, accessCode)
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-portal', rfqId, accessCode] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-quote-portal', rfqId, accessCode] })
     },
   })
 
@@ -120,7 +132,7 @@ export function VendorPortalPage() {
     return (
       <main className="min-h-screen bg-[var(--color-bg-page)] px-6 py-10 text-[var(--color-text-primary)]">
         <div className="mx-auto max-w-3xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6">
-          <h1 className="text-2xl font-semibold">Vendor portal</h1>
+          <h1 className="text-2xl font-semibold">Supplier quote portal</h1>
           <p className="mt-2 text-sm text-[var(--color-text-muted)]">RFQ id and access code are required.</p>
         </div>
       </main>
@@ -131,22 +143,22 @@ export function VendorPortalPage() {
     <main className="min-h-screen bg-[var(--color-bg-page)] px-6 py-10 text-[var(--color-text-primary)]">
       <div className="mx-auto max-w-6xl space-y-6">
         <header className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6">
-          <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-text-muted)]">SupplyArr vendor portal</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-text-muted)]">SupplyArr supplier quote portal</p>
           <h1 className="mt-2 text-3xl font-semibold">Submit a quote for your invitation</h1>
           <p className="mt-2 max-w-3xl text-sm text-[var(--color-text-muted)]">
-            Review the RFQ, prepare pricing and lead times, and submit your vendor response without needing an internal login.
+            Review the RFQ, prepare pricing and lead times, and submit your supplier-unit response without needing an internal login.
           </p>
         </header>
 
         {portalQuery.isLoading && (
           <section className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 text-sm text-[var(--color-text-muted)]">
-            Loading vendor portal…
+            Loading supplier quote portal…
           </section>
         )}
 
         {portalQuery.isError && (
           <section className="rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-bg)] p-6 text-sm text-[var(--color-success-text)]">
-            Unable to load this vendor portal invitation. The access code may be invalid or expired.
+            Unable to load this supplier quote invitation. The access code may be invalid or expired.
           </section>
         )}
 
@@ -161,7 +173,9 @@ export function VendorPortalPage() {
               <div className="space-y-2 text-sm">
                 <DetailLine label="Invitation status" value={portal.invitationStatus} />
                 <DetailLine label="Portal expires" value={formatDateTime(portal.portalAccessExpiresAt)} />
-                <DetailLine label="Vendor" value={portal.vendorDisplayName} />
+                <DetailLine label="Supplier identity or sub-unit" value={supplierIdentityLabel} />
+                <DetailLine label="Hierarchy role" value={humanizeSupplierUnitKind(portal.supplierUnitKind)} />
+                <DetailLine label="Services provided" value={formatSupplierServiceTypes(portal.supplierServiceTypes)} />
                 <DetailLine label="Current quote" value={portal.vendorQuoteId ? portal.quoteStatus ?? 'draft' : 'none'} />
               </div>
             </section>
@@ -174,7 +188,7 @@ export function VendorPortalPage() {
                     className="mt-1 w-full rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-2 py-2 text-sm text-[var(--color-text-primary)]"
                     value={quoteKey}
                     onChange={(event) => setQuoteKey(event.target.value)}
-                    placeholder="VENDOR-QUOTE-001"
+                    placeholder="SUPPLIER-QUOTE-001"
                   />
                 </label>
                 <label className="block min-w-[10rem] text-sm text-[var(--color-text-secondary)]">
@@ -207,7 +221,7 @@ export function VendorPortalPage() {
                   rows={3}
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Optional vendor notes"
+                  placeholder="Optional supplier note"
                 />
               </label>
             </section>
@@ -258,7 +272,7 @@ export function VendorPortalPage() {
                             <input
                               className="w-28 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)]"
                               inputMode="decimal"
-                              data-testid={`vendor-portal-unit-price-${line.rfqLineId}`}
+                              data-testid={`supplier-quote-portal-unit-price-${line.rfqLineId}`}
                               value={line.draft.unitPrice}
                               onChange={(event) =>
                                 setLineDrafts((current) => ({
@@ -272,7 +286,7 @@ export function VendorPortalPage() {
                             <input
                               className="w-24 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)]"
                               inputMode="decimal"
-                              data-testid={`vendor-portal-quantity-${line.rfqLineId}`}
+                              data-testid={`supplier-quote-portal-quantity-${line.rfqLineId}`}
                               value={line.draft.quantityQuoted}
                               onChange={(event) =>
                                 setLineDrafts((current) => ({
@@ -286,7 +300,7 @@ export function VendorPortalPage() {
                             <input
                               className="w-24 rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)]"
                               inputMode="numeric"
-                              data-testid={`vendor-portal-lead-days-${line.rfqLineId}`}
+                              data-testid={`supplier-quote-portal-lead-days-${line.rfqLineId}`}
                               value={line.draft.leadTimeDays}
                               onChange={(event) =>
                                 setLineDrafts((current) => ({
@@ -299,7 +313,7 @@ export function VendorPortalPage() {
                           <td className="py-3 pr-4">
                             <input
                               className="w-full rounded border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-2 py-1 text-sm text-[var(--color-text-primary)]"
-                              data-testid={`vendor-portal-notes-${line.rfqLineId}`}
+                              data-testid={`supplier-quote-portal-notes-${line.rfqLineId}`}
                               value={line.draft.notes}
                               onChange={(event) =>
                                 setLineDrafts((current) => ({
@@ -341,6 +355,8 @@ export function VendorPortalPage() {
     </main>
   )
 }
+
+export const VendorPortalPage = SupplierQuotePortalPage
 
 function createLineDraft(line: VendorPortalRfqLineResponse): LineDraft {
   return {

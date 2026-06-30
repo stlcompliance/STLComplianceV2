@@ -4,22 +4,23 @@ using STLCompliance.Shared.Auth;
 
 namespace SupplyArr.Api.Endpoints;
 
-public static class VendorReturnEndpoints
+public static class SupplierReturnEndpoints
 {
-    public static void MapSupplyArrVendorReturnEndpoints(this WebApplication app)
+    public static void MapSupplyArrSupplierReturnEndpoints(this WebApplication app)
     {
         static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
         {
-        group = group.WithTags("Returns").RequireAuthorization();
+        group = group.WithTags("SupplierReturns").RequireAuthorization();
 
         group.MapGet("/", async (
             string? status,
+            Guid? supplierId,
             Guid? vendorPartyId,
             Guid? purchaseOrderId,
             Guid? partId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnRead(context.User);
@@ -27,31 +28,31 @@ public static class VendorReturnEndpoints
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 status,
-                vendorPartyId,
+                supplierId ?? vendorPartyId,
                 purchaseOrderId,
                 partId,
                 cancellationToken));
         })
-        .WithName($"ListVendorReturns{nameSuffix}");
+        .WithName($"ListSupplierReturns{nameSuffix}");
 
         group.MapGet("/{returnId:guid}", async (
             Guid returnId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, returnId, cancellationToken));
         })
-        .WithName($"GetVendorReturn{nameSuffix}");
+        .WithName($"GetSupplierReturn{nameSuffix}");
 
         group.MapPost("/from-stock", async (
-            CreateVendorReturnFromStockRequest request,
+            CreateSupplierReturnFromStockRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnManage(context.User);
@@ -64,14 +65,14 @@ public static class VendorReturnEndpoints
                 cancellationToken);
             return Results.Created($"/api/returns/{created.ReturnId}", created);
         })
-        .WithName($"CreateVendorReturnFromStock{nameSuffix}");
+        .WithName($"CreateSupplierReturnFromStock{nameSuffix}");
 
         group.MapPost("/from-purchase-order-line/{purchaseOrderLineId:guid}", async (
             Guid purchaseOrderLineId,
-            CreateVendorReturnFromPurchaseOrderLineRequest request,
+            CreateSupplierReturnFromPurchaseOrderLineRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnManage(context.User);
@@ -85,13 +86,13 @@ public static class VendorReturnEndpoints
                 cancellationToken);
             return Results.Created($"/api/returns/{created.ReturnId}", created);
         })
-        .WithName($"CreateVendorReturnFromPurchaseOrderLine{nameSuffix}");
+        .WithName($"CreateSupplierReturnFromPurchaseOrderLine{nameSuffix}");
 
         group.MapPost("/{returnId:guid}/post", async (
             Guid returnId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnManage(context.User);
@@ -103,14 +104,14 @@ public static class VendorReturnEndpoints
                 returnId,
                 cancellationToken));
         })
-        .WithName($"PostVendorReturn{nameSuffix}");
+        .WithName($"PostSupplierReturn{nameSuffix}");
 
         group.MapPost("/{returnId:guid}/cancel", async (
             Guid returnId,
-            CancelVendorReturnRequest request,
+            CancelSupplierReturnRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorReturnService service,
+            SupplierReturnService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireReturnManage(context.User);
@@ -123,10 +124,18 @@ public static class VendorReturnEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"CancelVendorReturn{nameSuffix}");
+        .WithName($"CancelSupplierReturn{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/returns"), string.Empty);
         MapRoutes(app.MapGroup("/api/v1/returns"), "V1");
+        MapRoutes(app.MapGroup("/api/supplier-returns"), "Alias");
+        MapRoutes(app.MapGroup("/api/v1/supplier-returns"), "V1Alias");
     }
+}
+
+public static class VendorReturnEndpoints
+{
+    public static void MapSupplyArrVendorReturnEndpoints(this WebApplication app)
+        => app.MapSupplyArrSupplierReturnEndpoints();
 }

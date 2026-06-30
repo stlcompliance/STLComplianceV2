@@ -5,9 +5,18 @@ import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
   exportComplianceReportSummaryCsv,
-  getCompliancePartyDetail,
+  getComplianceSupplierDetail,
   getComplianceReportSummary,
 } from '../api/client'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
+import type {
+  SupplierComplianceDocumentSummaryItem,
+  SupplierComplianceSummaryItem,
+} from '../api/types'
 
 interface ComplianceReportsPanelProps {
   accessToken: string
@@ -25,7 +34,7 @@ export function ComplianceReportsPanel({
   canExport,
 }: ComplianceReportsPanelProps) {
   const [attentionOnly, setAttentionOnly] = useState(true)
-  const [selectedPartyId, setSelectedPartyId] = useState<string | null>(null)
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null)
 
   const summaryQuery = useQuery({
     queryKey: ['supplyarr-compliance-report-summary', accessToken, attentionOnly],
@@ -36,10 +45,10 @@ export function ComplianceReportsPanel({
     enabled: canRead,
   })
 
-  const partyDetailQuery = useQuery({
-    queryKey: ['supplyarr-compliance-party-detail', accessToken, selectedPartyId],
-    queryFn: () => getCompliancePartyDetail(accessToken, selectedPartyId!),
-    enabled: canRead && Boolean(selectedPartyId),
+  const supplierDetailQuery = useQuery({
+    queryKey: ['supplyarr-compliance-supplier-detail', accessToken, selectedSupplierId],
+    queryFn: () => getComplianceSupplierDetail(accessToken, selectedSupplierId!),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
   const exportMutation = useMutation({
@@ -56,6 +65,10 @@ export function ComplianceReportsPanel({
       URL.revokeObjectURL(url)
     },
   })
+
+  const supplierSummaries: SupplierComplianceSummaryItem[] = summaryQuery.data?.suppliers ?? []
+  const supplierDocuments: SupplierComplianceDocumentSummaryItem[] = summaryQuery.data?.documents ?? []
+  const supplierRecordCount = summaryQuery.data?.totals.supplierCount ?? 0
 
   if (!canRead) {
     return null
@@ -130,7 +143,7 @@ export function ComplianceReportsPanel({
         <>
           <div className="mt-4 flex flex-wrap gap-2 text-xs">
             <span className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-secondary)]">
-              Parties: {summaryQuery.data.totals.partyCount}
+              Supplier records: {supplierRecordCount}
             </span>
             <span className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-secondary)]">
               Documents: {summaryQuery.data.totals.documentCount}
@@ -150,7 +163,7 @@ export function ComplianceReportsPanel({
             <table className="min-w-full text-left text-sm">
               <thead className="text-xs uppercase text-[var(--color-text-muted)]">
                 <tr>
-                  <th className="px-2 py-2">Party</th>
+                  <th className="px-2 py-2">Supplier record</th>
                   <th className="px-2 py-2">Posture</th>
                   <th className="px-2 py-2">Docs</th>
                   <th className="px-2 py-2">Expired</th>
@@ -158,23 +171,34 @@ export function ComplianceReportsPanel({
                 </tr>
               </thead>
               <tbody>
-                {summaryQuery.data.parties.map((party) => (
+                {supplierSummaries.map((supplier) => (
                   <tr
-                    key={party.externalPartyId}
+                    key={supplier.supplierId}
                     className={`cursor-pointer border-t border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-control-hover)] ${
-                      selectedPartyId === party.externalPartyId ? 'bg-[var(--color-bg-control-hover)]' : ''
+                      selectedSupplierId === supplier.supplierId ? 'bg-[var(--color-bg-control-hover)]' : ''
                     }`}
-                    onClick={() => setSelectedPartyId(party.externalPartyId)}
+                    onClick={() => setSelectedSupplierId(supplier.supplierId)}
                   >
                     <td className="px-2 py-2 text-[var(--color-text-primary)]">
-                      {party.partyKey} · {party.displayName}
+                      <div>{formatSupplierIdentitySummary({
+                        supplierDisplayName: supplier.displayName,
+                        supplierKey: supplier.supplierKey,
+                        parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+                        supplierUnitKind: supplier.supplierUnitKind,
+                      })}</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">
+                        {humanizeSupplierUnitKind(supplier.supplierUnitKind ?? 'identity')}
+                        {supplier.supplierServiceTypes && supplier.supplierServiceTypes.length > 0
+                          ? ` · ${formatSupplierServiceTypes(supplier.supplierServiceTypes)}`
+                          : ''}
+                      </div>
                     </td>
                     <td className="px-2 py-2 capitalize text-[var(--color-text-secondary)]">
-                      {formatPosture(party.compliancePosture)}
+                      {formatPosture(supplier.compliancePosture)}
                     </td>
-                    <td className="px-2 py-2 text-[var(--color-text-muted)]">{party.documentCount}</td>
-                    <td className="px-2 py-2 text-[var(--tone-danger-text)]">{party.expiredCount}</td>
-                    <td className="px-2 py-2 text-[var(--tone-warning-text)]">{party.expiringSoonCount}</td>
+                    <td className="px-2 py-2 text-[var(--color-text-muted)]">{supplier.documentCount}</td>
+                    <td className="px-2 py-2 text-[var(--tone-danger-text)]">{supplier.expiredCount}</td>
+                    <td className="px-2 py-2 text-[var(--tone-warning-text)]">{supplier.expiringSoonCount}</td>
                   </tr>
                 ))}
               </tbody>
@@ -192,11 +216,11 @@ export function ComplianceReportsPanel({
                 </tr>
               </thead>
               <tbody>
-                {summaryQuery.data.documents.map((doc) => (
+                {supplierDocuments.map((doc) => (
                   <tr
                     key={doc.documentId}
                     className="border-t border-[var(--color-border-subtle)]"
-                    onClick={() => setSelectedPartyId(doc.externalPartyId)}
+                    onClick={() => setSelectedSupplierId(doc.supplierId)}
                   >
                     <td className="px-2 py-2 text-[var(--color-text-primary)]">
                       {doc.documentKey} · {doc.title}
@@ -214,17 +238,28 @@ export function ComplianceReportsPanel({
         </>
       )}
 
-      {selectedPartyId && partyDetailQuery.data && (
+      {selectedSupplierId && supplierDetailQuery.data && (
         <div className="mt-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-            {partyDetailQuery.data.summary.partyKey} · {partyDetailQuery.data.summary.displayName}
+            {formatSupplierIdentitySummary({
+              supplierDisplayName: supplierDetailQuery.data.summary.displayName,
+              supplierKey: supplierDetailQuery.data.summary.supplierKey,
+              parentSupplierDisplayName: supplierDetailQuery.data.summary.parentSupplierDisplayName,
+              supplierUnitKind: supplierDetailQuery.data.summary.supplierUnitKind,
+            })}
           </h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Approval: {partyDetailQuery.data.summary.approvalStatus} · Posture:{' '}
-            {formatPosture(partyDetailQuery.data.summary.compliancePosture)}
+            Approval: {supplierDetailQuery.data.summary.approvalStatus} · Posture:{' '}
+            {formatPosture(supplierDetailQuery.data.summary.compliancePosture)}
+          </p>
+          <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+            {humanizeSupplierUnitKind(supplierDetailQuery.data.summary.supplierUnitKind ?? 'identity')}
+            {supplierDetailQuery.data.summary.supplierServiceTypes?.length
+              ? ` · ${formatSupplierServiceTypes(supplierDetailQuery.data.summary.supplierServiceTypes)}`
+              : ''}
           </p>
           <ul className="mt-3 space-y-2 text-sm">
-            {partyDetailQuery.data.documents.map((doc) => (
+            {supplierDetailQuery.data.documents.map((doc) => (
               <li key={doc.documentId} className="rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2">
                 <span className="font-medium text-[var(--color-text-primary)]">
                   {doc.documentKey} v{doc.version}

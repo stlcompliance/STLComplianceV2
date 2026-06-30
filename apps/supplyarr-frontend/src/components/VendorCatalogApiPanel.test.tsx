@@ -86,9 +86,9 @@ function renderPanel() {
             vendorLinks: [
               {
                 linkId: 'link-1',
-                partyId: 'vendor-1',
-                partyKey: 'midwest-fleet',
-                partyDisplayName: 'Midwest Fleet Parts & Service',
+                supplierId: 'vendor-1',
+                supplierKey: 'midwest-fleet',
+                supplierDisplayName: 'Midwest Fleet Parts & Service',
                 vendorPartNumber: 'V-FLT-001',
                 isPreferred: true,
                 catalogUnitPrice: 12.5,
@@ -104,11 +104,11 @@ function renderPanel() {
             updatedAt: '2026-05-27T00:00:00Z',
           },
         ]}
-        vendors={[
+        suppliers={[
           {
-            partyId: 'vendor-1',
+            supplierId: 'vendor-1',
             displayName: 'Midwest Fleet Parts & Service',
-            partyKey: 'midwest-fleet',
+            supplierKey: 'midwest-fleet',
           },
         ]}
       />
@@ -132,7 +132,7 @@ describe('VendorCatalogApiPanel', () => {
 
     const { invalidateSpy } = renderPanel()
 
-    expect(screen.getByTestId('vendor-catalog-api-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-catalog-api-panel')).toBeInTheDocument()
     expect(screen.getByText('1 current link')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Supplier source JSON payload'), {
@@ -161,7 +161,7 @@ describe('VendorCatalogApiPanel', () => {
 
     await waitFor(() => {
       expect(mockSyncVendorCatalogApi).toHaveBeenCalledWith('token', {
-        vendorPartyKey: 'midwest-fleet',
+        supplierKey: 'midwest-fleet',
         dryRun: true,
         items: [
           {
@@ -181,7 +181,7 @@ describe('VendorCatalogApiPanel', () => {
 
     await waitFor(() => {
       expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['supplyarr-parts'] })
-      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['supplyarr-vendors'] })
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['supplyarr-suppliers'] })
     })
 
     expect(await screen.findByText('Sync succeeded')).toBeInTheDocument()

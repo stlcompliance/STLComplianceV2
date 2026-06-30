@@ -234,11 +234,11 @@ public sealed class RoutArrDemandIntakeService(
             tenantId,
             actorUserId,
             new CreatePurchaseRequestRequest(
-                request.RequestKey,
-                request.Title,
-                request.Notes ?? string.Empty,
-                null,
-                lines),
+                RequestKey: request.RequestKey,
+                Title: request.Title,
+                Notes: request.Notes ?? string.Empty,
+                SupplierId: null,
+                Lines: lines),
             cancellationToken);
 
         entity.PurchaseRequestId = created.PurchaseRequestId;

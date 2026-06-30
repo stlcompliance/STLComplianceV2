@@ -12,7 +12,7 @@ public sealed class VendorCatalogCsvImportService(
 
     private static readonly string[] Headers =
     [
-        "vendor_party_key",
+        "supplier_key",
         "part_key",
         "vendor_part_number",
         "is_preferred",
@@ -77,7 +77,7 @@ public sealed class VendorCatalogCsvImportService(
                 tenantId,
                 actorUserId,
                 partId,
-                new CreatePartVendorLinkRequest(vendorId, row.VendorPartNumber, row.IsPreferred),
+                new CreatePartVendorLinkRequest(vendorId, vendorId, vendorId, row.VendorPartNumber, row.IsPreferred),
                 cancellationToken);
 
             if (row.CatalogUnitPrice is not null)
@@ -150,7 +150,7 @@ public sealed class VendorCatalogCsvImportService(
             return [];
         }
 
-        var headerFields = ParseRow(lines[0]);
+        var headerFields = NormalizeHeaderFields(ParseRow(lines[0]));
         if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
             issues.Add(new VendorCatalogCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
@@ -200,7 +200,7 @@ public sealed class VendorCatalogCsvImportService(
         ISet<string> seenLinkKeys,
         List<VendorCatalogCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "vendor_party_key", row.VendorPartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.VendorPartyKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "vendor_part_number", row.VendorPartNumber, 1, 128, issues);
         ValidateMaxLength(row.LineNumber, "catalog_availability_status", row.CatalogAvailabilityStatus, 64, issues);
@@ -208,7 +208,7 @@ public sealed class VendorCatalogCsvImportService(
         var hasVendor = vendors.TryGetValue(row.VendorPartyKey, out var vendorId);
         if (!hasVendor)
         {
-            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "vendor.not_found", "Vendor or supplier party was not found."));
+            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "supplier.not_found", "Supplier key was not found."));
         }
 
         var hasPart = partIds.TryGetValue(row.PartKey, out var partId);
@@ -225,12 +225,12 @@ public sealed class VendorCatalogCsvImportService(
         var linkKey = LinkKey(partId, vendorId);
         if (existingLinkKeys.Contains(linkKey))
         {
-            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "vendor_catalog.duplicate", "This vendor is already linked to the part."));
+            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "supplier_catalog.duplicate", "This supplier unit is already linked to the part."));
         }
 
         if (!seenLinkKeys.Add(linkKey))
         {
-            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "vendor_catalog.duplicate_in_file", "Vendor and part pair appears more than once in the import file."));
+            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "supplier_catalog.duplicate_in_file", "Supplier and part pair appears more than once in the import file."));
         }
 
         if (row.CatalogUnitPrice is null
@@ -238,9 +238,16 @@ public sealed class VendorCatalogCsvImportService(
             && row.CatalogQuantityAvailable is null
             && string.IsNullOrWhiteSpace(row.CatalogAvailabilityStatus))
         {
-            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "vendor_catalog.empty_facts", "Vendor catalog import requires price, lead time, quantity available, or availability status."));
+            issues.Add(new VendorCatalogCsvImportIssue(row.LineNumber, "supplier_catalog.empty_facts", "Supplier catalog import requires price, lead time, quantity available, or availability status."));
         }
     }
+
+    private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
+        headerFields
+            .Select(field => string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
+                ? "supplier_key"
+                : field)
+            .ToList();
 
     private static IReadOnlyList<string> ParseRow(string line)
     {

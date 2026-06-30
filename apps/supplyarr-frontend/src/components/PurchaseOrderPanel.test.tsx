@@ -56,9 +56,13 @@ const baseProps = {
       status: 'draft',
       purchaseRequestId: 'pr-1',
       purchaseRequestKey: 'pr-2026-001',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'vendor-a',
-      vendorDisplayName: 'Acme Supply',
+      supplierId: 'vendor-1',
+      supplierKey: 'vendor-a',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Supply',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
       createdByUserId: 'user-1',
       approvedAt: null,
       approvedByUserId: null,
@@ -95,9 +99,13 @@ const baseProps = {
       status: 'cancelled',
       purchaseRequestId: 'pr-2',
       purchaseRequestKey: 'pr-2026-002',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'vendor-a',
-      vendorDisplayName: 'Acme Supply',
+      supplierId: 'vendor-1',
+      supplierKey: 'vendor-a',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Supply',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts'],
       createdByUserId: 'user-1',
       approvedAt: null,
       approvedByUserId: null,
@@ -118,9 +126,13 @@ const baseProps = {
       title: 'Shop restock',
       notes: '',
       status: 'approved',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'vendor-a',
-      vendorDisplayName: 'Acme Supply',
+      supplierId: 'vendor-1',
+      supplierKey: 'vendor-a',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Supply',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
       requestedByUserId: 'user-1',
       submittedAt: '2026-05-27T00:00:00Z',
       submittedByUserId: 'user-1',
@@ -171,9 +183,10 @@ describe('PurchaseOrderPanel', () => {
     expect(screen.getByRole('button', { name: 'Create purchase order' })).toBeInTheDocument()
     expect(screen.getByTestId('purchase-order-create-pr-picker')).toHaveValue('pr-1')
     expect(screen.getByTestId('purchase-order-create-pr-picker-options')).toHaveTextContent(
-      'pr-2026-001 — Shop restock · Acme Supply',
+      'pr-2026-001 — Shop restock · Acme Supply · North Yard Counter',
     )
     expect(screen.getByTestId('purchase-order-line-line-1')).toHaveTextContent('6 each ordered')
+    expect(screen.getAllByText('Sub-unit · Parts, Maintenance').length).toBeGreaterThan(0)
   })
 
   it('updates the selected approved purchase request through the searchable picker', async () => {
@@ -187,9 +200,13 @@ describe('PurchaseOrderPanel', () => {
             purchaseRequestId: 'pr-2',
             requestKey: 'pr-2026-002',
             title: 'Emergency repair kit',
-            vendorPartyId: 'vendor-2',
-            vendorPartyKey: 'vendor-b',
-            vendorDisplayName: 'Bravo Supply',
+            supplierId: 'vendor-2',
+            supplierKey: 'vendor-b',
+            supplierDisplayName: 'South Service Desk',
+            parentSupplierId: 'supplier-2',
+            parentSupplierDisplayName: 'Bravo Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['maintenance'],
           },
         ]}
         selectedPurchaseRequestId=""

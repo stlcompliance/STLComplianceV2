@@ -1,20 +1,20 @@
 import { PartsInventoryReportsPanel } from '../../components/PartsInventoryReportsPanel'
 import { PurchasingReportsPanel } from '../../components/PurchasingReportsPanel'
-import { VendorReportsPanel } from '../../components/VendorReportsPanel'
+import { SupplierReportsPanel } from '../../components/VendorReportsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 
 export function PerformanceSection({ state: s }: Props) {
-  const canReadVendorReports = s.canReadParties
-  const canReadPurchasingReports = s.canReadParties || s.canReadSupplyReadiness
+  const canReadSupplierReports = s.canReadSuppliers
+  const canReadPurchasingReports = s.canReadSuppliers || s.canReadSupplyReadiness
   const canReadInventoryReports = s.canReadSupplyReadiness
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <VendorReportsPanel
+      <SupplierReportsPanel
         accessToken={s.accessToken}
-        canRead={canReadVendorReports}
+        canRead={canReadSupplierReports}
         canExport={false}
       />
       <PurchasingReportsPanel

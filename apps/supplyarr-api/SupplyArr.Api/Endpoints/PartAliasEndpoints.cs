@@ -110,11 +110,15 @@ public static class PartAliasEndpoints
                 tenantId,
                 actorUserId,
                 request.PartId,
-                new CreatePartVendorLinkRequest(request.PartyId, request.VendorPartNumber, request.IsPreferred),
+                new CreatePartVendorLinkRequest(
+                    request.PartyId,
+                    request.PartyId,
+                    request.PartyId,
+                    request.VendorPartNumber,
+                    request.IsPreferred),
                 cancellationToken);
             return Results.Created($"/api/v1/vendor-items/{created.LinkId}", created);
         })
         .WithName("CreateVendorItemV1");
     }
 }
-

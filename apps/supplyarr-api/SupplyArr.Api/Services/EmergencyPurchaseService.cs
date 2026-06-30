@@ -3,6 +3,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -15,6 +16,8 @@ public sealed class EmergencyPurchaseService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<IReadOnlyList<EmergencyPurchaseResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
@@ -23,6 +26,7 @@ public sealed class EmergencyPurchaseService(
         var query = db.PurchaseRequests
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .Where(x => x.TenantId == tenantId && x.IsEmergency);
@@ -77,7 +81,13 @@ public sealed class EmergencyPurchaseService(
                 400);
         }
 
-        await EnsureVendorPartyAsync(tenantId, request.VendorPartyId, cancellationToken);
+        var selectedSupplierId = request.SupplierId ?? request.VendorPartyId
+            ?? throw new StlApiException(
+                "emergency_purchase.supplier.required",
+                "Supplier is required for an emergency purchase.",
+                400);
+
+        await EnsureSupplierAllowedAsync(tenantId, selectedSupplierId, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var entity = new PurchaseRequest
@@ -88,7 +98,7 @@ public sealed class EmergencyPurchaseService(
             Title = NormalizeTitle(request.Title),
             Notes = NormalizeNotes(request.Notes),
             Status = PurchaseRequestStatuses.Draft,
-            VendorPartyId = request.VendorPartyId,
+            VendorPartyId = selectedSupplierId,
             RequestedByUserId = actorUserId,
             IsEmergency = true,
             EmergencyReason = NormalizeEmergencyReason(request.EmergencyReason),
@@ -152,8 +162,8 @@ public sealed class EmergencyPurchaseService(
         if (!entity.VendorPartyId.HasValue)
         {
             throw new StlApiException(
-                "emergency_purchase.vendor.required",
-                "Emergency purchase must have a vendor before expedited submit.",
+                "emergency_purchase.supplier.required",
+                "Emergency purchase must have a supplier before expedited submit.",
                 400);
         }
 
@@ -390,6 +400,13 @@ public sealed class EmergencyPurchaseService(
             entity.VendorPartyId,
             entity.VendorParty?.PartyKey,
             entity.VendorParty?.DisplayName,
+            entity.VendorParty?.ParentExternalPartyId,
+            entity.VendorParty?.ParentExternalParty?.DisplayName,
+            entity.VendorParty?.UnitKind,
+            ParseServiceTypes(entity.VendorParty?.ServiceTypesJson),
+            entity.VendorPartyId,
+            entity.VendorParty?.PartyKey,
+            entity.VendorParty?.DisplayName,
             entity.EmergencyReason,
             entity.EmergencyExpeditedAt,
             entity.ManagerOverrideApproved,
@@ -453,13 +470,13 @@ public sealed class EmergencyPurchaseService(
         });
     }
 
-    private Task EnsureVendorPartyAsync(
+    private Task EnsureSupplierAllowedAsync(
         Guid tenantId,
-        Guid vendorPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken) =>
         vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
             tenantId,
-            vendorPartyId,
+            supplierId,
             VendorRestrictionScopes.PurchaseRequests,
             cancellationToken);
 
@@ -471,6 +488,7 @@ public sealed class EmergencyPurchaseService(
         var entity = await db.PurchaseRequests
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -491,6 +509,7 @@ public sealed class EmergencyPurchaseService(
     {
         var entity = await db.PurchaseRequests
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -502,6 +521,23 @@ public sealed class EmergencyPurchaseService(
                 404);
 
         return entity;
+    }
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private static string NormalizeRequestKey(string value)

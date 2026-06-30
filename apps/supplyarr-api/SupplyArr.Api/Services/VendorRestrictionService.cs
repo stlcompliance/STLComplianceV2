@@ -15,7 +15,7 @@ public sealed class VendorRestrictionService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<IReadOnlyList<VendorRestrictionResponse>> ListAsync(
+    public async Task<IReadOnlyList<SupplierRestrictionResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
         CancellationToken cancellationToken = default)
@@ -39,24 +39,31 @@ public sealed class VendorRestrictionService(
         return rows.Select(Map).ToList();
     }
 
-    public async Task<IReadOnlyList<VendorRestrictionResponse>> ListByPartyAsync(
+    public async Task<IReadOnlyList<SupplierRestrictionResponse>> ListByPartyAsync(
         Guid tenantId,
         Guid externalPartyId,
         CancellationToken cancellationToken = default)
+        => await ListBySupplierAsync(tenantId, externalPartyId, cancellationToken);
+
+    public async Task<IReadOnlyList<SupplierRestrictionResponse>> ListBySupplierAsync(
+        Guid tenantId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default)
     {
-        await EnsureRestrictablePartyExistsAsync(tenantId, externalPartyId, cancellationToken);
+        await EnsureRestrictableSupplierExistsAsync(tenantId, supplierId, cancellationToken);
 
         var rows = await db.VendorRestrictions
             .AsNoTracking()
             .Include(x => x.ExternalParty)
-            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == externalPartyId)
+            .ThenInclude(x => x.ParentExternalParty)
+            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == supplierId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return rows.Select(Map).ToList();
     }
 
-    public async Task<VendorRestrictionResponse> GetAsync(
+    public async Task<SupplierRestrictionResponse> GetAsync(
         Guid tenantId,
         Guid restrictionId,
         CancellationToken cancellationToken = default)
@@ -65,21 +72,21 @@ public sealed class VendorRestrictionService(
         return Map(entity);
     }
 
-    public async Task<VendorRestrictionResponse> CreateAsync(
+    public async Task<SupplierRestrictionResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid externalPartyId,
-        CreateVendorRestrictionRequest request,
+        Guid supplierId,
+        CreateSupplierRestrictionRequest request,
         CancellationToken cancellationToken = default)
     {
-        var party = await EnsureRestrictablePartyExistsAsync(tenantId, externalPartyId, cancellationToken);
+        var supplier = await EnsureRestrictableSupplierExistsAsync(tenantId, supplierId, cancellationToken);
         var restrictionKey = VendorRestrictionRules.NormalizeRestrictionKey(request.RestrictionKey);
         var scopes = VendorRestrictionRules.NormalizeScopes(request.Scopes);
         var reason = VendorRestrictionRules.NormalizeReason(request.Reason);
 
         var duplicateKey = await db.VendorRestrictions.AnyAsync(
             x => x.TenantId == tenantId
-                && x.ExternalPartyId == externalPartyId
+                && x.ExternalPartyId == supplierId
                 && x.RestrictionKey == restrictionKey
                 && x.Status == VendorRestrictionStatuses.Active,
             cancellationToken);
@@ -87,7 +94,7 @@ public sealed class VendorRestrictionService(
         {
             throw new StlApiException(
                 "vendor_restrictions.duplicate_key",
-                "An active restriction with this key already exists for the party.",
+                "An active restriction with this key already exists for the supplier.",
                 409);
         }
 
@@ -105,7 +112,7 @@ public sealed class VendorRestrictionService(
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = party.Id,
+            ExternalPartyId = supplier.Id,
             RestrictionKey = restrictionKey,
             ScopesJson = JsonSerializer.Serialize(scopes, JsonOptions),
             Reason = reason,
@@ -134,24 +141,24 @@ public sealed class VendorRestrictionService(
             IntegrationOutboxEventKinds.VendorRestrictionCreated,
             "vendor_restriction",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Vendor restriction created: {restrictionKey}", party.Id),
+            new IntegrationOutboxPayload(tenantId, $"Supplier restriction created: {restrictionKey}", supplier.Id),
             cancellationToken: cancellationToken);
 
-        if (string.Equals(party.ApprovalStatus, "approved", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(supplier.ApprovalStatus, "approved", StringComparison.OrdinalIgnoreCase))
         {
-            party.ApprovalStatus = "restricted";
-            party.UpdatedAt = now;
+            supplier.ApprovalStatus = "restricted";
+            supplier.UpdatedAt = now;
             await db.SaveChangesAsync(cancellationToken);
         }
 
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
     }
 
-    public async Task<VendorRestrictionResponse> UpdateAsync(
+    public async Task<SupplierRestrictionResponse> UpdateAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid restrictionId,
-        UpdateVendorRestrictionRequest request,
+        UpdateSupplierRestrictionRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, restrictionId, cancellationToken);
@@ -188,17 +195,17 @@ public sealed class VendorRestrictionService(
             IntegrationOutboxEventKinds.VendorRestrictionUpdated,
             "vendor_restriction",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Vendor restriction updated: {entity.RestrictionKey}", entity.ExternalPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Supplier restriction updated: {entity.RestrictionKey}", entity.ExternalPartyId),
             cancellationToken: cancellationToken);
 
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
     }
 
-    public async Task<VendorRestrictionResponse> LiftAsync(
+    public async Task<SupplierRestrictionResponse> LiftAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid restrictionId,
-        LiftVendorRestrictionRequest request,
+        LiftSupplierRestrictionRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, restrictionId, cancellationToken);
@@ -227,7 +234,7 @@ public sealed class VendorRestrictionService(
             IntegrationOutboxEventKinds.VendorRestrictionLifted,
             "vendor_restriction",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Vendor restriction lifted: {entity.RestrictionKey}", entity.ExternalPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Supplier restriction lifted: {entity.RestrictionKey}", entity.ExternalPartyId),
             cancellationToken: cancellationToken);
 
         await TryClearPartyRestrictedStatusAsync(tenantId, entity.ExternalPartyId, cancellationToken);
@@ -235,11 +242,11 @@ public sealed class VendorRestrictionService(
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
     }
 
-    public Task<VendorRestrictionEnforcementResponse> GetEnforcementAsync(
+    public Task<SupplierRestrictionEnforcementResponse> GetEnforcementAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken = default) =>
-        procurementGuard.GetEnforcementAsync(tenantId, externalPartyId, cancellationToken);
+        procurementGuard.GetEnforcementAsync(tenantId, supplierId, cancellationToken);
 
     private async Task TryClearPartyRestrictedStatusAsync(
         Guid tenantId,
@@ -256,15 +263,15 @@ public sealed class VendorRestrictionService(
             return;
         }
 
-        var party = await db.ExternalParties
+        var supplier = await db.ExternalParties
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken);
-        if (party is null || !string.Equals(party.ApprovalStatus, "restricted", StringComparison.OrdinalIgnoreCase))
+        if (supplier is null || !string.Equals(supplier.ApprovalStatus, "restricted", StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        party.ApprovalStatus = "approved";
-        party.UpdatedAt = DateTimeOffset.UtcNow;
+        supplier.ApprovalStatus = "approved";
+        supplier.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
     }
 
@@ -279,27 +286,27 @@ public sealed class VendorRestrictionService(
         }
     }
 
-    private async Task<ExternalParty> EnsureRestrictablePartyExistsAsync(
+    private async Task<ExternalParty> EnsureRestrictableSupplierExistsAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken)
     {
-        var party = await db.ExternalParties
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken)
+        var supplier = await db.ExternalParties
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == supplierId, cancellationToken)
             ?? throw new StlApiException(
-                "vendor_restrictions.party_not_found",
-                "Party was not found.",
+                "vendor_restrictions.supplier_not_found",
+                "Supplier was not found.",
                 404);
 
-        if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
+        if (!VendorRestrictionPartyTypes.Allowed.Contains(supplier.PartyType))
         {
             throw new StlApiException(
-                "vendor_restrictions.party_type_not_allowed",
-                "Restrictions apply only to vendor or supplier parties.",
+                "vendor_restrictions.supplier_type_not_allowed",
+                "Restrictions apply only to supplier records.",
                 400);
         }
 
-        return party;
+        return supplier;
     }
 
     private async Task<VendorRestriction> LoadAsync(
@@ -309,6 +316,7 @@ public sealed class VendorRestrictionService(
         await db.VendorRestrictions
             .AsNoTracking()
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == restrictionId, cancellationToken)
             ?? throw new StlApiException(
                 "vendor_restrictions.not_found",
@@ -321,13 +329,14 @@ public sealed class VendorRestrictionService(
         CancellationToken cancellationToken) =>
         await db.VendorRestrictions
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == restrictionId, cancellationToken)
             ?? throw new StlApiException(
                 "vendor_restrictions.not_found",
                 "Vendor restriction was not found.",
                 404);
 
-    private static VendorRestrictionResponse Map(VendorRestriction entity)
+    private static SupplierRestrictionResponse Map(VendorRestriction entity)
     {
         IReadOnlyList<string> scopes;
         try
@@ -339,12 +348,25 @@ public sealed class VendorRestrictionService(
             scopes = [];
         }
 
-        return new VendorRestrictionResponse(
+        IReadOnlyList<string> serviceTypes;
+        try
+        {
+            serviceTypes = JsonSerializer.Deserialize<List<string>>(entity.ExternalParty.ServiceTypesJson ?? "[]", JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            serviceTypes = [];
+        }
+
+        return new SupplierRestrictionResponse(
             entity.Id,
             entity.ExternalPartyId,
             entity.ExternalParty.PartyKey,
             entity.ExternalParty.DisplayName,
-            entity.ExternalParty.PartyType,
+            entity.ExternalParty.ParentExternalPartyId,
+            entity.ExternalParty.ParentExternalParty?.DisplayName,
+            entity.ExternalParty.UnitKind,
+            serviceTypes,
             entity.RestrictionKey,
             scopes,
             entity.Reason,
@@ -356,6 +378,7 @@ public sealed class VendorRestrictionService(
             entity.LiftedAt,
             entity.LiftNotes,
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.Id);
     }
 }

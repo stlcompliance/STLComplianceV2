@@ -4,46 +4,47 @@ using STLCompliance.Shared.Auth;
 
 namespace SupplyArr.Api.Endpoints;
 
-public static class VendorOrderEndpoints
+public static class SupplierOrderEndpoints
 {
-    public static void MapSupplyArrVendorOrderEndpoints(this WebApplication app)
+    public static void MapSupplyArrSupplierOrderEndpoints(this WebApplication app)
     {
-        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix, string canonicalRoutePrefix)
         {
-            group = group.WithTags("VendorOrders").RequireAuthorization();
+            group = group.WithTags("SupplierOrders").RequireAuthorization();
 
             group.MapGet("/", async (
                 string? status,
                 Guid? vendorId,
+                Guid? supplierId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderRead(context.User);
                 return Results.Ok(await service.ListAsync(
                     context.User.GetTenantId(),
                     status,
-                    vendorId,
+                    supplierId ?? vendorId,
                     cancellationToken));
             })
-            .WithName($"ListVendorOrders{nameSuffix}");
+            .WithName($"ListSupplierOrders{nameSuffix}");
 
             group.MapGet("/metadata", (
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service) =>
+                SupplierOrderService service) =>
             {
                 authorization.RequireVendorOrderRead(context.User);
                 return Results.Ok(service.GetMetadata());
             })
-            .WithName($"GetVendorOrderMetadata{nameSuffix}");
+            .WithName($"GetSupplierOrderMetadata{nameSuffix}");
 
             group.MapGet("/{vendorOrderId:guid}", async (
                 Guid vendorOrderId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderRead(context.User);
@@ -52,13 +53,13 @@ public static class VendorOrderEndpoints
                     vendorOrderId,
                     cancellationToken));
             })
-            .WithName($"GetVendorOrder{nameSuffix}");
+            .WithName($"GetSupplierOrder{nameSuffix}");
 
             group.MapPost("/", async (
                 CreateVendorOrderRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderCreate(context.User);
@@ -68,16 +69,16 @@ public static class VendorOrderEndpoints
                     context.User.GetUserId(),
                     request,
                     cancellationToken);
-                return Results.Created($"/api/v1/vendor-orders/{created.VendorOrderId}", created);
+                return Results.Created($"{canonicalRoutePrefix}/{created.VendorOrderId}", created);
             })
-            .WithName($"CreateVendorOrder{nameSuffix}");
+            .WithName($"CreateSupplierOrder{nameSuffix}");
 
             group.MapPatch("/{vendorOrderId:guid}", async (
                 Guid vendorOrderId,
                 UpdateVendorOrderRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderUpdate(context.User);
@@ -89,13 +90,30 @@ public static class VendorOrderEndpoints
                     request,
                     cancellationToken));
             })
-            .WithName($"UpdateVendorOrder{nameSuffix}");
+            .WithName($"UpdateSupplierOrder{nameSuffix}");
+
+            group.MapPost("/{vendorOrderId:guid}/send-to-supplier", async (
+                Guid vendorOrderId,
+                HttpContext context,
+                SupplyArrAuthorizationService authorization,
+                SupplierOrderService service,
+                CancellationToken cancellationToken) =>
+            {
+                authorization.RequireVendorOrderSend(context.User);
+                return Results.Ok(await service.SendToVendorAsync(
+                    context.User.GetTenantId(),
+                    context.User.GetPersonId().ToString(),
+                    context.User.GetUserId(),
+                    vendorOrderId,
+                    cancellationToken));
+            })
+            .WithName($"SendSupplierOrder{nameSuffix}");
 
             group.MapPost("/{vendorOrderId:guid}/send-to-vendor", async (
                 Guid vendorOrderId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderSend(context.User);
@@ -113,7 +131,7 @@ public static class VendorOrderEndpoints
                 UpdateVendorOrderStatusRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderStatusUpdate(context.User);
@@ -125,13 +143,13 @@ public static class VendorOrderEndpoints
                     request,
                     cancellationToken));
             })
-            .WithName($"UpdateVendorOrderStatus{nameSuffix}");
+            .WithName($"UpdateSupplierOrderStatus{nameSuffix}");
 
             group.MapGet("/{vendorOrderId:guid}/status-history", async (
                 Guid vendorOrderId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderRead(context.User);
@@ -140,13 +158,13 @@ public static class VendorOrderEndpoints
                     vendorOrderId,
                     cancellationToken));
             })
-            .WithName($"GetVendorOrderStatusHistory{nameSuffix}");
+            .WithName($"GetSupplierOrderStatusHistory{nameSuffix}");
 
             group.MapPost("/{vendorOrderId:guid}/magic-link", async (
                 Guid vendorOrderId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderSend(context.User);
@@ -157,14 +175,14 @@ public static class VendorOrderEndpoints
                     vendorOrderId,
                     cancellationToken));
             })
-            .WithName($"CreateVendorOrderMagicLink{nameSuffix}");
+            .WithName($"CreateSupplierOrderMagicLink{nameSuffix}");
 
             group.MapPost("/{vendorOrderId:guid}/documents", async (
                 Guid vendorOrderId,
                 RegisterVendorOrderDocumentRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderDocumentUpload(context.User);
@@ -176,14 +194,14 @@ public static class VendorOrderEndpoints
                     request,
                     cancellationToken));
             })
-            .WithName($"RegisterVendorOrderDocument{nameSuffix}");
+            .WithName($"RegisterSupplierOrderDocument{nameSuffix}");
 
             group.MapPost("/{vendorOrderId:guid}/partial-decision", async (
                 Guid vendorOrderId,
                 CreateVendorOrderBrokerDecisionRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderUpdate(context.User);
@@ -195,14 +213,14 @@ public static class VendorOrderEndpoints
                     request,
                     cancellationToken));
             })
-            .WithName($"CreateVendorOrderPartialDecision{nameSuffix}");
+            .WithName($"CreateSupplierOrderPartialDecision{nameSuffix}");
 
             group.MapPost("/{vendorOrderId:guid}/split", async (
                 Guid vendorOrderId,
                 SplitVendorOrderRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                VendorOrderService service,
+                SupplierOrderService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireVendorOrderUpdate(context.User);
@@ -214,10 +232,18 @@ public static class VendorOrderEndpoints
                     request,
                     cancellationToken));
             })
-            .WithName($"SplitVendorOrder{nameSuffix}");
+            .WithName($"SplitSupplierOrder{nameSuffix}");
         }
 
-        MapRoutes(app.MapGroup("/api/vendor-orders"), string.Empty);
-        MapRoutes(app.MapGroup("/api/v1/vendor-orders"), "V1");
+        MapRoutes(app.MapGroup("/api/supplier-orders"), "Supplier", "/api/v1/supplier-orders");
+        MapRoutes(app.MapGroup("/api/v1/supplier-orders"), "SupplierV1", "/api/v1/supplier-orders");
+        MapRoutes(app.MapGroup("/api/vendor-orders"), string.Empty, "/api/v1/vendor-orders");
+        MapRoutes(app.MapGroup("/api/v1/vendor-orders"), "V1", "/api/v1/vendor-orders");
     }
+}
+
+public static class VendorOrderEndpoints
+{
+    public static void MapSupplyArrVendorOrderEndpoints(this WebApplication app) =>
+        app.MapSupplyArrSupplierOrderEndpoints();
 }

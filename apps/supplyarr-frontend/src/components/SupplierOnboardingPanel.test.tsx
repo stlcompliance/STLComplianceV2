@@ -52,11 +52,13 @@ vi.mock('../api/client', () => ({
     ],
   }),
   listPendingSupplierOnboarding: vi.fn().mockResolvedValue([]),
-  getSupplierOnboardingByParty: vi.fn().mockResolvedValue(null),
-  listPartyComplianceDocuments: vi.fn().mockResolvedValue([
+  getSupplierOnboarding: vi.fn().mockResolvedValue(null),
+  listSupplierComplianceDocuments: vi.fn().mockResolvedValue([
     {
       documentId: 'doc-1',
-      externalPartyId: 'p1',
+      supplierId: 'p1',
+      supplierKey: 'acme-hq',
+      supplierDisplayName: 'HQ Counter',
       documentKey: 'w9-001',
       documentTypeKey: 'w9',
       title: 'W-9 tax form',
@@ -73,7 +75,9 @@ vi.mock('../api/client', () => ({
     },
     {
       documentId: 'doc-2',
-      externalPartyId: 'p1',
+      supplierId: 'p1',
+      supplierKey: 'acme-hq',
+      supplierDisplayName: 'HQ Counter',
       documentKey: 'coi-001',
       documentTypeKey: 'insurance',
       title: 'Insurance certificate',
@@ -93,9 +97,31 @@ vi.mock('../api/client', () => ({
   submitSupplierOnboarding: vi.fn(),
   approveSupplierOnboarding: vi.fn(),
   rejectSupplierOnboarding: vi.fn(),
-  registerPartyComplianceDocument: vi.fn(),
-  approvePartyComplianceDocument: vi.fn(),
+  registerSupplierComplianceDocument: vi.fn(),
+  approveSupplierComplianceDocument: vi.fn(),
 }))
+
+const acmeHqSupplier = {
+  supplierId: 'p1',
+  supplierKey: 'acme-hq',
+  parentSupplierId: 'parent-1',
+  parentSupplierDisplayName: 'Acme Supply',
+  unitKind: 'sub_unit',
+  displayName: 'HQ Counter',
+  legalName: '',
+  taxIdentifier: null,
+  approvalStatus: 'pending',
+  status: 'active',
+  notes: '',
+  serviceTypes: ['parts', 'maintenance'],
+  addressLine1: '100 Main St',
+  locality: 'Tulsa',
+  regionCode: 'OK',
+  postalCode: '74101',
+  contacts: [],
+  createdAt: '',
+  updatedAt: '',
+}
 
 describe('SupplierOnboardingPanel', () => {
   afterEach(() => {
@@ -111,23 +137,7 @@ describe('SupplierOnboardingPanel', () => {
           accessToken="token"
           canManage={true}
           canReview={true}
-          onboardableParties={[
-            {
-              partyId: 'p1',
-              partyKey: 'V-1',
-              partyType: 'vendor',
-              unitKind: 'identity',
-              displayName: 'Vendor One',
-              legalName: '',
-              taxIdentifier: null,
-              approvalStatus: 'pending',
-              status: 'active',
-              notes: '',
-              contacts: [],
-              createdAt: '',
-              updatedAt: '',
-            },
-          ]}
+          onboardableSuppliers={[acmeHqSupplier]}
         />
       </QueryClientProvider>,
     )
@@ -142,7 +152,7 @@ describe('SupplierOnboardingPanel', () => {
           accessToken="token"
           canManage={false}
           canReview={false}
-          onboardableParties={[]}
+          onboardableSuppliers={[]}
         />
       </QueryClientProvider>,
     )
@@ -159,28 +169,12 @@ describe('SupplierOnboardingPanel', () => {
           accessToken="token"
           canManage={true}
           canReview={true}
-          onboardableParties={[
-            {
-              partyId: 'p1',
-              partyKey: 'V-1',
-              partyType: 'vendor',
-              unitKind: 'identity',
-              displayName: 'Vendor One',
-              legalName: '',
-              taxIdentifier: null,
-              approvalStatus: 'pending',
-              status: 'active',
-              notes: '',
-              contacts: [],
-              createdAt: '',
-              updatedAt: '',
-            },
-          ]}
+          onboardableSuppliers={[acmeHqSupplier]}
         />
       </QueryClientProvider>,
     )
 
-    fireEvent.change(await screen.findByLabelText('Onboarding party'), { target: { value: 'p1' } })
+    fireEvent.change(await screen.findByLabelText('Supplier identity or sub-unit'), { target: { value: 'p1' } })
     expect(await screen.findByRole('heading', { name: 'Compliance documents' })).toBeInTheDocument()
     expect(await screen.findByText(/2 document\(s\)/i)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Required documents' })).toBeInTheDocument()
@@ -192,7 +186,7 @@ describe('SupplierOnboardingPanel', () => {
     expect(screen.getByTestId('supplier-onboarding-action-error')).toBeInTheDocument()
   })
 
-  it('uses a searchable party picker for onboarding selection', async () => {
+  it('uses a searchable supplier picker for onboarding selection', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
@@ -200,33 +194,25 @@ describe('SupplierOnboardingPanel', () => {
           accessToken="token"
           canManage={true}
           canReview={true}
-          onboardableParties={[
+          onboardableSuppliers={[
+            acmeHqSupplier,
             {
-              partyId: 'p1',
-              partyKey: 'V-1',
-              partyType: 'vendor',
-              unitKind: 'identity',
-              displayName: 'Vendor One',
-              legalName: '',
-              taxIdentifier: null,
-              approvalStatus: 'pending',
-              status: 'active',
-              notes: '',
-              contacts: [],
-              createdAt: '',
-              updatedAt: '',
-            },
-            {
-              partyId: 'p2',
-              partyKey: 'S-1',
-              partyType: 'supplier',
+              supplierId: 'p2',
+              supplierKey: 'bravo-west',
+              parentSupplierId: 'parent-2',
+              parentSupplierDisplayName: 'Bravo Supply',
               unitKind: 'sub_unit',
-              displayName: 'Supplier Two',
+              displayName: 'West Service Desk',
               legalName: '',
               taxIdentifier: null,
               approvalStatus: 'pending',
               status: 'active',
               notes: '',
+              serviceTypes: ['maintenance'],
+              addressLine1: '44 Service Ave',
+              locality: 'Oklahoma City',
+              regionCode: 'OK',
+              postalCode: '73102',
               contacts: [],
               createdAt: '',
               updatedAt: '',
@@ -237,17 +223,18 @@ describe('SupplierOnboardingPanel', () => {
     )
 
     expect(await screen.findByTestId('supplier-onboarding-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
-      'Vendor One (supplier identity)',
+    expect(screen.getByTestId('supplier-onboarding-supplier-picker-options')).toHaveTextContent(
+      'Acme Supply · HQ Counter (acme-hq) · Sub-unit',
     )
-    expect(screen.getByTestId('supplier-onboarding-party-picker-options')).toHaveTextContent(
-      'Supplier Two (sub-unit)',
+    expect(screen.getByTestId('supplier-onboarding-supplier-picker-options')).toHaveTextContent(
+      'Bravo Supply · West Service Desk (bravo-west) · Sub-unit',
     )
 
-    fireEvent.change(screen.getByTestId('supplier-onboarding-party-picker'), {
+    fireEvent.change(screen.getByTestId('supplier-onboarding-supplier-picker'), {
       target: { value: 'p2' },
     })
 
     expect(await screen.findByLabelText('Onboarding notes')).toBeInTheDocument()
+    expect(screen.getByText(/Bravo Supply · West Service Desk \(bravo-west\) · Sub-unit · 44 Service Ave, Oklahoma City, OK, 73102 · Maintenance/i)).toBeInTheDocument()
   })
 })

@@ -20,6 +20,8 @@ public sealed record PurchasingProcurementAnalyticsResponse(
     int ActiveProcurementExceptionCount,
     int OpenReceivingExceptionCount,
     int OpenWarrantyClaimCount,
+    int SupplierDocumentExpiringSoonCount,
+    int BlockedSupplierCount,
     int VendorDocumentExpiringSoonCount,
     int BlockedVendorCount,
     int? AverageLeadTimeDays,
@@ -31,12 +33,21 @@ public sealed record PurchasingDocumentSummaryItemResponse(
     string DocumentKey,
     string Title,
     string Status,
-    Guid? VendorPartyId,
-    string VendorDisplayName,
+    Guid? SupplierId,
+    string? SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string? SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
+    string? SupplierType,
     int LineCount,
     decimal QuantityOrdered,
     decimal QuantityReceived,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid? VendorPartyId,
+    string? VendorPartyKey,
+    string? VendorDisplayName);
 
 public sealed record PurchasingReportSummaryResponse(
     DateTimeOffset GeneratedAt,

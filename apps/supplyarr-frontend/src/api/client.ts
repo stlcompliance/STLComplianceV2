@@ -1,17 +1,15 @@
 import type {
-  CreateExternalPartyRequest,
   CreatePartCatalogRequest,
   CreatePartRequest,
   CreatePartSourceRequest,
   CreatePartVendorLinkRequest,
-  CreatePartyContactRequest,
-  CreateTypedExternalPartyRequest,
-  ExternalPartyResponse,
-  PartyRegistryMetadataResponse,
-  PartyRegistryRoute,
-  UpdateExternalPartyApprovalStatusRequest,
-  UpdateExternalPartyRequest,
-  UpdateExternalPartyStatusRequest,
+  CreateSupplierContactRequest,
+  CreateSupplierRequest,
+  SupplierResponse,
+  SupplierDirectoryMetadataResponse,
+  UpdateSupplierApprovalStatusRequest,
+  UpdateSupplierRequest,
+  UpdateSupplierStatusRequest,
   HandoffSessionResponse,
   PartCatalogResponse,
   PartResponse,
@@ -32,13 +30,14 @@ import type {
   BackorderResponse,
   CancelBackorderRequest,
   CancelPurchaseOrderRequest,
-  CancelVendorReturnRequest,
+  CancelSupplierReturnRequest,
   CreateBackorderFromPurchaseOrderLineRequest,
-  CreateVendorReturnFromPurchaseOrderLineRequest,
-  CreateVendorReturnFromStockRequest,
+  CreateSupplierReturnFromPurchaseOrderLineRequest,
+  CreateSupplierReturnFromStockRequest,
+  CreateSupplierWarrantyClaimRequest,
+  SupplierReturnResponse,
   VendorReturnResponse,
   WarrantyClaimResponse,
-  CreateWarrantyClaimRequest,
   UpdateWarrantyClaimRequest,
   SubmitWarrantyClaimRequest,
   RecordWarrantyClaimVendorResponseRequest,
@@ -55,6 +54,7 @@ import type {
   AvailabilitySnapshotResponse,
   CreateAvailabilitySnapshotRequest,
   ReorderEvaluationResponse,
+  ReorderSuggestionResponse,
   UpsertPartReorderPolicyRequest,
   PartReorderPolicyResponse,
   CreatePurchaseRequestFromReorderRequest,
@@ -76,6 +76,7 @@ import type {
   PendingAvailabilitySnapshotCapturesResponse,
   AvailabilitySnapshotRunsResponse,
   ProcurementCoordinationDashboardResponse,
+  ProcurementCoordinationSummaryResponse,
   ProcurementCoordinationSettingsResponse,
   UpsertProcurementCoordinationSettingsRequest,
   PendingProcurementCoordinationResponse,
@@ -100,15 +101,17 @@ import type {
   DemandProcessingOperatorActionResponse,
   SupplyReadinessDashboardResponse,
   PartSupplyReadinessResponse,
-  VendorSupplyReadinessResponse,
+  SupplierSupplyReadinessResponse,
   ProcurementPathReadinessResponse,
   IntegrationEventSettingsResponse,
   UpsertIntegrationEventSettingsRequest,
   IntegrationEventsListResponse,
   RfqResponse,
+  RfqVendorInvitationResponse,
   RfqQuoteComparisonResponse,
   VendorPortalCreateQuoteRequest,
   VendorPortalRfqResponse,
+  SupplierQuoteResponse,
   VendorQuoteResponse,
   VendorEmailInboxListResponse,
   IngestVendorEmailInboxRequest,
@@ -116,10 +119,12 @@ import type {
   CreatePurchaseRequestFromRfqResponse,
   SupplierOnboardingResponse,
   SupplierOnboardingDocumentRequirementsResponse,
+  SupplierRestrictionResponse,
+  CreateSupplierRestrictionRequest,
+  LiftSupplierRestrictionRequest,
+  SupplierRestrictionEnforcementResponse,
   VendorRestrictionResponse,
-  CreateVendorRestrictionRequest,
   LiftVendorRestrictionRequest,
-  VendorRestrictionEnforcementResponse,
   SupplierIncidentResponse,
   CreateSupplierIncidentRequest,
   ResolveSupplierIncidentRequest,
@@ -138,25 +143,97 @@ import type {
   CancelProcurementExceptionRequest,
   ReopenProcurementExceptionRequest,
   ProcurementApprovalAuthorityMirrorResponse,
-  PartyComplianceDocumentResponse,
+  SupplierComplianceDocumentResponse,
   EmergencyPurchaseResponse,
+  CreateEmergencyPurchaseRequest,
   IssueEmergencyPurchaseOrderResponse,
   ForgivingSearchResponse,
   AuditHistoryListResponse,
+  SupplierReportSummaryItem,
+  SupplierReportSummaryResponse,
+  SupplierReportDetailResponse,
+  VendorReportSummaryItem,
   VendorReportSummaryResponse,
   VendorReportDetailResponse,
   ComplianceReportSummaryResponse,
-  CompliancePartyDetailResponse,
+  SupplierComplianceReportSummaryResponse,
+  SupplierComplianceDetailResponse,
   PartsInventoryReportSummaryResponse,
   PartsInventoryPartDetailResponse,
   PartsInventoryLocationDetailResponse,
   PurchasingReportSummaryResponse,
+  PurchasingDocumentSummaryItem,
   PurchasingPurchaseRequestDetailResponse,
   PurchasingPurchaseOrderDetailResponse,
 } from './types'
 import type { ProductImportHistoryEntry, ProductImportManifest } from '@stl/shared-ui'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
+
+type RawSupplierResponse = SupplierResponse & {
+  partyId?: string
+  partyKey?: string
+  partyType?: string
+  parentPartyId?: string | null
+  parentPartyDisplayName?: string | null
+}
+type RawVendorSupplyReadinessResponse = SupplierSupplyReadinessResponse & {
+  externalPartyId?: string
+  partyKey?: string
+  partyType?: string
+}
+type RawProcurementPathReadinessResponse = ProcurementPathReadinessResponse & {
+  externalPartyId?: string
+  partyKey?: string
+}
+type RawSupplierRestrictionResponse = SupplierRestrictionResponse & {
+  supplierRestrictionId?: string
+  externalPartyId?: string
+  partyKey?: string
+  partyDisplayName?: string
+  partyType?: string
+  supplierType?: string
+}
+type RawSupplierRestrictionEnforcementResponse = SupplierRestrictionEnforcementResponse & {
+  externalPartyId?: string
+}
+type RawPricingSnapshotResponse = PricingSnapshotResponse & {
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
+}
+type RawLeadTimeSnapshotResponse = LeadTimeSnapshotResponse & {
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
+}
+type RawAvailabilitySnapshotResponse = AvailabilitySnapshotResponse & {
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
+}
+type RawSupplierOnboardingResponse = SupplierOnboardingResponse & {
+  externalPartyId?: string
+  partyKey?: string
+  supplierType?: string | null
+  partyType?: string | null
+  supplierUnitKind?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+}
+
+type RawPartyComplianceDocumentResponse = SupplierComplianceDocumentResponse & {
+  externalPartyId?: string
+  partyKey?: string
+  partyDisplayName?: string
+}
+
+type RawSupplierIncidentResponse = SupplierIncidentResponse & {
+  externalPartyId?: string
+  partyKey?: string
+  partyDisplayName?: string
+  vendorRestrictionId?: string | null
+}
 
 export class SupplyArrApiError extends Error {
   constructor(
@@ -173,6 +250,43 @@ type ProblemDetailsLike = {
   title?: string
   detail?: string
   errors?: Record<string, string[] | string>
+}
+
+type SupplierIdentityLike = {
+  supplierId?: string | null
+  externalPartyId?: string | null
+  vendorPartyId?: string | null
+  partyId?: string | null
+  supplierKey?: string | null
+  vendorPartyKey?: string | null
+  partyKey?: string | null
+  supplierDisplayName?: string | null
+  vendorDisplayName?: string | null
+  partyDisplayName?: string | null
+}
+
+function resolveSupplierId(raw: SupplierIdentityLike): string | null {
+  return raw.supplierId ?? raw.externalPartyId ?? raw.vendorPartyId ?? raw.partyId ?? null
+}
+
+function resolveSupplierKey(raw: SupplierIdentityLike): string | null {
+  return raw.supplierKey ?? raw.vendorPartyKey ?? raw.partyKey ?? null
+}
+
+function resolveSupplierDisplayName(raw: SupplierIdentityLike): string | null {
+  return raw.supplierDisplayName ?? raw.vendorDisplayName ?? raw.partyDisplayName ?? null
+}
+
+function serializeSupplierReference<T extends {
+  supplierId?: string | null
+  supplierUnitId?: string | null
+  vendorPartyId?: string | null
+  partyId?: string | null
+}>(request: T): T & { supplierId?: string | null } {
+  return {
+    ...request,
+    supplierId: request.supplierUnitId ?? request.supplierId ?? request.vendorPartyId ?? request.partyId ?? null,
+  }
 }
 
 function extractProblemDetailsMessage(body: string): string | null {
@@ -235,6 +349,541 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
+function normalizeSupplierResponse(raw: RawSupplierResponse): SupplierResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    parentSupplierId: raw.parentSupplierId ?? raw.parentPartyId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? raw.parentPartyDisplayName ?? null,
+  }
+}
+
+function normalizeSupplierResponses(raw: RawSupplierResponse[]): SupplierResponse[] {
+  return raw.map(normalizeSupplierResponse)
+}
+
+function normalizeSupplierOnboarding(raw: RawSupplierOnboardingResponse): SupplierOnboardingResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+  }
+}
+
+function normalizeSupplierOnboardings(raw: RawSupplierOnboardingResponse[]): SupplierOnboardingResponse[] {
+  return raw.map(normalizeSupplierOnboarding)
+}
+
+function normalizeSupplierComplianceDocument(raw: RawPartyComplianceDocumentResponse): SupplierComplianceDocumentResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: raw.supplierKey ?? resolveSupplierKey(raw)!,
+    supplierDisplayName: raw.supplierDisplayName ?? raw.partyDisplayName ?? '',
+  }
+}
+
+function normalizeSupplierComplianceDocuments(raw: RawPartyComplianceDocumentResponse[]): SupplierComplianceDocumentResponse[] {
+  return raw.map(normalizeSupplierComplianceDocument)
+}
+
+function normalizeSupplierComplianceDetail(raw: SupplierComplianceDetailResponse): SupplierComplianceDetailResponse {
+  return {
+    ...raw,
+    summary: {
+      ...raw.summary,
+      parentSupplierId: raw.summary.parentSupplierId ?? null,
+      parentSupplierDisplayName: raw.summary.parentSupplierDisplayName ?? null,
+      supplierUnitKind: raw.summary.supplierUnitKind ?? 'identity',
+      supplierServiceTypes: raw.summary.supplierServiceTypes ?? [],
+    },
+  }
+}
+
+function serializeSupplierRequest(request: CreateSupplierRequest | UpdateSupplierRequest) {
+  return {
+    ...request,
+    parentSupplierId: request.parentSupplierId ?? null,
+  }
+}
+
+function normalizeSupplierReadiness(raw: RawVendorSupplyReadinessResponse): SupplierSupplyReadinessResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeProcurementPathReadiness(raw: RawProcurementPathReadinessResponse): ProcurementPathReadinessResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplierRestriction(raw: RawSupplierRestrictionResponse): SupplierRestrictionResponse {
+  return {
+    ...raw,
+    supplierRestrictionId: raw.supplierRestrictionId ?? raw.restrictionId,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierDisplayName: resolveSupplierDisplayName(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplierRestrictions(raw: RawSupplierRestrictionResponse[]): SupplierRestrictionResponse[] {
+  return raw.map(normalizeSupplierRestriction)
+}
+
+function normalizeSupplierRestrictionEnforcement(raw: RawSupplierRestrictionEnforcementResponse): SupplierRestrictionEnforcementResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplierIncident(raw: RawSupplierIncidentResponse): SupplierIncidentResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierDisplayName: resolveSupplierDisplayName(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+    supplierRestrictionId: raw.supplierRestrictionId ?? raw.vendorRestrictionId,
+  }
+}
+
+function normalizeSupplierIncidents(raw: RawSupplierIncidentResponse[]): SupplierIncidentResponse[] {
+  return raw.map(normalizeSupplierIncident)
+}
+
+function normalizePartVendorLink(raw: PartVendorLinkResponse): PartVendorLinkResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierDisplayName: resolveSupplierDisplayName(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+    partyId: raw.partyId ?? resolveSupplierId(raw) ?? undefined,
+    partyKey: raw.partyKey ?? resolveSupplierKey(raw) ?? undefined,
+    partyDisplayName: raw.partyDisplayName ?? resolveSupplierDisplayName(raw) ?? undefined,
+  }
+}
+
+function normalizePartResponse(raw: PartResponse): PartResponse {
+  return {
+    ...raw,
+    vendorLinks: raw.vendorLinks.map(normalizePartVendorLink),
+  }
+}
+
+function normalizePurchaseRequestResponse(raw: PurchaseRequestResponse): PurchaseRequestResponse {
+  const supplierId = resolveSupplierId(raw)
+  return {
+    ...raw,
+    supplierId,
+    supplierKey: resolveSupplierKey(raw),
+    supplierDisplayName: resolveSupplierDisplayName(raw),
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? (supplierId ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeEmergencyPurchaseResponse(raw: EmergencyPurchaseResponse): EmergencyPurchaseResponse {
+  const supplierId = resolveSupplierId(raw)
+  return {
+    ...raw,
+    supplierId: supplierId ?? undefined,
+    supplierKey: resolveSupplierKey(raw) ?? undefined,
+    supplierDisplayName: resolveSupplierDisplayName(raw) ?? undefined,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? (supplierId ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeEmergencyPurchaseResponses(raw: EmergencyPurchaseResponse[]): EmergencyPurchaseResponse[] {
+  return raw.map(normalizeEmergencyPurchaseResponse)
+}
+
+function normalizeProcurementCoordinationSummary(
+  raw: ProcurementCoordinationSummaryResponse,
+): ProcurementCoordinationSummaryResponse {
+  const supplierId = resolveSupplierId(raw)
+  return {
+    ...raw,
+    supplierId,
+    supplierKey: resolveSupplierKey(raw),
+    supplierDisplayName: resolveSupplierDisplayName(raw),
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? (supplierId ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizePurchaseOrderResponse(raw: PurchaseOrderResponse): PurchaseOrderResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierDisplayName: resolveSupplierDisplayName(raw)!,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplyContractResponse(raw: SupplyContractResponse): SupplyContractResponse {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw)!,
+    supplierKey: resolveSupplierKey(raw)!,
+    supplierDisplayName: resolveSupplierDisplayName(raw)!,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplyContractResponses(raw: SupplyContractResponse[]): SupplyContractResponse[] {
+  return raw.map(normalizeSupplyContractResponse)
+}
+
+function normalizePurchasingDocumentSummaryItem(raw: PurchasingDocumentSummaryItem): PurchasingDocumentSummaryItem {
+  const supplierId = resolveSupplierId(raw)
+  const hasSupplierIdentity = Boolean(
+    supplierId ?? resolveSupplierDisplayName(raw),
+  )
+
+  return {
+    ...raw,
+    supplierId,
+    supplierKey: resolveSupplierKey(raw),
+    supplierDisplayName: resolveSupplierDisplayName(raw) ?? '',
+    supplierUnitKind: raw.supplierUnitKind ?? (hasSupplierIdentity ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+    vendorPartyId: raw.vendorPartyId ?? supplierId,
+    vendorPartyKey: raw.vendorPartyKey ?? raw.supplierKey ?? null,
+    vendorDisplayName: raw.vendorDisplayName ?? raw.supplierDisplayName ?? null,
+  }
+}
+
+function normalizePurchasingReportSummary(
+  raw: PurchasingReportSummaryResponse,
+): PurchasingReportSummaryResponse {
+  return {
+    ...raw,
+    analytics: {
+      ...raw.analytics,
+      supplierDocumentExpiringSoonCount:
+        raw.analytics.supplierDocumentExpiringSoonCount ?? raw.analytics.vendorDocumentExpiringSoonCount,
+      blockedSupplierCount: raw.analytics.blockedSupplierCount ?? raw.analytics.blockedVendorCount,
+    },
+    documents: raw.documents.map(normalizePurchasingDocumentSummaryItem),
+  }
+}
+
+function normalizePurchasingPurchaseRequestDetail(
+  raw: PurchasingPurchaseRequestDetailResponse,
+): PurchasingPurchaseRequestDetailResponse {
+  return {
+    ...raw,
+    summary: normalizePurchasingDocumentSummaryItem(raw.summary),
+  }
+}
+
+function normalizePurchasingPurchaseOrderDetail(
+  raw: PurchasingPurchaseOrderDetailResponse,
+): PurchasingPurchaseOrderDetailResponse {
+  return {
+    ...raw,
+    summary: normalizePurchasingDocumentSummaryItem(raw.summary),
+  }
+}
+
+function normalizeRfqInvitation(raw: RfqVendorInvitationResponse): RfqVendorInvitationResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId,
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeVendorQuote(raw: VendorQuoteResponse): VendorQuoteResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId,
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplierQuote(raw: SupplierQuoteResponse): SupplierQuoteResponse {
+  return {
+    ...normalizeVendorQuote(raw),
+    supplierQuoteId: raw.supplierQuoteId ?? raw.vendorQuoteId,
+  }
+}
+
+function normalizeRfq(raw: RfqResponse): RfqResponse {
+  return {
+    ...raw,
+    selectedSupplierQuoteId: raw.selectedSupplierQuoteId ?? raw.selectedVendorQuoteId ?? null,
+    awardedSupplierId: raw.awardedSupplierId ?? raw.awardedVendorPartyId ?? null,
+    awardedSupplierKey: raw.awardedSupplierKey ?? raw.awardedVendorPartyKey ?? null,
+    awardedSupplierDisplayName: raw.awardedSupplierDisplayName ?? raw.awardedVendorDisplayName ?? null,
+    awardedSupplierUnitKind: raw.awardedSupplierUnitKind ?? null,
+    awardedSupplierServiceTypes: raw.awardedSupplierServiceTypes ?? [],
+    invitations: raw.invitations.map(normalizeRfqInvitation),
+    quotes: raw.quotes.map(normalizeSupplierQuote),
+  }
+}
+
+function normalizeVendorPortalRfq(raw: VendorPortalRfqResponse): VendorPortalRfqResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId,
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeRfqQuoteComparison(raw: RfqQuoteComparisonResponse): RfqQuoteComparisonResponse {
+  return {
+    ...raw,
+    lines: raw.lines.map((line) => ({
+      ...line,
+      quotes: line.quotes.map((quote) => ({
+        ...quote,
+        supplierId: quote.supplierId ?? quote.vendorPartyId,
+        supplierKey: quote.supplierKey ?? quote.vendorPartyKey,
+        supplierDisplayName: quote.supplierDisplayName ?? quote.vendorDisplayName,
+        supplierUnitKind: quote.supplierUnitKind ?? 'identity',
+        supplierServiceTypes: quote.supplierServiceTypes ?? [],
+      })),
+    })),
+    quoteSummaries: raw.quoteSummaries.map((quote) => ({
+      ...quote,
+      supplierId: quote.supplierId ?? quote.vendorPartyId,
+      supplierKey: quote.supplierKey ?? quote.vendorPartyKey,
+      supplierDisplayName: quote.supplierDisplayName ?? quote.vendorDisplayName,
+      supplierUnitKind: quote.supplierUnitKind ?? 'identity',
+      supplierServiceTypes: quote.supplierServiceTypes ?? [],
+    })),
+  }
+}
+
+function normalizeVendorReturn(raw: VendorReturnResponse): VendorReturnResponse {
+  const supplierId = (raw.supplierId ?? raw.vendorPartyId ?? undefined) as string | undefined
+  const supplierKey = (raw.supplierKey ?? raw.vendorPartyKey ?? undefined) as string | undefined
+  const supplierDisplayName = (raw.supplierDisplayName ?? raw.vendorDisplayName ?? undefined) as string | undefined
+  return {
+    ...raw,
+    supplierId,
+    supplierKey,
+    supplierDisplayName,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeSupplierReturn(raw: SupplierReturnResponse): SupplierReturnResponse {
+  return normalizeVendorReturn(raw)
+}
+
+function normalizeWarrantyClaim(raw: WarrantyClaimResponse): WarrantyClaimResponse {
+  const supplierId = (raw.supplierId ?? raw.vendorPartyId ?? undefined) as string | undefined
+  const supplierKey = (raw.supplierKey ?? raw.vendorPartyKey ?? undefined) as string | undefined
+  const supplierDisplayName = (raw.supplierDisplayName ?? raw.vendorDisplayName ?? undefined) as string | undefined
+  return {
+    ...raw,
+    supplierId,
+    supplierKey,
+    supplierDisplayName,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizePricingSnapshot(raw: RawPricingSnapshotResponse): PricingSnapshotResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeLeadTimeSnapshot(raw: RawLeadTimeSnapshotResponse): LeadTimeSnapshotResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeAvailabilitySnapshot(raw: RawAvailabilitySnapshotResponse): AvailabilitySnapshotResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
+    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
+    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeReorderSuggestion(raw: ReorderSuggestionResponse): ReorderSuggestionResponse {
+  return {
+    ...raw,
+    preferredSupplierId: raw.preferredSupplierId ?? raw.preferredVendorPartyId,
+    preferredSupplierKey: raw.preferredSupplierKey ?? raw.preferredVendorPartyKey,
+    preferredSupplierDisplayName: raw.preferredSupplierDisplayName ?? raw.preferredVendorDisplayName,
+  }
+}
+
+function normalizeReorderEvaluation(raw: ReorderEvaluationResponse): ReorderEvaluationResponse {
+  return {
+    ...raw,
+    suggestions: raw.suggestions.map(normalizeReorderSuggestion),
+  }
+}
+
+function normalizeSupplierReportSummaryItem(
+  raw: SupplierReportSummaryItem | VendorReportSummaryItem,
+): SupplierReportSummaryItem {
+  const supplierId =
+    ('supplierId' in raw ? raw.supplierId : undefined) ??
+    ('vendorPartyId' in raw ? raw.vendorPartyId : undefined) ??
+    ''
+  const supplierKey =
+    ('supplierKey' in raw ? raw.supplierKey : undefined) ??
+    ('partyKey' in raw ? raw.partyKey : undefined) ??
+    ''
+  const supplierDisplayName =
+    ('supplierDisplayName' in raw ? raw.supplierDisplayName : undefined) ?? raw.displayName ?? ''
+
+  return {
+    supplierId,
+    supplierKey,
+    supplierDisplayName,
+    parentSupplierId: 'parentSupplierId' in raw ? raw.parentSupplierId ?? null : null,
+    parentSupplierDisplayName:
+      'parentSupplierDisplayName' in raw ? raw.parentSupplierDisplayName ?? null : null,
+    supplierUnitKind:
+      'supplierUnitKind' in raw && raw.supplierUnitKind ? raw.supplierUnitKind : 'identity',
+    supplierServiceTypes:
+      'supplierServiceTypes' in raw && Array.isArray(raw.supplierServiceTypes)
+        ? raw.supplierServiceTypes
+        : [],
+    approvalStatus: raw.approvalStatus,
+    status: raw.status,
+    partVendorLinkCount: raw.partVendorLinkCount,
+    preferredPartLinkCount: raw.preferredPartLinkCount,
+    openPurchaseRequestCount: raw.openPurchaseRequestCount,
+    openPurchaseOrderCount: raw.openPurchaseOrderCount,
+    issuedPurchaseOrderCount: raw.issuedPurchaseOrderCount,
+    postedReceivingReceiptCount: raw.postedReceivingReceiptCount,
+    openBackorderCount: raw.openBackorderCount,
+    openPurchaseOrderLineQuantity: raw.openPurchaseOrderLineQuantity,
+    averageLeadTimeDays: raw.averageLeadTimeDays,
+    leadTimeSampleCount: raw.leadTimeSampleCount,
+    onTimeDeliveryRate: raw.onTimeDeliveryRate,
+    onTimeDeliverySampleCount: raw.onTimeDeliverySampleCount,
+    lastPurchaseOrderAt: raw.lastPurchaseOrderAt,
+    lastReceivingPostedAt: raw.lastReceivingPostedAt,
+    vendorPartyId: ('vendorPartyId' in raw ? raw.vendorPartyId : undefined) ?? supplierId,
+    partyKey: 'partyKey' in raw ? raw.partyKey : supplierKey,
+    displayName: raw.displayName ?? supplierDisplayName,
+  }
+}
+
+function normalizeSupplierReportSummary(
+  raw: SupplierReportSummaryResponse | VendorReportSummaryResponse,
+): SupplierReportSummaryResponse {
+  if ('suppliers' in raw) {
+    return {
+      ...raw,
+      suppliers: raw.suppliers.map(normalizeSupplierReportSummaryItem),
+    }
+  }
+
+  return {
+    generatedAt: raw.generatedAt,
+    approvalStatusCounts: raw.approvalStatusCounts,
+    suppliers: raw.vendors.map(normalizeSupplierReportSummaryItem),
+  }
+}
+
+function normalizeSupplierReportDetail(
+  raw: SupplierReportDetailResponse | VendorReportDetailResponse,
+): SupplierReportDetailResponse {
+  const normalizedSummary = normalizeSupplierReportSummaryItem(raw.summary)
+
+  if ('supplierId' in raw.summary && raw.summary.supplierId) {
+    return {
+      ...raw,
+      summary: normalizedSummary,
+      partLinks: raw.partLinks.map((partLink) => ({
+        ...partLink,
+        supplierId: ('supplierId' in partLink ? partLink.supplierId : undefined) ?? normalizedSummary.supplierId,
+        supplierKey: ('supplierKey' in partLink ? partLink.supplierKey : undefined) ?? normalizedSummary.supplierKey,
+        supplierDisplayName:
+          ('supplierDisplayName' in partLink ? partLink.supplierDisplayName : undefined) ??
+          normalizedSummary.supplierDisplayName,
+      })),
+    }
+  }
+
+  return {
+    summary: normalizedSummary,
+    recentPurchaseRequests: raw.recentPurchaseRequests,
+    recentPurchaseOrders: raw.recentPurchaseOrders,
+    partLinks: raw.partLinks.map((partLink) => ({
+      ...partLink,
+      supplierId: normalizedSummary.supplierId,
+      supplierKey: normalizedSummary.supplierKey,
+      supplierDisplayName: normalizedSummary.supplierDisplayName,
+    })),
+  }
+}
+
 async function downloadExportBlob(
   accessToken: string,
   path: string,
@@ -277,193 +926,103 @@ export async function getSessionBootstrap(
   )
 }
 
-export async function getVendors(accessToken: string): Promise<ExternalPartyResponse[]> {
-  const response = await fetch(`${apiBase}/api/vendors`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ExternalPartyResponse[]>(response, 'Failed to load vendors')
-}
-
-export async function getSuppliers(accessToken: string): Promise<ExternalPartyResponse[]> {
+export async function getSupplierDirectory(accessToken: string): Promise<SupplierResponse[]> {
   const response = await fetch(`${apiBase}/api/suppliers`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ExternalPartyResponse[]>(response, 'Failed to load suppliers')
+  const raw = await parseJsonResponse<RawSupplierResponse[]>(response, 'Failed to load supplier directory')
+  return normalizeSupplierResponses(raw)
 }
 
-export async function getDealers(accessToken: string): Promise<ExternalPartyResponse[]> {
-  const response = await fetch(`${apiBase}/api/dealers`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ExternalPartyResponse[]>(response, 'Failed to load dealers')
+export async function getSuppliers(accessToken: string): Promise<SupplierResponse[]> {
+  return getSupplierDirectory(accessToken)
 }
 
-export async function getPartyRegistryMetadata(accessToken: string): Promise<PartyRegistryMetadataResponse> {
-  const response = await fetch(`${apiBase}/api/v1/parties/metadata`, {
+export async function getSupplierDirectoryMetadata(accessToken: string): Promise<SupplierDirectoryMetadataResponse> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/metadata`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PartyRegistryMetadataResponse>(
+  return parseJsonResponse<SupplierDirectoryMetadataResponse>(
     response,
-    'Failed to load party registry metadata',
+    'Failed to load supplier directory metadata',
   )
-}
-
-export async function createVendor(
-  accessToken: string,
-  request: CreateTypedExternalPartyRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/vendors`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create vendor')
 }
 
 export async function createSupplier(
   accessToken: string,
-  request: CreateExternalPartyRequest,
-): Promise<ExternalPartyResponse> {
+  request: CreateSupplierRequest,
+): Promise<SupplierResponse> {
   const response = await fetch(`${apiBase}/api/suppliers`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(serializeSupplierRequest(request)),
   })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create supplier')
+  const raw = await parseJsonResponse<RawSupplierResponse>(response, 'Failed to create supplier')
+  return normalizeSupplierResponse(raw)
 }
 
 export async function updateSupplier(
   accessToken: string,
-  partyId: string,
-  request: UpdateExternalPartyRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/suppliers/${partyId}`, {
+  supplierId: string,
+  request: UpdateSupplierRequest,
+): Promise<SupplierResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${supplierId}`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(serializeSupplierRequest(request)),
   })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier')
+  const raw = await parseJsonResponse<RawSupplierResponse>(response, 'Failed to update supplier')
+  return normalizeSupplierResponse(raw)
 }
 
 export async function updateSupplierApprovalStatus(
   accessToken: string,
-  partyId: string,
-  request: UpdateExternalPartyApprovalStatusRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/approval-status`, {
+  supplierId: string,
+  request: UpdateSupplierApprovalStatusRequest,
+): Promise<SupplierResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${supplierId}/approval-status`, {
     method: 'PATCH',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier approval status')
+  const raw = await parseJsonResponse<RawSupplierResponse>(response, 'Failed to update supplier approval status')
+  return normalizeSupplierResponse(raw)
 }
 
 export async function updateSupplierStatus(
   accessToken: string,
-  partyId: string,
-  request: UpdateExternalPartyStatusRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/status`, {
+  supplierId: string,
+  request: UpdateSupplierStatusRequest,
+): Promise<SupplierResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${supplierId}/status`, {
     method: 'PATCH',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update supplier status')
+  const raw = await parseJsonResponse<RawSupplierResponse>(response, 'Failed to update supplier status')
+  return normalizeSupplierResponse(raw)
 }
 
 export async function createSupplierContact(
   accessToken: string,
-  partyId: string,
-  request: CreatePartyContactRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/suppliers/${partyId}/contacts`, {
+  supplierId: string,
+  request: CreateSupplierContactRequest,
+): Promise<SupplierResponse> {
+  const response = await fetch(`${apiBase}/api/suppliers/${supplierId}/contacts`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
   if (!response.ok) {
-    return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to add supplier contact')
+    const raw = await parseJsonResponse<RawSupplierResponse>(response, 'Failed to add supplier contact')
+    return normalizeSupplierResponse(raw)
   }
 
-  const listResponse = await fetch(`${apiBase}/api/suppliers/${partyId}`, {
+  const listResponse = await fetch(`${apiBase}/api/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ExternalPartyResponse>(listResponse, 'Failed to reload supplier after contact add')
-}
-
-export async function createDealer(
-  accessToken: string,
-  request: CreateTypedExternalPartyRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/dealers`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to create dealer')
-}
-
-export async function updateParty(
-  accessToken: string,
-  route: PartyRegistryRoute,
-  partyId: string,
-  request: UpdateExternalPartyRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/${route}/${partyId}`, {
-    method: 'PUT',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update party')
-}
-
-export async function updatePartyApprovalStatus(
-  accessToken: string,
-  route: PartyRegistryRoute,
-  partyId: string,
-  request: UpdateExternalPartyApprovalStatusRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/${route}/${partyId}/approval-status`, {
-    method: 'PATCH',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update approval status')
-}
-
-export async function updatePartyStatus(
-  accessToken: string,
-  route: PartyRegistryRoute,
-  partyId: string,
-  request: UpdateExternalPartyStatusRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/${route}/${partyId}/status`, {
-    method: 'PATCH',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to update party status')
-}
-
-export async function createPartyContact(
-  accessToken: string,
-  route: PartyRegistryRoute,
-  partyId: string,
-  request: CreatePartyContactRequest,
-): Promise<ExternalPartyResponse> {
-  const response = await fetch(`${apiBase}/api/${route}/${partyId}/contacts`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
-  })
-  if (!response.ok) {
-    return parseJsonResponse<ExternalPartyResponse>(response, 'Failed to add party contact')
-  }
-
-  const listResponse = await fetch(`${apiBase}/api/${route}/${partyId}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<ExternalPartyResponse>(listResponse, 'Failed to reload party after contact add')
+  const raw = await parseJsonResponse<RawSupplierResponse>(listResponse, 'Failed to reload supplier after contact add')
+  return normalizeSupplierResponse(raw)
 }
 
 export async function getPartCatalogs(accessToken: string): Promise<PartCatalogResponse[]> {
@@ -477,7 +1036,8 @@ export async function getParts(accessToken: string): Promise<PartResponse[]> {
   const response = await fetch(`${apiBase}/api/parts`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PartResponse[]>(response, 'Failed to load parts')
+  const raw = await parseJsonResponse<PartResponse[]>(response, 'Failed to load parts')
+  return raw.map(normalizePartResponse)
 }
 
 export async function syncVendorCatalogApi(
@@ -487,7 +1047,11 @@ export async function syncVendorCatalogApi(
   const response = await fetch(`${apiBase}/api/v1/vendor-catalogs/sync`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify({
+      ...request,
+      supplierKey: resolveSupplierKey(request),
+      vendorPartyKey: resolveSupplierKey(request),
+    }),
   })
   return parseJsonResponse<VendorCatalogApiSyncResponse>(response, 'Failed to sync vendor catalog API feed')
 }
@@ -524,7 +1088,7 @@ export async function createPart(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<PartResponse>(response, 'Failed to create part')
+  return normalizePartResponse(await parseJsonResponse<PartResponse>(response, 'Failed to create part'))
 }
 
 export async function createPartSource(
@@ -545,12 +1109,15 @@ export async function createPartVendorLink(
   partId: string,
   request: CreatePartVendorLinkRequest,
 ): Promise<PartVendorLinkResponse> {
-  const response = await fetch(`${apiBase}/api/parts/${partId}/vendor-links`, {
+  const payload = serializeSupplierReference(request)
+  const response = await fetch(`${apiBase}/api/parts/${partId}/supplier-links`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(payload),
   })
-  return parseJsonResponse<PartVendorLinkResponse>(response, 'Failed to link vendor to part')
+  return normalizePartVendorLink(
+    await parseJsonResponse<PartVendorLinkResponse>(response, 'Failed to link vendor to part'),
+  )
 }
 
 export async function getOutboundShipments(accessToken: string): Promise<OutboundShipmentResponse[]> {
@@ -580,19 +1147,23 @@ export async function getPurchaseRequests(
   const response = await fetch(`${apiBase}/api/v1/purchase-requests${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseRequestResponse[]>(response, 'Failed to load purchase requests')
+  const raw = await parseJsonResponse<PurchaseRequestResponse[]>(response, 'Failed to load purchase requests')
+  return raw.map(normalizePurchaseRequestResponse)
 }
 
 export async function createPurchaseRequest(
   accessToken: string,
   request: CreatePurchaseRequestRequest,
 ): Promise<PurchaseRequestResponse> {
+  const payload = serializeSupplierReference(request)
   const response = await fetch(`${apiBase}/api/v1/purchase-requests`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(payload),
   })
-  return parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to create purchase request')
+  return normalizePurchaseRequestResponse(
+    await parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to create purchase request'),
+  )
 }
 
 export async function getRfqs(accessToken: string, status?: string): Promise<RfqResponse[]> {
@@ -600,40 +1171,47 @@ export async function getRfqs(accessToken: string, status?: string): Promise<Rfq
   const response = await fetch(`${apiBase}/api/v1/rfqs${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<RfqResponse[]>(response, 'Failed to load RFQs')
+  const raw = await parseJsonResponse<RfqResponse[]>(response, 'Failed to load RFQs')
+  return raw.map(normalizeRfq)
 }
 
 export async function getRfq(accessToken: string, rfqId: string): Promise<RfqResponse> {
   const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<RfqResponse>(response, 'Failed to load RFQ')
+  return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to load RFQ'))
 }
 
-export async function getVendorPortalRfq(
+const supplierPortalApiPath = `${apiBase}/api/v1/supplier-portal`
+
+export async function getSupplierPortalRfq(
   rfqId: string,
   accessCode: string,
 ): Promise<VendorPortalRfqResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
-  const response = await fetch(`${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}${query}`)
-  return parseJsonResponse<VendorPortalRfqResponse>(response, 'Failed to load vendor portal RFQ')
+  const response = await fetch(`${supplierPortalApiPath}/rfqs/${rfqId}${query}`)
+  return normalizeVendorPortalRfq(
+    await parseJsonResponse<VendorPortalRfqResponse>(response, 'Failed to load supplier portal RFQ'),
+  )
 }
 
-export async function createVendorPortalQuote(
+export async function createSupplierPortalQuote(
   rfqId: string,
   accessCode: string,
   payload: VendorPortalCreateQuoteRequest,
 ): Promise<VendorQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
-  const response = await fetch(`${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes${query}`, {
+  const response = await fetch(`${supplierPortalApiPath}/rfqs/${rfqId}/quotes${query}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to create vendor portal quote')
+  return normalizeVendorQuote(
+    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to create supplier portal quote'),
+  )
 }
 
-export async function upsertVendorPortalQuoteLine(
+export async function upsertSupplierPortalQuoteLine(
   rfqId: string,
   vendorQuoteId: string,
   accessCode: string,
@@ -647,28 +1225,37 @@ export async function upsertVendorPortalQuoteLine(
 ): Promise<VendorQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(
-    `${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines${query}`,
+    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines${query}`,
     {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     },
   )
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to save vendor portal quote line')
+  return normalizeVendorQuote(
+    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to save supplier portal quote line'),
+  )
 }
 
-export async function submitVendorPortalQuote(
+export async function submitSupplierPortalQuote(
   rfqId: string,
   vendorQuoteId: string,
   accessCode: string,
 ): Promise<VendorQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(
-    `${apiBase}/api/v1/vendor-portal/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit${query}`,
+    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit${query}`,
     { method: 'POST' },
   )
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to submit vendor portal quote')
+  return normalizeVendorQuote(
+    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to submit supplier portal quote'),
+  )
 }
+
+export const getVendorPortalRfq = getSupplierPortalRfq
+export const createVendorPortalQuote = createSupplierPortalQuote
+export const upsertVendorPortalQuoteLine = upsertSupplierPortalQuoteLine
+export const submitVendorPortalQuote = submitSupplierPortalQuote
 
 export async function getVendorEmailInbox(
   accessToken: string,
@@ -677,7 +1264,22 @@ export async function getVendorEmailInbox(
   const response = await fetch(`${apiBase}/api/v1/vendor-email-inbox?limit=${encodeURIComponent(limit)}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorEmailInboxListResponse>(response, 'Failed to load vendor email inbox')
+  const raw = await parseJsonResponse<VendorEmailInboxListResponse>(
+    response,
+    'Failed to load vendor email inbox',
+  )
+  return {
+    ...raw,
+    items: raw.items.map((item) => ({
+      ...item,
+      supplierId: item.supplierId ?? item.vendorPartyId ?? null,
+      supplierKey: item.supplierKey ?? item.vendorPartyKey ?? null,
+      supplierDisplayName: item.supplierDisplayName ?? item.vendorDisplayName ?? null,
+      vendorPartyId: item.vendorPartyId ?? item.supplierId ?? null,
+      vendorPartyKey: item.vendorPartyKey ?? item.supplierKey ?? null,
+      vendorDisplayName: item.vendorDisplayName ?? item.supplierDisplayName ?? null,
+    })),
+  }
 }
 
 export async function ingestVendorEmailInbox(
@@ -689,7 +1291,22 @@ export async function ingestVendorEmailInbox(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<IngestVendorEmailInboxResponse>(response, 'Failed to ingest vendor email')
+  const raw = await parseJsonResponse<IngestVendorEmailInboxResponse>(
+    response,
+    'Failed to ingest vendor email',
+  )
+  return {
+    ...raw,
+    message: {
+      ...raw.message,
+      supplierId: raw.message.supplierId ?? raw.message.vendorPartyId ?? null,
+      supplierKey: raw.message.supplierKey ?? raw.message.vendorPartyKey ?? null,
+      supplierDisplayName: raw.message.supplierDisplayName ?? raw.message.vendorDisplayName ?? null,
+      vendorPartyId: raw.message.vendorPartyId ?? raw.message.supplierId ?? null,
+      vendorPartyKey: raw.message.vendorPartyKey ?? raw.message.supplierKey ?? null,
+      vendorDisplayName: raw.message.vendorDisplayName ?? raw.message.supplierDisplayName ?? null,
+    },
+  }
 }
 
 export async function createRfq(
@@ -706,7 +1323,7 @@ export async function createRfq(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<RfqResponse>(response, 'Failed to create RFQ')
+  return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to create RFQ'))
 }
 
 export async function submitRfq(accessToken: string, rfqId: string): Promise<RfqResponse> {
@@ -714,39 +1331,45 @@ export async function submitRfq(accessToken: string, rfqId: string): Promise<Rfq
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<RfqResponse>(response, 'Failed to submit RFQ')
+  return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to submit RFQ'))
 }
 
-export async function inviteRfqVendors(
+export async function inviteRfqSuppliers(
   accessToken: string,
   rfqId: string,
-  vendorPartyIds: string[],
+  supplierIds: string[],
 ): Promise<RfqResponse> {
-  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/invite-vendors`, {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/invite-suppliers`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify({ vendorPartyIds }),
+    body: JSON.stringify({ supplierIds }),
   })
-  return parseJsonResponse<RfqResponse>(response, 'Failed to invite vendors')
+  return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to invite suppliers'))
 }
 
-export async function createVendorQuote(
+export const inviteRfqVendors = inviteRfqSuppliers
+
+export async function createSupplierQuote(
   accessToken: string,
   rfqId: string,
-  payload: { vendorPartyId: string; quoteKey: string; currencyCode: string; notes: string },
-): Promise<VendorQuoteResponse> {
+  payload: { supplierId: string; quoteKey: string; currencyCode: string; notes: string },
+): Promise<SupplierQuoteResponse> {
   const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to create vendor quote')
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to create supplier quote'),
+  )
 }
 
-export async function upsertVendorQuoteLine(
+export const createVendorQuote = createSupplierQuote
+
+export async function upsertSupplierQuoteLine(
   accessToken: string,
   rfqId: string,
-  vendorQuoteId: string,
+  supplierQuoteId: string,
   payload: {
     rfqLineId: string
     unitPrice: number
@@ -754,26 +1377,34 @@ export async function upsertVendorQuoteLine(
     leadTimeDays?: number | null
     notes: string
   },
-): Promise<VendorQuoteResponse> {
-  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines`, {
+): Promise<SupplierQuoteResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${supplierQuoteId}/lines`, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to save quote line')
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to save supplier quote line'),
+  )
 }
 
-export async function submitVendorQuote(
+export const upsertVendorQuoteLine = upsertSupplierQuoteLine
+
+export async function submitSupplierQuote(
   accessToken: string,
   rfqId: string,
-  vendorQuoteId: string,
-): Promise<VendorQuoteResponse> {
-  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit`, {
+  supplierQuoteId: string,
+): Promise<SupplierQuoteResponse> {
+  const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quotes/${supplierQuoteId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorQuoteResponse>(response, 'Failed to submit vendor quote')
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to submit supplier quote'),
+  )
 }
+
+export const submitVendorQuote = submitSupplierQuote
 
 export async function getRfqQuoteComparison(
   accessToken: string,
@@ -782,21 +1413,25 @@ export async function getRfqQuoteComparison(
   const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/quote-comparison`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<RfqQuoteComparisonResponse>(response, 'Failed to load quote comparison')
+  return normalizeRfqQuoteComparison(
+    await parseJsonResponse<RfqQuoteComparisonResponse>(response, 'Failed to load quote comparison'),
+  )
 }
 
-export async function selectRfqVendorQuote(
+export async function selectRfqSupplierQuote(
   accessToken: string,
   rfqId: string,
-  vendorQuoteId: string,
+  supplierQuoteId: string,
 ): Promise<RfqResponse> {
   const response = await fetch(`${apiBase}/api/v1/rfqs/${rfqId}/select-quote`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify({ vendorQuoteId }),
+    body: JSON.stringify({ supplierQuoteId }),
   })
-  return parseJsonResponse<RfqResponse>(response, 'Failed to select vendor quote')
+  return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to select supplier quote'))
 }
+
+export const selectRfqVendorQuote = selectRfqSupplierQuote
 
 export async function createPurchaseRequestFromRfq(
   accessToken: string,
@@ -808,10 +1443,14 @@ export async function createPurchaseRequestFromRfq(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<CreatePurchaseRequestFromRfqResponse>(
+  const raw = await parseJsonResponse<CreatePurchaseRequestFromRfqResponse>(
     response,
     'Failed to create purchase request from RFQ',
   )
+  return {
+    ...raw,
+    purchaseRequest: normalizePurchaseRequestResponse(raw.purchaseRequest),
+  }
 }
 
 export async function submitPurchaseRequest(
@@ -822,7 +1461,9 @@ export async function submitPurchaseRequest(
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to submit purchase request')
+  return normalizePurchaseRequestResponse(
+    await parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to submit purchase request'),
+  )
 }
 
 export async function approvePurchaseRequest(
@@ -833,7 +1474,9 @@ export async function approvePurchaseRequest(
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to approve purchase request')
+  return normalizePurchaseRequestResponse(
+    await parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to approve purchase request'),
+  )
 }
 
 export async function rejectPurchaseRequest(
@@ -846,7 +1489,9 @@ export async function rejectPurchaseRequest(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to reject purchase request')
+  return normalizePurchaseRequestResponse(
+    await parseJsonResponse<PurchaseRequestResponse>(response, 'Failed to reject purchase request'),
+  )
 }
 
 export async function getPurchaseOrders(
@@ -857,15 +1502,18 @@ export async function getPurchaseOrders(
   const response = await fetch(`${apiBase}/api/v1/purchase-orders${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseOrderResponse[]>(response, 'Failed to load purchase orders')
+  const raw = await parseJsonResponse<PurchaseOrderResponse[]>(response, 'Failed to load purchase orders')
+  return raw.map(normalizePurchaseOrderResponse)
 }
 
 export async function getContractRecords(
   accessToken: string,
-  options?: { vendorPartyId?: string; status?: string; limit?: number },
+  options?: { supplierId?: string; vendorPartyId?: string; status?: string; limit?: number },
 ): Promise<SupplyContractResponse[]> {
   const params = new URLSearchParams()
-  if (options?.vendorPartyId) {
+  if (options?.supplierId) {
+    params.set('supplierId', options.supplierId)
+  } else if (options?.vendorPartyId) {
     params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.status) {
@@ -878,7 +1526,9 @@ export async function getContractRecords(
   const response = await fetch(`${apiBase}/api/v1/contracts/records${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplyContractResponse[]>(response, 'Failed to load contract records')
+  return normalizeSupplyContractResponses(
+    await parseJsonResponse<SupplyContractResponse[]>(response, 'Failed to load contract records'),
+  )
 }
 
 export async function importContractsCsv(
@@ -1071,9 +1721,11 @@ export async function createPurchaseOrderFromPurchaseRequest(
       body: JSON.stringify(request),
     },
   )
-  return parseJsonResponse<PurchaseOrderResponse>(
-    response,
-    'Failed to create purchase order from purchase request',
+  return normalizePurchaseOrderResponse(
+    await parseJsonResponse<PurchaseOrderResponse>(
+      response,
+      'Failed to create purchase order from purchase request',
+    ),
   )
 }
 
@@ -1085,7 +1737,9 @@ export async function approvePurchaseOrder(
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to approve purchase order')
+  return normalizePurchaseOrderResponse(
+    await parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to approve purchase order'),
+  )
 }
 
 export async function issuePurchaseOrder(
@@ -1096,7 +1750,9 @@ export async function issuePurchaseOrder(
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to issue purchase order')
+  return normalizePurchaseOrderResponse(
+    await parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to issue purchase order'),
+  )
 }
 
 export async function cancelPurchaseOrder(
@@ -1109,7 +1765,9 @@ export async function cancelPurchaseOrder(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to cancel purchase order')
+  return normalizePurchaseOrderResponse(
+    await parseJsonResponse<PurchaseOrderResponse>(response, 'Failed to cancel purchase order'),
+  )
 }
 
 export async function getBackorders(
@@ -1173,18 +1831,22 @@ export async function cancelBackorder(
   return parseJsonResponse<BackorderResponse>(response, 'Failed to cancel backorder')
 }
 
-export async function getVendorReturns(
+export async function getSupplierReturns(
   accessToken: string,
   options?: {
     status?: string
+    supplierId?: string
     vendorPartyId?: string
     purchaseOrderId?: string
     partId?: string
   },
-): Promise<VendorReturnResponse[]> {
+): Promise<SupplierReturnResponse[]> {
   const params = new URLSearchParams()
   if (options?.status) {
     params.set('status', options.status)
+  }
+  if (options?.supplierId) {
+    params.set('supplierId', options.supplierId)
   }
   if (options?.vendorPartyId) {
     params.set('vendorPartyId', options.vendorPartyId)
@@ -1199,26 +1861,33 @@ export async function getVendorReturns(
   const response = await fetch(`${apiBase}/api/v1/returns${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorReturnResponse[]>(response, 'Failed to load vendor returns')
+  const returns = await parseJsonResponse<SupplierReturnResponse[]>(response, 'Failed to load supplier returns')
+  return returns.map(normalizeSupplierReturn)
 }
 
-export async function createVendorReturnFromStock(
+export const getVendorReturns = getSupplierReturns
+
+export async function createSupplierReturnFromStock(
   accessToken: string,
-  request: CreateVendorReturnFromStockRequest,
-): Promise<VendorReturnResponse> {
+  request: CreateSupplierReturnFromStockRequest,
+): Promise<SupplierReturnResponse> {
   const response = await fetch(`${apiBase}/api/v1/returns/from-stock`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(serializeSupplierReference(request)),
   })
-  return parseJsonResponse<VendorReturnResponse>(response, 'Failed to create vendor return')
+  return normalizeSupplierReturn(
+    await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to create supplier return'),
+  )
 }
 
-export async function createVendorReturnFromPurchaseOrderLine(
+export const createVendorReturnFromStock = createSupplierReturnFromStock
+
+export async function createSupplierReturnFromPurchaseOrderLine(
   accessToken: string,
   purchaseOrderLineId: string,
-  request: CreateVendorReturnFromPurchaseOrderLineRequest,
-): Promise<VendorReturnResponse> {
+  request: CreateSupplierReturnFromPurchaseOrderLineRequest,
+): Promise<SupplierReturnResponse> {
   const response = await fetch(
     `${apiBase}/api/v1/returns/from-purchase-order-line/${purchaseOrderLineId}`,
     {
@@ -1227,37 +1896,50 @@ export async function createVendorReturnFromPurchaseOrderLine(
       body: JSON.stringify(request),
     },
   )
-  return parseJsonResponse<VendorReturnResponse>(response, 'Failed to create vendor return')
+  return normalizeSupplierReturn(
+    await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to create supplier return'),
+  )
 }
 
-export async function postVendorReturn(
+export const createVendorReturnFromPurchaseOrderLine = createSupplierReturnFromPurchaseOrderLine
+
+export async function postSupplierReturn(
   accessToken: string,
   returnId: string,
-): Promise<VendorReturnResponse> {
+): Promise<SupplierReturnResponse> {
   const response = await fetch(`${apiBase}/api/v1/returns/${returnId}/post`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorReturnResponse>(response, 'Failed to post vendor return')
+  return normalizeSupplierReturn(
+    await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to post supplier return'),
+  )
 }
 
-export async function cancelVendorReturn(
+export const postVendorReturn = postSupplierReturn
+
+export async function cancelSupplierReturn(
   accessToken: string,
   returnId: string,
-  request: CancelVendorReturnRequest,
-): Promise<VendorReturnResponse> {
+  request: CancelSupplierReturnRequest,
+): Promise<SupplierReturnResponse> {
   const response = await fetch(`${apiBase}/api/v1/returns/${returnId}/cancel`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<VendorReturnResponse>(response, 'Failed to cancel vendor return')
+  return normalizeSupplierReturn(
+    await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to cancel supplier return'),
+  )
 }
 
-export async function listWarrantyClaims(
+export const cancelVendorReturn = cancelSupplierReturn
+
+export async function listSupplierWarrantyClaims(
   accessToken: string,
   options?: {
     status?: string
+    supplierId?: string
     vendorPartyId?: string
     partId?: string
     purchaseOrderId?: string
@@ -1265,6 +1947,7 @@ export async function listWarrantyClaims(
 ): Promise<WarrantyClaimResponse[]> {
   const params = new URLSearchParams()
   if (options?.status) params.set('status', options.status)
+  if (options?.supplierId) params.set('supplierId', options.supplierId)
   if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
   if (options?.partId) params.set('partId', options.partId)
   if (options?.purchaseOrderId) params.set('purchaseOrderId', options.purchaseOrderId)
@@ -1272,20 +1955,27 @@ export async function listWarrantyClaims(
   const response = await fetch(`${apiBase}/api/v1/warranty-claims${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<WarrantyClaimResponse[]>(response, 'Failed to load warranty claims')
+  const claims = await parseJsonResponse<WarrantyClaimResponse[]>(response, 'Failed to load warranty claims')
+  return claims.map(normalizeWarrantyClaim)
 }
 
-export async function createWarrantyClaim(
+export const listWarrantyClaims = listSupplierWarrantyClaims
+
+export async function createSupplierWarrantyClaim(
   accessToken: string,
-  request: CreateWarrantyClaimRequest,
+  request: CreateSupplierWarrantyClaimRequest,
 ): Promise<WarrantyClaimResponse> {
   const response = await fetch(`${apiBase}/api/v1/warranty-claims`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(request),
+    body: JSON.stringify(serializeSupplierReference(request)),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to create warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to create warranty claim'),
+  )
 }
+
+export const createWarrantyClaim = createSupplierWarrantyClaim
 
 export async function updateWarrantyClaim(
   accessToken: string,
@@ -1297,7 +1987,9 @@ export async function updateWarrantyClaim(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to update warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to update warranty claim'),
+  )
 }
 
 export async function submitWarrantyClaim(
@@ -1310,7 +2002,9 @@ export async function submitWarrantyClaim(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to submit warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to submit warranty claim'),
+  )
 }
 
 export async function recordWarrantyClaimVendorResponse(
@@ -1326,9 +2020,11 @@ export async function recordWarrantyClaimVendorResponse(
       body: JSON.stringify(request),
     },
   )
-  return parseJsonResponse<WarrantyClaimResponse>(
-    response,
-    'Failed to record warranty claim vendor response',
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(
+      response,
+      'Failed to record warranty claim vendor response',
+    ),
   )
 }
 
@@ -1342,7 +2038,9 @@ export async function closeWarrantyClaim(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to close warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to close warranty claim'),
+  )
 }
 
 export async function denyWarrantyClaim(
@@ -1355,7 +2053,9 @@ export async function denyWarrantyClaim(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to deny warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to deny warranty claim'),
+  )
 }
 
 export async function cancelWarrantyClaim(
@@ -1368,7 +2068,9 @@ export async function cancelWarrantyClaim(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to cancel warranty claim')
+  return normalizeWarrantyClaim(
+    await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to cancel warranty claim'),
+  )
 }
 
 export async function getPricingSnapshots(
@@ -1376,6 +2078,7 @@ export async function getPricingSnapshots(
   options?: {
     partVendorLinkId?: string
     partId?: string
+    supplierId?: string
     vendorPartyId?: string
     asOf?: string
   },
@@ -1387,6 +2090,9 @@ export async function getPricingSnapshots(
   if (options?.partId) {
     params.set('partId', options.partId)
   }
+  if (options?.supplierId) {
+    params.set('supplierId', options.supplierId)
+  }
   if (options?.vendorPartyId) {
     params.set('vendorPartyId', options.vendorPartyId)
   }
@@ -1397,7 +2103,8 @@ export async function getPricingSnapshots(
   const response = await fetch(`${apiBase}/api/v1/pricing-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PricingSnapshotResponse[]>(response, 'Failed to load pricing snapshots')
+  const snapshots = await parseJsonResponse<RawPricingSnapshotResponse[]>(response, 'Failed to load pricing snapshots')
+  return snapshots.map(normalizePricingSnapshot)
 }
 
 export async function createPricingSnapshot(
@@ -1409,7 +2116,9 @@ export async function createPricingSnapshot(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<PricingSnapshotResponse>(response, 'Failed to create pricing snapshot')
+  return normalizePricingSnapshot(
+    await parseJsonResponse<RawPricingSnapshotResponse>(response, 'Failed to create pricing snapshot'),
+  )
 }
 
 export async function getLeadTimeSnapshots(
@@ -1417,6 +2126,7 @@ export async function getLeadTimeSnapshots(
   options?: {
     partVendorLinkId?: string
     partId?: string
+    supplierId?: string
     vendorPartyId?: string
     asOf?: string
   },
@@ -1428,6 +2138,9 @@ export async function getLeadTimeSnapshots(
   if (options?.partId) {
     params.set('partId', options.partId)
   }
+  if (options?.supplierId) {
+    params.set('supplierId', options.supplierId)
+  }
   if (options?.vendorPartyId) {
     params.set('vendorPartyId', options.vendorPartyId)
   }
@@ -1438,7 +2151,8 @@ export async function getLeadTimeSnapshots(
   const response = await fetch(`${apiBase}/api/v1/lead-time-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<LeadTimeSnapshotResponse[]>(response, 'Failed to load lead-time snapshots')
+  const snapshots = await parseJsonResponse<RawLeadTimeSnapshotResponse[]>(response, 'Failed to load lead-time snapshots')
+  return snapshots.map(normalizeLeadTimeSnapshot)
 }
 
 export async function createLeadTimeSnapshot(
@@ -1450,7 +2164,9 @@ export async function createLeadTimeSnapshot(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<LeadTimeSnapshotResponse>(response, 'Failed to create lead-time snapshot')
+  return normalizeLeadTimeSnapshot(
+    await parseJsonResponse<RawLeadTimeSnapshotResponse>(response, 'Failed to create lead-time snapshot'),
+  )
 }
 
 export async function getAvailabilitySnapshots(
@@ -1458,6 +2174,7 @@ export async function getAvailabilitySnapshots(
   options?: {
     partVendorLinkId?: string
     partId?: string
+    supplierId?: string
     vendorPartyId?: string
     asOf?: string
   },
@@ -1469,6 +2186,9 @@ export async function getAvailabilitySnapshots(
   if (options?.partId) {
     params.set('partId', options.partId)
   }
+  if (options?.supplierId) {
+    params.set('supplierId', options.supplierId)
+  }
   if (options?.vendorPartyId) {
     params.set('vendorPartyId', options.vendorPartyId)
   }
@@ -1479,10 +2199,11 @@ export async function getAvailabilitySnapshots(
   const response = await fetch(`${apiBase}/api/v1/availability-snapshots${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<AvailabilitySnapshotResponse[]>(
+  const snapshots = await parseJsonResponse<RawAvailabilitySnapshotResponse[]>(
     response,
     'Failed to load availability snapshots',
   )
+  return snapshots.map(normalizeAvailabilitySnapshot)
 }
 
 export async function createAvailabilitySnapshot(
@@ -1494,9 +2215,11 @@ export async function createAvailabilitySnapshot(
     headers: authHeaders(accessToken),
     body: JSON.stringify(request),
   })
-  return parseJsonResponse<AvailabilitySnapshotResponse>(
-    response,
-    'Failed to create availability snapshot',
+  return normalizeAvailabilitySnapshot(
+    await parseJsonResponse<RawAvailabilitySnapshotResponse>(
+      response,
+      'Failed to create availability snapshot',
+    ),
   )
 }
 
@@ -1504,7 +2227,9 @@ export async function getReorderEvaluation(accessToken: string): Promise<Reorder
   const response = await fetch(`${apiBase}/api/v1/reorder-evaluation`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ReorderEvaluationResponse>(response, 'Failed to load reorder evaluation')
+  return normalizeReorderEvaluation(
+    await parseJsonResponse<ReorderEvaluationResponse>(response, 'Failed to load reorder evaluation'),
+  )
 }
 
 export async function upsertPartReorderPolicy(
@@ -1784,10 +2509,14 @@ export async function getProcurementCoordinationDashboard(
   const response = await fetch(`${apiBase}/api/v1/procurement-coordination?${search}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ProcurementCoordinationDashboardResponse>(
+  const raw = await parseJsonResponse<ProcurementCoordinationDashboardResponse>(
     response,
     'Failed to load procurement coordination dashboard',
   )
+  return {
+    ...raw,
+    items: raw.items.map(normalizeProcurementCoordinationSummary),
+  }
 }
 
 export async function getProcurementCoordinationSettings(
@@ -2080,36 +2809,32 @@ export async function getPartSupplyReadiness(
   )
 }
 
-export async function getVendorSupplyReadiness(
+export async function getSupplierReadiness(
   accessToken: string,
-  externalPartyId: string,
-): Promise<VendorSupplyReadinessResponse> {
-  const response = await fetch(`${apiBase}/api/v1/supply-readiness/vendors/${externalPartyId}`, {
+  supplierId: string,
+): Promise<SupplierSupplyReadinessResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supply-readiness/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorSupplyReadinessResponse>(
-    response,
-    'Failed to load vendor supply readiness',
-  )
+  const raw = await parseJsonResponse<RawVendorSupplyReadinessResponse>(response, 'Failed to load supplier readiness')
+  return normalizeSupplierReadiness(raw)
 }
 
 export async function getProcurementPathReadiness(
   accessToken: string,
   partId: string,
-  externalPartyId: string,
+  supplierId: string,
   quantity?: number,
 ): Promise<ProcurementPathReadinessResponse> {
-  const params = new URLSearchParams({ partId, externalPartyId })
+  const params = new URLSearchParams({ partId, supplierId })
   if (quantity !== undefined) {
     params.set('quantity', String(quantity))
   }
   const response = await fetch(`${apiBase}/api/v1/supply-readiness/procurement-path?${params}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ProcurementPathReadinessResponse>(
-    response,
-    'Failed to load procurement path readiness',
-  )
+  const raw = await parseJsonResponse<RawProcurementPathReadinessResponse>(response, 'Failed to load procurement path readiness')
+  return normalizeProcurementPathReadiness(raw)
 }
 
 export async function getDemandProcessingSettings(
@@ -2292,7 +3017,9 @@ export async function getEmergencyPurchases(
   const response = await fetch(`${apiBase}/api/v1/emergency-purchases${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<EmergencyPurchaseResponse[]>(response, 'Failed to load emergency purchases')
+  return normalizeEmergencyPurchaseResponses(
+    await parseJsonResponse<EmergencyPurchaseResponse[]>(response, 'Failed to load emergency purchases'),
+  )
 }
 
 export async function listPendingEmergencyPurchases(
@@ -2301,29 +3028,29 @@ export async function listPendingEmergencyPurchases(
   const response = await fetch(`${apiBase}/api/v1/emergency-purchases/pending`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<EmergencyPurchaseResponse[]>(
-    response,
-    'Failed to load pending emergency purchases',
+  return normalizeEmergencyPurchaseResponses(
+    await parseJsonResponse<EmergencyPurchaseResponse[]>(
+      response,
+      'Failed to load pending emergency purchases',
+    ),
   )
 }
 
 export async function createEmergencyPurchase(
   accessToken: string,
-  payload: {
-    requestKey: string
-    title: string
-    emergencyReason: string
-    vendorPartyId: string
-    notes: string
-    lines: { partId: string; quantityRequested: number; notes: string }[]
-  },
+  payload: CreateEmergencyPurchaseRequest,
 ): Promise<EmergencyPurchaseResponse> {
   const response = await fetch(`${apiBase}/api/v1/emergency-purchases`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      supplierId: payload.supplierId ?? payload.vendorPartyId,
+    }),
   })
-  return parseJsonResponse<EmergencyPurchaseResponse>(response, 'Failed to create emergency purchase')
+  return normalizeEmergencyPurchaseResponse(
+    await parseJsonResponse<EmergencyPurchaseResponse>(response, 'Failed to create emergency purchase'),
+  )
 }
 
 export async function expeditedSubmitEmergencyPurchase(
@@ -2339,9 +3066,11 @@ export async function expeditedSubmitEmergencyPurchase(
       body: JSON.stringify({ notes: notes ?? null }),
     },
   )
-  return parseJsonResponse<EmergencyPurchaseResponse>(
-    response,
-    'Failed to expedited-submit emergency purchase',
+  return normalizeEmergencyPurchaseResponse(
+    await parseJsonResponse<EmergencyPurchaseResponse>(
+      response,
+      'Failed to expedited-submit emergency purchase',
+    ),
   )
 }
 
@@ -2358,9 +3087,11 @@ export async function managerOverrideApproveEmergencyPurchase(
       body: JSON.stringify({ justification }),
     },
   )
-  return parseJsonResponse<EmergencyPurchaseResponse>(
-    response,
-    'Failed to manager-override approve emergency purchase',
+  return normalizeEmergencyPurchaseResponse(
+    await parseJsonResponse<EmergencyPurchaseResponse>(
+      response,
+      'Failed to manager-override approve emergency purchase',
+    ),
   )
 }
 
@@ -2377,10 +3108,19 @@ export async function issueEmergencyPurchaseOrder(
       body: JSON.stringify({ orderKey, title: null, notes: null }),
     },
   )
-  return parseJsonResponse<IssueEmergencyPurchaseOrderResponse>(
+  const raw = await parseJsonResponse<IssueEmergencyPurchaseOrderResponse>(
     response,
     'Failed to issue emergency purchase order',
   )
+  return {
+    ...raw,
+    emergencyPurchase: raw.emergencyPurchase
+      ? normalizeEmergencyPurchaseResponse(raw.emergencyPurchase)
+      : (raw.emergencyPurchase as IssueEmergencyPurchaseOrderResponse['emergencyPurchase']),
+    purchaseOrder: raw.purchaseOrder
+      ? normalizePurchaseOrderResponse(raw.purchaseOrder)
+      : (raw.purchaseOrder as IssueEmergencyPurchaseOrderResponse['purchaseOrder']),
+  }
 }
 
 export async function getSupplierOnboardingDocumentRequirements(
@@ -2401,88 +3141,102 @@ export async function listPendingSupplierOnboarding(
   const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/pending`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierOnboardingResponse[]>(
-    response,
-    'Failed to load pending supplier onboarding',
+  return normalizeSupplierOnboardings(
+    await parseJsonResponse<SupplierOnboardingResponse[]>(
+      response,
+      'Failed to load pending supplier onboarding',
+    ),
   )
 }
 
 export async function startSupplierOnboarding(
   accessToken: string,
-  externalPartyId: string,
+  supplierId: string,
   notes?: string,
 ): Promise<SupplierOnboardingResponse> {
   const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/start`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify({ externalPartyId, notes: notes ?? null }),
+    body: JSON.stringify({ supplierId, notes: notes ?? null }),
   })
-  return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to start supplier onboarding')
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to start supplier onboarding'),
+  )
 }
 
-export async function getSupplierOnboardingByParty(
+export async function getSupplierOnboarding(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to load supplier onboarding')
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to load supplier onboarding'),
+  )
 }
 
 export async function submitSupplierOnboarding(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
   notes?: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/submit`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/suppliers/${supplierId}/submit`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ notes: notes ?? null }),
   })
-  return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to submit supplier onboarding')
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to submit supplier onboarding'),
+  )
 }
 
 export async function approveSupplierOnboarding(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/approve`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/suppliers/${supplierId}/approve`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to approve supplier onboarding')
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to approve supplier onboarding'),
+  )
 }
 
 export async function rejectSupplierOnboarding(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
   reason: string,
 ): Promise<SupplierOnboardingResponse> {
-  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/parties/${partyId}/reject`, {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/suppliers/${supplierId}/reject`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({ reason }),
   })
-  return parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to reject supplier onboarding')
-}
-
-export async function listPartyComplianceDocuments(
-  accessToken: string,
-  partyId: string,
-): Promise<PartyComplianceDocumentResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/compliance-documents`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<PartyComplianceDocumentResponse[]>(
-    response,
-    'Failed to load party compliance documents',
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to reject supplier onboarding'),
   )
 }
 
-export async function registerPartyComplianceDocument(
+export async function listSupplierComplianceDocuments(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
+): Promise<SupplierComplianceDocumentResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/compliance-documents`, {
+    headers: authHeaders(accessToken),
+  })
+  return normalizeSupplierComplianceDocuments(
+    await parseJsonResponse<SupplierComplianceDocumentResponse[]>(
+      response,
+      'Failed to load supplier compliance documents',
+    ),
+  )
+}
+
+export async function registerSupplierComplianceDocument(
+  accessToken: string,
+  supplierId: string,
   payload: {
     documentKey: string
     documentTypeKey: string
@@ -2495,82 +3249,112 @@ export async function registerPartyComplianceDocument(
     notes: string
     contentBase64?: string | null
   },
-): Promise<PartyComplianceDocumentResponse> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/compliance-documents`, {
+): Promise<SupplierComplianceDocumentResponse> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/compliance-documents`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<PartyComplianceDocumentResponse>(
-    response,
-    'Failed to register compliance document',
+  return normalizeSupplierComplianceDocument(
+    await parseJsonResponse<SupplierComplianceDocumentResponse>(
+      response,
+      'Failed to register compliance document',
+    ),
   )
 }
 
-export async function approvePartyComplianceDocument(
+export async function approveSupplierComplianceDocument(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
   documentId: string,
-): Promise<PartyComplianceDocumentResponse> {
+): Promise<SupplierComplianceDocumentResponse> {
   const response = await fetch(
-    `${apiBase}/api/v1/parties/${partyId}/compliance-documents/${documentId}/approve`,
+    `${apiBase}/api/v1/suppliers/${supplierId}/compliance-documents/${documentId}/approve`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
-  return parseJsonResponse<PartyComplianceDocumentResponse>(
-    response,
-    'Failed to approve compliance document',
+  return normalizeSupplierComplianceDocument(
+    await parseJsonResponse<SupplierComplianceDocumentResponse>(
+      response,
+      'Failed to approve compliance document',
+    ),
   )
+}
+
+export async function listSupplierRestrictions(
+  accessToken: string,
+  options?: { status?: string } | string,
+): Promise<SupplierRestrictionResponse[]> {
+  const status = typeof options === 'string' ? options : options?.status
+  const search = status ? `?status=${encodeURIComponent(status)}` : ''
+  const response = await fetch(`${apiBase}/api/v1/supplier-restrictions${search}`, {
+    headers: authHeaders(accessToken),
+  })
+  const raw = await parseJsonResponse<RawSupplierRestrictionResponse[]>(response, 'Failed to load supplier restrictions')
+  return normalizeSupplierRestrictions(raw)
+}
+
+export async function listSupplierRestrictionsBySupplier(
+  accessToken: string,
+  supplierId: string,
+): Promise<SupplierRestrictionResponse[]> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/restrictions`, {
+    headers: authHeaders(accessToken),
+  })
+  const raw = await parseJsonResponse<RawSupplierRestrictionResponse[]>(response, 'Failed to load supplier restrictions')
+  return normalizeSupplierRestrictions(raw)
+}
+
+export async function getSupplierRestrictionEnforcement(
+  accessToken: string,
+  supplierId: string,
+): Promise<SupplierRestrictionEnforcementResponse> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/restrictions/enforcement`, {
+    headers: authHeaders(accessToken),
+  })
+  const raw = await parseJsonResponse<RawSupplierRestrictionEnforcementResponse>(response, 'Failed to load supplier restriction enforcement')
+  return normalizeSupplierRestrictionEnforcement(raw)
+}
+
+export async function createSupplierRestriction(
+  accessToken: string,
+  supplierId: string,
+  payload: CreateSupplierRestrictionRequest,
+): Promise<SupplierRestrictionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/restrictions`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  const raw = await parseJsonResponse<RawSupplierRestrictionResponse>(response, 'Failed to create supplier restriction')
+  return normalizeSupplierRestriction(raw)
+}
+
+export async function liftSupplierRestriction(
+  accessToken: string,
+  restrictionId: string,
+  payload: LiftSupplierRestrictionRequest,
+): Promise<SupplierRestrictionResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-restrictions/${restrictionId}/lift`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  const raw = await parseJsonResponse<RawSupplierRestrictionResponse>(response, 'Failed to lift supplier restriction')
+  return normalizeSupplierRestriction(raw)
 }
 
 export async function listVendorRestrictions(
   accessToken: string,
   options?: { status?: string } | string,
 ): Promise<VendorRestrictionResponse[]> {
-  const status = typeof options === 'string' ? options : options?.status
-  const search = status ? `?status=${encodeURIComponent(status)}` : ''
-  const response = await fetch(`${apiBase}/api/v1/vendor-restrictions${search}`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<VendorRestrictionResponse[]>(response, 'Failed to load vendor restrictions')
+  return await listSupplierRestrictions(accessToken, options)
 }
 
-export async function listPartyVendorRestrictions(
+export async function listRestrictionsForSupplier(
   accessToken: string,
-  partyId: string,
-): Promise<VendorRestrictionResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<VendorRestrictionResponse[]>(
-    response,
-    'Failed to load party vendor restrictions',
-  )
-}
-
-export async function getPartyVendorRestrictionEnforcement(
-  accessToken: string,
-  partyId: string,
-): Promise<VendorRestrictionEnforcementResponse> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions/enforcement`, {
-    headers: authHeaders(accessToken),
-  })
-  return parseJsonResponse<VendorRestrictionEnforcementResponse>(
-    response,
-    'Failed to load vendor restriction enforcement',
-  )
-}
-
-export async function createPartyVendorRestriction(
-  accessToken: string,
-  partyId: string,
-  payload: CreateVendorRestrictionRequest,
-): Promise<VendorRestrictionResponse> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/vendor-restrictions`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(payload),
-  })
-  return parseJsonResponse<VendorRestrictionResponse>(response, 'Failed to create vendor restriction')
+  supplierId: string,
+): Promise<SupplierRestrictionResponse[]> {
+  return await listSupplierRestrictionsBySupplier(accessToken, supplierId)
 }
 
 export async function liftVendorRestriction(
@@ -2578,41 +3362,40 @@ export async function liftVendorRestriction(
   restrictionId: string,
   payload: LiftVendorRestrictionRequest,
 ): Promise<VendorRestrictionResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-restrictions/${restrictionId}/lift`, {
-    method: 'POST',
-    headers: authHeaders(accessToken),
-    body: JSON.stringify(payload),
-  })
-  return parseJsonResponse<VendorRestrictionResponse>(response, 'Failed to lift vendor restriction')
+  return await liftSupplierRestriction(accessToken, restrictionId, payload)
 }
 
 export async function listSupplierIncidents(
   accessToken: string,
-  options?: { status?: string; externalPartyId?: string; severity?: string },
+  options?: { status?: string; supplierId?: string; severity?: string },
 ): Promise<SupplierIncidentResponse[]> {
   const search = new URLSearchParams()
   if (options?.status) search.set('status', options.status)
-  if (options?.externalPartyId) search.set('externalPartyId', options.externalPartyId)
+  if (options?.supplierId) search.set('supplierId', options.supplierId)
   if (options?.severity) search.set('severity', options.severity)
   const query = search.toString()
   const response = await fetch(`${apiBase}/api/v1/supplier-incidents${query ? `?${query}` : ''}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierIncidentResponse[]>(response, 'Failed to load supplier incidents')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse[]>(response, 'Failed to load supplier incidents')
+  return normalizeSupplierIncidents(raw)
 }
 
-export async function listPartySupplierIncidents(
+export async function listSupplierIncidentsForSupplier(
   accessToken: string,
-  partyId: string,
+  supplierId: string,
 ): Promise<SupplierIncidentResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/parties/${partyId}/supplier-incidents`, {
+  const response = await fetch(`${apiBase}/api/v1/suppliers/${supplierId}/supplier-incidents`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierIncidentResponse[]>(
-    response,
-    'Failed to load party supplier incidents',
-  )
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse[]>(response, 'Failed to load supplier incidents for supplier record')
+  return normalizeSupplierIncidents(raw)
 }
+
+export const getSupplierOnboardingBySupplier = getSupplierOnboarding
+export const submitSupplierOnboardingForSupplier = submitSupplierOnboarding
+export const approveSupplierOnboardingForSupplier = approveSupplierOnboarding
+export const rejectSupplierOnboardingForSupplier = rejectSupplierOnboarding
 
 export async function createSupplierIncident(
   accessToken: string,
@@ -2623,7 +3406,8 @@ export async function createSupplierIncident(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to create supplier incident')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to create supplier incident')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function startSupplierIncidentInvestigation(
@@ -2634,7 +3418,8 @@ export async function startSupplierIncidentInvestigation(
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to start investigation')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to start investigation')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function resolveSupplierIncident(
@@ -2647,7 +3432,8 @@ export async function resolveSupplierIncident(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to resolve supplier incident')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to resolve supplier incident')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function closeSupplierIncident(
@@ -2659,7 +3445,8 @@ export async function closeSupplierIncident(
     headers: authHeaders(accessToken),
     body: JSON.stringify({ resolutionNotes: null }),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to close supplier incident')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to close supplier incident')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function cancelSupplierIncident(
@@ -2672,7 +3459,8 @@ export async function cancelSupplierIncident(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to cancel supplier incident')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to cancel supplier incident')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function reopenSupplierIncident(
@@ -2685,7 +3473,8 @@ export async function reopenSupplierIncident(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<SupplierIncidentResponse>(response, 'Failed to reopen supplier incident')
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(response, 'Failed to reopen supplier incident')
+  return normalizeSupplierIncident(raw)
 }
 
 export async function applySupplierIncidentProcurementRestriction(
@@ -2701,10 +3490,11 @@ export async function applySupplierIncidentProcurementRestriction(
       body: JSON.stringify(payload),
     },
   )
-  return parseJsonResponse<SupplierIncidentResponse>(
+  const raw = await parseJsonResponse<RawSupplierIncidentResponse>(
     response,
     'Failed to apply procurement restriction from incident',
   )
+  return normalizeSupplierIncident(raw)
 }
 
 export async function listProcurementExceptionResolutionTemplates(
@@ -2950,31 +3740,41 @@ export async function getProcurementApprovalAuthority(
   )
 }
 
-export async function getVendorReportSummary(
+export async function getSupplierReportSummary(
   accessToken: string,
   options?: { approvalStatus?: string; activeOnly?: boolean },
-): Promise<VendorReportSummaryResponse> {
+): Promise<SupplierReportSummaryResponse> {
   const params = new URLSearchParams()
   if (options?.approvalStatus) params.set('approvalStatus', options.approvalStatus)
   if (options?.activeOnly) params.set('activeOnly', 'true')
   const query = params.size > 0 ? `?${params.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/reports/vendors/summary${query}`, {
+  const response = await fetch(`${apiBase}/api/reports/suppliers/summary${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorReportSummaryResponse>(response, 'Failed to load vendor report summary')
+  return normalizeSupplierReportSummary(
+    await parseJsonResponse<SupplierReportSummaryResponse | VendorReportSummaryResponse>(
+      response,
+      'Failed to load supplier report summary',
+    ),
+  )
 }
 
-export async function getVendorReportDetail(
+export async function getSupplierReportDetail(
   accessToken: string,
-  vendorPartyId: string,
-): Promise<VendorReportDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/vendors/${vendorPartyId}`, {
+  supplierId: string,
+): Promise<SupplierReportDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorReportDetailResponse>(response, 'Failed to load vendor report detail')
+  return normalizeSupplierReportDetail(
+    await parseJsonResponse<SupplierReportDetailResponse | VendorReportDetailResponse>(
+      response,
+      'Failed to load supplier report detail',
+    ),
+  )
 }
 
-export function exportVendorReportSummaryCsv(
+export function exportSupplierReportSummaryCsv(
   accessToken: string,
   options?: { approvalStatus?: string; activeOnly?: boolean },
 ): Promise<Blob> {
@@ -2984,45 +3784,109 @@ export function exportVendorReportSummaryCsv(
   const query = params.size > 0 ? `?${params.toString()}` : ''
   return downloadExportBlob(
     accessToken,
-    `/api/reports/vendors/summary/export${query}`,
-    'Vendor report export failed',
+    `/api/reports/suppliers/summary/export${query}`,
+    'Supplier report export failed',
   )
 }
+
+export const getVendorReportSummary = getSupplierReportSummary
+export const getVendorReportDetail = getSupplierReportDetail
+export const exportVendorReportSummaryCsv = exportSupplierReportSummaryCsv
 
 export async function getComplianceReportSummary(
   accessToken: string,
   options?: {
     attentionOnly?: boolean
-    partyType?: string
-    externalPartyId?: string
+    supplierId?: string
     reviewStatus?: string
   },
-): Promise<ComplianceReportSummaryResponse> {
+): Promise<SupplierComplianceReportSummaryResponse> {
   const params = new URLSearchParams()
   if (options?.attentionOnly) params.set('attentionOnly', 'true')
-  if (options?.partyType) params.set('partyType', options.partyType)
-  if (options?.externalPartyId) params.set('externalPartyId', options.externalPartyId)
+  if (options?.supplierId) params.set('supplierId', options.supplierId)
   if (options?.reviewStatus) params.set('reviewStatus', options.reviewStatus)
   const query = params.size > 0 ? `?${params.toString()}` : ''
   const response = await fetch(`${apiBase}/api/reports/compliance/summary${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ComplianceReportSummaryResponse>(
+  const raw = await parseJsonResponse<SupplierComplianceReportSummaryResponse | ComplianceReportSummaryResponse>(
     response,
     'Failed to load compliance report summary',
   )
+  if ('suppliers' in raw) {
+    return {
+      ...raw,
+      totals: {
+        ...raw.totals,
+        supplierCount: raw.totals.supplierCount,
+      },
+      suppliers: raw.suppliers.map((supplier) => ({
+        ...supplier,
+        parentSupplierId: supplier.parentSupplierId ?? null,
+        parentSupplierDisplayName: supplier.parentSupplierDisplayName ?? null,
+        supplierUnitKind: supplier.supplierUnitKind ?? 'identity',
+        supplierServiceTypes: supplier.supplierServiceTypes ?? [],
+      })),
+    }
+  }
+
+  return {
+    generatedAt: raw.generatedAt,
+    totals: {
+      supplierCount: raw.totals.partyCount,
+      documentCount: raw.totals.documentCount,
+      expiredCount: raw.totals.expiredCount,
+      expiringSoonCount: raw.totals.expiringSoonCount,
+      reviewPendingCount: raw.totals.reviewPendingCount,
+      approvedCount: raw.totals.approvedCount,
+      rejectedCount: raw.totals.rejectedCount,
+    },
+    suppliers: raw.parties.map((party) => ({
+      supplierId: party.externalPartyId,
+      supplierKey: party.partyKey,
+      displayName: party.displayName,
+      parentSupplierId: null,
+      parentSupplierDisplayName: null,
+      supplierUnitKind: 'identity',
+      supplierServiceTypes: [],
+      approvalStatus: party.approvalStatus,
+      compliancePosture: party.compliancePosture,
+      documentCount: party.documentCount,
+      expiredCount: party.expiredCount,
+      expiringSoonCount: party.expiringSoonCount,
+      reviewPendingCount: party.reviewPendingCount,
+    })),
+    documents: raw.documents.map((document) => ({
+      documentId: document.documentId,
+      supplierId: document.externalPartyId,
+      supplierKey: document.partyKey,
+      supplierDisplayName: document.partyDisplayName,
+      documentKey: document.documentKey,
+      documentTypeKey: document.documentTypeKey,
+      title: document.title,
+      version: document.version,
+      reviewStatus: document.reviewStatus,
+      effectiveStatus: document.effectiveStatus,
+      isExpired: document.isExpired,
+      isExpiringSoon: document.isExpiringSoon,
+      expiresAt: document.expiresAt,
+      updatedAt: document.updatedAt,
+    })),
+  }
 }
 
-export async function getCompliancePartyDetail(
+export async function getComplianceSupplierDetail(
   accessToken: string,
-  externalPartyId: string,
-): Promise<CompliancePartyDetailResponse> {
-  const response = await fetch(`${apiBase}/api/reports/compliance/parties/${externalPartyId}`, {
+  supplierId: string,
+): Promise<SupplierComplianceDetailResponse> {
+  const response = await fetch(`${apiBase}/api/reports/compliance/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<CompliancePartyDetailResponse>(
-    response,
-    'Failed to load compliance party detail',
+  return normalizeSupplierComplianceDetail(
+    await parseJsonResponse<SupplierComplianceDetailResponse>(
+      response,
+      'Failed to load supplier compliance detail',
+    ),
   )
 }
 
@@ -3030,15 +3894,13 @@ export function exportComplianceReportSummaryCsv(
   accessToken: string,
   options?: {
     attentionOnly?: boolean
-    partyType?: string
-    externalPartyId?: string
+    supplierId?: string
     reviewStatus?: string
   },
 ): Promise<Blob> {
   const params = new URLSearchParams()
   if (options?.attentionOnly) params.set('attentionOnly', 'true')
-  if (options?.partyType) params.set('partyType', options.partyType)
-  if (options?.externalPartyId) params.set('externalPartyId', options.externalPartyId)
+  if (options?.supplierId) params.set('supplierId', options.supplierId)
   if (options?.reviewStatus) params.set('reviewStatus', options.reviewStatus)
   const query = params.size > 0 ? `?${params.toString()}` : ''
   return downloadExportBlob(
@@ -3122,18 +3984,20 @@ export function exportPartsInventoryReportSummaryCsv(
 
 export async function getPurchasingReportSummary(
   accessToken: string,
-  options?: { openDocumentsOnly?: boolean; vendorPartyId?: string },
+  options?: { openDocumentsOnly?: boolean; supplierId?: string },
 ): Promise<PurchasingReportSummaryResponse> {
   const params = new URLSearchParams()
   if (options?.openDocumentsOnly) params.set('openDocumentsOnly', 'true')
-  if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
+  if (options?.supplierId) params.set('supplierId', options.supplierId)
   const query = params.size > 0 ? `?${params.toString()}` : ''
   const response = await fetch(`${apiBase}/api/reports/purchasing/summary${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchasingReportSummaryResponse>(
-    response,
-    'Failed to load purchasing report summary',
+  return normalizePurchasingReportSummary(
+    await parseJsonResponse<PurchasingReportSummaryResponse>(
+      response,
+      'Failed to load purchasing report summary',
+    ),
   )
 }
 
@@ -3144,9 +4008,11 @@ export async function getPurchasingPurchaseRequestDetail(
   const response = await fetch(`${apiBase}/api/reports/purchasing/purchase-requests/${purchaseRequestId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchasingPurchaseRequestDetailResponse>(
-    response,
-    'Failed to load purchasing purchase request detail',
+  return normalizePurchasingPurchaseRequestDetail(
+    await parseJsonResponse<PurchasingPurchaseRequestDetailResponse>(
+      response,
+      'Failed to load purchasing purchase request detail',
+    ),
   )
 }
 
@@ -3157,19 +4023,21 @@ export async function getPurchasingPurchaseOrderDetail(
   const response = await fetch(`${apiBase}/api/reports/purchasing/purchase-orders/${purchaseOrderId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PurchasingPurchaseOrderDetailResponse>(
-    response,
-    'Failed to load purchasing purchase order detail',
+  return normalizePurchasingPurchaseOrderDetail(
+    await parseJsonResponse<PurchasingPurchaseOrderDetailResponse>(
+      response,
+      'Failed to load purchasing purchase order detail',
+    ),
   )
 }
 
 export function exportPurchasingReportSummaryCsv(
   accessToken: string,
-  options?: { openDocumentsOnly?: boolean; vendorPartyId?: string },
+  options?: { openDocumentsOnly?: boolean; supplierId?: string },
 ): Promise<Blob> {
   const params = new URLSearchParams()
   if (options?.openDocumentsOnly) params.set('openDocumentsOnly', 'true')
-  if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
+  if (options?.supplierId) params.set('supplierId', options.supplierId)
   const query = params.size > 0 ? `?${params.toString()}` : ''
   return downloadExportBlob(
     accessToken,

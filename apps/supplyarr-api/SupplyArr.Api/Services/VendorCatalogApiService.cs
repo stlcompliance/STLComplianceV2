@@ -19,24 +19,24 @@ public sealed class VendorCatalogApiService(
         CancellationToken cancellationToken = default)
     {
         var issues = new List<VendorCatalogApiSyncIssue>();
-        var vendorPartyKey = NormalizePartyKey(request.VendorPartyKey, issues);
+        var supplierKey = NormalizeSupplierKey(request.SupplierKey, request.VendorPartyKey, issues);
         var items = request.Items?.ToList() ?? [];
         if (items.Count == 0)
         {
-            issues.Add(new VendorCatalogApiSyncIssue(1, "vendor_catalog.empty", "At least one vendor catalog item is required."));
+            issues.Add(new VendorCatalogApiSyncIssue(1, "supplier_catalog.empty", "At least one supplier catalog item is required."));
         }
 
-        ExternalParty? vendor = null;
-        if (!string.IsNullOrWhiteSpace(vendorPartyKey))
+        ExternalParty? supplier = null;
+        if (!string.IsNullOrWhiteSpace(supplierKey))
         {
-            vendor = await db.ExternalParties.FirstOrDefaultAsync(
+            supplier = await db.ExternalParties.FirstOrDefaultAsync(
                 x => x.TenantId == tenantId
-                    && x.PartyKey == vendorPartyKey
+                    && x.PartyKey == supplierKey
                     && (x.PartyType == "vendor" || x.PartyType == "supplier"),
                 cancellationToken);
-            if (vendor is null)
+            if (supplier is null)
             {
-                issues.Add(new VendorCatalogApiSyncIssue(1, "vendor.not_found", "Vendor or supplier party was not found."));
+                issues.Add(new VendorCatalogApiSyncIssue(1, "supplier.not_found", "Supplier identity or sub-unit was not found."));
             }
         }
 
@@ -73,17 +73,17 @@ public sealed class VendorCatalogApiService(
 
             if (!seenPartKeys.Add(partKey))
             {
-                issues.Add(new VendorCatalogApiSyncIssue(itemNumber, "vendor_catalog.duplicate_in_file", "Part appears more than once in the sync payload."));
+                issues.Add(new VendorCatalogApiSyncIssue(itemNumber, "supplier_catalog.duplicate_in_file", "Part appears more than once in the sync payload."));
                 continue;
             }
 
             if (string.IsNullOrWhiteSpace(vendorPartNumber))
             {
-                issues.Add(new VendorCatalogApiSyncIssue(itemNumber, "vendor_part_number.required", "Vendor part number is required."));
+                issues.Add(new VendorCatalogApiSyncIssue(itemNumber, "supplier_part_number.required", "Supplier part number is required."));
             }
 
             ValidateLength(itemNumber, "part_key", partKey, 2, 128, issues);
-            ValidateLength(itemNumber, "vendor_part_number", vendorPartNumber, 1, 128, issues);
+            ValidateLength(itemNumber, "supplier_part_number", vendorPartNumber, 1, 128, issues);
             ValidateMaxLength(itemNumber, "catalog_availability_status", item.CatalogAvailabilityStatus, 32, issues);
 
             var hasFacts = item.IsPreferred
@@ -95,8 +95,8 @@ public sealed class VendorCatalogApiService(
             {
                 issues.Add(new VendorCatalogApiSyncIssue(
                     itemNumber,
-                    "vendor_catalog.empty_facts",
-                    "Vendor catalog sync requires price, lead time, quantity available, availability status, or preferred vendor flag."));
+                    "supplier_catalog.empty_facts",
+                    "Supplier catalog sync requires price, lead time, quantity available, availability status, or preferred source flag."));
             }
 
             normalizedItems.Add(new NormalizedItem(
@@ -113,7 +113,7 @@ public sealed class VendorCatalogApiService(
         }
 
         var accepted = normalizedItems.Count;
-        if (issues.Count > 0 || request.DryRun || vendor is null)
+        if (issues.Count > 0 || request.DryRun || supplier is null)
         {
             return new VendorCatalogApiSyncResponse(
                 SyncType,
@@ -128,14 +128,14 @@ public sealed class VendorCatalogApiService(
         var now = DateTimeOffset.UtcNow;
         var created = 0;
         var updated = 0;
-        var vendorId = vendor.Id;
+        var supplierId = supplier.Id;
 
         foreach (var item in normalizedItems)
         {
-            var part = item.Part ?? throw new InvalidOperationException("Normalized vendor catalog items must include a resolved part.");
+            var part = item.Part ?? throw new InvalidOperationException("Normalized supplier catalog items must include a resolved part.");
             var link = await db.PartVendorLinks
                 .FirstOrDefaultAsync(
-                    x => x.TenantId == tenantId && x.PartId == part.Id && x.ExternalPartyId == vendorId,
+                    x => x.TenantId == tenantId && x.PartId == part.Id && x.ExternalPartyId == supplierId,
                     cancellationToken);
 
             var isNew = link is null;
@@ -146,7 +146,7 @@ public sealed class VendorCatalogApiService(
                     Id = Guid.NewGuid(),
                     TenantId = tenantId,
                     PartId = part.Id,
-                    ExternalPartyId = vendorId,
+                    ExternalPartyId = supplierId,
                     CreatedAt = now,
                     UpdatedAt = now,
                 };
@@ -222,7 +222,7 @@ public sealed class VendorCatalogApiService(
             tenantId,
             actorUserId,
             "vendor_catalog",
-            vendorPartyKey,
+            supplierKey,
             "Succeeded",
             reasonCode: request.DryRun ? "dry_run" : $"applied:{created + updated}",
             cancellationToken: cancellationToken);
@@ -237,18 +237,23 @@ public sealed class VendorCatalogApiService(
             issues);
     }
 
-    private static string NormalizePartyKey(string value, ICollection<VendorCatalogApiSyncIssue> issues)
+    private static string NormalizeSupplierKey(
+        string? supplierKey,
+        string? vendorPartyKey,
+        ICollection<VendorCatalogApiSyncIssue> issues)
     {
-        var normalized = string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToLowerInvariant();
+        var normalized = string.IsNullOrWhiteSpace(supplierKey)
+            ? (string.IsNullOrWhiteSpace(vendorPartyKey) ? string.Empty : vendorPartyKey.Trim().ToLowerInvariant())
+            : supplierKey.Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            issues.Add(new VendorCatalogApiSyncIssue(1, "vendor.party_key_required", "Vendor party key is required."));
+            issues.Add(new VendorCatalogApiSyncIssue(1, "supplier.key_required", "Supplier key is required."));
             return string.Empty;
         }
 
         if (normalized.Length is < 2 or > 128)
         {
-            issues.Add(new VendorCatalogApiSyncIssue(1, "vendor.party_key_invalid", "Vendor party key must be between 2 and 128 characters."));
+            issues.Add(new VendorCatalogApiSyncIssue(1, "supplier.key_invalid", "Supplier key must be between 2 and 128 characters."));
             return string.Empty;
         }
 

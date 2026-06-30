@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -9,6 +10,8 @@ public sealed class ProcurementCoordinationWorkerService(
     SupplyArrDbContext db,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public const string ProcessProcurementCoordinationActionScope = "supplyarr.procurement.coordination";
 
     public static readonly Guid WorkerActorUserId = Guid.Parse("00000000-0000-0000-0000-0000000000fc");
@@ -261,8 +264,15 @@ public sealed class ProcurementCoordinationWorkerService(
         existing.NextActionRequired = summary.NextActionRequired;
         existing.PurchaseRequestId = summary.PurchaseRequestId;
         existing.PurchaseOrderId = summary.PurchaseOrderId;
+        existing.SupplierId = summary.SupplierId;
+        existing.SupplierKey = summary.SupplierKey;
+        existing.SupplierDisplayName = summary.SupplierDisplayName;
+        existing.ParentSupplierId = summary.ParentSupplierId;
+        existing.ParentSupplierDisplayName = summary.ParentSupplierDisplayName;
+        existing.SupplierUnitKind = summary.SupplierUnitKind;
+        existing.SupplierServiceTypesJson = SerializeServiceTypes(summary.SupplierServiceTypes);
         existing.VendorPartyId = summary.VendorPartyId;
-        existing.VendorDisplayName = summary.VendorDisplayName;
+        existing.VendorDisplayName = summary.VendorDisplayName ?? summary.SupplierDisplayName ?? string.Empty;
         existing.DocumentStatus = summary.DocumentStatus;
         existing.LineCount = summary.LineCount;
         existing.QuantityOrdered = summary.QuantityOrdered;
@@ -309,6 +319,13 @@ public sealed class ProcurementCoordinationWorkerService(
             record.NextActionRequired,
             record.PurchaseRequestId,
             record.PurchaseOrderId,
+            record.SupplierId,
+            record.SupplierKey,
+            record.SupplierDisplayName,
+            record.ParentSupplierId,
+            record.ParentSupplierDisplayName,
+            record.SupplierUnitKind,
+            ParseServiceTypes(record.SupplierServiceTypesJson),
             record.VendorPartyId,
             record.VendorDisplayName,
             record.DocumentStatus,
@@ -320,6 +337,26 @@ public sealed class ProcurementCoordinationWorkerService(
             record.SourceUpdatedAt,
             record.ComputedAt,
             isMaterialized);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static string SerializeServiceTypes(IReadOnlyList<string> values) =>
+        JsonSerializer.Serialize(values ?? [], JsonOptions);
 
     internal static ProcurementCoordinationEventResponse MapEvent(ProcurementCoordinationEvent entity) =>
         new(

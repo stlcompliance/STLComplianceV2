@@ -12,7 +12,8 @@ public sealed record VendorCatalogApiSyncItem(
     string? CatalogAvailabilityStatus);
 
 public sealed record VendorCatalogApiSyncRequest(
-    string VendorPartyKey,
+    string SupplierKey,
+    string? VendorPartyKey,
     bool DryRun,
     IReadOnlyList<VendorCatalogApiSyncItem> Items);
 

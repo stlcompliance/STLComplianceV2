@@ -241,10 +241,10 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.SupplyArrReceivingExceptionsSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.SupplyArrPartyRegistryMaintenanceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.SupplyArrSupplierDirectoryMaintenanceSmokeSpec,
             StlE2ePlaywrightSpecCatalog.ProductAdminSmokeSpecs);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.SupplyArrPartyRegistryMaintenanceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.SupplyArrSupplierDirectoryMaintenanceSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingDemandProcessingSmokeSpec,
@@ -511,7 +511,7 @@ public sealed class StlE2ePlaywrightSpecCatalogTests
             StlE2ePlaywrightSpecCatalog.SupplyArrReceivingExceptionsSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
-            StlE2ePlaywrightSpecCatalog.SupplyArrPartyRegistryMaintenanceSmokeSpec,
+            StlE2ePlaywrightSpecCatalog.SupplyArrSupplierDirectoryMaintenanceSmokeSpec,
             StlE2ePlaywrightSpecCatalog.All);
         Assert.Contains(
             StlE2ePlaywrightSpecCatalog.SupplyArrPurchasingDemandProcessingSmokeSpec,

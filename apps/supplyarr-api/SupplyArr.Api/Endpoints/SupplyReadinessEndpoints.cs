@@ -15,6 +15,8 @@ public static class SupplyReadinessEndpoints
                 .WithName($"{namePrefix}GetSupplyArrPartSupplyReadiness");
             group.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
                 .WithName($"{namePrefix}GetSupplyArrVendorSupplyReadiness");
+            group.MapGet("/suppliers/{supplierId:guid}", GetSupplierReadinessAsync)
+                .WithName($"{namePrefix}GetSupplyArrSupplierSupplyReadiness");
             group.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
                 .WithName($"{namePrefix}GetSupplyArrProcurementPathReadiness");
         }
@@ -81,9 +83,29 @@ public static class SupplyReadinessEndpoints
             return Results.Ok(result);
         }
 
+        static async Task<IResult> GetSupplierReadinessAsync(
+            Guid supplierId,
+            SupplyArrAuthorizationService authorization,
+            SupplyReadinessService service,
+            HttpContext context,
+            CancellationToken cancellationToken)
+        {
+            authorization.RequireSupplyReadinessRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            var result = await service.GetSupplierReadinessAsync(
+                tenantId,
+                supplierId,
+                cancellationToken,
+                actorUserId,
+                SupplyReadinessService.SupplierSnapshotKind);
+            return Results.Ok(result);
+        }
+
         static async Task<IResult> GetProcurementPathReadinessAsync(
             Guid partId,
-            Guid externalPartyId,
+            Guid supplierId,
+            Guid? externalPartyId,
             decimal? quantity,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,
@@ -96,7 +118,7 @@ public static class SupplyReadinessEndpoints
             var result = await service.GetProcurementPathReadinessAsync(
                 tenantId,
                 partId,
-                externalPartyId,
+                supplierId,
                 quantity,
                 cancellationToken,
                 actorUserId,

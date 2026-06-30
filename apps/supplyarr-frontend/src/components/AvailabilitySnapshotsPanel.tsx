@@ -4,6 +4,11 @@ import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type { AvailabilitySnapshotResponse, PartResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
 interface AvailabilitySnapshotsPanelProps {
   parts: PartResponse[]
@@ -11,13 +16,13 @@ interface AvailabilitySnapshotsPanelProps {
   canManage: boolean
   isLoading: boolean
   snapshotKey: string
-  selectedVendorLinkId: string
+  selectedSourceLinkId: string
   quantityAvailable: string
   availabilityStatus: string
   snapshotNotes: string
   currentOnlyFilter: boolean
   onSnapshotKeyChange: (value: string) => void
-  onSelectedVendorLinkIdChange: (value: string) => void
+  onSelectedSourceLinkIdChange: (value: string) => void
   onQuantityAvailableChange: (value: string) => void
   onAvailabilityStatusChange: (value: string) => void
   onSnapshotNotesChange: (value: string) => void
@@ -40,13 +45,13 @@ export function AvailabilitySnapshotsPanel({
   canManage,
   isLoading,
   snapshotKey,
-  selectedVendorLinkId,
+  selectedSourceLinkId,
   quantityAvailable,
   availabilityStatus,
   snapshotNotes,
   currentOnlyFilter,
   onSnapshotKeyChange,
-  onSelectedVendorLinkIdChange,
+  onSelectedSourceLinkIdChange,
   onQuantityAvailableChange,
   onAvailabilityStatusChange,
   onSnapshotNotesChange,
@@ -54,23 +59,32 @@ export function AvailabilitySnapshotsPanel({
   onCreateAvailabilitySnapshot,
   isCreating,
 }: AvailabilitySnapshotsPanelProps) {
-  const vendorLinkOptions = useMemo<PickerOption[]>(
+  const supplierSourceLinkOptions = useMemo<PickerOption[]>(
     () =>
       parts.flatMap((part) =>
         part.vendorLinks.map((link) => ({
           value: link.linkId,
-          label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
+          label: `${part.partKey} · ${formatSupplierIdentitySummary({
+            supplierDisplayName: link.supplierDisplayName,
+            supplierKey: link.supplierKey,
+            parentSupplierDisplayName: link.parentSupplierDisplayName,
+            supplierUnitKind: link.supplierUnitKind,
+          })} · ${link.vendorPartNumber}`,
         })),
       ),
     [parts],
   )
-  const selectedVendorLinkOption = useMemo<PickerOption | undefined>(
-    () => vendorLinkOptions.find((link) => link.value === selectedVendorLinkId),
-    [selectedVendorLinkId, vendorLinkOptions],
+  const selectedSourceLinkOption = useMemo<PickerOption | undefined>(
+    () => supplierSourceLinkOptions.find((link) => link.value === selectedSourceLinkId),
+    [selectedSourceLinkId, supplierSourceLinkOptions],
   )
-  const selectedVendorLinkLabel = selectedVendorLinkOption?.label ?? ''
-  const snapshotKeySource = selectedVendorLinkLabel
-    ? `${selectedVendorLinkLabel} ${availabilityStatus} snapshot`
+  const selectedSourceLink = useMemo(
+    () => parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === selectedSourceLinkId),
+    [parts, selectedSourceLinkId],
+  )
+  const selectedSourceLinkLabel = selectedSourceLinkOption?.label ?? ''
+  const snapshotKeySource = selectedSourceLinkLabel
+    ? `${selectedSourceLinkLabel} ${availabilityStatus} snapshot`
     : ''
   const existingSnapshotKeys = availabilitySnapshots.map((row) => row.snapshotKey)
 
@@ -116,9 +130,33 @@ export function AvailabilitySnapshotsPanel({
               ) : null}
             </div>
             <p className="mt-1 text-slate-400">
-              {row.partKey} · {row.vendorPartyKey} ·{' '}
+              {row.partKey} ·{' '}
+              {formatSupplierIdentitySummary({
+                supplierDisplayName: row.supplierDisplayName,
+                supplierKey: row.supplierKey,
+                parentSupplierDisplayName: row.parentSupplierDisplayName ?? null,
+                supplierUnitKind: row.supplierUnitKind ?? 'identity',
+              })}{' '}
+              ·{' '}
               {statusLabels[row.availabilityStatus] ?? row.availabilityStatus}
               {row.quantityAvailable != null ? ` · qty ${row.quantityAvailable}` : ''}
+            </p>
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {formatSupplierOperationalContext({
+                supplierServiceTypes: row.supplierServiceTypes ?? [],
+                addressLine1:
+                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                    ?.supplierAddressLine1 ?? null,
+                locality:
+                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                    ?.supplierLocality ?? null,
+                regionCode:
+                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                    ?.supplierRegionCode ?? null,
+                postalCode:
+                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                    ?.supplierPostalCode ?? null,
+              })}
             </p>
             <p className="text-xs text-[var(--color-text-muted)]">
               effective {new Date(row.effectiveFrom).toLocaleDateString()}
@@ -135,18 +173,24 @@ export function AvailabilitySnapshotsPanel({
 
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
-          <label htmlFor="availability-vendor-link" className="block text-sm text-slate-400">
+          <label htmlFor="availability-supplier-source-link" className="block text-sm text-slate-400">
             Supplier source link
             <StaticSearchPicker
-              id="availability-vendor-link"
+              id="availability-supplier-source-link"
               placeholder="Search supplier source links…"
-              value={selectedVendorLinkId}
-              options={vendorLinkOptions}
-              selectedOption={selectedVendorLinkOption}
-              onChange={onSelectedVendorLinkIdChange}
-              testId="availability-vendor-link-picker"
+              value={selectedSourceLinkId}
+              options={supplierSourceLinkOptions}
+              selectedOption={selectedSourceLinkOption}
+              onChange={onSelectedSourceLinkIdChange}
+              testId="availability-supplier-source-link-picker"
             />
           </label>
+          {selectedSourceLink ? (
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {humanizeSupplierUnitKind(selectedSourceLink.supplierUnitKind)} ·{' '}
+              {formatSupplierOperationalContext(selectedSourceLink)}
+            </p>
+          ) : null}
 
           <div className="grid gap-3 sm:grid-cols-2">
             <GeneratedKeyFieldGroup
@@ -201,7 +245,7 @@ export function AvailabilitySnapshotsPanel({
           <button
             type="button"
             className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-500 disabled:opacity-50"
-            disabled={isCreating || !selectedVendorLinkId || !snapshotKey || !availabilityStatus}
+            disabled={isCreating || !selectedSourceLinkId || !snapshotKey || !availabilityStatus}
             onClick={onCreateAvailabilitySnapshot}
           >
             {isCreating ? 'Saving availability…' : 'Record availability'}

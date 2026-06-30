@@ -1,9 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import { DetailBadge } from '@stl/shared-ui'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getVendors } from '../../api/client'
-import { getVendorOrderMetadata, getVendorOrders } from '../../api/vendorOrderClient'
+import { getSupplierDirectory } from '../../api/client'
+import { getSupplierOrderMetadata, getSupplierOrders } from '../../api/vendorOrderClient'
 import { useSupplyArrPageAccess } from './useSupplyArrPageAccess'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../../utils/supplierPresentation'
 import {
   formatVendorOrderDateTime,
   humanizeVendorOrderValue,
@@ -11,58 +17,58 @@ import {
   vendorOrderStatusTone,
 } from './vendorOrderUi'
 
-export function VendorOrdersPage() {
-  const { session, meQuery, canReadVendorOrders, canCreateVendorOrders } = useSupplyArrPageAccess()
+export function SupplierOrdersPage() {
+  const { session, meQuery, canReadSupplierOrders, canCreateSupplierOrders } = useSupplyArrPageAccess()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedStatus = searchParams.get('status') ?? ''
-  const selectedVendorId = searchParams.get('vendorId') ?? ''
+  const selectedSupplierId = searchParams.get('supplierId') ?? searchParams.get('vendorId') ?? ''
 
   if (!session) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor orders…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier orders…</p>
   }
 
   if (meQuery.isLoading) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order access…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier-order access…</p>
   }
 
-  if (!canReadVendorOrders) {
+  if (!canReadSupplierOrders) {
     return (
       <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor orders</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Supplier orders</h1>
         <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-          You do not have permission to view SupplyArr vendor orders.
+          You do not have permission to view SupplyArr supplier orders.
         </p>
       </section>
     )
   }
 
-  const vendorsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-vendors', session.accessToken],
-    queryFn: () => getVendors(session.accessToken),
+  const suppliersQuery = useQuery({
+    queryKey: ['supplyarr-supplier-order-suppliers', session.accessToken],
+    queryFn: () => getSupplierDirectory(session.accessToken),
   })
 
   const metadataQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-metadata', session.accessToken],
-    queryFn: () => getVendorOrderMetadata(session.accessToken),
+    queryKey: ['supplyarr-supplier-order-metadata', session.accessToken],
+    queryFn: () => getSupplierOrderMetadata(session.accessToken),
   })
 
-  const vendorOrdersQuery = useQuery({
-    queryKey: ['supplyarr-vendor-orders', session.accessToken, selectedStatus, selectedVendorId],
+  const supplierOrdersQuery = useQuery({
+    queryKey: ['supplyarr-supplier-orders', session.accessToken, selectedStatus, selectedSupplierId],
     queryFn: () =>
-      getVendorOrders(session.accessToken, {
+      getSupplierOrders(session.accessToken, {
         status: selectedStatus || undefined,
-        vendorId: selectedVendorId || undefined,
+        supplierId: selectedSupplierId || undefined,
       }),
   })
 
-  const orderCount = vendorOrdersQuery.data?.length ?? 0
+  const orderCount = supplierOrdersQuery.data?.length ?? 0
   const statusFilterOptions = [{ value: '', label: 'All statuses' }, ...(metadataQuery.data?.filterStatusOptions ?? [])]
   const readyCount =
-    vendorOrdersQuery.data?.filter((item) => item.status === 'completed_ready_for_dispatch').length ?? 0
+    supplierOrdersQuery.data?.filter((item) => item.status === 'completed_ready_for_dispatch').length ?? 0
   const partialCount =
-    vendorOrdersQuery.data?.filter((item) => item.status === 'partially_ready').length ?? 0
+    supplierOrdersQuery.data?.filter((item) => item.status === 'partially_ready').length ?? 0
   const blockedCount =
-    vendorOrdersQuery.data?.filter((item) => item.status === 'unable_to_fulfill').length ?? 0
+    supplierOrdersQuery.data?.filter((item) => item.status === 'unable_to_fulfill').length ?? 0
 
   return (
     <div className="space-y-6">
@@ -71,28 +77,28 @@ export function VendorOrdersPage() {
           <div>
             <div className="mb-3 flex flex-wrap gap-2">
               <DetailBadge label="SupplyArr" tone="info" />
-              <DetailBadge label="Vendor order registry" tone="neutral" />
+              <DetailBadge label="Supplier order registry" tone="neutral" />
               <DetailBadge label={session.tenantDisplayName} tone="neutral" />
             </div>
-            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Vendor order readiness</h1>
+            <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">Supplier order readiness</h1>
             <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-secondary)]">
-              Review vendor confirmations before transportation is released. Track readiness, documents, and history in one place.
+              Review supplier confirmations before transportation is released. Track readiness, documents, and history in one place.
             </p>
           </div>
-          {canCreateVendorOrders ? (
+          {canCreateSupplierOrders ? (
             <Link
-              to="/purchasing/vendor-orders/create"
+              to="/purchasing/supplier-orders/create"
               className="inline-flex items-center rounded-xl bg-[var(--color-accent)] px-4 py-3 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
             >
-              Create vendor order
+              Create supplier order
             </Link>
           ) : null}
         </div>
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Orders in scope" value={String(orderCount)} hint="Filtered vendor-order records" />
-        <SummaryCard label="Ready for dispatch" value={String(readyCount)} hint="Vendor released orders" tone="good" />
+        <SummaryCard label="Orders in scope" value={String(orderCount)} hint="Filtered supplier-order records" />
+        <SummaryCard label="Ready for dispatch" value={String(readyCount)} hint="Supplier released orders" tone="good" />
         <SummaryCard label="Partial readiness" value={String(partialCount)} hint="Broker decision required" tone="warn" />
         <SummaryCard label="Unable to fulfill" value={String(blockedCount)} hint="Broker ops follow-up" tone="bad" />
       </div>
@@ -123,30 +129,32 @@ export function VendorOrdersPage() {
           </label>
 
           <label className="text-sm text-[var(--color-text-secondary)]">
-            Vendor
+            Supplier identity or sub-unit
             <select
               className="mt-1 block min-w-72 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
-              value={selectedVendorId}
+              value={selectedSupplierId}
               onChange={(event) => {
                 const next = new URLSearchParams(searchParams)
                 if (event.target.value) {
-                  next.set('vendorId', event.target.value)
+                  next.set('supplierId', event.target.value)
+                  next.delete('vendorId')
                 } else {
+                  next.delete('supplierId')
                   next.delete('vendorId')
                 }
                 setSearchParams(next)
               }}
             >
-              <option value="">All vendors</option>
-              {(vendorsQuery.data ?? []).map((vendor) => (
-                <option key={vendor.partyId} value={vendor.partyId}>
-                  {vendor.displayName}
+              <option value="">All suppliers</option>
+              {(suppliersQuery.data ?? []).map((supplier) => (
+                <option key={supplier.supplierId} value={supplier.supplierId}>
+                  {formatSupplierUnitLabel(supplier)}
                 </option>
               ))}
             </select>
           </label>
 
-          {(selectedStatus || selectedVendorId) ? (
+          {(selectedStatus || selectedSupplierId) ? (
             <button
               type="button"
               className="rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-4 py-2 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
@@ -160,23 +168,23 @@ export function VendorOrdersPage() {
 
       <section className="overflow-hidden rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)]">
         <div className="border-b border-[var(--color-border-subtle)] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Vendor orders</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Supplier orders</h2>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
             Full readiness, partial decisions, and split lineage stay separate from dispatch execution.
           </p>
         </div>
 
-        {vendorOrdersQuery.isLoading ? (
-          <p className="px-5 py-6 text-sm text-[var(--color-text-muted)]">Loading vendor orders…</p>
-        ) : vendorOrdersQuery.isError ? (
-          <p className="px-5 py-6 text-sm text-[var(--tone-danger-text)]">Unable to load vendor orders right now.</p>
-        ) : vendorOrdersQuery.data && vendorOrdersQuery.data.length > 0 ? (
+        {supplierOrdersQuery.isLoading ? (
+          <p className="px-5 py-6 text-sm text-[var(--color-text-muted)]">Loading supplier orders…</p>
+        ) : supplierOrdersQuery.isError ? (
+          <p className="px-5 py-6 text-sm text-[var(--tone-danger-text)]">Unable to load supplier orders right now.</p>
+        ) : supplierOrdersQuery.data && supplierOrdersQuery.data.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[var(--color-bg-surface-elevated)] text-[var(--color-text-muted)]">
                 <tr>
-                  <th className="px-5 py-3">Vendor order</th>
-                  <th className="px-5 py-3">Vendor</th>
+                  <th className="px-5 py-3">Supplier order</th>
+                  <th className="px-5 py-3">Supplier</th>
                   <th className="px-5 py-3">Readiness</th>
                   <th className="px-5 py-3">Expected</th>
                   <th className="px-5 py-3">Updated</th>
@@ -184,7 +192,7 @@ export function VendorOrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {vendorOrdersQuery.data.map((order) => (
+                {supplierOrdersQuery.data.map((order) => (
                   <tr key={order.vendorOrderId} className="border-t border-[var(--color-border-subtle)] align-top">
                     <td className="px-5 py-4 text-[var(--color-text-secondary)]">
                       <div className="font-medium text-[var(--color-text-primary)]">{order.itemDescription}</div>
@@ -195,7 +203,22 @@ export function VendorOrdersPage() {
                         </div>
                       ) : null}
                     </td>
-                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">{order.vendorNameSnapshot}</td>
+                    <td className="px-5 py-4 text-[var(--color-text-secondary)]">
+                      <div className="font-medium text-[var(--color-text-primary)]">
+                        {formatSupplierIdentityLabel({
+                          supplierDisplayName: order.supplierNameSnapshot,
+                          vendorDisplayName: order.vendorNameSnapshot,
+                          parentSupplierDisplayName: order.parentSupplierDisplayName,
+                          supplierUnitKind: order.supplierUnitKind,
+                        })}
+                      </div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {humanizeSupplierUnitKind(order.supplierUnitKind)}
+                      </div>
+                      <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                        {formatSupplierServiceTypes(order.supplierServiceTypes)}
+                      </div>
+                    </td>
                     <td className="px-5 py-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <DetailBadge
@@ -220,7 +243,7 @@ export function VendorOrdersPage() {
                     </td>
                     <td className="px-5 py-4 text-right">
                       <Link
-                        to={`/purchasing/vendor-orders/${order.vendorOrderId}`}
+                        to={`/purchasing/supplier-orders/${order.vendorOrderId}`}
                         className="inline-flex rounded-lg border border-[var(--color-border-strong)] px-3 py-1.5 text-xs font-semibold text-[var(--color-accent)] hover:border-[var(--color-accent-border)] hover:text-[var(--color-accent-hover)]"
                       >
                         Open detail
@@ -233,12 +256,33 @@ export function VendorOrdersPage() {
           </div>
         ) : (
           <div className="px-5 py-8 text-sm text-[var(--color-text-muted)]">
-            No vendor orders match your filters.
+            No supplier orders match your filters.
           </div>
         )}
       </section>
     </div>
   )
+}
+
+export const VendorOrdersPage = SupplierOrdersPage
+
+function formatSupplierUnitLabel(supplier: {
+  displayName: string
+  supplierKey?: string | null
+  parentSupplierDisplayName?: string | null
+  unitKind?: string | null
+}) {
+  return [
+    humanizeSupplierUnitKind(supplier.unitKind),
+    formatSupplierIdentitySummary({
+      displayName: supplier.displayName,
+      supplierKey: supplier.supplierKey,
+      parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+      supplierUnitKind: supplier.unitKind,
+    }),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 }
 
 function SummaryCard({

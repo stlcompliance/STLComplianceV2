@@ -41,6 +41,20 @@ public sealed class ProcurementCoordinationRecord : IHasTenant
 
     public Guid? PurchaseOrderId { get; set; }
 
+    public Guid? SupplierId { get; set; }
+
+    public string? SupplierKey { get; set; }
+
+    public string? SupplierDisplayName { get; set; }
+
+    public Guid? ParentSupplierId { get; set; }
+
+    public string? ParentSupplierDisplayName { get; set; }
+
+    public string? SupplierUnitKind { get; set; }
+
+    public string SupplierServiceTypesJson { get; set; } = "[]";
+
     public Guid? VendorPartyId { get; set; }
 
     public string VendorDisplayName { get; set; } = string.Empty;

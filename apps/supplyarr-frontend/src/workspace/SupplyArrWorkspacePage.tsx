@@ -2,7 +2,7 @@ import type { WorkspaceSection } from '../lib/workspaceSection'
 import { useSupplyArrWorkspaceState } from './useSupplyArrWorkspaceState'
 import { WorkspaceShell } from './WorkspaceShell'
 import { DashboardSection } from './sections/DashboardSection'
-import { PartiesSection } from './sections/PartiesSection'
+import { SuppliersSection } from './sections/SuppliersSection'
 import { ImportsSection } from './sections/ImportsSection'
 import { OnboardingSection } from './sections/OnboardingSection'
 import { CatalogSection } from './sections/CatalogSection'
@@ -30,7 +30,7 @@ export function SupplyArrWorkspacePage({ section }: { section: WorkspaceSection 
       canSearch={state.canUseForgivingSearch}
     >
       {section === 'dashboard' ? <DashboardSection state={state} /> : null}
-      {section === 'suppliers' ? <PartiesSection state={state} /> : null}
+      {section === 'suppliers' ? <SuppliersSection state={state} /> : null}
       {section === 'imports' ? <ImportsSection state={state} /> : null}
       {section === 'onboarding' ? <OnboardingSection state={state} /> : null}
       {section === 'rfqs' ? <PurchasingSection state={state} /> : null}

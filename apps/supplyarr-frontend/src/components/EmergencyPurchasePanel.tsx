@@ -12,15 +12,25 @@ import {
   managerOverrideApproveEmergencyPurchase,
 } from '../api/client'
 import type { EmergencyPurchaseResponse, PartResponse } from '../api/types'
-import { toPartPickerOptions, toPartyPickerOptions } from '../forms/controlledFormHelpers'
+import {
+  toPartPickerOptions,
+  toSupplierUnitPickerOptions,
+  type SupplierUnitPickerSource,
+} from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 interface EmergencyPurchasePanelProps {
   accessToken: string
   canCreate: boolean
   canOverrideApprove: boolean
   parts: PartResponse[]
-  vendors: { partyId: string; displayName: string; partyKey: string }[]
+  suppliers: SupplierUnitPickerSource[]
 }
 
 function statusBadgeClass(status: string): string {
@@ -41,7 +51,7 @@ export function EmergencyPurchasePanel({
   canCreate,
   canOverrideApprove,
   parts,
-  vendors,
+  suppliers,
 }: EmergencyPurchasePanelProps) {
   if (!canCreate && !canOverrideApprove) {
     return null
@@ -53,7 +63,7 @@ export function EmergencyPurchasePanel({
   const [title, setTitle] = useState('')
   const [emergencyReason, setEmergencyReason] = useState('')
   const [notes] = useState('')
-  const [vendorId, setVendorId] = useState('')
+  const [supplierUnitId, setSupplierUnitId] = useState('')
   const [partId, setPartId] = useState('')
   const [lineQty] = useState('1')
   const [justification, setJustification] = useState('')
@@ -79,13 +89,17 @@ export function EmergencyPurchasePanel({
     () => (listQuery.data ?? []).map((item) => item.requestKey),
     [listQuery.data],
   )
-  const vendorOptions = useMemo<PickerOption[]>(
-    () => toPartyPickerOptions(vendors),
-    [vendors],
+  const supplierUnitOptions = useMemo<PickerOption[]>(
+    () => toSupplierUnitPickerOptions(suppliers),
+    [suppliers],
   )
-  const selectedVendorOption = useMemo<PickerOption | undefined>(
-    () => vendorOptions.find((option) => option.value === vendorId),
-    [vendorId, vendorOptions],
+  const selectedSupplierUnitOption = useMemo<PickerOption | undefined>(
+    () => supplierUnitOptions.find((option) => option.value === supplierUnitId),
+    [supplierUnitId, supplierUnitOptions],
+  )
+  const selectedSupplierUnit = useMemo<SupplierUnitPickerSource | undefined>(
+    () => suppliers.find((supplier) => resolveSupplierId(supplier) === supplierUnitId),
+    [supplierUnitId, suppliers],
   )
   const partOptions = useMemo<PickerOption[]>(
     () => toPartPickerOptions(parts),
@@ -112,7 +126,7 @@ export function EmergencyPurchasePanel({
         requestKey,
         title,
         emergencyReason,
-        vendorPartyId: vendorId,
+        supplierId: supplierUnitId,
         notes,
         lines: partId
           ? [{ partId, quantityRequested: Number(lineQty) || 1, notes: '' }]
@@ -155,7 +169,7 @@ export function EmergencyPurchasePanel({
     >
       <h2 className="text-lg font-medium text-white">Emergency purchase</h2>
       <p className="mt-1 text-sm text-slate-400">
-        Urgent procurement from a supplier unit with expedited submit, manager override, and linked PO issue.
+        Urgent procurement from a supplier identity or sub-unit with expedited submit, manager override, and linked PO issue.
       </p>
 
       {canOverrideApprove && (pendingQuery.data?.length ?? 0) > 0 ? (
@@ -210,15 +224,26 @@ export function EmergencyPurchasePanel({
             />
           </label>
           <StaticSearchPicker
-            label="Supplier unit"
-            id="emergency-purchase-vendor"
-            value={vendorId}
-            options={vendorOptions}
-            selectedOption={selectedVendorOption}
-            onChange={setVendorId}
-            placeholder="Search supplier units…"
-            testId="emergency-purchase-vendor-picker"
+            label="Supplier identity or sub-unit"
+            id="emergency-purchase-supplier-unit"
+            value={supplierUnitId}
+            options={supplierUnitOptions}
+            selectedOption={selectedSupplierUnitOption}
+            onChange={setSupplierUnitId}
+            placeholder="Search supplier identities or sub-units…"
+            testId="emergency-purchase-supplier-unit-picker"
           />
+          {selectedSupplierUnit ? (
+            <p className="text-xs text-[var(--color-text-muted)] sm:col-span-2">
+              {formatSupplierIdentitySummary({
+                supplierDisplayName: selectedSupplierUnit.displayName,
+                supplierKey: selectedSupplierUnit.supplierKey,
+                parentSupplierDisplayName: selectedSupplierUnit.parentSupplierDisplayName,
+                supplierUnitKind: selectedSupplierUnit.unitKind,
+              })}{' '}
+              · {humanizeSupplierUnitKind(selectedSupplierUnit.unitKind)}
+            </p>
+          ) : null}
           <StaticSearchPicker
             label="Part"
             id="emergency-purchase-part"
@@ -237,7 +262,7 @@ export function EmergencyPurchasePanel({
               !requestKey ||
               !title ||
               !emergencyReason ||
-              !vendorId ||
+              !supplierUnitId ||
               !partId
             }
             onClick={() => createMutation.mutate()}
@@ -272,6 +297,12 @@ export function EmergencyPurchasePanel({
             <div>
               <div className="font-medium">{selected.title}</div>
               <div className="text-sm text-slate-400">{selected.emergencyReason}</div>
+              {selected.supplierDisplayName ? (
+                <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  {formatSupplierIdentitySummary(selected)} · {humanizeSupplierUnitKind(selected.supplierUnitKind)} ·{' '}
+                  {formatSupplierServiceTypes(selected.supplierServiceTypes)}
+                </div>
+              ) : null}
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-xs ring-1 ${statusBadgeClass(selected.status)}`}

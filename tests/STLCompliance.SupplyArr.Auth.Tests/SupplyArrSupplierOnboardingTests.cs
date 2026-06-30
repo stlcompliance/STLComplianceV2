@@ -15,8 +15,6 @@ using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -90,22 +88,22 @@ public sealed class SupplyArrSupplierOnboardingTests : IAsyncLifetime
     [Fact]
     public async Task Supplier_onboarding_end_to_end_with_compliance_documents_and_outbox()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
 
         var startRequest = Authorized(HttpMethod.Post, "/api/supplier-onboarding/start", _userToken);
-        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(vendor.PartyId, "Initial onboarding"));
+        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(supplier.SupplierId, "Initial onboarding"));
         var startResponse = await _supplyarrClient.SendAsync(startRequest);
         startResponse.EnsureSuccessStatusCode();
         var onboarding = (await startResponse.Content.ReadFromJsonAsync<SupplierOnboardingResponse>())!;
         Assert.Equal("draft", onboarding.OnboardingStatus);
 
-        await RegisterAndApproveDocumentAsync(vendor.PartyId, "W9", "w9", "W-9");
-        await RegisterAndApproveDocumentAsync(vendor.PartyId, "INS", "insurance_certificate", "Insurance");
-        await RegisterAndApproveDocumentAsync(vendor.PartyId, "AGR", "supplier_agreement", "Agreement");
+        await RegisterAndApproveDocumentAsync(supplier.SupplierId, "W9", "w9", "W-9");
+        await RegisterAndApproveDocumentAsync(supplier.SupplierId, "INS", "insurance_certificate", "Insurance");
+        await RegisterAndApproveDocumentAsync(supplier.SupplierId, "AGR", "supplier_agreement", "Agreement");
 
         var submitRequest = Authorized(
             HttpMethod.Post,
-            $"/api/supplier-onboarding/parties/{vendor.PartyId}/submit",
+            $"/api/supplier-onboarding/suppliers/{supplier.SupplierId}/submit",
             _userToken);
         submitRequest.Content = JsonContent.Create(new SubmitSupplierOnboardingForReviewRequest("Ready for review"));
         var submitResponse = await _supplyarrClient.SendAsync(submitRequest);
@@ -117,19 +115,19 @@ public sealed class SupplyArrSupplierOnboardingTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/supplier-onboarding/pending", _userToken));
         pendingResponse.EnsureSuccessStatusCode();
         var pending = (await pendingResponse.Content.ReadFromJsonAsync<List<SupplierOnboardingResponse>>())!;
-        Assert.Contains(pending, x => x.ExternalPartyId == vendor.PartyId);
+        Assert.Contains(pending, x => x.SupplierId == supplier.SupplierId);
 
         var approveResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/supplier-onboarding/parties/{vendor.PartyId}/approve", _userToken));
+            Authorized(HttpMethod.Post, $"/api/supplier-onboarding/suppliers/{supplier.SupplierId}/approve", _userToken));
         approveResponse.EnsureSuccessStatusCode();
         var approved = (await approveResponse.Content.ReadFromJsonAsync<SupplierOnboardingResponse>())!;
         Assert.Equal("approved", approved.OnboardingStatus);
 
-        var partyResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/vendors/{vendor.PartyId}", _userToken));
-        partyResponse.EnsureSuccessStatusCode();
-        var party = (await partyResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        Assert.Equal("approved", party.ApprovalStatus);
+        var supplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/suppliers/{supplier.SupplierId}", _userToken));
+        supplierResponse.EnsureSuccessStatusCode();
+        var refreshedSupplier = (await supplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        Assert.Equal("approved", refreshedSupplier.ApprovalStatus);
 
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
@@ -142,15 +140,15 @@ public sealed class SupplyArrSupplierOnboardingTests : IAsyncLifetime
     [Fact]
     public async Task Submit_for_review_fails_when_required_documents_missing()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
 
         var startRequest = Authorized(HttpMethod.Post, "/api/supplier-onboarding/start", _userToken);
-        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(vendor.PartyId, null));
+        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(supplier.SupplierId, null));
         (await _supplyarrClient.SendAsync(startRequest)).EnsureSuccessStatusCode();
 
         var submitRequest = Authorized(
             HttpMethod.Post,
-            $"/api/supplier-onboarding/parties/{vendor.PartyId}/submit",
+            $"/api/supplier-onboarding/suppliers/{supplier.SupplierId}/submit",
             _userToken);
         submitRequest.Content = JsonContent.Create(new SubmitSupplierOnboardingForReviewRequest(null));
         var submitResponse = await _supplyarrClient.SendAsync(submitRequest);
@@ -158,16 +156,16 @@ public sealed class SupplyArrSupplierOnboardingTests : IAsyncLifetime
     }
 
     private async Task RegisterAndApproveDocumentAsync(
-        Guid partyId,
+        Guid supplierId,
         string documentKey,
         string documentTypeKey,
         string title)
     {
         var registerRequest = Authorized(
             HttpMethod.Post,
-            $"/api/parties/{partyId}/compliance-documents",
+            $"/api/suppliers/{supplierId}/compliance-documents",
             _userToken);
-        registerRequest.Content = JsonContent.Create(new RegisterPartyComplianceDocumentRequest(
+        registerRequest.Content = JsonContent.Create(new SupplierComplianceDocumentRegistrationRequest(
             documentKey,
             documentTypeKey,
             title,
@@ -179,28 +177,37 @@ public sealed class SupplyArrSupplierOnboardingTests : IAsyncLifetime
             string.Empty));
         var registerResponse = await _supplyarrClient.SendAsync(registerRequest);
         registerResponse.EnsureSuccessStatusCode();
-        var doc = (await registerResponse.Content.ReadFromJsonAsync<PartyComplianceDocumentResponse>())!;
+        var doc = (await registerResponse.Content.ReadFromJsonAsync<SupplierComplianceDocumentResponse>())!;
 
         var approveResponse = await _supplyarrClient.SendAsync(
             Authorized(
                 HttpMethod.Post,
-                $"/api/parties/{partyId}/compliance-documents/{doc.DocumentId}/approve",
+                $"/api/suppliers/{supplierId}/compliance-documents/{doc.DocumentId}/approve",
                 _userToken));
         approveResponse.EnsureSuccessStatusCode();
     }
 
-    private async Task<ExternalPartyResponse> CreateVendorAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
-        var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendor.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"v-onb-{Guid.NewGuid():N}"[..12],
-            "Onboarding Vendor",
-            string.Empty,
+        var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSupplier.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"supplier-onb-{Guid.NewGuid():N}"[..20],
             null,
-            string.Empty));
-        var response = await _supplyarrClient.SendAsync(createVendor);
+            null,
+            "Onboarding Supplier",
+            "Onboarding Supplier LLC",
+            null,
+            string.Empty,
+            ["parts", "products"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var response = await _supplyarrClient.SendAsync(createSupplier);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

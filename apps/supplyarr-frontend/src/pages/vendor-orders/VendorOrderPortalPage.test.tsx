@@ -4,14 +4,18 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
 import { VendorOrderPortalPage } from './VendorOrderPortalPage'
-import { submitVendorAccessOrderStatus } from '../../api/vendorOrderClient'
+import { submitSupplierAccessOrderStatus } from '../../api/vendorOrderClient'
 
 vi.mock('../../api/vendorOrderClient', () => ({
-  getVendorAccessOrder: vi.fn().mockResolvedValue({
+  getSupplierAccessOrder: vi.fn().mockResolvedValue({
     vendorOrderId: 'vendor-order-1',
     status: 'in_progress',
     linkExpiresAt: '2026-06-20T12:00:00Z',
+    supplierNameSnapshot: 'North Yard Counter',
     vendorNameSnapshot: 'Acme Aggregates',
+    parentSupplierDisplayName: 'Acme Aggregates',
+    supplierUnitKind: 'sub_unit',
+    supplierServiceTypes: ['parts', 'maintenance'],
     itemDescription: 'Crushed stone',
     orderedQuantity: 520,
     quantityReady: 200,
@@ -59,11 +63,15 @@ vi.mock('../../api/vendorOrderClient', () => ({
       brokerDecisionTypeOptions: [],
     },
   }),
-  submitVendorAccessOrderStatus: vi.fn().mockResolvedValue({
+  submitSupplierAccessOrderStatus: vi.fn().mockResolvedValue({
     vendorOrderId: 'vendor-order-1',
     status: 'completed_ready_for_dispatch',
     linkExpiresAt: '2026-06-20T12:00:00Z',
+    supplierNameSnapshot: 'North Yard Counter',
     vendorNameSnapshot: 'Acme Aggregates',
+    parentSupplierDisplayName: 'Acme Aggregates',
+    supplierUnitKind: 'sub_unit',
+    supplierServiceTypes: ['parts', 'maintenance'],
     itemDescription: 'Crushed stone',
     orderedQuantity: 520,
     quantityReady: 520,
@@ -111,11 +119,15 @@ vi.mock('../../api/vendorOrderClient', () => ({
       brokerDecisionTypeOptions: [],
     },
   }),
-  registerVendorAccessOrderDocument: vi.fn().mockResolvedValue({
+  registerSupplierAccessOrderDocument: vi.fn().mockResolvedValue({
     vendorOrderId: 'vendor-order-1',
     status: 'in_progress',
     linkExpiresAt: '2026-06-20T12:00:00Z',
+    supplierNameSnapshot: 'North Yard Counter',
     vendorNameSnapshot: 'Acme Aggregates',
+    parentSupplierDisplayName: 'Acme Aggregates',
+    supplierUnitKind: 'sub_unit',
+    supplierServiceTypes: ['parts', 'maintenance'],
     itemDescription: 'Crushed stone',
     orderedQuantity: 520,
     quantityReady: 200,
@@ -160,16 +172,18 @@ describe('VendorOrderPortalPage', () => {
 
     render(
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/vendor-portal/orders/token-1']}>
+        <MemoryRouter initialEntries={['/supplier-order-portal/orders/token-1']}>
           <Routes>
-            <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
+            <Route path="/supplier-order-portal/orders/:token" element={<VendorOrderPortalPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Order readiness confirmation')).toBeInTheDocument()
-    expect(screen.getByText('Acme Aggregates')).toBeInTheDocument()
+    expect(await screen.findByText('Supplier-order readiness confirmation')).toBeInTheDocument()
+    expect(screen.getByText('Acme Aggregates · North Yard Counter')).toBeInTheDocument()
+    expect(screen.getByText('Sub-unit')).toBeInTheDocument()
+    expect(screen.getByText('Parts, Maintenance')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Status'), {
       target: { value: 'completed_ready_for_dispatch' },
@@ -185,9 +199,9 @@ describe('VendorOrderPortalPage', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: 'Submit readiness update' }))
 
-    const { submitVendorAccessOrderStatus } = await import('../../api/vendorOrderClient')
+    const { submitSupplierAccessOrderStatus } = await import('../../api/vendorOrderClient')
     await waitFor(() => {
-      expect(submitVendorAccessOrderStatus).toHaveBeenCalledWith(
+      expect(submitSupplierAccessOrderStatus).toHaveBeenCalledWith(
         'token-1',
         expect.objectContaining({
           newStatus: 'completed_ready_for_dispatch',
@@ -198,21 +212,21 @@ describe('VendorOrderPortalPage', () => {
   })
 
   it('shows a safe fallback when the readiness update fails', async () => {
-    vi.mocked(submitVendorAccessOrderStatus).mockRejectedValueOnce(new Error('backend exploded'))
+    vi.mocked(submitSupplierAccessOrderStatus).mockRejectedValueOnce(new Error('backend exploded'))
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/vendor-portal/orders/token-1']} >
+        <MemoryRouter initialEntries={['/supplier-order-portal/orders/token-1']} >
           <Routes>
-            <Route path="/vendor-portal/orders/:token" element={<VendorOrderPortalPage />} />
+            <Route path="/supplier-order-portal/orders/:token" element={<VendorOrderPortalPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Order readiness confirmation')).toBeInTheDocument()
+    expect(await screen.findByText('Supplier-order readiness confirmation')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit readiness update' }))
 

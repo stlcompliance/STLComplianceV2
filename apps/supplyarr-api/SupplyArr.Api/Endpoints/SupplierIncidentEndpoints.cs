@@ -14,7 +14,7 @@ public static class SupplierIncidentEndpoints
 
         group.MapGet("/", async (
             string? status,
-            Guid? externalPartyId,
+            Guid? supplierId,
             string? severity,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -26,7 +26,7 @@ public static class SupplierIncidentEndpoints
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 status,
-                externalPartyId,
+                supplierId,
                 severity,
                 cancellationToken));
         })
@@ -201,11 +201,11 @@ public static class SupplierIncidentEndpoints
         MapRoutes(app.MapGroup("/api/supplier-incidents"), string.Empty);
         MapRoutes(app.MapGroup("/api/v1/supplier-incidents"), "V1");
 
-        static void MapPartyRoutes(RouteGroupBuilder partyGroup, string nameSuffix)
+        static void MapSupplierRoutes(RouteGroupBuilder supplierGroup, string nameSuffix)
         {
-        partyGroup = partyGroup.WithTags("SupplierIncidents").RequireAuthorization();
-        partyGroup.MapGet("/", async (
-            Guid partyId,
+        supplierGroup = supplierGroup.WithTags("SupplierIncidents").RequireAuthorization();
+        supplierGroup.MapGet("/", async (
+            Guid supplierId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             SupplierIncidentService service,
@@ -213,12 +213,14 @@ public static class SupplierIncidentEndpoints
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListByPartyAsync(tenantId, partyId, cancellationToken));
+            return Results.Ok(await service.ListBySupplierAsync(tenantId, supplierId, cancellationToken));
         })
-        .WithName($"ListSupplierIncidentsByParty{nameSuffix}");
+        .WithName($"ListSupplierIncidentsBySupplier{nameSuffix}");
         }
 
-        MapPartyRoutes(app.MapGroup("/api/parties/{partyId:guid}/supplier-incidents"), string.Empty);
-        MapPartyRoutes(app.MapGroup("/api/v1/parties/{partyId:guid}/supplier-incidents"), "V1");
+        MapSupplierRoutes(app.MapGroup("/api/parties/{supplierId:guid}/supplier-incidents"), string.Empty);
+        MapSupplierRoutes(app.MapGroup("/api/v1/parties/{supplierId:guid}/supplier-incidents"), "V1");
+        MapSupplierRoutes(app.MapGroup("/api/suppliers/{supplierId:guid}/supplier-incidents"), "Supplier");
+        MapSupplierRoutes(app.MapGroup("/api/v1/suppliers/{supplierId:guid}/supplier-incidents"), "V1Supplier");
     }
 }

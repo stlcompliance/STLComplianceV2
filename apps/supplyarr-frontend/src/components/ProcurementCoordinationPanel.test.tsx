@@ -21,8 +21,15 @@ vi.mock('../api/client', () => ({
         nextActionRequired: 'Approve or reject purchase request',
         purchaseRequestId: 'pr-1',
         purchaseOrderId: null,
+        supplierId: 'vendor-1',
+        supplierKey: 'acme-north-yard',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierId: 'supplier-1',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         vendorPartyId: 'vendor-1',
-        vendorDisplayName: 'Acme Supply',
+        vendorDisplayName: 'North Yard Counter',
         documentStatus: 'submitted',
         lineCount: 1,
         quantityOrdered: 0,
@@ -49,6 +56,7 @@ describe('ProcurementCoordinationPanel', () => {
     expect(await screen.findByTestId('procurement-coordination-panel')).toBeInTheDocument()
     expect(await screen.findByText(/PR-001 · Shop restock/i)).toBeInTheDocument()
     expect(await screen.findByText(/Approve or reject purchase request/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Acme Supply · North Yard Counter/i)).toBeInTheDocument()
   })
 
   it('returns null when user cannot read coordination', () => {

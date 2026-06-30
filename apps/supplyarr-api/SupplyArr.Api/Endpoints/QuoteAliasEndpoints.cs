@@ -55,6 +55,7 @@ public static class QuoteAliasEndpoints
                 actorUserId,
                 request.RfqId,
                 new CreateVendorQuoteRequest(
+                    request.SupplierId,
                     request.VendorPartyId,
                     request.QuoteKey,
                     request.CurrencyCode,
@@ -111,4 +112,3 @@ public static class QuoteAliasEndpoints
         .WithName("SubmitQuoteV1");
     }
 }
-

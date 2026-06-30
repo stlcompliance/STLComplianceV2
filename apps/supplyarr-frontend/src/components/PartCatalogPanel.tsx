@@ -6,10 +6,17 @@ import {
   distinctCategoryOptions,
   toCatalogPickerOptions,
   toPartPickerOptions,
-  toPartyPickerOptions,
+  toSupplierUnitPickerOptions,
+  type SupplierUnitPickerSource,
   UOM_OPTIONS,
 } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 const PART_SOURCE_TYPE_OPTIONS = [
   { value: 'unknown', label: 'Unknown / legacy' },
@@ -44,10 +51,10 @@ interface PartCatalogPanelProps {
   partSourceType: string
   partSourceLabel: string
   partSourceNotes: string
-  vendorPartNumber: string
+  supplierPartNumber: string
   selectedPartId: string
-  selectedVendorId: string
-  vendors: { partyId: string; displayName: string; partyKey: string }[]
+  selectedSupplierUnitId: string
+  suppliers: SupplierUnitPickerSource[]
   onCatalogKeyChange: (value: string) => void
   onCatalogNameChange: (value: string) => void
   onCatalogDescriptionChange: (value: string) => void
@@ -64,17 +71,17 @@ interface PartCatalogPanelProps {
   onPartSourceTypeChange: (value: string) => void
   onPartSourceLabelChange: (value: string) => void
   onPartSourceNotesChange: (value: string) => void
-  onVendorPartNumberChange: (value: string) => void
+  onSupplierPartNumberChange: (value: string) => void
   onSelectedPartIdChange: (value: string) => void
-  onSelectedVendorIdChange: (value: string) => void
+  onSelectedSupplierUnitIdChange: (value: string) => void
   onCreateCatalog: () => void
   onCreatePart: () => void
   onCreatePartSource: () => void
-  onLinkVendor: () => void
+  onLinkSupplierSource: () => void
   isCreatingCatalog: boolean
   isCreatingPart: boolean
   isCreatingPartSource: boolean
-  isLinkingVendor: boolean
+  isLinkingSupplierSource: boolean
 }
 
 function statusBadgeClass(status: string): string {
@@ -104,10 +111,10 @@ export function PartCatalogPanel({
   partSourceType,
   partSourceLabel,
   partSourceNotes,
-  vendorPartNumber,
+  supplierPartNumber,
   selectedPartId,
-  selectedVendorId,
-  vendors,
+  selectedSupplierUnitId,
+  suppliers,
   onCatalogKeyChange,
   onCatalogNameChange,
   onCatalogDescriptionChange,
@@ -124,17 +131,17 @@ export function PartCatalogPanel({
   onPartSourceTypeChange,
   onPartSourceLabelChange,
   onPartSourceNotesChange,
-  onVendorPartNumberChange,
+  onSupplierPartNumberChange,
   onSelectedPartIdChange,
-  onSelectedVendorIdChange,
+  onSelectedSupplierUnitIdChange,
   onCreateCatalog,
   onCreatePart,
   onCreatePartSource,
-  onLinkVendor,
+  onLinkSupplierSource,
   isCreatingCatalog,
   isCreatingPart,
   isCreatingPartSource,
-  isLinkingVendor,
+  isLinkingSupplierSource,
 }: PartCatalogPanelProps) {
   const catalogKeys = useMemo(() => catalogs.map((catalog) => catalog.catalogKey), [catalogs])
   const partKeys = useMemo(() => parts.map((part) => part.partKey), [parts])
@@ -159,13 +166,17 @@ export function PartCatalogPanel({
     () => partOptions.find((option) => option.value === selectedPartId),
     [partOptions, selectedPartId],
   )
-  const vendorOptions = useMemo<PickerOption[]>(
-    () => toPartyPickerOptions(vendors),
-    [vendors],
+  const supplierOptions = useMemo<PickerOption[]>(
+    () => toSupplierUnitPickerOptions(suppliers),
+    [suppliers],
   )
-  const selectedVendorOption = useMemo<PickerOption | undefined>(
-    () => vendorOptions.find((option) => option.value === selectedVendorId),
-    [selectedVendorId, vendorOptions],
+  const selectedSupplierUnitOption = useMemo<PickerOption | undefined>(
+    () => supplierOptions.find((option) => option.value === selectedSupplierUnitId),
+    [selectedSupplierUnitId, supplierOptions],
+  )
+  const selectedSupplierUnit = useMemo(
+    () => suppliers.find((supplier) => resolveSupplierId(supplier) === selectedSupplierUnitId),
+    [selectedSupplierUnitId, suppliers],
   )
 
   if (isLoading) {
@@ -244,12 +255,47 @@ export function PartCatalogPanel({
                     </div>
                   ) : null}
                   {part.vendorLinks.length > 0 ? (
-                    <p className="mt-2 text-slate-400">
-                      Supplier source: {part.vendorLinks.find((v) => v.isPreferred)?.partyDisplayName ?? part.vendorLinks[0].partyDisplayName}
-                      {part.vendorLinks[0].vendorPartNumber
-                        ? ` (${part.vendorLinks[0].vendorPartNumber})`
-                        : ''}
-                    </p>
+                    <div className="mt-3 space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Supplier sources
+                      </p>
+                      <ul className="space-y-2">
+                        {part.vendorLinks.map((link) => (
+                          <li
+                            key={link.linkId}
+                            className={`rounded-md border px-3 py-2 text-sm ${
+                              link.isPreferred
+                                ? 'border-sky-500/40 bg-sky-950/20'
+                                : 'border-slate-800 bg-slate-950/40'
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div>
+                                <div className="font-medium text-slate-100">
+                                  {formatSupplierIdentitySummary({
+                                    supplierDisplayName: link.supplierDisplayName,
+                                    supplierKey: link.supplierKey,
+                                    parentSupplierDisplayName: link.parentSupplierDisplayName,
+                                    supplierUnitKind: link.supplierUnitKind,
+                                  })}
+                                </div>
+                                <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                                  {humanizeSupplierUnitKind(link.supplierUnitKind)} · {link.vendorPartNumber}
+                                </div>
+                              </div>
+                              {link.isPreferred ? (
+                                <span className="rounded-full border border-sky-500/40 bg-sky-500/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-sky-200">
+                                  Preferred
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-xs text-slate-400">
+                              {formatSupplierOperationalContext(link)}
+                            </p>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : null}
                   {(!part.sources || part.sources.length === 0) && part.vendorLinks.length === 0 ? (
                     <p className="mt-2 text-slate-400">No sources configured.</p>
@@ -462,34 +508,45 @@ export function PartCatalogPanel({
               testId="vendor-link-part-picker"
             />
             <StaticSearchPicker
-              id="vendor-link-vendor"
-              label="Supplier unit"
-              value={selectedVendorId}
-              onChange={onSelectedVendorIdChange}
-              options={vendorOptions}
-              selectedOption={selectedVendorOption}
-              placeholder="Select supplier unit"
-              testId="vendor-link-vendor-picker"
+              id="vendor-link-supplier-unit"
+              label="Supplier identity or sub-unit"
+              value={selectedSupplierUnitId}
+              onChange={onSelectedSupplierUnitIdChange}
+              options={supplierOptions}
+              selectedOption={selectedSupplierUnitOption}
+              placeholder="Select supplier identity or sub-unit"
+              testId="vendor-link-supplier-unit-picker"
             />
+            {selectedSupplierUnit ? (
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {formatSupplierIdentitySummary({
+                  supplierDisplayName: selectedSupplierUnit.displayName,
+                  supplierKey: selectedSupplierUnit.supplierKey,
+                  parentSupplierDisplayName: selectedSupplierUnit.parentSupplierDisplayName,
+                  supplierUnitKind: selectedSupplierUnit.unitKind,
+                })}{' '}
+                · {humanizeSupplierUnitKind(selectedSupplierUnit.unitKind)}
+              </p>
+            ) : null}
             <label htmlFor="vendor-part-number" className="block text-sm text-slate-400">
               Supplier part number
               <input
                 id="vendor-part-number"
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                 placeholder="Supplier part number"
-                value={vendorPartNumber}
-                onChange={(e) => onVendorPartNumberChange(e.target.value)}
+                value={supplierPartNumber}
+                onChange={(e) => onSupplierPartNumberChange(e.target.value)}
               />
             </label>
             <button
               type="button"
               className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
               disabled={
-                isLinkingVendor || !selectedPartId || !selectedVendorId || !vendorPartNumber.trim()
+                isLinkingSupplierSource || !selectedPartId || !selectedSupplierUnitId || !supplierPartNumber.trim()
               }
-              onClick={onLinkVendor}
+              onClick={onLinkSupplierSource}
             >
-              {isLinkingVendor ? 'Linking…' : 'Add supplier source'}
+              {isLinkingSupplierSource ? 'Linking…' : 'Add supplier source'}
             </button>
           </div>
         </div>

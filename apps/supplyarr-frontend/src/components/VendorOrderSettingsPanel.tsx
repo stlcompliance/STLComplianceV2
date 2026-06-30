@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getVendorOrderSettings, upsertVendorOrderSettings } from '../api/vendorOrderClient'
+import { getSupplierOrderSettings, upsertSupplierOrderSettings } from '../api/vendorOrderClient'
 
-export function VendorOrderSettingsPanel({
+export function SupplierOrderSettingsPanel({
   accessToken,
   canManage,
 }: {
@@ -10,19 +10,19 @@ export function VendorOrderSettingsPanel({
 }) {
   const queryClient = useQueryClient()
   const settingsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-settings', accessToken],
-    queryFn: () => getVendorOrderSettings(accessToken),
+    queryKey: ['supplyarr-supplier-order-settings', accessToken],
+    queryFn: () => getSupplierOrderSettings(accessToken),
     enabled: canManage,
   })
 
   const mutation = useMutation({
     mutationFn: (payload: { allowDestinationSummaryInVendorPortal: boolean; magicLinkTtlHours: number }) =>
-      upsertVendorOrderSettings(accessToken, payload),
+      upsertSupplierOrderSettings(accessToken, payload),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-order-settings', accessToken] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-order-settings', accessToken] })
     },
     onError: (error) => {
-      console.error('Vendor order settings update failed', error)
+      console.error('Supplier order settings update failed', error)
     },
   })
 
@@ -42,7 +42,7 @@ export function VendorOrderSettingsPanel({
   const settings = settingsQuery.data
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="vendor-order-settings-panel">
+    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="supplier-order-settings-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Supplier-order portal settings</h2>
@@ -94,3 +94,5 @@ export function VendorOrderSettingsPanel({
     </section>
   )
 }
+
+export const VendorOrderSettingsPanel = SupplierOrderSettingsPanel

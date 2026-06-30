@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
@@ -7,9 +8,10 @@ using STLCompliance.Shared.Contracts;
 
 namespace SupplyArr.Api.Services;
 
-public sealed class VendorReportService(SupplyArrDbContext db)
+public class SupplierReportService(SupplyArrDbContext db)
 {
     private const int DetailListLimit = 25;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly string[] PostedReceivingStatuses =
     [
         ReceivingReceiptStatuses.Posted,
@@ -25,58 +27,80 @@ public sealed class VendorReportService(SupplyArrDbContext db)
         ReceivingReceiptStatuses.Closed,
     ];
 
-    public async Task<VendorReportSummaryResponse> GetSummaryAsync(
+    public Task<SupplierReportSummaryResponse> GetSummaryAsync(
+        Guid tenantId,
+        string? approvalStatus,
+        bool? activeOnly,
+        CancellationToken cancellationToken = default)
+    {
+        return GetSupplierSummaryAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+    }
+
+    public async Task<VendorReportSummaryResponse> GetVendorSummaryAsync(
+        Guid tenantId,
+        string? approvalStatus,
+        bool? activeOnly,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = await GetSupplierSummaryAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+        return new VendorReportSummaryResponse(
+            summary.GeneratedAt,
+            summary.ApprovalStatusCounts
+                .Select(x => new VendorApprovalStatusSummaryResponse(x.ApprovalStatus, x.Count))
+                .ToList(),
+            summary.Suppliers.Select(MapVendorSummary).ToList());
+    }
+
+    public async Task<SupplierReportSummaryResponse> GetSupplierSummaryAsync(
         Guid tenantId,
         string? approvalStatus,
         bool? activeOnly,
         CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var vendors = await db.ExternalParties
+        var suppliers = await db.ExternalParties
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.PartyType == "vendor")
+            .Where(x => x.TenantId == tenantId && x.PartyType == "supplier")
+            .Include(x => x.ParentExternalParty)
             .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
 
         if (!string.IsNullOrWhiteSpace(approvalStatus))
         {
             var normalized = approvalStatus.Trim().ToLowerInvariant();
-            vendors = vendors
+            suppliers = suppliers
                 .Where(x => string.Equals(x.ApprovalStatus, normalized, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
         if (activeOnly == true)
         {
-            vendors = vendors
+            suppliers = suppliers
                 .Where(x => string.Equals(x.Status, "active", StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
-        var vendorIds = vendors.Select(x => x.Id).ToList();
-        if (vendorIds.Count == 0)
+        var supplierIds = suppliers.Select(x => x.Id).ToList();
+        if (supplierIds.Count == 0)
         {
-            return new VendorReportSummaryResponse(
-                now,
-                [],
-                []);
+            return new SupplierReportSummaryResponse(now, [], []);
         }
 
-        var vendorLinks = await db.PartVendorLinks
+        var supplierLinks = await db.PartVendorLinks
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.ExternalPartyId))
-            .Select(x => new VendorLinkSummaryRow(
+            .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.ExternalPartyId))
+            .Select(x => new SupplierLinkSummaryRow(
                 x.Id,
                 x.ExternalPartyId,
                 x.PartId,
                 x.CatalogLeadTimeDays))
             .ToListAsync(cancellationToken);
 
-        var vendorLinkIds = vendorLinks.Select(x => x.PartVendorLinkId).ToList();
+        var supplierLinkIds = supplierLinks.Select(x => x.PartVendorLinkId).ToList();
         var leadTimeSnapshots = await db.PartVendorLeadTimeSnapshots
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && vendorLinkIds.Contains(x.PartVendorLinkId)
+                && supplierLinkIds.Contains(x.PartVendorLinkId)
                 && x.EffectiveFrom <= now
                 && (x.EffectiveTo == null || x.EffectiveTo > now))
             .Select(x => new
@@ -97,24 +121,24 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                     .First()
                     .LeadTimeDays);
 
-        var vendorLinkByPart = vendorLinks
+        var supplierLinkByPart = supplierLinks
             .GroupBy(x => (x.ExternalPartyId, x.PartId))
             .ToDictionary(g => g.Key, g => g.First());
 
-        var scorecardMetricsByVendor = BuildVendorScorecardMetrics(
+        var scorecardMetricsBySupplier = BuildSupplierScorecardMetrics(
             tenantId,
-            vendorIds,
-            vendorLinks,
-            vendorLinkByPart,
+            supplierIds,
+            supplierLinks,
+            supplierLinkByPart,
             leadTimeByLinkId);
 
         var linkStats = await db.PartVendorLinks
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.ExternalPartyId))
+            .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.ExternalPartyId))
             .GroupBy(x => x.ExternalPartyId)
             .Select(g => new
             {
-                VendorPartyId = g.Key,
+                SupplierId = g.Key,
                 Count = g.Count(),
                 PreferredCount = g.Count(x => x.IsPreferred),
             })
@@ -124,18 +148,18 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
                 && x.VendorPartyId != null
-                && vendorIds.Contains(x.VendorPartyId.Value)
+                && supplierIds.Contains(x.VendorPartyId.Value)
                 && (x.Status == PurchaseRequestStatuses.Draft || x.Status == PurchaseRequestStatuses.Submitted))
             .GroupBy(x => x.VendorPartyId!.Value)
-            .Select(g => new { VendorPartyId = g.Key, Count = g.Count() })
+            .Select(g => new { SupplierId = g.Key, Count = g.Count() })
             .ToListAsync(cancellationToken);
 
         var poStats = await db.PurchaseOrders
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.VendorPartyId))
+            .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.VendorPartyId))
             .Select(x => new
             {
-                x.VendorPartyId,
+                SupplierId = x.VendorPartyId,
                 x.Status,
                 x.UpdatedAt,
                 LineQuantity = x.Lines.Sum(line => line.QuantityOrdered),
@@ -143,7 +167,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             .ToListAsync(cancellationToken);
 
         var poGrouped = poStats
-            .GroupBy(x => x.VendorPartyId)
+            .GroupBy(x => x.SupplierId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
         var receivingStats = await (
@@ -152,15 +176,15 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 on receipt.PurchaseOrderId equals purchaseOrder.Id
             where receipt.TenantId == tenantId
                 && PostedReceivingStatuses.Contains(receipt.Status)
-                && vendorIds.Contains(purchaseOrder.VendorPartyId)
+                && supplierIds.Contains(purchaseOrder.VendorPartyId)
             select new
             {
-                purchaseOrder.VendorPartyId,
+                SupplierId = purchaseOrder.VendorPartyId,
                 receipt.PostedAt,
             }).ToListAsync(cancellationToken);
 
         var receivingGrouped = receivingStats
-            .GroupBy(x => x.VendorPartyId)
+            .GroupBy(x => x.SupplierId)
             .ToDictionary(
                 g => g.Key,
                 g => new
@@ -175,24 +199,24 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 on backorder.PurchaseOrderId equals purchaseOrder.Id
             where backorder.TenantId == tenantId
                 && backorder.Status == BackorderStatuses.Open
-                && vendorIds.Contains(purchaseOrder.VendorPartyId)
+                && supplierIds.Contains(purchaseOrder.VendorPartyId)
             group backorder by purchaseOrder.VendorPartyId
             into grouped
-            select new { VendorPartyId = grouped.Key, Count = grouped.Count() })
+            select new { SupplierId = grouped.Key, Count = grouped.Count() })
             .ToListAsync(cancellationToken);
 
-        var linkByVendor = linkStats.ToDictionary(x => x.VendorPartyId);
-        var prByVendor = prStats.ToDictionary(x => x.VendorPartyId);
-        var backorderByVendor = backorderStats.ToDictionary(x => x.VendorPartyId);
+        var linkBySupplier = linkStats.ToDictionary(x => x.SupplierId);
+        var prBySupplier = prStats.ToDictionary(x => x.SupplierId);
+        var backorderBySupplier = backorderStats.ToDictionary(x => x.SupplierId);
 
-        var items = vendors.Select(vendor =>
+        var items = suppliers.Select(supplier =>
         {
-            linkByVendor.TryGetValue(vendor.Id, out var links);
-            prByVendor.TryGetValue(vendor.Id, out var openPr);
-            backorderByVendor.TryGetValue(vendor.Id, out var openBackorders);
-            poGrouped.TryGetValue(vendor.Id, out var pos);
-            receivingGrouped.TryGetValue(vendor.Id, out var receiving);
-            scorecardMetricsByVendor.TryGetValue(vendor.Id, out var scorecardMetrics);
+            linkBySupplier.TryGetValue(supplier.Id, out var links);
+            prBySupplier.TryGetValue(supplier.Id, out var openPr);
+            backorderBySupplier.TryGetValue(supplier.Id, out var openBackorders);
+            poGrouped.TryGetValue(supplier.Id, out var pos);
+            receivingGrouped.TryGetValue(supplier.Id, out var receiving);
+            scorecardMetricsBySupplier.TryGetValue(supplier.Id, out var scorecardMetrics);
 
             var openPoCount = pos?.Count(x => PurchaseOrderStatuses.Open.Contains(x.Status)) ?? 0;
             var issuedPoCount = pos?.Count(x =>
@@ -203,12 +227,16 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 .Sum(x => x.LineQuantity) ?? 0m;
             var lastPoAt = pos?.Max(x => (DateTimeOffset?)x.UpdatedAt);
 
-            return new VendorReportSummaryItemResponse(
-                vendor.Id,
-                vendor.PartyKey,
-                vendor.DisplayName,
-                vendor.ApprovalStatus,
-                vendor.Status,
+            return new SupplierReportSummaryItemResponse(
+                supplier.Id,
+                supplier.PartyKey,
+                supplier.DisplayName,
+                supplier.ParentExternalPartyId,
+                supplier.ParentExternalParty?.DisplayName,
+                supplier.UnitKind,
+                ParseServiceTypes(supplier.ServiceTypesJson),
+                supplier.ApprovalStatus,
+                supplier.Status,
                 links?.Count ?? 0,
                 links?.PreferredCount ?? 0,
                 openPr?.Count ?? 0,
@@ -225,37 +253,59 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 receiving?.LastPostedAt);
         }).ToList();
 
-        var approvalCounts = vendors
+        var approvalCounts = suppliers
             .GroupBy(x => x.ApprovalStatus)
-            .Select(g => new VendorApprovalStatusSummaryResponse(g.Key, g.Count()))
+            .Select(g => new SupplierApprovalStatusSummaryResponse(g.Key, g.Count()))
             .OrderBy(x => x.ApprovalStatus)
             .ToList();
 
-        return new VendorReportSummaryResponse(now, approvalCounts, items);
+        return new SupplierReportSummaryResponse(now, approvalCounts, items);
     }
 
-    public async Task<VendorReportDetailResponse> GetDetailAsync(
+    public Task<SupplierReportDetailResponse> GetDetailAsync(
+        Guid tenantId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default)
+    {
+        return GetSupplierDetailAsync(tenantId, supplierId, cancellationToken);
+    }
+
+    public async Task<VendorReportDetailResponse> GetVendorDetailAsync(
         Guid tenantId,
         Guid vendorPartyId,
         CancellationToken cancellationToken = default)
     {
-        var vendor = await db.ExternalParties
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == vendorPartyId && x.PartyType == "vendor",
-                cancellationToken)
-            ?? throw new StlApiException("vendor.not_found", "Vendor was not found.", 404);
+        var detail = await GetSupplierDetailAsync(tenantId, vendorPartyId, cancellationToken);
+        return new VendorReportDetailResponse(
+            MapVendorSummary(detail.Summary),
+            detail.RecentPurchaseRequests.Select(MapVendorPurchaseRequest).ToList(),
+            detail.RecentPurchaseOrders.Select(MapVendorPurchaseOrder).ToList(),
+            detail.PartLinks.Select(MapVendorPartLink).ToList());
+    }
 
-        var summaryResponse = await GetSummaryAsync(tenantId, null, null, cancellationToken);
-        var summary = summaryResponse.Vendors.FirstOrDefault(x => x.VendorPartyId == vendorPartyId)
-            ?? MapSingleVendorSummary(vendor);
+    public async Task<SupplierReportDetailResponse> GetSupplierDetailAsync(
+        Guid tenantId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default)
+    {
+        var supplier = await db.ExternalParties
+            .AsNoTracking()
+            .Include(x => x.ParentExternalParty)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId && x.Id == supplierId && x.PartyType == "supplier",
+                cancellationToken)
+            ?? throw new StlApiException("supplier.not_found", "Supplier was not found.", 404);
+
+        var summaryResponse = await GetSupplierSummaryAsync(tenantId, null, null, cancellationToken);
+        var summary = summaryResponse.Suppliers.FirstOrDefault(x => x.SupplierId == supplierId)
+            ?? MapSingleSupplierSummary(supplier);
 
         var recentPurchaseRequests = await db.PurchaseRequests
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.VendorPartyId == vendorPartyId)
+            .Where(x => x.TenantId == tenantId && x.VendorPartyId == supplierId)
             .OrderByDescending(x => x.UpdatedAt)
             .Take(DetailListLimit)
-            .Select(x => new VendorReportPurchaseRequestRowResponse(
+            .Select(x => new SupplierReportPurchaseRequestRowResponse(
                 x.Id,
                 x.RequestKey,
                 x.Title,
@@ -265,10 +315,10 @@ public sealed class VendorReportService(SupplyArrDbContext db)
 
         var recentPurchaseOrders = await db.PurchaseOrders
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.VendorPartyId == vendorPartyId)
+            .Where(x => x.TenantId == tenantId && x.VendorPartyId == supplierId)
             .OrderByDescending(x => x.UpdatedAt)
             .Take(DetailListLimit)
-            .Select(x => new VendorReportPurchaseOrderRowResponse(
+            .Select(x => new SupplierReportPurchaseOrderRowResponse(
                 x.Id,
                 x.OrderKey,
                 x.Title,
@@ -281,12 +331,19 @@ public sealed class VendorReportService(SupplyArrDbContext db)
 
         var partLinks = await db.PartVendorLinks
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == vendorPartyId)
+            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == supplierId)
             .OrderByDescending(x => x.IsPreferred)
             .ThenBy(x => x.VendorPartNumber)
             .Take(DetailListLimit)
-            .Select(x => new VendorReportPartLinkRowResponse(
+            .Select(x => new SupplierReportPartLinkRowResponse(
                 x.Id,
+                x.ExternalParty.Id,
+                x.ExternalParty.PartyKey,
+                x.ExternalParty.DisplayName,
+                x.ExternalParty.ParentExternalPartyId,
+                x.ExternalParty.ParentExternalParty != null ? x.ExternalParty.ParentExternalParty.DisplayName : null,
+                x.ExternalParty.UnitKind,
+                ParseServiceTypes(x.ExternalParty.ServiceTypesJson),
                 x.PartId,
                 x.Part.PartKey,
                 x.Part.DisplayName,
@@ -296,16 +353,38 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 x.CatalogAvailabilityStatus))
             .ToListAsync(cancellationToken);
 
-        return new VendorReportDetailResponse(summary, recentPurchaseRequests, recentPurchaseOrders, partLinks);
+        return new SupplierReportDetailResponse(
+            summary,
+            recentPurchaseRequests,
+            recentPurchaseOrders,
+            partLinks);
     }
 
-    public async Task<(string ContentType, string FileName, byte[] Content)> ExportSummaryCsvAsync(
+    public Task<(string ContentType, string FileName, byte[] Content)> ExportSupplierSummaryCsvAsync(
         Guid tenantId,
         string? approvalStatus,
         bool? activeOnly,
         CancellationToken cancellationToken = default)
     {
-        var summary = await GetSummaryAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+        return ExportSupplierSummaryCsvInternalAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+    }
+
+    public Task<(string ContentType, string FileName, byte[] Content)> ExportSummaryCsvAsync(
+        Guid tenantId,
+        string? approvalStatus,
+        bool? activeOnly,
+        CancellationToken cancellationToken = default)
+    {
+        return ExportSupplierSummaryCsvInternalAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+    }
+
+    public async Task<(string ContentType, string FileName, byte[] Content)> ExportVendorSummaryCsvAsync(
+        Guid tenantId,
+        string? approvalStatus,
+        bool? activeOnly,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = await GetVendorSummaryAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
         var builder = new StringBuilder();
         builder.AppendLine(
             "partyKey,displayName,approvalStatus,status,partVendorLinkCount,preferredPartLinkCount,openPurchaseRequestCount,openPurchaseOrderCount,issuedPurchaseOrderCount,postedReceivingReceiptCount,openBackorderCount,openPurchaseOrderLineQuantity,averageLeadTimeDays,leadTimeSampleCount,onTimeDeliveryRate,onTimeDeliverySampleCount,lastPurchaseOrderAt,lastReceivingPostedAt");
@@ -353,13 +432,77 @@ public sealed class VendorReportService(SupplyArrDbContext db)
         return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
     }
 
-    private static VendorReportSummaryItemResponse MapSingleVendorSummary(ExternalParty vendor) =>
+    private async Task<(string ContentType, string FileName, byte[] Content)> ExportSupplierSummaryCsvInternalAsync(
+        Guid tenantId,
+        string? approvalStatus,
+        bool? activeOnly,
+        CancellationToken cancellationToken)
+    {
+        var summary = await GetSupplierSummaryAsync(tenantId, approvalStatus, activeOnly, cancellationToken);
+        var builder = new StringBuilder();
+        builder.AppendLine(
+            "supplierKey,supplierDisplayName,parentSupplierDisplayName,supplierUnitKind,supplierServiceTypes,approvalStatus,status,partVendorLinkCount,preferredPartLinkCount,openPurchaseRequestCount,openPurchaseOrderCount,issuedPurchaseOrderCount,postedReceivingReceiptCount,openBackorderCount,openPurchaseOrderLineQuantity,averageLeadTimeDays,leadTimeSampleCount,onTimeDeliveryRate,onTimeDeliverySampleCount,lastPurchaseOrderAt,lastReceivingPostedAt");
+
+        foreach (var supplier in summary.Suppliers)
+        {
+            builder.Append(CsvEscape(supplier.SupplierKey));
+            builder.Append(',');
+            builder.Append(CsvEscape(supplier.SupplierDisplayName));
+            builder.Append(',');
+            builder.Append(CsvEscape(supplier.ParentSupplierDisplayName ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(supplier.SupplierUnitKind));
+            builder.Append(',');
+            builder.Append(CsvEscape(string.Join("; ", supplier.SupplierServiceTypes)));
+            builder.Append(',');
+            builder.Append(CsvEscape(supplier.ApprovalStatus));
+            builder.Append(',');
+            builder.Append(CsvEscape(supplier.Status));
+            builder.Append(',');
+            builder.Append(supplier.PartVendorLinkCount);
+            builder.Append(',');
+            builder.Append(supplier.PreferredPartLinkCount);
+            builder.Append(',');
+            builder.Append(supplier.OpenPurchaseRequestCount);
+            builder.Append(',');
+            builder.Append(supplier.OpenPurchaseOrderCount);
+            builder.Append(',');
+            builder.Append(supplier.IssuedPurchaseOrderCount);
+            builder.Append(',');
+            builder.Append(supplier.PostedReceivingReceiptCount);
+            builder.Append(',');
+            builder.Append(supplier.OpenBackorderCount);
+            builder.Append(',');
+            builder.Append(supplier.OpenPurchaseOrderLineQuantity);
+            builder.Append(',');
+            builder.Append(supplier.AverageLeadTimeDays?.ToString() ?? string.Empty);
+            builder.Append(',');
+            builder.Append(supplier.LeadTimeSampleCount);
+            builder.Append(',');
+            builder.Append(supplier.OnTimeDeliveryRate?.ToString() ?? string.Empty);
+            builder.Append(',');
+            builder.Append(supplier.OnTimeDeliverySampleCount);
+            builder.Append(',');
+            builder.Append(supplier.LastPurchaseOrderAt?.ToString("O") ?? string.Empty);
+            builder.Append(',');
+            builder.AppendLine(supplier.LastReceivingPostedAt?.ToString("O") ?? string.Empty);
+        }
+
+        var fileName = $"supplyarr-supplier-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
+        return ("text/csv", fileName, Encoding.UTF8.GetBytes(builder.ToString()));
+    }
+
+    private static SupplierReportSummaryItemResponse MapSingleSupplierSummary(ExternalParty supplier) =>
         new(
-            vendor.Id,
-            vendor.PartyKey,
-            vendor.DisplayName,
-            vendor.ApprovalStatus,
-            vendor.Status,
+            supplier.Id,
+            supplier.PartyKey,
+            supplier.DisplayName,
+            supplier.ParentExternalPartyId,
+            supplier.ParentExternalParty?.DisplayName,
+            supplier.UnitKind,
+            ParseServiceTypes(supplier.ServiceTypesJson),
+            supplier.ApprovalStatus,
+            supplier.Status,
             0,
             0,
             0,
@@ -375,6 +518,71 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             null,
             null);
 
+    private static VendorReportSummaryItemResponse MapVendorSummary(SupplierReportSummaryItemResponse supplier) =>
+        new(
+            supplier.SupplierId,
+            supplier.SupplierKey,
+            supplier.SupplierDisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplierDisplayName,
+            supplier.SupplierUnitKind,
+            supplier.SupplierServiceTypes,
+            supplier.ApprovalStatus,
+            supplier.Status,
+            supplier.PartVendorLinkCount,
+            supplier.PreferredPartLinkCount,
+            supplier.OpenPurchaseRequestCount,
+            supplier.OpenPurchaseOrderCount,
+            supplier.IssuedPurchaseOrderCount,
+            supplier.PostedReceivingReceiptCount,
+            supplier.OpenBackorderCount,
+            supplier.OpenPurchaseOrderLineQuantity,
+            supplier.AverageLeadTimeDays,
+            supplier.LeadTimeSampleCount,
+            supplier.OnTimeDeliveryRate,
+            supplier.OnTimeDeliverySampleCount,
+            supplier.LastPurchaseOrderAt,
+            supplier.LastReceivingPostedAt);
+
+    private static VendorReportPurchaseRequestRowResponse MapVendorPurchaseRequest(
+        SupplierReportPurchaseRequestRowResponse purchaseRequest) =>
+        new(
+            purchaseRequest.PurchaseRequestId,
+            purchaseRequest.RequestKey,
+            purchaseRequest.Title,
+            purchaseRequest.Status,
+            purchaseRequest.UpdatedAt);
+
+    private static VendorReportPurchaseOrderRowResponse MapVendorPurchaseOrder(
+        SupplierReportPurchaseOrderRowResponse purchaseOrder) =>
+        new(
+            purchaseOrder.PurchaseOrderId,
+            purchaseOrder.OrderKey,
+            purchaseOrder.Title,
+            purchaseOrder.Status,
+            purchaseOrder.LineCount,
+            purchaseOrder.QuantityOrdered,
+            purchaseOrder.QuantityReceived,
+            purchaseOrder.UpdatedAt);
+
+    private static VendorReportPartLinkRowResponse MapVendorPartLink(SupplierReportPartLinkRowResponse partLink) =>
+        new(
+            partLink.PartVendorLinkId,
+            partLink.SupplierId,
+            partLink.SupplierKey,
+            partLink.SupplierDisplayName,
+            partLink.ParentSupplierId,
+            partLink.ParentSupplierDisplayName,
+            partLink.SupplierUnitKind,
+            partLink.SupplierServiceTypes,
+            partLink.PartId,
+            partLink.PartKey,
+            partLink.PartDisplayName,
+            partLink.VendorPartNumber,
+            partLink.IsPreferred,
+            partLink.CatalogUnitPrice,
+            partLink.CatalogAvailabilityStatus);
+
     private static string CsvEscape(string value)
     {
         if (value.Contains('"') || value.Contains(',') || value.Contains('\n'))
@@ -385,26 +593,43 @@ public sealed class VendorReportService(SupplyArrDbContext db)
         return value;
     }
 
-    private sealed record VendorLinkSummaryRow(
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private sealed record SupplierLinkSummaryRow(
         Guid PartVendorLinkId,
         Guid ExternalPartyId,
         Guid PartId,
         int? CatalogLeadTimeDays);
 
-    private sealed record VendorScorecardMetrics(
+    private sealed record SupplierScorecardMetrics(
         int? AverageLeadTimeDays,
         int LeadTimeSampleCount,
         int? OnTimeDeliveryRate,
         int OnTimeDeliverySampleCount);
 
-    private Dictionary<Guid, VendorScorecardMetrics> BuildVendorScorecardMetrics(
+    private Dictionary<Guid, SupplierScorecardMetrics> BuildSupplierScorecardMetrics(
         Guid tenantId,
-        IReadOnlyCollection<Guid> vendorIds,
-        IReadOnlyCollection<VendorLinkSummaryRow> vendorLinks,
-        IReadOnlyDictionary<(Guid ExternalPartyId, Guid PartId), VendorLinkSummaryRow> vendorLinkByPart,
+        IReadOnlyCollection<Guid> supplierIds,
+        IReadOnlyCollection<SupplierLinkSummaryRow> supplierLinks,
+        IReadOnlyDictionary<(Guid ExternalPartyId, Guid PartId), SupplierLinkSummaryRow> supplierLinkByPart,
         IReadOnlyDictionary<Guid, int> leadTimeByLinkId)
     {
-        var vendorLeadTimeByVendor = vendorLinks
+        var leadTimeBySupplier = supplierLinks
             .GroupBy(x => x.ExternalPartyId)
             .ToDictionary(
                 g => g.Key,
@@ -416,7 +641,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                         .Select(x => x!.Value)
                         .ToList();
 
-                    return new VendorScorecardMetrics(
+                    return new SupplierScorecardMetrics(
                         leadTimes.Count > 0 ? (int?)Math.Round(leadTimes.Average()) : null,
                         leadTimes.Count,
                         null,
@@ -426,12 +651,12 @@ public sealed class VendorReportService(SupplyArrDbContext db)
         var purchaseOrders = db.PurchaseOrders
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && vendorIds.Contains(x.VendorPartyId)
+                && supplierIds.Contains(x.VendorPartyId)
                 && x.IssuedAt != null)
             .Select(x => new
             {
                 x.Id,
-                x.VendorPartyId,
+                SupplierId = x.VendorPartyId,
                 IssuedAt = x.IssuedAt!.Value,
             })
             .ToList();
@@ -467,16 +692,16 @@ public sealed class VendorReportService(SupplyArrDbContext db)
             .GroupBy(x => x.PurchaseOrderId)
             .ToDictionary(g => g.Key, g => g.Min(x => x.PostedAt));
 
-        var metricsByVendor = vendorLeadTimeByVendor
+        var metricsBySupplier = leadTimeBySupplier
             .ToDictionary(x => x.Key, x => x.Value);
 
-        foreach (var vendorGroup in purchaseOrders.GroupBy(x => x.VendorPartyId))
+        foreach (var supplierGroup in purchaseOrders.GroupBy(x => x.SupplierId))
         {
-            vendorLeadTimeByVendor.TryGetValue(vendorGroup.Key, out var leadTimeMetrics);
+            leadTimeBySupplier.TryGetValue(supplierGroup.Key, out var leadTimeMetrics);
 
             var onTimeSampleCount = 0;
             var onTimeCount = 0;
-            foreach (var purchaseOrder in vendorGroup)
+            foreach (var purchaseOrder in supplierGroup)
             {
                 if (!lineByPurchaseOrderId.TryGetValue(purchaseOrder.Id, out var lines))
                 {
@@ -486,7 +711,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 var lineLeadTimes = lines
                     .Select(line =>
                         ResolveLeadTimeDays(
-                            vendorLinkByPart.TryGetValue((purchaseOrder.VendorPartyId, line.PartId), out var link)
+                            supplierLinkByPart.TryGetValue((purchaseOrder.SupplierId, line.PartId), out var link)
                                 ? link
                                 : null,
                             leadTimeByLinkId))
@@ -512,7 +737,7 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 }
             }
 
-            metricsByVendor[vendorGroup.Key] = new VendorScorecardMetrics(
+            metricsBySupplier[supplierGroup.Key] = new SupplierScorecardMetrics(
                 leadTimeMetrics?.AverageLeadTimeDays,
                 leadTimeMetrics?.LeadTimeSampleCount ?? 0,
                 onTimeSampleCount > 0
@@ -521,23 +746,25 @@ public sealed class VendorReportService(SupplyArrDbContext db)
                 onTimeSampleCount);
         }
 
-        return metricsByVendor;
+        return metricsBySupplier;
     }
 
     private static int? ResolveLeadTimeDays(
-        VendorLinkSummaryRow? vendorLink,
+        SupplierLinkSummaryRow? supplierLink,
         IReadOnlyDictionary<Guid, int> leadTimeByLinkId)
     {
-        if (vendorLink is null)
+        if (supplierLink is null)
         {
             return null;
         }
 
-        if (leadTimeByLinkId.TryGetValue(vendorLink.PartVendorLinkId, out var leadTimeDays))
+        if (leadTimeByLinkId.TryGetValue(supplierLink.PartVendorLinkId, out var leadTimeDays))
         {
             return leadTimeDays;
         }
 
-        return vendorLink.CatalogLeadTimeDays is > 0 ? vendorLink.CatalogLeadTimeDays : null;
+        return supplierLink.CatalogLeadTimeDays is > 0 ? supplierLink.CatalogLeadTimeDays : null;
     }
 }
+
+public sealed class VendorReportService(SupplyArrDbContext db) : SupplierReportService(db);

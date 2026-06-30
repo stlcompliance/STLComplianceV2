@@ -88,9 +88,18 @@ describe('PartCatalogPanel', () => {
             vendorLinks: [
               {
                 linkId: '44444444-4444-4444-4444-444444444444',
-                partyId: '11111111-1111-1111-1111-111111111111',
-                partyKey: 'acme-parts',
-                partyDisplayName: 'Acme Parts Co.',
+                supplierId: '11111111-1111-1111-1111-111111111111',
+                supplierKey: 'acme-north',
+                supplierDisplayName: 'North Yard Counter',
+                parentSupplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                parentSupplierKey: 'acme-parts',
+                parentSupplierDisplayName: 'Acme Parts Co.',
+                supplierUnitKind: 'sub_unit',
+                supplierServiceTypes: ['parts', 'maintenance'],
+                supplierAddressLine1: '1200 North Yard Rd',
+                supplierLocality: 'Tulsa',
+                supplierRegionCode: 'OK',
+                supplierPostalCode: '74101',
                 vendorPartNumber: 'V-FLT-001',
                 isPreferred: true,
                 catalogUnitPrice: null,
@@ -124,10 +133,10 @@ describe('PartCatalogPanel', () => {
         partSourceType="unknown"
         partSourceLabel=""
         partSourceNotes=""
-        vendorPartNumber=""
+        supplierPartNumber=""
         selectedPartId=""
-        selectedVendorId=""
-        vendors={[]}
+        selectedSupplierUnitId=""
+        suppliers={[]}
         onCatalogKeyChange={() => {}}
         onCatalogNameChange={() => {}}
         onCatalogDescriptionChange={() => {}}
@@ -144,23 +153,25 @@ describe('PartCatalogPanel', () => {
         onPartSourceTypeChange={() => {}}
         onPartSourceLabelChange={() => {}}
         onPartSourceNotesChange={() => {}}
-        onVendorPartNumberChange={() => {}}
+        onSupplierPartNumberChange={() => {}}
         onSelectedPartIdChange={() => {}}
-        onSelectedVendorIdChange={() => {}}
+        onSelectedSupplierUnitIdChange={() => {}}
         onCreateCatalog={() => {}}
         onCreatePart={() => {}}
         onCreatePartSource={() => {}}
-        onLinkVendor={() => {}}
+        onLinkSupplierSource={() => {}}
         isCreatingCatalog={false}
         isCreatingPart={false}
         isCreatingPartSource={false}
-        isLinkingVendor={false}
+        isLinkingSupplierSource={false}
       />,
     )
 
     expect(screen.getByText('Primary Oil Filter')).toBeInTheDocument()
     expect(screen.getByText('OEM Filters')).toBeInTheDocument()
-    expect(screen.getByText(/Acme Parts Co/)).toBeInTheDocument()
+    expect(screen.getByText(/Acme Parts Co\. · North Yard Counter \(acme-north\)/)).toBeInTheDocument()
+    expect(screen.getByText(/Sub-unit · V-FLT-001/)).toBeInTheDocument()
+    expect(screen.getByText(/Tulsa, OK, 74101 · Parts, Maintenance/)).toBeInTheDocument()
     expect(screen.getByText('Rebuild bench')).toBeInTheDocument()
   })
 
@@ -187,10 +198,18 @@ describe('PartCatalogPanel', () => {
         partSourceType="unknown"
         partSourceLabel=""
         partSourceNotes=""
-        vendorPartNumber=""
+        supplierPartNumber=""
         selectedPartId=""
-        selectedVendorId=""
-        vendors={[]}
+        selectedSupplierUnitId=""
+        suppliers={[
+          {
+            supplierId: '11111111-1111-1111-1111-111111111111',
+            displayName: 'North Yard Counter',
+            supplierKey: 'acme-north',
+            parentSupplierDisplayName: 'Acme Parts Co.',
+            unitKind: 'sub_unit',
+          },
+        ]}
         onCatalogKeyChange={() => {}}
         onCatalogNameChange={() => {}}
         onCatalogDescriptionChange={() => {}}
@@ -207,17 +226,17 @@ describe('PartCatalogPanel', () => {
         onPartSourceTypeChange={() => {}}
         onPartSourceLabelChange={() => {}}
         onPartSourceNotesChange={() => {}}
-        onVendorPartNumberChange={() => {}}
+        onSupplierPartNumberChange={() => {}}
         onSelectedPartIdChange={() => {}}
-        onSelectedVendorIdChange={() => {}}
+        onSelectedSupplierUnitIdChange={() => {}}
         onCreateCatalog={() => {}}
         onCreatePart={() => {}}
         onCreatePartSource={() => {}}
-        onLinkVendor={() => {}}
+        onLinkSupplierSource={() => {}}
         isCreatingCatalog={false}
         isCreatingPart={false}
         isCreatingPartSource={false}
-        isLinkingVendor={false}
+        isLinkingSupplierSource={false}
       />,
     )
 
@@ -228,6 +247,6 @@ describe('PartCatalogPanel', () => {
     expect(screen.getByTestId('part-catalog-picker')).toBeInTheDocument()
     expect(screen.getByTestId('part-source-part-picker')).toBeInTheDocument()
     expect(screen.getByTestId('vendor-link-part-picker')).toBeInTheDocument()
-    expect(screen.getByTestId('vendor-link-vendor-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('vendor-link-supplier-unit-picker')).toBeInTheDocument()
   })
 })

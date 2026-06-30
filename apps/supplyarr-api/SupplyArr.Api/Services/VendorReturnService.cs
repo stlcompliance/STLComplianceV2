@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 using SupplyArr.Api.Contracts;
 
@@ -14,7 +15,7 @@ namespace SupplyArr.Api.Services;
 
 
 
-public sealed class VendorReturnService(
+public class SupplierReturnService(
 
     SupplyArrDbContext db,
 
@@ -24,13 +25,13 @@ public sealed class VendorReturnService(
 
 {
 
-    public async Task<IReadOnlyList<VendorReturnResponse>> ListAsync(
+    public async Task<IReadOnlyList<SupplierReturnResponse>> ListAsync(
 
         Guid tenantId,
 
         string? status = null,
 
-        Guid? vendorPartyId = null,
+        Guid? supplierId = null,
 
         Guid? purchaseOrderId = null,
 
@@ -45,6 +46,7 @@ public sealed class VendorReturnService(
             .AsNoTracking()
 
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
 
             .Include(x => x.PurchaseOrder)
 
@@ -78,11 +80,11 @@ public sealed class VendorReturnService(
 
 
 
-        if (vendorPartyId is not null)
+        if (supplierId is not null)
 
         {
 
-            query = query.Where(x => x.VendorPartyId == vendorPartyId);
+            query = query.Where(x => x.VendorPartyId == supplierId);
 
         }
 
@@ -122,7 +124,7 @@ public sealed class VendorReturnService(
 
 
 
-    public async Task<VendorReturnResponse> GetAsync(
+    public async Task<SupplierReturnResponse> GetAsync(
 
         Guid tenantId,
 
@@ -140,13 +142,13 @@ public sealed class VendorReturnService(
 
 
 
-    public async Task<VendorReturnResponse> CreateFromStockAsync(
+    public async Task<SupplierReturnResponse> CreateFromStockAsync(
 
         Guid tenantId,
 
         Guid actorUserId,
 
-        CreateVendorReturnFromStockRequest request,
+        CreateSupplierReturnFromStockRequest request,
 
         CancellationToken cancellationToken = default)
 
@@ -168,7 +170,12 @@ public sealed class VendorReturnService(
 
 
 
-        var vendor = await LoadVendorAsync(tenantId, request.VendorPartyId, cancellationToken);
+        var selectedSupplierId = request.SupplierUnitId ?? request.SupplierId ?? request.VendorPartyId
+            ?? throw new StlApiException(
+                "return.supplier.required",
+                "Supplier is required.",
+                400);
+        var supplier = await LoadSupplierAsync(tenantId, selectedSupplierId, cancellationToken);
 
         var bin = await LoadActiveBinAsync(tenantId, request.InventoryBinId, cancellationToken);
 
@@ -194,7 +201,7 @@ public sealed class VendorReturnService(
 
             SourceType = VendorReturnSourceTypes.Stock,
 
-            VendorPartyId = vendor.Id,
+            VendorPartyId = supplier.Id,
 
             PurchaseOrderId = null,
 
@@ -210,7 +217,7 @@ public sealed class VendorReturnService(
 
             UpdatedAt = now,
 
-            VendorParty = vendor,
+            VendorParty = supplier,
 
             InventoryBin = bin
 
@@ -290,7 +297,7 @@ public sealed class VendorReturnService(
 
 
 
-    public async Task<VendorReturnResponse> CreateFromPurchaseOrderLineAsync(
+    public async Task<SupplierReturnResponse> CreateFromPurchaseOrderLineAsync(
 
         Guid tenantId,
 
@@ -298,7 +305,7 @@ public sealed class VendorReturnService(
 
         Guid purchaseOrderLineId,
 
-        CreateVendorReturnFromPurchaseOrderLineRequest request,
+        CreateSupplierReturnFromPurchaseOrderLineRequest request,
 
         CancellationToken cancellationToken = default)
 
@@ -456,7 +463,7 @@ public sealed class VendorReturnService(
 
             UpdatedAt = now,
 
-            VendorParty = await LoadVendorAsync(tenantId, line.PurchaseOrder.VendorPartyId, cancellationToken),
+            VendorParty = await LoadSupplierAsync(tenantId, line.PurchaseOrder.VendorPartyId, cancellationToken),
 
             PurchaseOrder = line.PurchaseOrder,
 
@@ -532,7 +539,7 @@ public sealed class VendorReturnService(
 
 
 
-    public async Task<VendorReturnResponse> PostAsync(
+    public async Task<SupplierReturnResponse> PostAsync(
 
         Guid tenantId,
 
@@ -666,7 +673,7 @@ public sealed class VendorReturnService(
 
 
 
-    public async Task<VendorReturnResponse> CancelAsync(
+    public async Task<SupplierReturnResponse> CancelAsync(
 
         Guid tenantId,
 
@@ -674,7 +681,7 @@ public sealed class VendorReturnService(
 
         Guid returnId,
 
-        CancelVendorReturnRequest request,
+        CancelSupplierReturnRequest request,
 
         CancellationToken cancellationToken = default)
 
@@ -764,21 +771,23 @@ public sealed class VendorReturnService(
 
 
 
-    private async Task<ExternalParty> LoadVendorAsync(
+    private async Task<ExternalParty> LoadSupplierAsync(
 
         Guid tenantId,
 
-        Guid vendorPartyId,
+        Guid supplierId,
 
         CancellationToken cancellationToken) =>
 
-        await db.ExternalParties.FirstOrDefaultAsync(
+        await db.ExternalParties
+            .Include(x => x.ParentExternalParty)
+            .FirstOrDefaultAsync(
 
             x => x.TenantId == tenantId
 
-                && x.Id == vendorPartyId
+                && x.Id == supplierId
 
-                && x.PartyType == "vendor",
+                && x.PartyType == "supplier",
 
             cancellationToken)
 
@@ -786,7 +795,7 @@ public sealed class VendorReturnService(
 
             "return.vendor.not_found",
 
-            "Vendor was not found.",
+            "Supplier was not found.",
 
             404);
 
@@ -931,6 +940,7 @@ public sealed class VendorReturnService(
             .AsNoTracking()
 
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
 
             .Include(x => x.PurchaseOrder)
 
@@ -975,6 +985,7 @@ public sealed class VendorReturnService(
         await db.VendorReturns
 
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
 
             .Include(x => x.PurchaseOrder)
 
@@ -1008,7 +1019,7 @@ public sealed class VendorReturnService(
 
 
 
-    private static VendorReturnResponse Map(VendorReturn entity)
+    private static SupplierReturnResponse Map(VendorReturn entity)
 
     {
 
@@ -1027,6 +1038,20 @@ public sealed class VendorReturnService(
             entity.Status,
 
             entity.SourceType,
+
+            entity.VendorPartyId,
+
+            entity.VendorParty.PartyKey,
+
+            entity.VendorParty.DisplayName,
+
+            entity.VendorParty.ParentExternalPartyId,
+
+            entity.VendorParty.ParentExternalParty?.DisplayName,
+
+            entity.VendorParty.UnitKind,
+
+            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
 
             entity.VendorPartyId,
 
@@ -1084,9 +1109,28 @@ public sealed class VendorReturnService(
 
     }
 
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
 
-    private static VendorReturnLineResponse MapLine(VendorReturnLine line) =>
+
+    private static SupplierReturnLineResponse MapLine(VendorReturnLine line) =>
 
         new(
 
@@ -1247,4 +1291,10 @@ public sealed class VendorReturnService(
     }
 
 }
+
+public sealed class VendorReturnService(
+    SupplyArrDbContext db,
+    PartStockService stock,
+    ISupplyArrAuditService audit)
+    : SupplierReturnService(db, stock, audit);
 

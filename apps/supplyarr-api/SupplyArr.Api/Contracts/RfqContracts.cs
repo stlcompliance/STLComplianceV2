@@ -14,15 +14,22 @@ public sealed record RfqLineResponse(
 
 public sealed record RfqVendorInvitationResponse(
     Guid InvitationId,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string Status,
     DateTimeOffset InvitedAt,
     DateTimeOffset PortalAccessCodeIssuedAt,
     DateTimeOffset PortalAccessExpiresAt,
     string PortalAccessCode,
-    string PortalUrl);
+    string PortalUrl,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName);
 
 public sealed record VendorQuoteLineResponse(
     Guid QuoteLineId,
@@ -39,9 +46,13 @@ public sealed record VendorQuoteLineResponse(
 public sealed record VendorQuoteResponse(
     Guid VendorQuoteId,
     Guid RfqId,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string QuoteKey,
     string Status,
     string CurrencyCode,
@@ -51,7 +62,13 @@ public sealed record VendorQuoteResponse(
     DateTimeOffset? SubmittedAt,
     IReadOnlyList<VendorQuoteLineResponse> Lines,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName)
+{
+    public Guid SupplierQuoteId => VendorQuoteId;
+}
 
 public sealed record RfqResponse(
     Guid RfqId,
@@ -61,8 +78,13 @@ public sealed record RfqResponse(
     string Status,
     Guid RequestedByUserId,
     DateTimeOffset? SubmittedAt,
-    Guid? AwardedVendorPartyId,
-    string? AwardedVendorDisplayName,
+    Guid? AwardedSupplierId,
+    string? AwardedSupplierKey,
+    string? AwardedSupplierDisplayName,
+    Guid? AwardedParentSupplierId,
+    string? AwardedParentSupplierDisplayName,
+    string? AwardedSupplierUnitKind,
+    IReadOnlyList<string> AwardedSupplierServiceTypes,
     Guid? SelectedVendorQuoteId,
     Guid? PurchaseRequestId,
     DateTimeOffset? AwardedAt,
@@ -70,7 +92,13 @@ public sealed record RfqResponse(
     IReadOnlyList<RfqVendorInvitationResponse> Invitations,
     IReadOnlyList<VendorQuoteResponse> Quotes,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid? AwardedVendorPartyId,
+    string? AwardedVendorPartyKey,
+    string? AwardedVendorDisplayName)
+{
+    public Guid? SelectedSupplierQuoteId => SelectedVendorQuoteId;
+}
 
 public sealed record CreateRfqRequest(
     string RfqKey,
@@ -96,14 +124,44 @@ public sealed record UpdateRfqLineRequest(
     decimal QuantityRequested,
     string Notes);
 
-public sealed record InviteRfqVendorsRequest(
-    IReadOnlyList<Guid> VendorPartyIds);
+public record InviteRfqSuppliersRequest(
+    IReadOnlyList<Guid>? SupplierIds = null,
+    IReadOnlyList<Guid>? VendorPartyIds = null);
 
-public sealed record CreateVendorQuoteRequest(
-    Guid VendorPartyId,
+public sealed record InviteRfqVendorsRequest(
+    IReadOnlyList<Guid>? SupplierIds = null,
+    IReadOnlyList<Guid>? VendorPartyIds = null)
+    : InviteRfqSuppliersRequest(SupplierIds, VendorPartyIds);
+
+public record CreateSupplierQuoteRequest(
+    Guid? SupplierId,
     string QuoteKey,
     string CurrencyCode,
-    string Notes);
+    string Notes,
+    Guid? VendorPartyId = null);
+
+public sealed record CreateVendorQuoteRequest(
+    Guid? SupplierId,
+    Guid? VendorPartyId,
+    string QuoteKey,
+    string CurrencyCode,
+    string Notes)
+    : CreateSupplierQuoteRequest(
+        SupplierId,
+        QuoteKey,
+        CurrencyCode,
+        Notes,
+        VendorPartyId)
+{
+    public CreateVendorQuoteRequest(
+        Guid vendorPartyId,
+        string quoteKey,
+        string currencyCode,
+        string notes)
+        : this(vendorPartyId, vendorPartyId, quoteKey, currencyCode, notes)
+    {
+    }
+}
 
 public sealed record VendorPortalRfqLineResponse(
     Guid RfqLineId,
@@ -126,9 +184,13 @@ public sealed record VendorPortalRfqResponse(
     string Title,
     string Notes,
     string Status,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     Guid InvitationId,
     string InvitationStatus,
     DateTimeOffset InvitedAt,
@@ -143,7 +205,13 @@ public sealed record VendorPortalRfqResponse(
     DateTimeOffset? SubmittedAt,
     IReadOnlyList<VendorPortalRfqLineResponse> Lines,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName)
+{
+    public Guid? SupplierQuoteId => VendorQuoteId;
+}
 
 public sealed record VendorPortalCreateQuoteRequest(
     string QuoteKey,
@@ -163,14 +231,25 @@ public sealed record UpsertVendorQuoteLineRequest(
 
 public sealed record RfqQuoteLineMetric(
     Guid VendorQuoteId,
-    Guid VendorPartyId,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string QuoteStatus,
     decimal? UnitPrice,
     decimal? LineTotal,
     int? LeadTimeDays,
     bool IsLowestPrice,
-    bool IsFastestLeadTime);
+    bool IsFastestLeadTime,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName)
+{
+    public Guid SupplierQuoteId => VendorQuoteId;
+}
 
 public sealed record RfqLineComparisonRow(
     Guid RfqLineId,
@@ -183,13 +262,24 @@ public sealed record RfqLineComparisonRow(
 
 public sealed record RfqQuoteSummary(
     Guid VendorQuoteId,
-    Guid VendorPartyId,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string Status,
     decimal? TotalAmount,
     int? MaxLeadTimeDays,
     int LinesQuoted,
-    bool IsSelected);
+    bool IsSelected,
+    Guid VendorPartyId,
+    string VendorPartyKey,
+    string VendorDisplayName)
+{
+    public Guid SupplierQuoteId => VendorQuoteId;
+}
 
 public sealed record RfqQuoteComparisonResponse(
     Guid RfqId,
@@ -198,7 +288,10 @@ public sealed record RfqQuoteComparisonResponse(
     IReadOnlyList<RfqLineComparisonRow> Lines,
     IReadOnlyList<RfqQuoteSummary> QuoteSummaries);
 
-public sealed record SelectVendorQuoteRequest(Guid VendorQuoteId);
+public record SelectSupplierQuoteRequest(Guid SupplierQuoteId);
+
+public sealed record SelectVendorQuoteRequest(Guid VendorQuoteId)
+    : SelectSupplierQuoteRequest(VendorQuoteId);
 
 public sealed record CreatePurchaseRequestFromRfqRequest(
     string RequestKey,

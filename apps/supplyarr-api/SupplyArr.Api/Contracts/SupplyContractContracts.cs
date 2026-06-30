@@ -5,6 +5,13 @@ public sealed record SupplyContractResponse(
     string ContractKey,
     string ContractType,
     string Title,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     Guid VendorPartyId,
     string VendorPartyKey,
     string VendorDisplayName,
@@ -27,7 +34,8 @@ public sealed record CreateSupplyContractRequest(
     string ContractKey,
     string ContractType,
     string Title,
-    Guid VendorPartyId,
+    Guid? SupplierId,
+    Guid? VendorPartyId,
     DateTimeOffset? EffectiveAt,
     DateTimeOffset? ExpiresAt,
     DateTimeOffset? RenewalAt,
@@ -38,4 +46,76 @@ public sealed record CreateSupplyContractRequest(
     string ServiceLevelAgreement,
     string ApprovalStatus,
     string Status,
-    string Notes);
+    string Notes)
+{
+    public CreateSupplyContractRequest(
+        string contractKey,
+        string contractType,
+        string title,
+        Guid? vendorPartyId,
+        DateTimeOffset? effectiveAt,
+        DateTimeOffset? expiresAt,
+        DateTimeOffset? renewalAt,
+        string paymentTerms,
+        string freightTerms,
+        string warrantyTerms,
+        decimal? minimumSpend,
+        string serviceLevelAgreement,
+        string approvalStatus,
+        string status)
+        : this(
+            contractKey,
+            contractType,
+            title,
+            vendorPartyId,
+            vendorPartyId,
+            effectiveAt,
+            expiresAt,
+            renewalAt,
+            paymentTerms,
+            freightTerms,
+            warrantyTerms,
+            minimumSpend,
+            serviceLevelAgreement,
+            approvalStatus,
+            status,
+            string.Empty)
+    {
+    }
+
+    public CreateSupplyContractRequest(
+        string contractKey,
+        string contractType,
+        string title,
+        Guid? vendorPartyId,
+        DateTimeOffset? effectiveAt,
+        DateTimeOffset? expiresAt,
+        DateTimeOffset? renewalAt,
+        string paymentTerms,
+        string freightTerms,
+        string warrantyTerms,
+        decimal? minimumSpend,
+        string serviceLevelAgreement,
+        string approvalStatus,
+        string status,
+        string notes)
+        : this(
+            contractKey,
+            contractType,
+            title,
+            vendorPartyId,
+            vendorPartyId,
+            effectiveAt,
+            expiresAt,
+            renewalAt,
+            paymentTerms,
+            freightTerms,
+            warrantyTerms,
+            minimumSpend,
+            serviceLevelAgreement,
+            approvalStatus,
+            status,
+            notes)
+    {
+    }
+}

@@ -8,7 +8,7 @@ public static class ReportIndexEndpoints
     [
         new { Key = "dashboard", Path = "/api/v1/dashboard" },
         new { Key = "readiness", Path = "/api/v1/supply-readiness/dashboard" },
-        new { Key = "vendors", Path = "/api/v1/reports/vendors" },
+        new { Key = "suppliers", Path = "/api/v1/reports/suppliers" },
         new { Key = "parts-inventory", Path = "/api/v1/reports/parts-inventory" },
         new { Key = "purchasing", Path = "/api/v1/reports/purchasing" },
         new { Key = "compliance", Path = "/api/v1/reports/compliance" }

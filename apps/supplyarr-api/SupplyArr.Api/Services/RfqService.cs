@@ -5,6 +5,7 @@ using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -16,6 +17,7 @@ public sealed class RfqService(
     ISupplyArrAuditService audit)
 {
     public static readonly Guid VendorPortalActorUserId = Guid.Parse("00000000-0000-0000-0000-0000000000f0");
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<RfqResponse>> ListAsync(
         Guid tenantId,
@@ -24,10 +26,10 @@ public sealed class RfqService(
     {
         var query = db.Rfqs
             .AsNoTracking()
-            .Include(x => x.AwardedVendorParty)
+            .Include(x => x.AwardedVendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines).ThenInclude(x => x.Part)
-            .Include(x => x.VendorInvitations).ThenInclude(x => x.VendorParty)
-            .Include(x => x.VendorQuotes).ThenInclude(x => x.VendorParty)
+            .Include(x => x.VendorInvitations).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.VendorQuotes).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.VendorQuotes).ThenInclude(x => x.Lines).ThenInclude(x => x.RfqLine).ThenInclude(x => x.Part)
             .Where(x => x.TenantId == tenantId);
         if (!string.IsNullOrWhiteSpace(status))
@@ -222,11 +224,24 @@ public sealed class RfqService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
-    public async Task<RfqResponse> InviteVendorsAsync(
+    public Task<RfqResponse> InviteVendorsAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid rfqId,
         InviteRfqVendorsRequest request,
+        CancellationToken cancellationToken = default) =>
+        InviteSuppliersAsync(
+            tenantId,
+            actorUserId,
+            rfqId,
+            new InviteRfqSuppliersRequest(request.SupplierIds, request.VendorPartyIds),
+            cancellationToken);
+
+    public async Task<RfqResponse> InviteSuppliersAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid rfqId,
+        InviteRfqSuppliersRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, rfqId, cancellationToken);
@@ -235,9 +250,10 @@ public sealed class RfqService(
             throw new StlApiException("rfq.not_open", "Vendors can only be invited on submitted RFQs.", 409);
         }
 
-        if (request.VendorPartyIds is not { Count: > 0 })
+        var selectedSupplierIds = request.SupplierIds ?? request.VendorPartyIds;
+        if (selectedSupplierIds is not { Count: > 0 })
         {
-            throw new StlApiException("rfq.invitations.required", "At least one vendor is required.", 400);
+            throw new StlApiException("rfq.invitations.required", "At least one supplier is required.", 400);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -246,10 +262,10 @@ public sealed class RfqService(
             .Select(x => x.VendorPartyId)
             .ToListAsync(cancellationToken);
 
-        foreach (var vendorPartyId in request.VendorPartyIds.Distinct())
+        foreach (var supplierId in selectedSupplierIds.Distinct())
         {
-            await EnsureVendorPartyAsync(tenantId, vendorPartyId, cancellationToken);
-            if (existingVendorIds.Contains(vendorPartyId))
+            await EnsureSupplierAllowedAsync(tenantId, supplierId, cancellationToken);
+            if (existingVendorIds.Contains(supplierId))
             {
                 continue;
             }
@@ -263,7 +279,7 @@ public sealed class RfqService(
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 RfqId = entity.Id,
-                VendorPartyId = vendorPartyId,
+                VendorPartyId = supplierId,
                 Status = RfqInvitationStatuses.Invited,
                 InvitedAt = now,
                 InvitedByUserId = actorUserId,
@@ -271,7 +287,7 @@ public sealed class RfqService(
                 PortalAccessCodeIssuedAt = portalAccessIssuedAt,
                 PortalAccessCodeExpiresAt = portalAccessExpiresAt,
             });
-            existingVendorIds.Add(vendorPartyId);
+            existingVendorIds.Add(supplierId);
         }
 
         entity.UpdatedAt = now;
@@ -291,7 +307,7 @@ public sealed class RfqService(
             IntegrationOutboxEventKinds.RfqVendorsInvited,
             "rfq",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"RFQ vendors invited: {entity.RfqKey}"),
+            new IntegrationOutboxPayload(tenantId, $"RFQ suppliers invited: {entity.RfqKey}"),
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
@@ -322,6 +338,7 @@ public sealed class RfqService(
             VendorPortalActorUserId,
             rfqId,
             new CreateVendorQuoteRequest(
+                invitation.VendorPartyId,
                 invitation.VendorPartyId,
                 request.QuoteKey,
                 request.CurrencyCode,
@@ -365,11 +382,29 @@ public sealed class RfqService(
             cancellationToken);
     }
 
-    public async Task<VendorQuoteResponse> CreateVendorQuoteAsync(
+    public Task<VendorQuoteResponse> CreateVendorQuoteAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid rfqId,
         CreateVendorQuoteRequest request,
+        CancellationToken cancellationToken = default) =>
+        CreateSupplierQuoteAsync(
+            tenantId,
+            actorUserId,
+            rfqId,
+            new CreateSupplierQuoteRequest(
+                request.SupplierId,
+                request.QuoteKey,
+                request.CurrencyCode,
+                request.Notes,
+                request.VendorPartyId),
+            cancellationToken);
+
+    public async Task<VendorQuoteResponse> CreateSupplierQuoteAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid rfqId,
+        CreateSupplierQuoteRequest request,
         CancellationToken cancellationToken = default)
     {
         var rfq = await LoadTrackedAsync(tenantId, rfqId, cancellationToken);
@@ -378,15 +413,17 @@ public sealed class RfqService(
             throw new StlApiException("rfq.not_open", "Quotes can only be recorded on submitted RFQs.", 409);
         }
 
-        await EnsureVendorPartyAsync(tenantId, request.VendorPartyId, cancellationToken);
+        var selectedSupplierId = request.SupplierId ?? request.VendorPartyId
+            ?? throw new StlApiException("rfq.quote.supplier_required", "Supplier is required.", 400);
+        await EnsureSupplierAllowedAsync(tenantId, selectedSupplierId, cancellationToken);
         var invited = await db.RfqVendorInvitations.AnyAsync(
-            x => x.TenantId == tenantId && x.RfqId == rfqId && x.VendorPartyId == request.VendorPartyId,
+            x => x.TenantId == tenantId && x.RfqId == rfqId && x.VendorPartyId == selectedSupplierId,
             cancellationToken);
         if (!invited)
         {
             throw new StlApiException(
                 "rfq.vendor.not_invited",
-                "Vendor must be invited before recording a quote.",
+                "Supplier must be invited before recording a quote.",
                 409);
         }
 
@@ -401,13 +438,13 @@ public sealed class RfqService(
         if (await db.VendorQuotes.AnyAsync(
                 x => x.TenantId == tenantId
                     && x.RfqId == rfqId
-                    && x.VendorPartyId == request.VendorPartyId
+                    && x.VendorPartyId == selectedSupplierId
                     && x.Status != VendorQuoteStatuses.Withdrawn,
                 cancellationToken))
         {
             throw new StlApiException(
                 "rfq.quote.vendor_exists",
-                "An active quote already exists for this vendor.",
+                "An active quote already exists for this supplier.",
                 409);
         }
 
@@ -417,7 +454,7 @@ public sealed class RfqService(
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             RfqId = rfq.Id,
-            VendorPartyId = request.VendorPartyId,
+            VendorPartyId = selectedSupplierId,
             QuoteKey = quoteKey,
             Status = VendorQuoteStatuses.Draft,
             CurrencyCode = NormalizeCurrencyCode(request.CurrencyCode),
@@ -592,13 +629,21 @@ public sealed class RfqService(
                 metrics.Add(new RfqQuoteLineMetric(
                     item.Quote.Id,
                     item.Quote.VendorPartyId,
+                    item.Quote.VendorParty.PartyKey,
                     item.Quote.VendorParty.DisplayName,
+                    item.Quote.VendorParty.ParentExternalPartyId,
+                    item.Quote.VendorParty.ParentExternalParty?.DisplayName,
+                    item.Quote.VendorParty.UnitKind,
+                    ParseServiceTypes(item.Quote.VendorParty.ServiceTypesJson),
                     item.Quote.Status,
                     line.UnitPrice,
                     lineTotal,
                     line.LeadTimeDays,
                     lowestPrice is not null && line.Id == lowestPrice.Id,
-                    fastestLead is not null && line.Id == fastestLead.Id));
+                    fastestLead is not null && line.Id == fastestLead.Id,
+                    item.Quote.VendorPartyId,
+                    item.Quote.VendorParty.PartyKey,
+                    item.Quote.VendorParty.DisplayName));
             }
 
             lineRows.Add(new RfqLineComparisonRow(
@@ -615,12 +660,20 @@ public sealed class RfqService(
             .Select(q => new RfqQuoteSummary(
                 q.Id,
                 q.VendorPartyId,
+                q.VendorParty.PartyKey,
                 q.VendorParty.DisplayName,
+                q.VendorParty.ParentExternalPartyId,
+                q.VendorParty.ParentExternalParty?.DisplayName,
+                q.VendorParty.UnitKind,
+                ParseServiceTypes(q.VendorParty.ServiceTypesJson),
                 q.Status,
                 q.TotalAmount,
                 q.LeadTimeDays,
                 q.Lines.Count,
-                q.Id == rfq.SelectedVendorQuoteId))
+                q.Id == rfq.SelectedVendorQuoteId,
+                q.VendorPartyId,
+                q.VendorParty.PartyKey,
+                q.VendorParty.DisplayName))
             .ToList();
 
         return new RfqQuoteComparisonResponse(
@@ -631,11 +684,24 @@ public sealed class RfqService(
             summaries);
     }
 
-    public async Task<RfqResponse> SelectVendorQuoteAsync(
+    public Task<RfqResponse> SelectVendorQuoteAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid rfqId,
         SelectVendorQuoteRequest request,
+        CancellationToken cancellationToken = default) =>
+        SelectSupplierQuoteAsync(
+            tenantId,
+            actorUserId,
+            rfqId,
+            new SelectSupplierQuoteRequest(request.VendorQuoteId),
+            cancellationToken);
+
+    public async Task<RfqResponse> SelectSupplierQuoteAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid rfqId,
+        SelectSupplierQuoteRequest request,
         CancellationToken cancellationToken = default)
     {
         var rfq = await LoadTrackedAsync(tenantId, rfqId, cancellationToken);
@@ -644,8 +710,8 @@ public sealed class RfqService(
             throw new StlApiException("rfq.not_open", "Quotes can only be selected on submitted RFQs.", 409);
         }
 
-        var quote = rfq.VendorQuotes.FirstOrDefault(x => x.Id == request.VendorQuoteId)
-            ?? throw new StlApiException("rfq.quote.not_found", "Vendor quote was not found.", 404);
+        var quote = rfq.VendorQuotes.FirstOrDefault(x => x.Id == request.SupplierQuoteId)
+            ?? throw new StlApiException("rfq.quote.not_found", "Supplier quote was not found.", 404);
 
         if (quote.Status != VendorQuoteStatuses.Submitted)
         {
@@ -735,11 +801,12 @@ public sealed class RfqService(
             tenantId,
             actorUserId,
             new CreatePurchaseRequestRequest(
-                NormalizeRequestKey(request.RequestKey),
-                string.IsNullOrWhiteSpace(request.Title) ? rfq.Title : NormalizeTitle(request.Title!),
-                string.IsNullOrWhiteSpace(request.Notes) ? rfq.Notes : NormalizeNotes(request.Notes!),
-                quote.VendorPartyId,
-                prLines),
+                RequestKey: NormalizeRequestKey(request.RequestKey),
+                Title: string.IsNullOrWhiteSpace(request.Title) ? rfq.Title : NormalizeTitle(request.Title!),
+                Notes: string.IsNullOrWhiteSpace(request.Notes) ? rfq.Notes : NormalizeNotes(request.Notes!),
+                SupplierId: quote.VendorPartyId,
+                VendorPartyId: quote.VendorPartyId,
+                Lines: prLines),
             cancellationToken);
 
         rfq.PurchaseRequestId = pr.PurchaseRequestId;
@@ -815,20 +882,20 @@ public sealed class RfqService(
         }
     }
 
-    private Task EnsureVendorPartyAsync(Guid tenantId, Guid vendorPartyId, CancellationToken cancellationToken) =>
+    private Task EnsureSupplierAllowedAsync(Guid tenantId, Guid supplierId, CancellationToken cancellationToken) =>
         vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
             tenantId,
-            vendorPartyId,
+            supplierId,
             VendorRestrictionScopes.RfqInvitations,
             cancellationToken);
 
     private async Task<Rfq> LoadAsync(Guid tenantId, Guid rfqId, CancellationToken cancellationToken) =>
         await db.Rfqs
             .AsNoTracking()
-            .Include(x => x.AwardedVendorParty)
+            .Include(x => x.AwardedVendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines).ThenInclude(x => x.Part)
-            .Include(x => x.VendorInvitations).ThenInclude(x => x.VendorParty)
-            .Include(x => x.VendorQuotes).ThenInclude(x => x.VendorParty)
+            .Include(x => x.VendorInvitations).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.VendorQuotes).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.VendorQuotes).ThenInclude(x => x.Lines).ThenInclude(x => x.RfqLine).ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == rfqId, cancellationToken)
         ?? throw new StlApiException("rfq.not_found", "RFQ was not found.", 404);
@@ -836,7 +903,8 @@ public sealed class RfqService(
     private async Task<Rfq> LoadTrackedAsync(Guid tenantId, Guid rfqId, CancellationToken cancellationToken) =>
         await db.Rfqs
             .Include(x => x.Lines).ThenInclude(x => x.Part)
-            .Include(x => x.VendorInvitations)
+            .Include(x => x.VendorInvitations).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.VendorQuotes).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.VendorQuotes).ThenInclude(x => x.Lines).ThenInclude(x => x.RfqLine)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == rfqId, cancellationToken)
         ?? throw new StlApiException("rfq.not_found", "RFQ was not found.", 404);
@@ -844,7 +912,7 @@ public sealed class RfqService(
     private async Task<VendorQuote> LoadQuoteAsync(Guid tenantId, Guid quoteId, CancellationToken cancellationToken) =>
         await db.VendorQuotes
             .AsNoTracking()
-            .Include(x => x.VendorParty)
+            .Include(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines).ThenInclude(x => x.RfqLine).ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == quoteId, cancellationToken)
         ?? throw new StlApiException("rfq.quote.not_found", "Vendor quote was not found.", 404);
@@ -857,7 +925,7 @@ public sealed class RfqService(
         await db.VendorQuotes
             .Include(x => x.Rfq).ThenInclude(x => x.Lines).ThenInclude(x => x.Part)
         .Include(x => x.Rfq).ThenInclude(x => x.VendorInvitations)
-        .Include(x => x.VendorParty)
+        .Include(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
         .Include(x => x.Lines).ThenInclude(x => x.RfqLine)
         .FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.RfqId == rfqId && x.Id == vendorQuoteId,
@@ -880,10 +948,10 @@ public sealed class RfqService(
             .Include(x => x.Rfq)
                 .ThenInclude(x => x.Lines).ThenInclude(x => x.Part)
             .Include(x => x.Rfq)
-                .ThenInclude(x => x.VendorQuotes).ThenInclude(x => x.VendorParty)
+                .ThenInclude(x => x.VendorQuotes).ThenInclude(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Rfq)
                 .ThenInclude(x => x.VendorQuotes).ThenInclude(x => x.Lines).ThenInclude(x => x.RfqLine).ThenInclude(x => x.Part)
-            .Include(x => x.VendorParty)
+            .Include(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.RfqId == rfqId && x.PortalAccessCode == accessCode.Trim(),
                 cancellationToken);
@@ -933,7 +1001,12 @@ public sealed class RfqService(
             entity.RequestedByUserId,
             entity.SubmittedAt,
             entity.AwardedVendorPartyId,
+            entity.AwardedVendorParty?.PartyKey,
             entity.AwardedVendorParty?.DisplayName,
+            entity.AwardedVendorParty?.ParentExternalPartyId,
+            entity.AwardedVendorParty?.ParentExternalParty?.DisplayName,
+            entity.AwardedVendorParty?.UnitKind,
+            ParseServiceTypes(entity.AwardedVendorParty?.ServiceTypesJson),
             entity.SelectedVendorQuoteId,
             entity.PurchaseRequestId,
             entity.AwardedAt,
@@ -944,7 +1017,10 @@ public sealed class RfqService(
                 .ToList(),
             entity.VendorQuotes.OrderBy(x => x.CreatedAt).Select(MapQuote).ToList(),
             entity.CreatedAt,
-            entity.UpdatedAt);
+            entity.UpdatedAt,
+            entity.AwardedVendorPartyId,
+            entity.AwardedVendorParty?.PartyKey,
+            entity.AwardedVendorParty?.DisplayName);
 
     private static RfqLineResponse MapLine(RfqLine line) =>
         new(
@@ -965,12 +1041,19 @@ public sealed class RfqService(
             invitation.VendorPartyId,
             invitation.VendorParty.PartyKey,
             invitation.VendorParty.DisplayName,
+            invitation.VendorParty.ParentExternalPartyId,
+            invitation.VendorParty.ParentExternalParty?.DisplayName,
+            invitation.VendorParty.UnitKind,
+            ParseServiceTypes(invitation.VendorParty.ServiceTypesJson),
             invitation.Status,
             invitation.InvitedAt,
             invitation.PortalAccessCodeIssuedAt,
             invitation.PortalAccessCodeExpiresAt,
             invitation.PortalAccessCode,
-            GenerateVendorPortalLink(invitation.RfqId, invitation.PortalAccessCode));
+            GenerateVendorPortalLink(invitation.RfqId, invitation.PortalAccessCode),
+            invitation.VendorPartyId,
+            invitation.VendorParty.PartyKey,
+            invitation.VendorParty.DisplayName);
 
     private static VendorPortalRfqResponse MapVendorPortal(
         Rfq rfq,
@@ -987,6 +1070,10 @@ public sealed class RfqService(
             invitation.VendorPartyId,
             invitation.VendorParty.PartyKey,
             invitation.VendorParty.DisplayName,
+            invitation.VendorParty.ParentExternalPartyId,
+            invitation.VendorParty.ParentExternalParty?.DisplayName,
+            invitation.VendorParty.UnitKind,
+            ParseServiceTypes(invitation.VendorParty.ServiceTypesJson),
             invitation.Id,
             invitation.Status,
             invitation.InvitedAt,
@@ -1018,7 +1105,10 @@ public sealed class RfqService(
                     quoteLine?.Notes ?? string.Empty);
             }).ToList(),
             rfq.CreatedAt,
-            rfq.UpdatedAt);
+            rfq.UpdatedAt,
+            invitation.VendorPartyId,
+            invitation.VendorParty.PartyKey,
+            invitation.VendorParty.DisplayName);
     }
 
     private static string GenerateVendorPortalAccessCode()
@@ -1030,7 +1120,7 @@ public sealed class RfqService(
     private static string GenerateVendorPortalLink(Guid rfqId, string portalAccessCode) =>
         string.IsNullOrWhiteSpace(portalAccessCode)
             ? string.Empty
-            : $"/vendor-portal?rfqId={rfqId:D}&accessCode={Uri.EscapeDataString(portalAccessCode)}";
+            : $"/supplier-quote-portal?rfqId={rfqId:D}&accessCode={Uri.EscapeDataString(portalAccessCode)}";
 
     private static VendorQuoteResponse MapQuote(VendorQuote quote) =>
         new(
@@ -1039,6 +1129,10 @@ public sealed class RfqService(
             quote.VendorPartyId,
             quote.VendorParty.PartyKey,
             quote.VendorParty.DisplayName,
+            quote.VendorParty.ParentExternalPartyId,
+            quote.VendorParty.ParentExternalParty?.DisplayName,
+            quote.VendorParty.UnitKind,
+            ParseServiceTypes(quote.VendorParty.ServiceTypesJson),
             quote.QuoteKey,
             quote.Status,
             quote.CurrencyCode,
@@ -1051,7 +1145,27 @@ public sealed class RfqService(
                 .Select(MapQuoteLine)
                 .ToList(),
             quote.CreatedAt,
-            quote.UpdatedAt);
+            quote.UpdatedAt,
+            quote.VendorPartyId,
+            quote.VendorParty.PartyKey,
+            quote.VendorParty.DisplayName);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private static VendorQuoteLineResponse MapQuoteLine(VendorQuoteLine line) =>
         new(

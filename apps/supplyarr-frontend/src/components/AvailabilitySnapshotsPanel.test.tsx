@@ -59,9 +59,18 @@ const baseProps = {
       vendorLinks: [
         {
           linkId: 'link-1',
-          partyId: 'vendor-1',
-          partyKey: 'acme',
-          partyDisplayName: 'Acme Supply',
+          supplierId: 'vendor-1',
+          supplierKey: 'acme-north',
+          supplierDisplayName: 'North Yard Counter',
+          parentSupplierId: 'supplier-1',
+          parentSupplierKey: 'acme',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts', 'maintenance'],
+          supplierAddressLine1: '1200 North Yard Rd',
+          supplierLocality: 'Tulsa',
+          supplierRegionCode: 'OK',
+          supplierPostalCode: '74101',
           vendorPartNumber: 'V-FLT-01',
           isPreferred: true,
           catalogUnitPrice: null,
@@ -85,9 +94,13 @@ const baseProps = {
       partId: 'part-1',
       partKey: 'filter-01',
       partDisplayName: 'Oil Filter',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'acme',
-      vendorDisplayName: 'Acme Supply',
+      supplierId: 'vendor-1',
+      supplierKey: 'acme-north',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Supply',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
       vendorPartNumber: 'V-FLT-01',
       quantityAvailable: 120,
       availabilityStatus: 'in_stock',
@@ -104,13 +117,13 @@ const baseProps = {
   canManage: true,
   isLoading: false,
   snapshotKey: '',
-  selectedVendorLinkId: 'link-1',
+  selectedSourceLinkId: 'link-1',
   quantityAvailable: '120',
   availabilityStatus: 'in_stock',
   snapshotNotes: '',
   currentOnlyFilter: true,
   onSnapshotKeyChange: () => {},
-  onSelectedVendorLinkIdChange: () => {},
+  onSelectedSourceLinkIdChange: () => {},
   onQuantityAvailableChange: () => {},
   onAvailabilityStatusChange: () => {},
   onSnapshotNotesChange: () => {},
@@ -128,5 +141,7 @@ describe('AvailabilitySnapshotsPanel', () => {
     expect(within(panel).getByText(/qty 120/)).toBeInTheDocument()
     expect(within(panel).getByRole('button', { name: 'Record availability' })).toBeInTheDocument()
     expect(screen.getByLabelText('Search supplier source links…')).toBeInTheDocument()
+    expect(within(panel).getByText(/filter-01 · Acme Supply · North Yard Counter \(acme-north\) · In stock · qty 120/i)).toBeInTheDocument()
+    expect(within(panel).getAllByText(/Tulsa, OK, 74101 · Parts, Maintenance/i).length).toBeGreaterThan(0)
   })
 })

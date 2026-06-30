@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { getVendorEmailInbox, ingestVendorEmailInbox } from '../api/client'
 import type { IngestVendorEmailInboxResponse, VendorEmailInboxMessageResponse } from '../api/types'
+import { formatSupplierSummary } from '../utils/supplierPresentation'
 
 interface VendorEmailInboxPanelProps {
   accessToken: string
@@ -40,7 +41,9 @@ function MessageCard({ message }: { message: VendorEmailInboxMessageResponse }) 
       </div>
       <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[var(--color-text-muted)]">
         <span>Received {formatDate(message.receivedAt)}</span>
-        {message.vendorPartyKey ? <span>Supplier {message.vendorPartyKey}</span> : null}
+        {message.supplierKey || message.vendorPartyKey ? (
+          <span>Supplier {formatSupplierSummary(message)}</span>
+        ) : null}
         {message.linkedReferenceType && message.linkedReferenceKey ? (
           <span>
             Linked {message.linkedReferenceType.toUpperCase()} {message.linkedReferenceKey}
@@ -65,7 +68,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
   const [lastResult, setLastResult] = useState<IngestVendorEmailInboxResponse | null>(null)
 
   const inboxQuery = useQuery({
-    queryKey: ['supplyarr-vendor-email-inbox', accessToken],
+    queryKey: ['supplyarr-supplier-email-inbox', accessToken],
     queryFn: () => getVendorEmailInbox(accessToken, 25),
     enabled: canManage,
   })
@@ -90,7 +93,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
       setSubject('')
       setReferenceKey('')
       setBody('')
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-email-inbox', accessToken] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-email-inbox', accessToken] })
     },
   })
 
@@ -103,7 +106,7 @@ export function VendorEmailInboxPanel({ accessToken, canManage }: VendorEmailInb
   const unmatchedCount = messages.filter((message) => message.matchStatus !== 'matched').length
 
   return (
-    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm" data-testid="vendor-email-inbox-panel">
+    <section className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4 shadow-sm" data-testid="supplier-email-inbox-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Supplier email inbox</h3>

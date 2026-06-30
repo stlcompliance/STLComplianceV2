@@ -2,10 +2,11 @@ namespace SupplyArr.Api.Contracts;
 
 public sealed record CreateQuoteRequest(
     Guid RfqId,
-    Guid VendorPartyId,
+    Guid SupplierId,
     string QuoteKey,
     string CurrencyCode,
-    string Notes);
+    string Notes,
+    Guid? VendorPartyId = null);
 
 public sealed record UpsertQuoteLineRequest(
     Guid RfqId,
@@ -14,4 +15,3 @@ public sealed record UpsertQuoteLineRequest(
     decimal QuantityQuoted,
     int? LeadTimeDays,
     string Notes);
-

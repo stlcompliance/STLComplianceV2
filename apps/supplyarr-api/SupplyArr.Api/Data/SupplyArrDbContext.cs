@@ -1429,6 +1429,11 @@ public sealed class SupplyArrDbContext(DbContextOptions<SupplyArrDbContext> opti
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.CoordinationStage).HasMaxLength(64).IsRequired();
             entity.Property(x => x.NextActionRequired).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.SupplierKey).HasMaxLength(128);
+            entity.Property(x => x.SupplierDisplayName).HasMaxLength(256);
+            entity.Property(x => x.ParentSupplierDisplayName).HasMaxLength(256);
+            entity.Property(x => x.SupplierUnitKind).HasMaxLength(32);
+            entity.Property(x => x.SupplierServiceTypesJson).HasMaxLength(2048).HasDefaultValue("[]").IsRequired();
             entity.Property(x => x.VendorDisplayName).HasMaxLength(256).IsRequired();
             entity.Property(x => x.DocumentStatus).HasMaxLength(32).IsRequired();
             entity.Property(x => x.QuantityOrdered).HasPrecision(18, 4);

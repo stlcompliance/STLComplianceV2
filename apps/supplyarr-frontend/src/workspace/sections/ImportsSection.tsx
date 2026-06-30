@@ -105,7 +105,7 @@ export function ImportsSection({ state }: Props) {
         <div className="space-y-4">
           <ProductGuidance
             title="Import types"
-            body="Choose the exact import type first, validate it, and commit through the normal procurement and catalog flows. References stay resolved instead of becoming free-text values."
+            body="Choose the exact import type first, validate it, and commit through the normal supplier directory, procurement, and catalog flows. References stay resolved instead of becoming free-text values."
           />
           {selectedManifest.importTypeKey === 'contracts_csv' ? (
             <ContractsImportPanel
@@ -214,7 +214,7 @@ export function ImportsSection({ state }: Props) {
         <div className="grid gap-4 xl:grid-cols-2">
           <ProductGuidance
             title="Pick the explicit import type first"
-            body="Start with the exact destination type, such as parties, contacts, catalogs, contracts, price lists, or purchase history."
+            body="Start with the exact destination type, such as supplier identities or sub-units, contacts, catalogs, contracts, price lists, or purchase history."
           />
           <ProductGuidance
             title="References stay resolved"
@@ -245,7 +245,7 @@ export function ImportsSection({ state }: Props) {
         title="Import center"
         description={
           canUseImportCenter
-            ? 'Choose an import type, validate it, and commit through the normal catalog, party, and procurement flows.'
+            ? 'Choose an import type, validate it, and commit through the normal catalog, supplier directory, and procurement flows.'
             : 'Your current role does not have access to imports.'
         }
         manifests={manifests}

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SupplyArr.Api.Contracts;
 
 public sealed record PurchaseRequestLineResponse(
@@ -18,6 +20,13 @@ public sealed record PurchaseRequestResponse(
     string Title,
     string Notes,
     string Status,
+    Guid? SupplierId,
+    string? SupplierKey,
+    string? SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string? SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     Guid? VendorPartyId,
     string? VendorPartyKey,
     string? VendorDisplayName,
@@ -44,17 +53,33 @@ public sealed record CreatePurchaseRequestLineRequest(
     decimal QuantityRequested,
     string Notes);
 
+[method: JsonConstructor]
 public sealed record CreatePurchaseRequestRequest(
     string RequestKey,
     string Title,
     string Notes,
-    Guid? VendorPartyId,
-    IReadOnlyList<CreatePurchaseRequestLineRequest>? Lines);
+    Guid? SupplierId = null,
+    Guid? SupplierUnitId = null,
+    Guid? VendorPartyId = null,
+    IReadOnlyList<CreatePurchaseRequestLineRequest>? Lines = null)
+{
+    public CreatePurchaseRequestRequest(
+        string requestKey,
+        string title,
+        string notes,
+        Guid? vendorPartyId,
+        IReadOnlyList<CreatePurchaseRequestLineRequest>? lines)
+        : this(requestKey, title, notes, vendorPartyId, vendorPartyId, vendorPartyId, lines)
+    {
+    }
+}
 
 public sealed record UpdatePurchaseRequestRequest(
     string Title,
     string Notes,
-    Guid? VendorPartyId);
+    Guid? SupplierId = null,
+    Guid? SupplierUnitId = null,
+    Guid? VendorPartyId = null);
 
 public sealed record AddPurchaseRequestLineRequest(
     Guid PartId,

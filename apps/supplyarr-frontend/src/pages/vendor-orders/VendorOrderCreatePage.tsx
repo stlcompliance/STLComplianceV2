@@ -2,15 +2,20 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { DetailBadge, QuestionnaireFlow, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getVendors } from '../../api/client'
-import { createVendorOrder } from '../../api/vendorOrderClient'
+import { getSupplierDirectory } from '../../api/client'
+import { createSupplierOrder } from '../../api/vendorOrderClient'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+} from '../../utils/supplierPresentation'
 import { useSupplyArrPageAccess } from './useSupplyArrPageAccess'
 import { humanizeVendorOrderValue } from './vendorOrderUi'
 
 type SectionKey = 'basics' | 'locations' | 'timing' | 'review'
 
 type CreateFormState = {
-  vendorId: string
+  supplierId: string
   brokerOrderNumberSnapshot: string
   itemDescription: string
   orderedQuantity: string
@@ -27,7 +32,7 @@ type CreateFormState = {
 }
 
 const INITIAL_FORM: CreateFormState = {
-  vendorId: '',
+  supplierId: '',
   brokerOrderNumberSnapshot: '',
   itemDescription: '',
   orderedQuantity: '',
@@ -49,8 +54,29 @@ const customArrCustomerOptions: PickerOption[] = [
   { value: 'cust-1003', label: 'CUS-1003 - South Ridge Logistics Partners' },
 ]
 
-export function VendorOrderCreatePage() {
-  const { session, meQuery, canCreateVendorOrders } = useSupplyArrPageAccess()
+function formatSupplierUnitOptionLabel(supplier: Awaited<ReturnType<typeof getSupplierDirectory>>[number]): string {
+  return [
+    humanizeSupplierUnitKind(supplier.unitKind),
+    formatSupplierIdentitySummary({
+      displayName: supplier.displayName,
+      supplierKey: supplier.supplierKey,
+      parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+      supplierUnitKind: supplier.unitKind,
+    }),
+    formatSupplierOperationalContext({
+      supplierServiceTypes: supplier.serviceTypes,
+      addressLine1: supplier.addressLine1,
+      locality: supplier.locality,
+      regionCode: supplier.regionCode,
+      postalCode: supplier.postalCode,
+    }),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+export function SupplierOrderCreatePage() {
+  const { session, meQuery, canCreateSupplierOrders } = useSupplyArrPageAccess()
   const navigate = useNavigate()
   const [form, setForm] = useState<CreateFormState>(INITIAL_FORM)
   const [expandedSection, setExpandedSection] = useState<SectionKey>('basics')
@@ -58,31 +84,31 @@ export function VendorOrderCreatePage() {
   const complianceCoreApiBase = import.meta.env.VITE_COMPLIANCECORE_API_BASE ?? ''
 
   if (!session) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order create flow…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier-order create flow…</p>
   }
 
   if (meQuery.isLoading) {
     return <p className="text-sm text-[var(--color-text-muted)]">Loading create permissions…</p>
   }
 
-  if (!canCreateVendorOrders) {
+  if (!canCreateSupplierOrders) {
     return (
       <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Create vendor order</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Create supplier order</h1>
         <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-          You do not have permission to create SupplyArr vendor orders.
+          You do not have permission to create SupplyArr supplier orders.
         </p>
       </section>
     )
   }
 
-  const vendorsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-create-vendors', session.accessToken],
-    queryFn: () => getVendors(session.accessToken),
+  const suppliersQuery = useQuery({
+    queryKey: ['supplyarr-supplier-order-create-suppliers', session.accessToken],
+    queryFn: () => getSupplierDirectory(session.accessToken),
   })
 
   const basicsComplete = Boolean(
-    form.vendorId.trim() &&
+    form.supplierId.trim() &&
       form.itemDescription.trim() &&
       Number(form.orderedQuantity) > 0 &&
       form.quantityUom.trim(),
@@ -91,12 +117,13 @@ export function VendorOrderCreatePage() {
   const timingComplete = true
   const reviewReady = basicsComplete && locationsComplete && timingComplete
 
-  const selectedVendor = vendorsQuery.data?.find((vendor) => vendor.partyId === form.vendorId) ?? null
+  const selectedSupplier = suppliersQuery.data?.find((supplier) => supplier.supplierId === form.supplierId) ?? null
 
   const createMutation = useMutation({
     mutationFn: () =>
-      createVendorOrder(session.accessToken, {
-        vendorId: form.vendorId,
+      createSupplierOrder(session.accessToken, {
+        supplierId: form.supplierId,
+        vendorId: form.supplierId,
         brokerOrderNumberSnapshot: form.brokerOrderNumberSnapshot || null,
         pickupLocationNameSnapshot: form.pickupLocationNameSnapshot || null,
         pickupAddressSnapshot: form.pickupAddressSnapshot,
@@ -112,7 +139,7 @@ export function VendorOrderCreatePage() {
         pickupInstructions: form.pickupInstructions || null,
       }),
     onSuccess: async (created) => {
-      await navigate(`/purchasing/vendor-orders/${created.vendorOrderId}`)
+      await navigate(`/purchasing/supplier-orders/${created.vendorOrderId}`)
     },
   })
 
@@ -120,11 +147,16 @@ export function VendorOrderCreatePage() {
     () => [
       {
         key: 'basics' as const,
-        title: '1. Vendor & order basics',
+        title: '1. Supplier & order basics',
         state: basicsComplete ? 'Complete' : 'Needs required fields',
         summary: basicsComplete
-          ? `${selectedVendor?.displayName ?? 'Vendor'} · ${form.itemDescription} · ${form.orderedQuantity} ${form.quantityUom}`
-          : 'Select vendor, item description, quantity, and unit of measure.',
+          ? `${selectedSupplier ? formatSupplierIdentitySummary({
+              displayName: selectedSupplier.displayName,
+              supplierKey: selectedSupplier.supplierKey,
+              parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+              supplierUnitKind: selectedSupplier.unitKind,
+            }) : 'Supplier'} · ${form.itemDescription} · ${form.orderedQuantity} ${form.quantityUom}`
+          : 'Select the supplier identity or sub-unit, item description, quantity, and unit of measure.',
       },
       {
         key: 'locations' as const,
@@ -148,7 +180,7 @@ export function VendorOrderCreatePage() {
         title: '4. Review & create',
         state: reviewReady ? 'Ready' : 'Locked',
         summary: reviewReady
-          ? 'Review the order before saving the draft vendor order.'
+          ? 'Review the order before saving the draft supplier order.'
           : 'Complete the required basics and pickup snapshot first.',
       },
     ],
@@ -164,7 +196,10 @@ export function VendorOrderCreatePage() {
       form.quantityUom,
       locationsComplete,
       reviewReady,
-      selectedVendor?.displayName,
+      selectedSupplier?.displayName,
+      selectedSupplier?.parentSupplierDisplayName,
+      selectedSupplier?.supplierKey,
+      selectedSupplier?.unitKind,
       timingComplete,
     ],
   )
@@ -177,19 +212,19 @@ export function VendorOrderCreatePage() {
             <div>
               <div className="mb-3 flex flex-wrap gap-2">
                 <DetailBadge label="SupplyArr" tone="info" />
-                <DetailBadge label="Create vendor order" tone="warn" />
+                <DetailBadge label="Create supplier order" tone="warn" />
                 <DetailBadge label={session.tenantDisplayName} tone="neutral" />
               </div>
-              <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">New vendor-order readiness workflow</h1>
+              <h1 className="text-3xl font-bold text-[var(--color-text-primary)]">New supplier-order readiness workflow</h1>
               <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-secondary)]">
-                Create the order, then add timing and pickup details before sending it to the vendor.
+                Create the order, then add timing and pickup details before sending it to the supplier.
               </p>
             </div>
             <Link
-              to="/purchasing/vendor-orders"
+              to="/purchasing/supplier-orders"
               className="inline-flex rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-4 py-3 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-control-hover)]"
             >
-              Back to vendor orders
+              Back to supplier orders
             </Link>
           </div>
         </section>
@@ -204,7 +239,7 @@ export function VendorOrderCreatePage() {
           sourceRecordId={questionnaireDraftId}
           sourceEntity="vendor_order"
           title="Compliance Core questionnaire"
-          subtitle="Keep the vendor-order setup short and review missing trip facts."
+          subtitle="Keep the supplier-order setup short and review missing trip facts."
           submitLabel="Save questionnaire answers"
         />
 
@@ -245,7 +280,8 @@ export function VendorOrderCreatePage() {
                       <BasicsSection
                         form={form}
                         onChange={setForm}
-                        vendorsQuery={vendorsQuery}
+                        suppliersQuery={suppliersQuery}
+                        selectedSupplier={selectedSupplier}
                         onComplete={() => setExpandedSection('locations')}
                         complete={basicsComplete}
                       />
@@ -271,7 +307,16 @@ export function VendorOrderCreatePage() {
                     {section.key === 'review' ? (
                       <ReviewSection
                         form={form}
-                        vendorName={selectedVendor?.displayName ?? 'Vendor not selected'}
+                        supplierSummary={
+                          selectedSupplier
+                            ? formatSupplierIdentitySummary({
+                                displayName: selectedSupplier.displayName,
+                                supplierKey: selectedSupplier.supplierKey,
+                                parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+                                supplierUnitKind: selectedSupplier.unitKind,
+                              })
+                            : 'Supplier not selected'
+                        }
                         onCreate={() => createMutation.mutate()}
                         createPending={createMutation.isPending}
                         createError={createMutation.error instanceof Error ? createMutation.error.message : null}
@@ -289,10 +334,10 @@ export function VendorOrderCreatePage() {
         <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
           <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Workflow guidance</h2>
           <ul className="mt-4 space-y-3 text-sm text-[var(--color-text-secondary)]">
-            <li>Track vendor readiness and document updates here.</li>
+            <li>Track supplier readiness and document updates here.</li>
             <li>Trips can use the order later for dispatch blocking and release checks.</li>
             <li>Pickup and destination fields on this page are snapshots, not master locations.</li>
-            <li>Saving this record creates a draft only. Sending to the vendor happens later from the detail page.</li>
+            <li>Saving this record creates a draft only. Sending to the supplier happens later from the detail page.</li>
           </ul>
         </section>
 
@@ -318,36 +363,65 @@ export function VendorOrderCreatePage() {
   )
 }
 
+export const VendorOrderCreatePage = SupplierOrderCreatePage
+
 function BasicsSection({
   form,
   onChange,
-  vendorsQuery,
+  suppliersQuery,
+  selectedSupplier,
   onComplete,
   complete,
 }: {
   form: CreateFormState
   onChange: (next: CreateFormState) => void
-  vendorsQuery: { data?: Awaited<ReturnType<typeof getVendors>> }
+  suppliersQuery: { data?: Awaited<ReturnType<typeof getSupplierDirectory>> }
+  selectedSupplier: Awaited<ReturnType<typeof getSupplierDirectory>>[number] | null
   onComplete: () => void
   complete: boolean
 }) {
+  const supplierOptions = (suppliersQuery.data ?? []).map((supplier) => ({
+    value: supplier.supplierId!,
+    label: formatSupplierUnitOptionLabel(supplier),
+  }))
+  const selectedSupplierOption = supplierOptions.find((option) => option.value === form.supplierId)
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <label className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
-        Vendor
-        <select
-          className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
-          value={form.vendorId}
-          onChange={(event) => onChange({ ...form, vendorId: event.target.value })}
-        >
-          <option value="">Select a vendor</option>
-          {(vendorsQuery.data ?? []).map((vendor) => (
-            <option key={vendor.partyId} value={vendor.partyId}>
-              {vendor.displayName}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="text-sm text-[var(--color-text-secondary)] md:col-span-2">
+        <StaticSearchPicker
+          id="supplier-order-supplier-unit"
+          label="Supplier identity or sub-unit"
+          value={form.supplierId}
+          onChange={(value) => onChange({ ...form, supplierId: value })}
+          options={supplierOptions}
+          selectedOption={selectedSupplierOption}
+          placeholder="Search supplier identities or sub-units…"
+          testId="supplier-order-supplier-unit-picker"
+        />
+      </div>
+
+      {selectedSupplier ? (
+        <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)] md:col-span-2">
+          <p className="font-medium text-[var(--color-text-primary)]">
+            {formatSupplierIdentitySummary({
+              displayName: selectedSupplier.displayName,
+              supplierKey: selectedSupplier.supplierKey,
+              parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+              supplierUnitKind: selectedSupplier.unitKind,
+            })}
+          </p>
+          <p className="mt-2">
+            {humanizeSupplierUnitKind(selectedSupplier.unitKind)} ·{' '}
+            {formatSupplierOperationalContext({
+              supplierServiceTypes: selectedSupplier.serviceTypes,
+              addressLine1: selectedSupplier.addressLine1,
+              locality: selectedSupplier.locality,
+              regionCode: selectedSupplier.regionCode,
+              postalCode: selectedSupplier.postalCode,
+            })}
+          </p>
+        </div>
+      ) : null}
 
       <label className="text-sm text-[var(--color-text-secondary)]">
         Broker order number snapshot
@@ -376,7 +450,7 @@ function BasicsSection({
           rows={4}
           value={form.itemDescription}
           onChange={(event) => onChange({ ...form, itemDescription: event.target.value })}
-          placeholder="Describe the shipment or palletized order the vendor must complete."
+          placeholder="Describe the shipment or palletized order the supplier must complete."
         />
       </label>
 
@@ -423,7 +497,7 @@ function LocationsSection({
           className="mt-1 block w-full rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-[var(--color-text-primary)]"
           value={form.pickupLocationNameSnapshot}
           onChange={(event) => onChange({ ...form, pickupLocationNameSnapshot: event.target.value })}
-          placeholder="Vendor yard, warehouse, or dock"
+          placeholder="Supplier yard, warehouse, or dock"
         />
       </label>
 
@@ -551,13 +625,13 @@ function TimingSection({
 
 function ReviewSection({
   form,
-  vendorName,
+  supplierSummary,
   onCreate,
   createPending,
   createError,
 }: {
   form: CreateFormState
-  vendorName: string
+  supplierSummary: string
   onCreate: () => void
   createPending: boolean
   createError: string | null
@@ -565,7 +639,7 @@ function ReviewSection({
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <ReviewCard label="Vendor" value={vendorName} />
+        <ReviewCard label="Supplier" value={supplierSummary} />
         <ReviewCard label="Order quantity" value={`${form.orderedQuantity} ${form.quantityUom}`} />
         <ReviewCard label="Pickup snapshot" value={form.pickupLocationNameSnapshot || 'Pickup snapshot not labeled'} />
         <ReviewCard label="Expected ready" value={form.expectedReadyAt || 'Not scheduled'} />
@@ -574,9 +648,9 @@ function ReviewSection({
       <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4 text-sm text-[var(--color-text-secondary)]">
         <h3 className="font-semibold text-[var(--color-text-primary)]">What happens next</h3>
         <ul className="mt-3 space-y-2">
-          <li>The draft vendor order, status history, and vendor link are saved together.</li>
+          <li>The draft supplier order, status history, and supplier link are saved together.</li>
           <li>Trips can reference this order later by its order ID without changing transport responsibilities.</li>
-          <li>Document records stay attached when files are added from this page or the vendor portal.</li>
+          <li>Document records stay attached when files are added from this page or the supplier portal.</li>
         </ul>
       </div>
 
@@ -592,7 +666,7 @@ function ReviewSection({
         disabled={createPending}
         onClick={onCreate}
       >
-        {createPending ? 'Creating vendor order…' : 'Create vendor order draft'}
+        {createPending ? 'Creating supplier order…' : 'Create supplier order draft'}
       </button>
     </div>
   )

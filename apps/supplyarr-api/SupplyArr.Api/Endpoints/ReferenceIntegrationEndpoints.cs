@@ -11,7 +11,7 @@ namespace SupplyArr.Api.Endpoints;
 public static class ReferenceIntegrationEndpoints
 {
     private const string ProductKey = "supplyarr";
-    private static readonly string[] PartyReferenceTypes = ["vendor", "supplier", "carrier"];
+    private const string SupplierReferenceType = "supplier";
 
     public static void MapSupplyArrReferenceIntegrationEndpoints(this WebApplication app)
     {
@@ -27,9 +27,7 @@ public static class ReferenceIntegrationEndpoints
             authorization.RequirePartiesRead(context.User);
             return Results.Ok(new ReferenceTypeDescriptor[]
             {
-                PartyDescriptor("vendor"),
-                PartyDescriptor("supplier"),
-                PartyDescriptor("carrier"),
+                SupplierDescriptor(),
                 new(
                     ProductKey,
                     "part",
@@ -45,7 +43,7 @@ public static class ReferenceIntegrationEndpoints
             ReferenceSearchRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService parties,
+            SupplierDirectoryService parties,
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
@@ -54,13 +52,13 @@ public static class ReferenceIntegrationEndpoints
             var limit = Math.Clamp(request.Limit <= 0 ? 25 : request.Limit, 1, 50);
             var tenantId = context.User.GetTenantId();
 
-            if (IsPartyType(referenceType))
+            if (IsSupplierReferenceType(referenceType))
             {
                 authorization.RequirePartiesRead(context.User);
-                var results = (await parties.ListAsync(tenantId, referenceType, cancellationToken))
-                    .Where(party => MatchesParty(party, request.Query))
+                var results = (await parties.ListSuppliersAsync(tenantId, cancellationToken))
+                    .Where(supplier => MatchesSupplier(supplier, request.Query))
                     .Take(limit)
-                    .Select(party => ToPartySummary(referenceType, party))
+                    .Select(ToSupplierSummary)
                     .ToArray();
                 return Results.Ok(new ReferenceSearchResponse(results));
             }
@@ -85,7 +83,7 @@ public static class ReferenceIntegrationEndpoints
             string id,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService parties,
+            SupplierDirectoryService parties,
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
@@ -97,13 +95,10 @@ public static class ReferenceIntegrationEndpoints
             }
 
             var tenantId = context.User.GetTenantId();
-            if (IsPartyType(normalizedType))
+            if (IsSupplierReferenceType(normalizedType))
             {
                 authorization.RequirePartiesRead(context.User);
-                var party = await parties.GetAsync(tenantId, parsedId, cancellationToken);
-                return string.Equals(party.PartyType, normalizedType, StringComparison.OrdinalIgnoreCase)
-                    ? Results.Ok(ToPartySummary(normalizedType, party))
-                    : Results.NotFound();
+                return Results.Ok(ToSupplierSummary(await parties.GetSupplierAsync(tenantId, parsedId, cancellationToken)));
             }
 
             if (normalizedType == "part")
@@ -123,21 +118,24 @@ public static class ReferenceIntegrationEndpoints
         {
             RequireSupplyArrTenantRole(context.User);
             var normalizedType = NormalizeReferenceType(referenceType);
-            if (IsPartyType(normalizedType))
+            if (IsSupplierReferenceType(normalizedType))
             {
                 authorization.RequirePartiesRead(context.User);
                 var allowed = CanQuickCreateParty(context.User);
                 return Results.Ok(new QuickCreateSchemaResponse(
                     ProductKey,
-                    normalizedType,
+                    SupplierReferenceType,
                     allowed,
                     "SupplyArr",
                     "supplyarr.parties.quick_create",
-                    allowed ? null : "Party quick create requires SupplyArr party management access.",
+                    allowed ? null : "Supplier quick create requires SupplyArr supplier management access.",
                     [
-                        new QuickCreateFieldDescriptor("partyKey", "Party key", "text", Placeholder: $"{normalizedType}-acme"),
+                        new QuickCreateFieldDescriptor("supplierKey", "Supplier key", "text", Placeholder: "acme-midwest"),
+                        new QuickCreateFieldDescriptor("parentSupplierId", "Parent supplier identity", "text"),
+                        new QuickCreateFieldDescriptor("unitKind", "Hierarchy role", "text", DefaultValue: "identity"),
                         new QuickCreateFieldDescriptor("displayName", "Display name", "text", Required: true),
                         new QuickCreateFieldDescriptor("legalName", "Legal name", "text"),
+                        new QuickCreateFieldDescriptor("serviceTypes", "Service coverage", "text", Placeholder: "products,parts"),
                         new QuickCreateFieldDescriptor("taxIdentifier", "Tax identifier", "text"),
                         new QuickCreateFieldDescriptor("notes", "Notes", "textarea")
                     ]));
@@ -174,7 +172,7 @@ public static class ReferenceIntegrationEndpoints
             QuickCreateRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService parties,
+            SupplierDirectoryService parties,
             PartRegistryService parts,
             CancellationToken cancellationToken) =>
         {
@@ -187,13 +185,12 @@ public static class ReferenceIntegrationEndpoints
 
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            if (IsPartyType(normalizedType))
+            if (IsSupplierReferenceType(normalizedType))
             {
                 authorization.RequirePartiesManage(context.User);
                 var duplicates = (await FindPartyDuplicates(
                     parties,
                     tenantId,
-                    normalizedType,
                     request,
                     cancellationToken)).ToArray();
                 if (duplicates.Length > 0)
@@ -207,20 +204,31 @@ public static class ReferenceIntegrationEndpoints
                     throw new StlApiException("supplyarr.references.display_name_required", "Display name is required.", 400);
                 }
 
-                var partyKey = FirstValue(request.Values, "partyKey", "key");
-                var created = await parties.CreateTypedAsync(
+                var supplierKey = FirstValue(request.Values, "supplierKey", "partyKey", "key");
+                var parentSupplierIdText = FirstValue(request.Values, "parentSupplierId");
+                Guid? parentSupplierId = null;
+                if (!string.IsNullOrWhiteSpace(parentSupplierIdText))
+                {
+                    if (!Guid.TryParse(parentSupplierIdText, out var parsedParentSupplierId))
+                    {
+                        throw new StlApiException("supplyarr.references.parent_supplier_invalid", "Parent supplier identity must be a GUID.", 400);
+                    }
+
+                    parentSupplierId = parsedParentSupplierId;
+                }
+
+                var created = await parties.CreateSupplierAsync(
                     tenantId,
                     actorUserId,
-                    normalizedType,
-                    new CreateTypedExternalPartyRequest(
-                        string.IsNullOrWhiteSpace(partyKey) ? Slugify(displayName) : partyKey,
-                        null,
-                        null,
+                    new CreateSupplierRequest(
+                        string.IsNullOrWhiteSpace(supplierKey) ? Slugify(displayName) : supplierKey,
+                        parentSupplierId,
+                        NullIfWhiteSpace(GetValue(request.Values, "unitKind")),
                         displayName,
                         FirstValue(request.Values, "legalName", "displayName", "name"),
                         NullIfWhiteSpace(GetValue(request.Values, "taxIdentifier", "taxId")),
                         FirstValue(request.Values, "notes"),
-                        null,
+                        ParseDelimitedValues(GetValue(request.Values, "serviceTypes", "services", "coverage")),
                         null,
                         null,
                         null,
@@ -230,8 +238,8 @@ public static class ReferenceIntegrationEndpoints
                     cancellationToken);
 
                 return Results.Created(
-                    $"/api/v1/integrations/references/{normalizedType}/{created.PartyId}/summary",
-                    CreatedResponse(ToPartySummary(normalizedType, created)));
+                    $"/api/v1/integrations/references/{SupplierReferenceType}/{created.SupplierId}/summary",
+                    CreatedResponse(ToSupplierSummary(created)));
             }
 
             if (normalizedType == "part")
@@ -274,14 +282,14 @@ public static class ReferenceIntegrationEndpoints
         .WithName("QuickCreateSupplyArrReference");
     }
 
-    private static ReferenceTypeDescriptor PartyDescriptor(string referenceType) =>
+    private static ReferenceTypeDescriptor SupplierDescriptor() =>
         new(
             ProductKey,
-            referenceType,
-            CultureInfo.InvariantCulture.TextInfo.ToTitleCase(referenceType),
+            SupplierReferenceType,
+            "Supplier",
             CanQuickCreate: true,
             QuickCreatePermission: "supplyarr.parties.quick_create",
-            Description: $"SupplyArr-owned {referenceType} party reference.");
+            Description: "SupplyArr-owned supplier identity or supplier sub-unit reference.");
 
     private static bool CanQuickCreateParty(System.Security.Claims.ClaimsPrincipal principal)
     {
@@ -315,23 +323,36 @@ public static class ReferenceIntegrationEndpoints
     private static bool RoleMatches(string roleKey, params string[] allowedRoles) =>
         allowedRoles.Any(role => string.Equals(roleKey, role, StringComparison.OrdinalIgnoreCase));
 
-    private static ReferenceSummaryResponse ToPartySummary(string referenceType, ExternalPartyResponse party) =>
+    private static ReferenceSummaryResponse ToSupplierSummary(SupplierResponse supplier) =>
         new(
             ProductKey,
-            referenceType,
-            party.PartyId.ToString("D"),
-            party.DisplayName,
-            string.Join(" / ", new[] { party.PartyKey, party.LegalName }.Where(value => !string.IsNullOrWhiteSpace(value))),
-            party.ApprovalStatus,
-            party.UpdatedAt.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture),
-            $"/{referenceType}s/{party.PartyId:D}",
-            new Dictionary<string, string>
-            {
-                ["partyKey"] = party.PartyKey,
-                ["partyType"] = party.PartyType,
-                ["status"] = party.Status,
-                ["taxIdentifier"] = party.TaxIdentifier ?? string.Empty
-            });
+            SupplierReferenceType,
+            supplier.SupplierId.ToString("D"),
+            supplier.DisplayName,
+            string.Join(" / ", new[] { supplier.SupplierKey, supplier.LegalName }.Where(value => !string.IsNullOrWhiteSpace(value))),
+            supplier.ApprovalStatus,
+            supplier.UpdatedAt.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture),
+            $"/suppliers/{supplier.SupplierId:D}",
+              new Dictionary<string, string>
+              {
+                  ["supplierKey"] = supplier.SupplierKey,
+                  ["unitKind"] = supplier.UnitKind,
+                  ["serviceTypes"] = string.Join(",", supplier.ServiceTypes),
+                  ["status"] = supplier.Status,
+                  ["taxIdentifier"] = supplier.TaxIdentifier ?? string.Empty,
+                  ["parentSupplierId"] = supplier.ParentSupplierId?.ToString("D") ?? string.Empty,
+                  ["parentSupplierDisplayName"] = supplier.ParentSupplierDisplayName ?? string.Empty
+              });
+
+    private static IReadOnlyList<string>? ParseDelimitedValues(string value)
+    {
+        var parsed = value
+            .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return parsed.Length == 0 ? null : parsed;
+    }
 
     private static ReferenceSummaryResponse ToPartSummary(PartResponse part) =>
         new(
@@ -352,50 +373,49 @@ public static class ReferenceIntegrationEndpoints
             });
 
     private static async Task<IEnumerable<DuplicateCandidateResponse>> FindPartyDuplicates(
-        ExternalPartyService parties,
+        SupplierDirectoryService parties,
         Guid tenantId,
-        string partyType,
         QuickCreateRequest request,
         CancellationToken cancellationToken)
     {
         var displayName = Normalize(FirstValue(request.Values, "displayName", "legalName", "name"));
         var legalName = Normalize(FirstValue(request.Values, "legalName", "displayName", "name"));
         var taxId = Normalize(GetValue(request.Values, "taxIdentifier", "taxId"));
-        var partyKey = Normalize(GetValue(request.Values, "partyKey", "key"));
+        var partyKey = Normalize(GetValue(request.Values, "supplierKey", "partyKey", "key"));
 
-        return (await parties.ListAsync(tenantId, partyType, cancellationToken))
-            .Select(party =>
+        return (await parties.ListSuppliersAsync(tenantId, cancellationToken))
+            .Select(supplier =>
             {
                 var reasons = new List<string>();
-                if (!string.IsNullOrWhiteSpace(displayName) && Normalize(party.DisplayName) == displayName)
+                if (!string.IsNullOrWhiteSpace(displayName) && Normalize(supplier.DisplayName) == displayName)
                 {
                     reasons.Add("matching display name");
                 }
 
-                if (!string.IsNullOrWhiteSpace(legalName) && Normalize(party.LegalName) == legalName)
+                if (!string.IsNullOrWhiteSpace(legalName) && Normalize(supplier.LegalName) == legalName)
                 {
                     reasons.Add("matching legal name");
                 }
 
-                if (!string.IsNullOrWhiteSpace(taxId) && Normalize(party.TaxIdentifier ?? string.Empty) == taxId)
+                if (!string.IsNullOrWhiteSpace(taxId) && Normalize(supplier.TaxIdentifier ?? string.Empty) == taxId)
                 {
                     reasons.Add("matching tax identifier");
                 }
 
-                if (!string.IsNullOrWhiteSpace(partyKey) && Normalize(party.PartyKey) == partyKey)
+                if (!string.IsNullOrWhiteSpace(partyKey) && Normalize(supplier.SupplierKey) == partyKey)
                 {
-                    reasons.Add("matching party key");
+                    reasons.Add("matching supplier key");
                 }
 
-                return (party, reasons);
+                return (supplier, reasons);
             })
             .Where(match => match.reasons.Count > 0)
             .Take(10)
             .Select(match => new DuplicateCandidateResponse(
-                match.party.PartyId.ToString("D"),
-                match.party.DisplayName,
-                match.party.PartyKey,
-                match.party.ApprovalStatus,
+                match.supplier.SupplierId.ToString("D"),
+                match.supplier.DisplayName,
+                match.supplier.SupplierKey,
+                match.supplier.ApprovalStatus,
                 string.Join(", ", match.reasons),
                 match.reasons.Count > 1 ? 0.95m : 0.8m));
     }
@@ -456,7 +476,7 @@ public static class ReferenceIntegrationEndpoints
             ReviewStatus: "needs_review",
             Message: "Reference was created in SupplyArr and marked for owner review.");
 
-    private static bool MatchesParty(ExternalPartyResponse party, string? query)
+    private static bool MatchesSupplier(SupplierResponse supplier, string? query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -464,11 +484,11 @@ public static class ReferenceIntegrationEndpoints
         }
 
         var needle = Normalize(query);
-        return Normalize(party.DisplayName).Contains(needle)
-            || Normalize(party.LegalName).Contains(needle)
-            || Normalize(party.PartyKey).Contains(needle)
-            || Normalize(party.TaxIdentifier ?? string.Empty).Contains(needle)
-            || party.Contacts.Any(contact => Normalize(contact.Email).Contains(needle) || Normalize(contact.Phone).Contains(needle));
+        return Normalize(supplier.DisplayName).Contains(needle)
+            || Normalize(supplier.LegalName).Contains(needle)
+            || Normalize(supplier.SupplierKey).Contains(needle)
+            || Normalize(supplier.TaxIdentifier ?? string.Empty).Contains(needle)
+            || supplier.Contacts.Any(contact => Normalize(contact.Email).Contains(needle) || Normalize(contact.Phone).Contains(needle));
     }
 
     private static bool MatchesPart(PartResponse part, string? query)
@@ -492,12 +512,13 @@ public static class ReferenceIntegrationEndpoints
         return normalized switch
         {
             "item" or "material" => "part",
+            "party" or "vendor" or "dealer" or "carrier" => SupplierReferenceType,
             _ => normalized
         };
     }
 
-    private static bool IsPartyType(string referenceType) =>
-        PartyReferenceTypes.Contains(referenceType, StringComparer.OrdinalIgnoreCase);
+    private static bool IsSupplierReferenceType(string referenceType) =>
+        string.Equals(referenceType, SupplierReferenceType, StringComparison.OrdinalIgnoreCase);
 
     private static StlApiException UnsupportedReferenceType(string referenceType) =>
         new(

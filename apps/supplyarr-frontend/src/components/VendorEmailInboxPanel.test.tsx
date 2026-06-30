@@ -13,13 +13,16 @@ const mocks = vi.hoisted(() => ({
         messageKind: 'quote_received',
         senderEmail: 'vendor@example.com',
         senderName: 'Vendor Supply',
-        subject: 'RFQ-001 quote attached',
-        bodyPreview: 'Please see our quote attached.',
-        matchStatus: 'matched',
-        matchReason: 'matched explicit reference key',
-        vendorPartyId: 'vendor-1',
-        vendorPartyKey: 'ACME',
-        vendorDisplayName: 'Acme Supply',
+      subject: 'RFQ-001 quote attached',
+      bodyPreview: 'Please see our quote attached.',
+      matchStatus: 'matched',
+      matchReason: 'matched explicit reference key',
+      supplierId: 'vendor-1',
+      supplierKey: 'ACME',
+      supplierDisplayName: 'Acme Supply',
+      vendorPartyId: 'vendor-1',
+      vendorPartyKey: 'ACME',
+      vendorDisplayName: 'Acme Supply',
         linkedReferenceType: 'rfq',
         linkedReferenceId: 'rfq-1',
         linkedReferenceKey: 'RFQ-001',
@@ -42,6 +45,9 @@ const mocks = vi.hoisted(() => ({
       bodyPreview: 'Confirmed.',
       matchStatus: 'matched',
       matchReason: 'matched explicit reference key',
+      supplierId: 'vendor-1',
+      supplierKey: 'ACME',
+      supplierDisplayName: 'Acme Supply',
       vendorPartyId: 'vendor-1',
       vendorPartyKey: 'ACME',
       vendorDisplayName: 'Acme Supply',
@@ -71,10 +77,10 @@ function renderPanel(canManage = true) {
 }
 
 describe('VendorEmailInboxPanel', () => {
-  it('renders and ingests vendor emails', async () => {
+  it('renders and ingests supplier emails', async () => {
     renderPanel()
 
-    expect(await screen.findByTestId('vendor-email-inbox-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('supplier-email-inbox-panel')).toBeInTheDocument()
     expect(await screen.findByText('RFQ-001 quote attached')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Message key'), { target: { value: 'mail-002' } })

@@ -5,19 +5,19 @@ import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 
-function uniqueParties(state: SupplyArrWorkspaceState) {
+function uniqueSuppliers(state: SupplyArrWorkspaceState) {
   return state.supplierDirectory
 }
 
 export function CorrectiveActionsSection({ state: s }: Props) {
-  const parties = uniqueParties(s)
+  const suppliers = uniqueSuppliers(s)
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <SupplierIncidentsPanel
         accessToken={s.accessToken}
         canManage={s.canManage}
-        incidentParties={parties}
+        supplierUnits={suppliers}
       />
       <ProcurementExceptionsPanel
         accessToken={s.accessToken}

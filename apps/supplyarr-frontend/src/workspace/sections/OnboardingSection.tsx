@@ -1,17 +1,17 @@
 import { ApprovalRemindersPanel } from '../../components/ApprovalRemindersPanel'
 import { SupplierOnboardingPanel } from '../../components/SupplierOnboardingPanel'
 import { SupplyReadinessCheckPanel } from '../../components/SupplyReadinessCheckPanel'
-import { VendorRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
+import { SupplierRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 
-function uniqueParties(state: SupplyArrWorkspaceState) {
+function uniqueSuppliers(state: SupplyArrWorkspaceState) {
   return state.supplierDirectory
 }
 
 export function OnboardingSection({ state: s }: Props) {
-  const parties = uniqueParties(s)
+  const suppliers = uniqueSuppliers(s)
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -19,18 +19,18 @@ export function OnboardingSection({ state: s }: Props) {
         accessToken={s.accessToken}
         canManage={s.canManage}
         canReview={s.canApprovePr}
-        onboardableParties={parties}
+        onboardableSuppliers={suppliers}
       />
       <SupplyReadinessCheckPanel
         accessToken={s.accessToken}
         canRead={s.canReadSupplyReadiness}
         parts={s.partsQuery.data ?? []}
-        vendors={parties}
+        suppliers={suppliers}
       />
-      <VendorRestrictionsPanel
+      <SupplierRestrictionsPanel
         accessToken={s.accessToken}
         canManage={s.canManage}
-        restrictableParties={parties}
+        restrictableSuppliers={suppliers}
       />
       <ApprovalRemindersPanel
         accessToken={s.accessToken}

@@ -18,6 +18,45 @@ import type {
 } from './types'
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
+const supplierOrdersApiPath = `${apiBase}/api/v1/supplier-orders`
+const supplierOrderSettingsApiPath = `${apiBase}/api/v1/supplier-order-settings`
+const supplierOrderPortalApiPath = `${apiBase}/api/v1/supplier-access/orders`
+
+function normalizeVendorOrderListItem(raw: VendorOrderListItemResponse): VendorOrderListItemResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? ('vendorId' in raw ? (raw as VendorOrderResponse).vendorId : undefined),
+    supplierNameSnapshot: raw.supplierNameSnapshot ?? raw.vendorNameSnapshot,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeVendorOrder(raw: VendorOrderResponse): VendorOrderResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? raw.vendorId,
+    supplierNameSnapshot: raw.supplierNameSnapshot ?? raw.vendorNameSnapshot,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeVendorOrderPortal(raw: VendorOrderPortalResponse): VendorOrderPortalResponse {
+  return {
+    ...raw,
+    supplierId: raw.supplierId ?? ('vendorId' in raw ? (raw as unknown as VendorOrderResponse).vendorId : undefined),
+    supplierNameSnapshot: raw.supplierNameSnapshot ?? raw.vendorNameSnapshot,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
 
 class SupplyArrVendorOrderApiError extends Error {
   constructor(
@@ -88,195 +127,232 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return (await response.json()) as T
 }
 
-export async function getVendorOrders(
+export async function getSupplierOrders(
   accessToken: string,
-  options?: { status?: string; vendorId?: string },
+  options?: { status?: string; supplierId?: string; vendorId?: string },
 ): Promise<VendorOrderListItemResponse[]> {
   const search = new URLSearchParams()
   if (options?.status) {
     search.set('status', options.status)
   }
-  if (options?.vendorId) {
+  if (options?.supplierId) {
+    search.set('supplierId', options.supplierId)
+  } else if (options?.vendorId) {
     search.set('vendorId', options.vendorId)
   }
 
   const suffix = search.size > 0 ? `?${search.toString()}` : ''
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders${suffix}`, {
+  const response = await fetch(`${supplierOrdersApiPath}${suffix}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorOrderListItemResponse[]>(response, 'Failed to load vendor orders')
+  return (await parseJsonResponse<VendorOrderListItemResponse[]>(response, 'Failed to load supplier orders'))
+    .map(normalizeVendorOrderListItem)
 }
 
-export async function getVendorOrderMetadata(accessToken: string): Promise<VendorOrderMetadataResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/metadata`, {
+export async function getSupplierOrderMetadata(accessToken: string): Promise<VendorOrderMetadataResponse> {
+  const response = await fetch(`${supplierOrdersApiPath}/metadata`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorOrderMetadataResponse>(response, 'Failed to load vendor-order metadata')
+  return parseJsonResponse<VendorOrderMetadataResponse>(response, 'Failed to load supplier-order metadata')
 }
 
-export async function getVendorOrder(
+export async function getSupplierOrder(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
 ): Promise<VendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorOrderResponse>(response, 'Failed to load vendor order')
+  return normalizeVendorOrder(
+    await parseJsonResponse<VendorOrderResponse>(response, 'Failed to load supplier order'),
+  )
 }
 
-export async function createVendorOrder(
+export async function createSupplierOrder(
   accessToken: string,
   payload: CreateVendorOrderRequest,
 ): Promise<VendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders`, {
+  const response = await fetch(supplierOrdersApiPath, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ ...payload, vendorId: payload.supplierId ?? payload.vendorId }),
   })
-  return parseJsonResponse<VendorOrderResponse>(response, 'Failed to create vendor order')
+  return normalizeVendorOrder(
+    await parseJsonResponse<VendorOrderResponse>(response, 'Failed to create supplier order'),
+  )
 }
 
-export async function updateVendorOrder(
+export async function updateSupplierOrder(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
   payload: UpdateVendorOrderRequest,
 ): Promise<VendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}`, {
     method: 'PATCH',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderResponse>(response, 'Failed to update vendor order')
+  return normalizeVendorOrder(
+    await parseJsonResponse<VendorOrderResponse>(response, 'Failed to update supplier order'),
+  )
 }
 
-export async function sendVendorOrderToVendor(
+export async function sendSupplierOrderToSupplier(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
 ): Promise<SendVendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/send-to-vendor`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/send-to-supplier`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<SendVendorOrderResponse>(response, 'Failed to send vendor order')
+  return parseJsonResponse<SendVendorOrderResponse>(response, 'Failed to send supplier order')
 }
 
-export async function submitVendorOrderStatus(
+export async function submitSupplierOrderStatus(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
   payload: UpdateVendorOrderStatusRequest,
 ): Promise<VendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/status`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/status`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderResponse>(response, 'Failed to update vendor-order status')
+  return normalizeVendorOrder(
+    await parseJsonResponse<VendorOrderResponse>(response, 'Failed to update supplier-order status'),
+  )
 }
 
-export async function getVendorOrderHistory(
+export async function getSupplierOrderHistory(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
 ): Promise<VendorOrderStatusUpdateResponse[]> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/status-history`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/status-history`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorOrderStatusUpdateResponse[]>(response, 'Failed to load vendor-order history')
+  return parseJsonResponse<VendorOrderStatusUpdateResponse[]>(response, 'Failed to load supplier-order history')
 }
 
-export async function createVendorOrderMagicLink(
+export async function createSupplierOrderMagicLink(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
 ): Promise<CreateVendorOrderMagicLinkResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/magic-link`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/magic-link`, {
     method: 'POST',
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<CreateVendorOrderMagicLinkResponse>(response, 'Failed to create magic link')
 }
 
-export async function registerVendorOrderDocument(
+export async function registerSupplierOrderDocument(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
   payload: RegisterVendorOrderDocumentRequest,
 ): Promise<VendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/documents`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/documents`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderResponse>(response, 'Failed to register vendor-order document')
+  return normalizeVendorOrder(
+    await parseJsonResponse<VendorOrderResponse>(response, 'Failed to register supplier-order document'),
+  )
 }
 
-export async function createVendorOrderBrokerDecision(
+export async function createSupplierOrderBrokerDecision(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
   payload: CreateVendorOrderBrokerDecisionRequest,
 ): Promise<unknown> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/partial-decision`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/partial-decision`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<unknown>(response, 'Failed to record vendor partial decision')
+  return parseJsonResponse<unknown>(response, 'Failed to record supplier partial decision')
 }
 
-export async function splitVendorOrder(
+export async function splitSupplierOrder(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
   payload: SplitVendorOrderRequest,
 ): Promise<SplitVendorOrderResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-orders/${vendorOrderId}/split`, {
+  const response = await fetch(`${supplierOrdersApiPath}/${supplierOrderId}/split`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<SplitVendorOrderResponse>(response, 'Failed to split vendor order')
+  return parseJsonResponse<SplitVendorOrderResponse>(response, 'Failed to split supplier order')
 }
 
-export async function getVendorOrderSettings(accessToken: string): Promise<VendorOrderSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-order-settings`, {
+export async function getSupplierOrderSettings(accessToken: string): Promise<VendorOrderSettingsResponse> {
+  const response = await fetch(supplierOrderSettingsApiPath, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<VendorOrderSettingsResponse>(response, 'Failed to load vendor-order settings')
+  return parseJsonResponse<VendorOrderSettingsResponse>(response, 'Failed to load supplier-order settings')
 }
 
-export async function upsertVendorOrderSettings(
+export async function upsertSupplierOrderSettings(
   accessToken: string,
   payload: UpsertVendorOrderSettingsRequest,
 ): Promise<VendorOrderSettingsResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-order-settings`, {
+  const response = await fetch(supplierOrderSettingsApiPath, {
     method: 'PUT',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderSettingsResponse>(response, 'Failed to save vendor-order settings')
+  return parseJsonResponse<VendorOrderSettingsResponse>(response, 'Failed to save supplier-order settings')
 }
 
-export async function getVendorAccessOrder(token: string): Promise<VendorOrderPortalResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-access/orders/${encodeURIComponent(token)}`)
-  return parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to load vendor portal order')
+export async function getSupplierAccessOrder(token: string): Promise<VendorOrderPortalResponse> {
+  const response = await fetch(`${supplierOrderPortalApiPath}/${encodeURIComponent(token)}`)
+  return normalizeVendorOrderPortal(
+    await parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to load supplier portal order'),
+  )
 }
 
-export async function submitVendorAccessOrderStatus(
+export async function submitSupplierAccessOrderStatus(
   token: string,
   payload: UpdateVendorOrderStatusRequest,
 ): Promise<VendorOrderPortalResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-access/orders/${encodeURIComponent(token)}/status`, {
+  const response = await fetch(`${supplierOrderPortalApiPath}/${encodeURIComponent(token)}/status`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to submit vendor portal status')
+  return normalizeVendorOrderPortal(
+    await parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to submit supplier portal status'),
+  )
 }
 
-export async function registerVendorAccessOrderDocument(
+export async function registerSupplierAccessOrderDocument(
   token: string,
   payload: RegisterVendorOrderDocumentRequest,
 ): Promise<VendorOrderPortalResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-access/orders/${encodeURIComponent(token)}/documents`, {
+  const response = await fetch(`${supplierOrderPortalApiPath}/${encodeURIComponent(token)}/documents`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to register vendor portal document')
+  return normalizeVendorOrderPortal(
+    await parseJsonResponse<VendorOrderPortalResponse>(response, 'Failed to register supplier portal document'),
+  )
 }
+
+export const getVendorOrders = getSupplierOrders
+export const getVendorOrderMetadata = getSupplierOrderMetadata
+export const getVendorOrder = getSupplierOrder
+export const createVendorOrder = createSupplierOrder
+export const updateVendorOrder = updateSupplierOrder
+export const sendVendorOrderToVendor = sendSupplierOrderToSupplier
+export const submitVendorOrderStatus = submitSupplierOrderStatus
+export const getVendorOrderHistory = getSupplierOrderHistory
+export const createVendorOrderMagicLink = createSupplierOrderMagicLink
+export const registerVendorOrderDocument = registerSupplierOrderDocument
+export const createVendorOrderBrokerDecision = createSupplierOrderBrokerDecision
+export const splitVendorOrder = splitSupplierOrder
+export const getVendorOrderSettings = getSupplierOrderSettings
+export const upsertVendorOrderSettings = upsertSupplierOrderSettings
+export const getVendorAccessOrder = getSupplierAccessOrder
+export const submitVendorAccessOrderStatus = submitSupplierAccessOrderStatus
+export const registerVendorAccessOrderDocument = registerSupplierAccessOrderDocument

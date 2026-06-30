@@ -40,7 +40,7 @@ vi.mock('../../components/ProcurementExceptionEscalationSettingsPanel', () => ({
 }))
 
 vi.mock('../../components/VendorOrderSettingsPanel', () => ({
-  VendorOrderSettingsPanel: () => <div data-testid="vendor-order-settings-panel" />,
+  SupplierOrderSettingsPanel: () => <div data-testid="supplier-order-settings-panel" />,
 }))
 
 vi.mock('../../components/DemandProcessingSettingsPanel', () => ({
@@ -80,7 +80,7 @@ describe('SettingsSection', () => {
     expect(screen.getByTestId('procurement-coordination-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('approval-reminder-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('procurement-exception-escalation-settings-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('vendor-order-settings-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-order-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('demand-processing-settings-panel')).toBeInTheDocument()
     expect(screen.getByTestId('integration-event-settings-panel')).toBeInTheDocument()
   })

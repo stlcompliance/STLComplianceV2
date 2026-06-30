@@ -167,7 +167,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/reports", _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var json = await response.Content.ReadAsStringAsync();
-        Assert.Contains("/api/v1/reports/vendors", json, StringComparison.Ordinal);
+        Assert.Contains("/api/v1/reports/suppliers", json, StringComparison.Ordinal);
         Assert.Contains("/api/v1/reports/parts-inventory", json, StringComparison.Ordinal);
         Assert.Contains("/api/v1/reports/purchasing", json, StringComparison.Ordinal);
         Assert.Contains("/api/v1/reports/compliance", json, StringComparison.Ordinal);

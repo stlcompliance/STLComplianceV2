@@ -13,7 +13,7 @@ public sealed class VendorDocumentsCsvImportService(
 
     private static readonly string[] Headers =
     [
-        "party_key",
+        "supplier_key",
         "document_key",
         "document_type_key",
         "title",
@@ -38,7 +38,7 @@ public sealed class VendorDocumentsCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var partyIdsByKey = await db.ExternalParties
+        var supplierIdsByKey = await db.ExternalParties
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
         var seenDocumentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -46,7 +46,7 @@ public sealed class VendorDocumentsCsvImportService(
 
         foreach (var row in rows)
         {
-            ValidateRow(row, partyIdsByKey, seenDocumentKeys, issues);
+            ValidateRow(row, supplierIdsByKey, seenDocumentKeys, issues);
             if (issues.Any(x => x.LineNumber == row.LineNumber))
             {
                 continue;
@@ -66,7 +66,7 @@ public sealed class VendorDocumentsCsvImportService(
             await documents.RegisterAsync(
                 tenantId,
                 actorUserId,
-                partyIdsByKey[row.PartyKey],
+                supplierIdsByKey[row.SupplierKey],
                 new RegisterPartyComplianceDocumentRequest(
                     row.DocumentKey,
                     row.DocumentTypeKey,
@@ -111,9 +111,12 @@ public sealed class VendorDocumentsCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
+        var normalizedHeaders = headerFields
+            .Select(header => string.Equals(header, "party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
+            .ToArray();
+        if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new VendorDocumentsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
+            issues.Add(new VendorDocumentsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy party_key remains accepted."));
             return [];
         }
 
@@ -152,24 +155,24 @@ public sealed class VendorDocumentsCsvImportService(
 
     private static void ValidateRow(
         ImportRow row,
-        IReadOnlyDictionary<string, Guid> partyIdsByKey,
+        IReadOnlyDictionary<string, Guid> supplierIdsByKey,
         ISet<string> seenDocumentKeys,
         List<VendorDocumentsCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "party_key", row.PartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.SupplierKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "document_key", row.DocumentKey, 1, 128, issues);
         ValidateLength(row.LineNumber, "document_type_key", row.DocumentTypeKey, 1, 64, issues);
         ValidateMaxLength(row.LineNumber, "title", row.Title, 256, issues);
         ValidateMaxLength(row.LineNumber, "file_name", row.FileName, 256, issues);
         ValidateMaxLength(row.LineNumber, "content_type", row.ContentType, 128, issues);
-        if (!partyIdsByKey.ContainsKey(row.PartyKey))
+        if (!supplierIdsByKey.ContainsKey(row.SupplierKey))
         {
-            issues.Add(new VendorDocumentsCsvImportIssue(row.LineNumber, "party.not_found", "Party key was not found."));
+            issues.Add(new VendorDocumentsCsvImportIssue(row.LineNumber, "supplier.not_found", "Supplier key was not found."));
         }
 
-        if (!seenDocumentKeys.Add($"{row.PartyKey}|{row.DocumentKey}"))
+        if (!seenDocumentKeys.Add($"{row.SupplierKey}|{row.DocumentKey}"))
         {
-            issues.Add(new VendorDocumentsCsvImportIssue(row.LineNumber, "document.duplicate_in_file", "Document key appears more than once for the same party in the import file."));
+            issues.Add(new VendorDocumentsCsvImportIssue(row.LineNumber, "document.duplicate_in_file", "Document key appears more than once for the same supplier in the import file."));
         }
     }
 
@@ -305,7 +308,7 @@ public sealed class VendorDocumentsCsvImportService(
 
     private sealed record ImportRow(
         int LineNumber,
-        string PartyKey,
+        string SupplierKey,
         string DocumentKey,
         string DocumentTypeKey,
         string Title,

@@ -3,25 +3,30 @@ import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption
 import { useMemo, useState } from 'react'
 
 import {
-  approvePartyComplianceDocument,
+  approveSupplierComplianceDocument,
   approveSupplierOnboarding,
-  getSupplierOnboardingByParty,
+  getSupplierOnboarding,
   getSupplierOnboardingDocumentRequirements,
   listPendingSupplierOnboarding,
-  listPartyComplianceDocuments,
-  registerPartyComplianceDocument,
+  listSupplierComplianceDocuments,
+  registerSupplierComplianceDocument,
   rejectSupplierOnboarding,
   startSupplierOnboarding,
   submitSupplierOnboarding,
 } from '../api/client'
-import type { ExternalPartyResponse, PartyComplianceDocumentResponse } from '../api/types'
+import type { SupplierResponse, SupplierComplianceDocumentResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
 interface SupplierOnboardingPanelProps {
   accessToken: string
   canManage: boolean
   canReview: boolean
-  onboardableParties: ExternalPartyResponse[]
+  onboardableSuppliers: SupplierResponse[]
 }
 
 function statusBadgeClass(status: string): string {
@@ -62,14 +67,14 @@ export function SupplierOnboardingPanel({
   accessToken,
   canManage,
   canReview,
-  onboardableParties,
+  onboardableSuppliers,
 }: SupplierOnboardingPanelProps) {
   if (!canManage && !canReview) {
     return null
   }
 
   const queryClient = useQueryClient()
-  const [selectedPartyId, setSelectedPartyId] = useState('')
+  const [selectedSupplierId, setSelectedSupplierId] = useState('')
   const [onboardingNotes, setOnboardingNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
   const [docTypeKey, setDocTypeKey] = useState('w9')
@@ -89,61 +94,69 @@ export function SupplierOnboardingPanel({
   })
 
   const onboardingQuery = useQuery({
-    queryKey: ['supplyarr-onboarding', accessToken, selectedPartyId],
-    queryFn: () => getSupplierOnboardingByParty(accessToken, selectedPartyId),
-    enabled: Boolean(selectedPartyId),
+    queryKey: ['supplyarr-supplier-onboarding', accessToken, selectedSupplierId],
+    queryFn: () => getSupplierOnboarding(accessToken, selectedSupplierId),
+    enabled: Boolean(selectedSupplierId),
     retry: false,
   })
 
   const documentsQuery = useQuery({
-    queryKey: ['supplyarr-party-compliance-documents', accessToken, selectedPartyId],
-    queryFn: () => listPartyComplianceDocuments(accessToken, selectedPartyId),
-    enabled: Boolean(selectedPartyId),
+    queryKey: ['supplyarr-supplier-compliance-documents', accessToken, selectedSupplierId],
+    queryFn: () => listSupplierComplianceDocuments(accessToken, selectedSupplierId),
+    enabled: Boolean(selectedSupplierId),
   })
 
-  const selectedParty = useMemo(
-    () => onboardableParties.find((p) => p.partyId === selectedPartyId),
-    [onboardableParties, selectedPartyId],
+  const selectedSupplier = useMemo(
+    () => onboardableSuppliers.find((supplier) => supplier.supplierId === selectedSupplierId),
+    [onboardableSuppliers, selectedSupplierId],
   )
-  const partyOptions = useMemo<PickerOption[]>(
+  const supplierOptions = useMemo<PickerOption[]>(
     () =>
-      onboardableParties.map((party) => ({
-        value: party.partyId,
-        label: `${party.displayName} (${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'})`,
+      onboardableSuppliers.map((supplier) => ({
+        value: supplier.supplierId,
+        label: `${formatSupplierIdentitySummary({
+          supplierDisplayName: supplier.displayName,
+          supplierKey: supplier.supplierKey,
+          parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+          supplierUnitKind: supplier.unitKind,
+        })} · ${humanizeSupplierUnitKind(supplier.unitKind)}`,
       })),
-    [onboardableParties],
+    [onboardableSuppliers],
   )
-  const selectedPartyOption = useMemo<PickerOption | undefined>(
-    () => partyOptions.find((option) => option.value === selectedPartyId),
-    [partyOptions, selectedPartyId],
+  const selectedSupplierOption = useMemo<PickerOption | undefined>(
+    () => supplierOptions.find((option) => option.value === selectedSupplierId),
+    [supplierOptions, selectedSupplierId],
   )
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-onboarding-pending', accessToken] })
-    if (selectedPartyId) {
+    if (selectedSupplierId) {
       void queryClient.invalidateQueries({
-        queryKey: ['supplyarr-onboarding', accessToken, selectedPartyId],
+        queryKey: ['supplyarr-supplier-onboarding', accessToken, selectedSupplierId],
+      })
+      void queryClient.invalidateQueries({
+        queryKey: ['supplyarr-supplier-compliance-documents', accessToken, selectedSupplierId],
       })
     }
   }
 
   const startMutation = useMutation({
-    mutationFn: () => startSupplierOnboarding(accessToken, selectedPartyId, onboardingNotes),
+    mutationFn: () => startSupplierOnboarding(accessToken, selectedSupplierId, onboardingNotes),
     onSuccess: invalidate,
   })
 
   const submitMutation = useMutation({
-    mutationFn: () => submitSupplierOnboarding(accessToken, selectedPartyId, onboardingNotes),
+    mutationFn: () => submitSupplierOnboarding(accessToken, selectedSupplierId, onboardingNotes),
     onSuccess: invalidate,
   })
 
   const approveMutation = useMutation({
-    mutationFn: () => approveSupplierOnboarding(accessToken, selectedPartyId),
+    mutationFn: () => approveSupplierOnboarding(accessToken, selectedSupplierId),
     onSuccess: invalidate,
   })
 
   const rejectMutation = useMutation({
-    mutationFn: () => rejectSupplierOnboarding(accessToken, selectedPartyId, rejectReason),
+    mutationFn: () => rejectSupplierOnboarding(accessToken, selectedSupplierId, rejectReason),
     onSuccess: invalidate,
   })
 
@@ -157,7 +170,7 @@ export function SupplierOnboardingPanel({
         throw new Error('Select a document file.')
       }
       const contentBase64 = await fileToBase64(docFile)
-      return registerPartyComplianceDocument(accessToken, selectedPartyId, {
+      return registerSupplierComplianceDocument(accessToken, selectedSupplierId, {
         documentKey: generatedDocumentKey,
         documentTypeKey: docTypeKey,
         title: docTitle || docTypeKey,
@@ -170,14 +183,14 @@ export function SupplierOnboardingPanel({
     },
     onSuccess: async (created) => {
       if (canReview) {
-        await approvePartyComplianceDocument(accessToken, selectedPartyId, created.documentId)
+        await approveSupplierComplianceDocument(accessToken, selectedSupplierId, created.documentId)
       }
       invalidate()
     },
   })
 
   const onboarding = onboardingQuery.data
-  const partyDocuments = documentsQuery.data ?? []
+  const supplierDocuments = documentsQuery.data ?? []
   const actionError =
     (startMutation.isError && startMutation.error)
     || (submitMutation.isError && submitMutation.error)
@@ -192,11 +205,11 @@ export function SupplierOnboardingPanel({
   const documentPosture =
     onboarding?.documentRequirements.some((doc) => !doc.isSatisfied)
       ? 'missing required documents'
-      : partyDocuments.some((doc) => doc.reviewStatus === 'rejected')
+      : supplierDocuments.some((doc) => doc.reviewStatus === 'rejected')
         ? 'rejected document'
-        : partyDocuments.some((doc) => isDocumentExpiringSoon(doc))
+        : supplierDocuments.some((doc) => isDocumentExpiringSoon(doc))
           ? 'expiring soon'
-          : partyDocuments.length > 0
+          : supplierDocuments.length > 0
             ? 'approved'
             : 'no documents'
 
@@ -249,9 +262,13 @@ export function SupplierOnboardingPanel({
                 <button
                   type="button"
                   className="text-left underline decoration-dotted hover:text-white"
-                  onClick={() => setSelectedPartyId(item.externalPartyId)}
+                  onClick={() => {
+                    if (item.supplierId) {
+                  setSelectedSupplierId(item.supplierId)
+                    }
+                  }}
                 >
-                  {item.displayName} ({item.partyKey})
+                  {item.displayName} ({item.supplierKey})
                 </button>
               </li>
             ))}
@@ -261,15 +278,33 @@ export function SupplierOnboardingPanel({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <StaticSearchPicker
-          id="supplier-onboarding-party"
-          label="Onboarding party"
-          value={selectedPartyId}
-          onChange={setSelectedPartyId}
-          options={partyOptions}
-          selectedOption={selectedPartyOption}
+          id="supplier-onboarding-supplier"
+          label="Supplier identity or sub-unit"
+          value={selectedSupplierId}
+          onChange={setSelectedSupplierId}
+          options={supplierOptions}
+          selectedOption={selectedSupplierOption}
           placeholder="Search supplier identities or sub-units…"
-          testId="supplier-onboarding-party-picker"
+          testId="supplier-onboarding-supplier-picker"
         />
+        {selectedSupplier ? (
+          <p className="sm:col-span-2 text-xs text-[var(--color-text-muted)]">
+            {formatSupplierIdentitySummary({
+              supplierDisplayName: selectedSupplier.displayName,
+              supplierKey: selectedSupplier.supplierKey,
+              parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+              supplierUnitKind: selectedSupplier.unitKind,
+            })}{' '}
+            · {humanizeSupplierUnitKind(selectedSupplier.unitKind)} ·{' '}
+            {formatSupplierOperationalContext({
+              supplierServiceTypes: selectedSupplier.serviceTypes,
+              addressLine1: selectedSupplier.addressLine1,
+              locality: selectedSupplier.locality,
+              regionCode: selectedSupplier.regionCode,
+              postalCode: selectedSupplier.postalCode,
+            })}
+          </p>
+        ) : null}
         <label htmlFor="supplier-onboarding-notes" className="text-sm text-slate-400">
           Onboarding notes
           <input
@@ -281,7 +316,7 @@ export function SupplierOnboardingPanel({
         </label>
       </div>
 
-      {canManage && selectedPartyId ? (
+      {canManage && selectedSupplierId ? (
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
@@ -308,7 +343,7 @@ export function SupplierOnboardingPanel({
         <div className="mt-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-medium text-slate-300">Required documents</h3>
-            {selectedPartyId ? (
+            {selectedSupplierId ? (
               <span className="rounded-full bg-slate-800 px-2 py-1 text-[11px] uppercase tracking-wide text-slate-300">
                 {documentPosture}
               </span>
@@ -318,7 +353,7 @@ export function SupplierOnboardingPanel({
             {requirementsQuery.data.requirements.map((req) => {
               const status =
                 onboarding?.documentRequirements.find((d) => d.documentTypeKey === req.documentTypeKey)
-                ?? deriveRequirementStatus(req.documentTypeKey, partyDocuments)
+                ?? deriveRequirementStatus(req.documentTypeKey, supplierDocuments)
               return (
                 <li key={req.documentTypeKey} className="flex justify-between gap-2">
                   <span>{req.label}</span>
@@ -332,14 +367,14 @@ export function SupplierOnboardingPanel({
         </div>
       ) : null}
 
-      {selectedPartyId && (
+      {selectedSupplierId && (
         <div className="mt-4 rounded-lg border border-slate-800 bg-slate-950/50 p-3">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <h3 className="text-sm font-medium text-slate-300">Compliance documents</h3>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                {partyDocuments.length} document(s) · {countDocuments(partyDocuments, 'approved')} approved ·{' '}
-                {countDocuments(partyDocuments, 'expiring')} expiring soon · {countDocuments(partyDocuments, 'rejected')} rejected
+                {supplierDocuments.length} document(s) · {countDocuments(supplierDocuments, 'approved')} approved ·{' '}
+                {countDocuments(supplierDocuments, 'expiring')} expiring soon · {countDocuments(supplierDocuments, 'rejected')} rejected
               </p>
             </div>
             {documentsQuery.isLoading ? (
@@ -349,19 +384,19 @@ export function SupplierOnboardingPanel({
 
           {documentsQuery.isError ? (
             <div className="mt-3">
-          <ApiErrorCallout
-            title="Unable to load compliance documents"
-            message={getErrorMessage(documentsQuery.error, 'Failed to load supplier compliance documents.')}
-            onRetry={() => void documentsQuery.refetch()}
-            retryLabel="Retry documents"
-          />
+              <ApiErrorCallout
+                title="Unable to load compliance documents"
+                message={getErrorMessage(documentsQuery.error, 'Failed to load supplier compliance documents.')}
+                onRetry={() => void documentsQuery.refetch()}
+                retryLabel="Retry documents"
+              />
             </div>
           ) : null}
 
           {!documentsQuery.isLoading && !documentsQuery.isError ? (
-            partyDocuments.length > 0 ? (
+            supplierDocuments.length > 0 ? (
               <ul className="mt-3 space-y-2 text-sm">
-                {partyDocuments.map((doc) => (
+                {supplierDocuments.map((doc) => (
                   <li key={doc.documentId} className="rounded-md border border-slate-800 bg-slate-900/60 px-3 py-2">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -388,7 +423,7 @@ export function SupplierOnboardingPanel({
         </div>
       )}
 
-      {canManage && selectedPartyId && onboarding ? (
+      {canManage && selectedSupplierId && onboarding ? (
         <div className="mt-4 rounded-lg border border-slate-800 p-3">
           <h3 className="text-sm font-medium text-slate-300">Upload document</h3>
           <div className="mt-2 grid gap-2 sm:grid-cols-4">
@@ -421,7 +456,7 @@ export function SupplierOnboardingPanel({
               sourceLabel={docTitle || docTypeKey}
               existingKeys={[]}
               onKeyChange={setDocKey}
-              domain="vendor"
+              domain="supplier"
               kind="document"
               label="Document key"
             />
@@ -450,8 +485,17 @@ export function SupplierOnboardingPanel({
         <div className="mt-4 rounded-lg border border-slate-800 p-3">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="font-medium">{selectedParty?.displayName ?? onboarding.displayName}</div>
-              <div className="text-sm text-slate-400">{onboarding.partyKey}</div>
+              <div className="font-medium">
+                {formatSupplierIdentitySummary({
+                  supplierDisplayName: selectedSupplier?.displayName ?? onboarding.displayName,
+                  supplierKey: onboarding.supplierKey,
+                  parentSupplierDisplayName: selectedSupplier?.parentSupplierDisplayName ?? null,
+                  supplierUnitKind: selectedSupplier?.unitKind ?? null,
+                })}
+              </div>
+              <div className="text-sm text-slate-400">
+                {humanizeSupplierUnitKind(selectedSupplier?.unitKind ?? null)}
+              </div>
             </div>
             <span
               className={`rounded-full px-2 py-0.5 text-xs ring-1 ${statusBadgeClass(onboarding.onboardingStatus)}`}
@@ -463,10 +507,10 @@ export function SupplierOnboardingPanel({
             <p className="mt-2 text-sm text-rose-300">Rejected: {onboarding.rejectionReason}</p>
           ) : null}
         </div>
-      ) : selectedPartyId && onboardingQuery.isError && isMissingOnboardingRecordError(onboardingQuery.error) ? (
+      ) : selectedSupplierId && onboardingQuery.isError && isMissingOnboardingRecordError(onboardingQuery.error) ? (
         <p className="mt-3 text-sm text-slate-400">No onboarding record yet — start onboarding above.</p>
       ) : null}
-      {selectedPartyId
+      {selectedSupplierId
       && onboardingQuery.isError
       && !isMissingOnboardingRecordError(onboardingQuery.error) ? (
         <div className="mt-3">
@@ -513,7 +557,7 @@ export function SupplierOnboardingPanel({
   )
 }
 
-function isDocumentExpiringSoon(document: PartyComplianceDocumentResponse): boolean {
+function isDocumentExpiringSoon(document: SupplierComplianceDocumentResponse): boolean {
   if (!document.expiresAt) {
     return false
   }
@@ -525,14 +569,14 @@ function isDocumentExpiringSoon(document: PartyComplianceDocumentResponse): bool
 
 function deriveRequirementStatus(
   documentTypeKey: string,
-  documents: PartyComplianceDocumentResponse[],
+  documents: SupplierComplianceDocumentResponse[],
 ): { isSatisfied: boolean } | undefined {
   const matched = documents.find((doc) => doc.documentTypeKey === documentTypeKey)
   return matched ? { isSatisfied: matched.reviewStatus === 'approved' } : undefined
 }
 
 function countDocuments(
-  documents: PartyComplianceDocumentResponse[],
+  documents: SupplierComplianceDocumentResponse[],
   kind: 'approved' | 'expiring' | 'rejected',
 ): number {
   switch (kind) {
@@ -545,14 +589,14 @@ function countDocuments(
   }
 }
 
-function documentStatusLabel(document: PartyComplianceDocumentResponse): string {
+function documentStatusLabel(document: SupplierComplianceDocumentResponse): string {
   if (document.reviewStatus === 'rejected') return 'rejected'
   if (isDocumentExpiringSoon(document)) return 'expiring soon'
   if (document.reviewStatus === 'approved') return 'approved'
   return document.reviewStatus
 }
 
-function documentStatusClass(document: PartyComplianceDocumentResponse): string {
+function documentStatusClass(document: SupplierComplianceDocumentResponse): string {
   if (document.reviewStatus === 'rejected') return 'text-rose-300'
   if (isDocumentExpiringSoon(document)) return 'text-amber-300'
   if (document.reviewStatus === 'approved') return 'text-emerald-300'

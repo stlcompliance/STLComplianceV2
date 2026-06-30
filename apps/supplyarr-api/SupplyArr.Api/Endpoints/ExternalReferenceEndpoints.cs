@@ -12,7 +12,7 @@ public static class ExternalReferenceEndpoints
 
     private static readonly ExternalReferenceEntityContract[] EntityContracts =
     [
-        new("party", "External party records including vendors, suppliers, dealers, and customers.", "/api/v1/references/resolve?entityType=party&key={externalPartyKey}"),
+        new("supplier", "Supplier identity and supplier sub-unit records.", "/api/v1/references/resolve?entityType=supplier&key={supplierKey}"),
         new("part", "Part/material item master records.", "/api/v1/references/resolve?entityType=part&key={partKey}"),
         new("purchase_request", "Purchase request records.", "/api/v1/references/resolve?entityType=purchase_request&key={requestKey}"),
         new("purchase_order", "Purchase order records.", "/api/v1/references/resolve?entityType=purchase_order&key={orderKey}"),
@@ -142,8 +142,7 @@ public static class ExternalReferenceEndpoints
     {
         return normalizedEntityType switch
         {
-            "party" or "vendor" or "supplier" or "dealer" or "customer" => await ResolvePartyAsync(
-                normalizedEntityType,
+            "party" or "vendor" or "supplier" or "dealer" or "carrier" => await ResolveSupplierAsync(
                 normalizedKey,
                 tenantId,
                 authorization,
@@ -183,8 +182,7 @@ public static class ExternalReferenceEndpoints
         };
     }
 
-    private static async Task<ExternalReferenceResolutionResponse?> ResolvePartyAsync(
-        string entityType,
+    private static async Task<ExternalReferenceResolutionResponse?> ResolveSupplierAsync(
         string key,
         Guid tenantId,
         SupplyArrAuthorizationService authorization,
@@ -202,7 +200,7 @@ public static class ExternalReferenceEndpoints
         return party is null
             ? null
             : new ExternalReferenceResolutionResponse(
-                entityType,
+                "supplier",
                 party.PartyKey,
                 party.Id,
                 party.PartyKey,

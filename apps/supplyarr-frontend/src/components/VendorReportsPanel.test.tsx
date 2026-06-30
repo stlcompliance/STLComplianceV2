@@ -2,17 +2,21 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, expect, it, vi } from 'vitest'
 
-import { VendorReportsPanel } from './VendorReportsPanel'
+import { SupplierReportsPanel } from './VendorReportsPanel'
 
 vi.mock('../api/client', () => ({
-  getVendorReportSummary: vi.fn().mockResolvedValue({
+  getSupplierReportSummary: vi.fn().mockResolvedValue({
     generatedAt: new Date().toISOString(),
     approvalStatusCounts: [{ approvalStatus: 'approved', count: 1 }],
-    vendors: [
+    suppliers: [
       {
-        vendorPartyId: 'vendor-1',
-        partyKey: 'ACME',
-        displayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
+        supplierType: 'supplier',
         approvalStatus: 'approved',
         status: 'active',
         partVendorLinkCount: 2,
@@ -50,6 +54,12 @@ vi.mock('../api/client', () => ({
       invitations: [
         {
           invitationId: 'inv-1',
+          supplierId: 'vendor-1',
+          supplierKey: 'ACME',
+          supplierDisplayName: 'North Yard Counter',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts', 'maintenance'],
           vendorPartyId: 'vendor-1',
           vendorPartyKey: 'ACME',
           vendorDisplayName: 'Acme Supply',
@@ -58,6 +68,11 @@ vi.mock('../api/client', () => ({
         },
         {
           invitationId: 'inv-2',
+          supplierId: 'vendor-2',
+          supplierKey: 'BETA',
+          supplierDisplayName: 'Beta Parts',
+          supplierUnitKind: 'identity',
+          supplierServiceTypes: ['parts'],
           vendorPartyId: 'vendor-2',
           vendorPartyKey: 'BETA',
           vendorDisplayName: 'Beta Parts',
@@ -69,6 +84,12 @@ vi.mock('../api/client', () => ({
         {
           vendorQuoteId: 'vq-1',
           rfqId: 'rfq-1',
+          supplierId: 'vendor-1',
+          supplierKey: 'ACME',
+          supplierDisplayName: 'North Yard Counter',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts', 'maintenance'],
           vendorPartyId: 'vendor-1',
           vendorPartyKey: 'ACME',
           vendorDisplayName: 'Acme Supply',
@@ -86,6 +107,11 @@ vi.mock('../api/client', () => ({
         {
           vendorQuoteId: 'vq-2',
           rfqId: 'rfq-1',
+          supplierId: 'vendor-2',
+          supplierKey: 'BETA',
+          supplierDisplayName: 'Beta Parts',
+          supplierUnitKind: 'identity',
+          supplierServiceTypes: ['parts'],
           vendorPartyId: 'vendor-2',
           vendorPartyKey: 'BETA',
           vendorDisplayName: 'Beta Parts',
@@ -121,6 +147,12 @@ vi.mock('../api/client', () => ({
       invitations: [
         {
           invitationId: 'inv-3',
+          supplierId: 'vendor-1',
+          supplierKey: 'ACME',
+          supplierDisplayName: 'North Yard Counter',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts', 'maintenance'],
           vendorPartyId: 'vendor-1',
           vendorPartyKey: 'ACME',
           vendorDisplayName: 'Acme Supply',
@@ -129,6 +161,11 @@ vi.mock('../api/client', () => ({
         },
         {
           invitationId: 'inv-4',
+          supplierId: 'vendor-2',
+          supplierKey: 'BETA',
+          supplierDisplayName: 'Beta Parts',
+          supplierUnitKind: 'identity',
+          supplierServiceTypes: ['parts'],
           vendorPartyId: 'vendor-2',
           vendorPartyKey: 'BETA',
           vendorDisplayName: 'Beta Parts',
@@ -140,6 +177,12 @@ vi.mock('../api/client', () => ({
         {
           vendorQuoteId: 'vq-3',
           rfqId: 'rfq-2',
+          supplierId: 'vendor-1',
+          supplierKey: 'ACME',
+          supplierDisplayName: 'North Yard Counter',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts', 'maintenance'],
           vendorPartyId: 'vendor-1',
           vendorPartyKey: 'ACME',
           vendorDisplayName: 'Acme Supply',
@@ -157,6 +200,11 @@ vi.mock('../api/client', () => ({
         {
           vendorQuoteId: 'vq-4',
           rfqId: 'rfq-2',
+          supplierId: 'vendor-2',
+          supplierKey: 'BETA',
+          supplierDisplayName: 'Beta Parts',
+          supplierUnitKind: 'identity',
+          supplierServiceTypes: ['parts'],
           vendorPartyId: 'vendor-2',
           vendorPartyKey: 'BETA',
           vendorDisplayName: 'Beta Parts',
@@ -176,11 +224,15 @@ vi.mock('../api/client', () => ({
       updatedAt: '2026-06-05T00:00:00Z',
     },
   ]),
-  getVendorReportDetail: vi.fn().mockResolvedValue({
+  getSupplierReportDetail: vi.fn().mockResolvedValue({
     summary: {
-      vendorPartyId: 'vendor-1',
-      partyKey: 'ACME',
-      displayName: 'Acme Supply',
+      supplierId: 'vendor-1',
+      supplierKey: 'ACME',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierDisplayName: 'Acme Supply',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
+      supplierType: 'supplier',
       approvalStatus: 'approved',
       status: 'active',
       partVendorLinkCount: 2,
@@ -224,6 +276,12 @@ vi.mock('../api/client', () => ({
     partLinks: [
       {
         partVendorLinkId: 'link-1',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         partId: 'part-1',
         partKey: 'FILTER-001',
         partDisplayName: 'Oil Filter',
@@ -236,12 +294,11 @@ vi.mock('../api/client', () => ({
   }),
   getVendorReturns: vi.fn().mockResolvedValue([]),
   listWarrantyClaims: vi.fn().mockResolvedValue([]),
-  getCompliancePartyDetail: vi.fn().mockResolvedValue({
+  getComplianceSupplierDetail: vi.fn().mockResolvedValue({
     summary: {
-      externalPartyId: 'vendor-1',
-      partyKey: 'ACME',
+      supplierId: 'vendor-1',
+      supplierKey: 'ACME',
       displayName: 'Acme Supply',
-      partyType: 'vendor',
       approvalStatus: 'approved',
       compliancePosture: 'approved',
       documentCount: 2,
@@ -292,25 +349,27 @@ vi.mock('../api/client', () => ({
       },
     ],
   }),
-  exportVendorReportSummaryCsv: vi.fn(),
+  exportSupplierReportSummaryCsv: vi.fn(),
 }))
 
-describe('VendorReportsPanel', () => {
+describe('SupplierReportsPanel', () => {
   it('renders supplier report summary rows', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
-        <VendorReportsPanel accessToken="token" canRead={true} canExport={true} />
+        <SupplierReportsPanel accessToken="token" canRead={true} canExport={true} />
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByTestId('vendor-reports-panel')).toBeInTheDocument()
-    expect(await screen.findByText(/ACME · Acme Supply/i)).toBeInTheDocument()
+    expect(await screen.findByTestId('supplier-reports-panel')).toBeInTheDocument()
+    expect(await screen.findByText(/Acme Supply · North Yard Counter \(ACME\)/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /ACME · Acme Supply/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Acme Supply · North Yard Counter \(ACME\)/i }))
 
     expect(await screen.findByText(/Supplier scorecard/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Sub-unit/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Parts, Maintenance/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Healthy/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Recent fill rate/i)).toBeInTheDocument()
     expect(screen.getAllByText(/86%/i).length).toBeGreaterThan(0)
@@ -333,7 +392,7 @@ describe('VendorReportsPanel', () => {
     const client = new QueryClient()
     const { container } = render(
       <QueryClientProvider client={client}>
-        <VendorReportsPanel accessToken="token" canRead={false} canExport={false} />
+        <SupplierReportsPanel accessToken="token" canRead={false} canExport={false} />
       </QueryClientProvider>,
     )
 

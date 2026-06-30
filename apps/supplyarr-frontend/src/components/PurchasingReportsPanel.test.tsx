@@ -25,6 +25,8 @@ vi.mock('../api/client', () => ({
       activeProcurementExceptionCount: 1,
       openReceivingExceptionCount: 1,
       openWarrantyClaimCount: 1,
+      supplierDocumentExpiringSoonCount: 1,
+      blockedSupplierCount: 1,
       vendorDocumentExpiringSoonCount: 1,
       blockedVendorCount: 1,
       averageLeadTimeDays: 8,
@@ -39,8 +41,12 @@ vi.mock('../api/client', () => ({
         documentKey: 'PR-001',
         title: 'Shop restock',
         status: 'submitted',
-        vendorPartyId: 'vendor-1',
-        vendorDisplayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         lineCount: 2,
         quantityOrdered: 10,
         quantityReceived: 0,
@@ -52,8 +58,12 @@ vi.mock('../api/client', () => ({
         documentKey: 'PO-001',
         title: 'Shop restock PO',
         status: 'issued',
-        vendorPartyId: 'vendor-1',
-        vendorDisplayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         lineCount: 2,
         quantityOrdered: 10,
         quantityReceived: 4,
@@ -81,6 +91,8 @@ describe('PurchasingReportsPanel', () => {
     expect(screen.getByText('Pending approvals')).toBeInTheDocument()
     expect(screen.getByText('Open receiving exceptions')).toBeInTheDocument()
     expect(screen.getByText('$25')).toBeInTheDocument()
+    expect(screen.getAllByText(/Acme Supply · North Yard Counter \(ACME\)/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Parts, Maintenance/i).length).toBeGreaterThan(0)
   })
 
   it('returns null when user cannot read reports', () => {

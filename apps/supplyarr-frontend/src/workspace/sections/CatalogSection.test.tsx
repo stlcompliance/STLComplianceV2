@@ -23,17 +23,17 @@ const state = {
   partsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [] },
   supplierDirectory: [],
-  vendorsQuery: { data: [] },
   createCatalogMutation: { isPending: false, mutate: vi.fn() },
   createPartMutation: { isPending: false, mutate: vi.fn() },
   createPartSourceMutation: { isPending: false, mutate: vi.fn() },
-  linkVendorMutation: { isPending: false, mutate: vi.fn() },
+  linkSupplierSourceMutation: { isPending: false, mutate: vi.fn() },
   substitutionPartId: '',
-  vendors: [],
+  supplierPartNumber: '',
+  selectedSupplierUnitId: '',
 } as never
 
 describe('CatalogSection', () => {
-  it('renders the vendor catalog api panel with the catalog workspace', () => {
+  it('renders the supplier catalog api panel with the catalog workspace', () => {
     render(<CatalogSection state={state} />)
 
     expect(screen.getByTestId('supplyarr-part-catalog-panel')).toBeInTheDocument()

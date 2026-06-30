@@ -6,36 +6,42 @@ import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/sh
 import {
   createPurchaseRequestFromRfq,
   createRfq,
-  createVendorQuote,
+  inviteRfqSuppliers,
+  createSupplierQuote,
   getRfq,
   getRfqQuoteComparison,
   getRfqs,
-  inviteRfqVendors,
-  selectRfqVendorQuote,
+  selectRfqSupplierQuote,
   submitRfq,
-  submitVendorQuote,
-  upsertVendorQuoteLine,
+  submitSupplierQuote,
+  upsertSupplierQuoteLine,
 } from '../api/client'
 import type { PartResponse, RfqResponse } from '../api/types'
-import { CURRENCY_OPTIONS, toPartPickerOptions } from '../forms/controlledFormHelpers'
+import { CURRENCY_OPTIONS, toPartPickerOptions, type SupplierUnitPickerSource } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
+
+interface SupplierDirectoryOptionSource extends SupplierUnitPickerSource {
+  approvalStatus: string
+  status: string
+}
 
 interface RfqPanelProps {
   accessToken: string
   canManage: boolean
   canAward: boolean
   parts: PartResponse[]
-  vendors: { partyId: string; displayName: string; partyKey: string }[]
-  vendorDirectory: {
-    partyId: string
-    displayName: string
-    partyKey: string
-    approvalStatus: string
-    status: string
-  }[]
+  suppliers: SupplierUnitPickerSource[]
+  supplierDirectory: SupplierDirectoryOptionSource[]
 }
 
-export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, vendorDirectory }: RfqPanelProps) {
+export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, supplierDirectory }: RfqPanelProps) {
   const queryClient = useQueryClient()
   const [selectedRfqId, setSelectedRfqId] = useState('')
   const [rfqKey, setRfqKey] = useState('')
@@ -43,12 +49,12 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
   const [notes] = useState('')
   const [partId, setPartId] = useState('')
   const [lineQty] = useState('1')
-  const [inviteVendorId, setInviteVendorId] = useState('')
-  const [quoteVendorId, setQuoteVendorId] = useState('')
+  const [inviteSupplierUnitId, setInviteSupplierUnitId] = useState('')
+  const [quoteSupplierUnitId, setQuoteSupplierUnitId] = useState('')
   const [quoteKey, setQuoteKey] = useState('')
   const [quoteUnitPrice, setQuoteUnitPrice] = useState('')
   const [quoteLeadDays, setQuoteLeadDays] = useState('')
-  const [selectedQuoteId, setSelectedQuoteId] = useState('')
+  const [selectedSupplierQuoteId, setSelectedSupplierQuoteId] = useState('')
   const [quoteCurrency, setQuoteCurrency] = useState('USD')
   const [prKeyFromRfq, setPrKeyFromRfq] = useState('')
 
@@ -82,8 +88,12 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
     }
 
     return selectedRfq.invitations.map((invite) => {
-      const vendorProfile = vendorDirectory.find((vendor) => vendor.partyId === invite.vendorPartyId)
-      const submittedQuotes = selectedRfq.quotes.filter((quote) => quote.vendorPartyId === invite.vendorPartyId)
+      const supplierProfile = supplierDirectory.find(
+        (supplier) => resolveSupplierId(supplier) === invite.supplierId,
+      )
+      const submittedQuotes = selectedRfq.quotes.filter(
+        (quote) => quote.supplierId === invite.supplierId,
+      )
       const submittedQuote =
         submittedQuotes.find((quote) => quote.status === 'submitted') ?? submittedQuotes[0] ?? null
       const responseDays =
@@ -98,20 +108,26 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               .filter((candidate) => candidate.status === 'submitted' && candidate.totalAmount != null)
               .map((candidate) => candidate.totalAmount!),
           )
-          return count + (quote.vendorPartyId === invite.vendorPartyId && quote.totalAmount === lowestTotal ? 1 : 0)
+          return count + (quote.supplierId === invite.supplierId && quote.totalAmount === lowestTotal ? 1 : 0)
         }, 0)
       return {
-        vendorPartyId: invite.vendorPartyId,
-        vendorDisplayName: invite.vendorDisplayName,
-        approvalStatus: vendorProfile?.approvalStatus ?? 'unknown',
-        vendorStatus: vendorProfile?.status ?? 'unknown',
+        supplierId: invite.supplierId,
+        supplierDisplayName: formatSupplierIdentityLabel(invite),
+        parentSupplierDisplayName:
+          submittedQuote?.parentSupplierDisplayName ?? invite.parentSupplierDisplayName ?? supplierProfile?.parentSupplierDisplayName ?? null,
+        supplierUnitKind:
+          submittedQuote?.supplierUnitKind ?? invite.supplierUnitKind ?? supplierProfile?.unitKind ?? null,
+        supplierServiceTypes:
+          submittedQuote?.supplierServiceTypes ?? invite.supplierServiceTypes ?? [],
+        approvalStatus: supplierProfile?.approvalStatus ?? 'unknown',
+        supplierStatus: supplierProfile?.status ?? 'unknown',
         responseDays,
         submittedQuote,
         quoteCount: submittedQuotes.filter((quote) => quote.status === 'submitted').length,
         bestPriceCount,
       }
     })
-  }, [selectedRfq, vendorDirectory])
+  }, [selectedRfq, supplierDirectory])
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-rfqs', accessToken] })
@@ -146,31 +162,35 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
 
   const inviteMutation = useMutation({
     mutationFn: () => {
-      const selectedVendor = vendorDirectory.find((vendor) => vendor.partyId === inviteVendorId)
+      const selectedSupplier = supplierDirectory.find(
+        (supplier) => resolveSupplierId(supplier) === inviteSupplierUnitId,
+      )
       if (
-        !selectedVendor ||
-        selectedVendor.approvalStatus !== 'approved' ||
-        selectedVendor.status !== 'active'
+        !selectedSupplier ||
+        selectedSupplier.approvalStatus !== 'approved' ||
+        selectedSupplier.status !== 'active'
       ) {
-        throw new Error('Select an approved, active vendor')
+        throw new Error('Select an approved, active supplier identity or sub-unit')
       }
-      return inviteRfqVendors(accessToken, selectedRfqId, [inviteVendorId])
+      return inviteRfqSuppliers(accessToken, selectedRfqId, [inviteSupplierUnitId])
     },
     onSuccess: invalidate,
   })
 
   const createQuoteMutation = useMutation({
     mutationFn: () => {
-      const selectedVendor = vendorDirectory.find((vendor) => vendor.partyId === quoteVendorId)
+      const selectedSupplier = supplierDirectory.find(
+        (supplier) => resolveSupplierId(supplier) === quoteSupplierUnitId,
+      )
       if (
-        !selectedVendor ||
-        selectedVendor.approvalStatus !== 'approved' ||
-        selectedVendor.status !== 'active'
+        !selectedSupplier ||
+        selectedSupplier.approvalStatus !== 'approved' ||
+        selectedSupplier.status !== 'active'
       ) {
-        throw new Error('Select an approved, active vendor')
+        throw new Error('Select an approved, active supplier identity or sub-unit')
       }
-      return createVendorQuote(accessToken, selectedRfqId, {
-        vendorPartyId: quoteVendorId,
+      return createSupplierQuote(accessToken, selectedRfqId, {
+        supplierId: quoteSupplierUnitId,
         quoteKey,
         currencyCode: quoteCurrency,
         notes: '',
@@ -186,7 +206,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
       if (!quote || !line) {
         throw new Error('Select an RFQ with a draft quote and line')
       }
-      return upsertVendorQuoteLine(accessToken, selectedRfqId, quote.vendorQuoteId, {
+      return upsertSupplierQuoteLine(accessToken, selectedRfqId, quote.vendorQuoteId, {
         rfqLineId: line.lineId,
         unitPrice: Number(quoteUnitPrice),
         quantityQuoted: line.quantityRequested,
@@ -198,12 +218,12 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
   })
 
   const submitQuoteMutation = useMutation({
-    mutationFn: () => submitVendorQuote(accessToken, selectedRfqId, draftQuotes[0]!.vendorQuoteId),
+    mutationFn: () => submitSupplierQuote(accessToken, selectedRfqId, draftQuotes[0]!.vendorQuoteId),
     onSuccess: invalidate,
   })
 
   const selectQuoteMutation = useMutation({
-    mutationFn: () => selectRfqVendorQuote(accessToken, selectedRfqId, selectedQuoteId),
+    mutationFn: () => selectRfqSupplierQuote(accessToken, selectedRfqId, selectedSupplierQuoteId),
     onSuccess: invalidate,
   })
 
@@ -218,10 +238,14 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
   })
 
   const existingRfqKeys = useMemo(() => (rfqsQuery.data ?? []).map((rfq) => rfq.rfqKey), [rfqsQuery.data])
-  const quoteVendor = selectedRfq?.invitations.find((invite) => invite.vendorPartyId === quoteVendorId)
-  const quoteKeySource = quoteVendor ? `${selectedRfq?.rfqKey ?? ''}-${quoteVendor.vendorDisplayName}` : ''
+  const quoteSupplierUnit = selectedRfq?.invitations.find(
+    (invite) => invite.supplierId === quoteSupplierUnitId,
+  )
+  const quoteKeySource = quoteSupplierUnit
+    ? `${selectedRfq?.rfqKey ?? ''}-${formatSupplierIdentityLabel(quoteSupplierUnit)}`
+    : ''
   const prKeySource = selectedRfq?.title ?? ''
-  const vendorPortalLinks = useMemo(
+  const supplierPortalLinks = useMemo(
     () =>
       (selectedRfq?.invitations ?? []).map((invite) => ({
         ...invite,
@@ -241,35 +265,49 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
     () => rfqOptions.find((option) => option.value === selectedRfqId),
     [rfqOptions, selectedRfqId],
   )
-  const vendorPickerOptions = useMemo(
+  const supplierUnitPickerOptions = useMemo(
     () =>
-      vendors.map((vendor) => {
-        const vendorProfile = vendorDirectory.find((profile) => profile.partyId === vendor.partyId)
+      suppliers.map((supplier) => {
+        const supplierId = resolveSupplierId(supplier) ?? ''
+        const supplierProfile = supplierDirectory.find(
+          (profile) => resolveSupplierId(profile) === supplierId,
+        )
         return {
-          value: vendor.partyId,
-          label: `${vendor.displayName} (${vendor.partyKey})`,
+          value: supplierId,
+          label: formatSupplierIdentitySummary({
+            supplierDisplayName: supplier.displayName,
+            supplierKey: supplier.supplierKey,
+            parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+            supplierUnitKind: supplier.unitKind,
+          }),
           inactive:
-            !vendorProfile ||
-            vendorProfile.approvalStatus !== 'approved' ||
-            vendorProfile.status !== 'active',
+            !supplierProfile ||
+            supplierProfile.approvalStatus !== 'approved' ||
+            supplierProfile.status !== 'active',
         }
       }),
-    [vendors, vendorDirectory],
+    [suppliers, supplierDirectory],
   )
-  const quoteVendorPickerOptions = useMemo(
+  const quoteSupplierUnitPickerOptions = useMemo(
     () =>
       (selectedRfq?.invitations ?? []).map((invite) => {
-        const vendorProfile = vendorDirectory.find((vendor) => vendor.partyId === invite.vendorPartyId)
+        const supplierProfile = supplierDirectory.find(
+          (supplier) => resolveSupplierId(supplier) === invite.supplierId,
+        )
         return {
-          value: invite.vendorPartyId,
-          label: `${invite.vendorDisplayName}${vendorProfile ? ` (${vendorProfile.approvalStatus} · ${vendorProfile.status})` : ''}`,
+          value: invite.supplierId,
+          label: `${formatSupplierIdentityLabel({
+            supplierDisplayName: invite.supplierDisplayName,
+            parentSupplierDisplayName: invite.parentSupplierDisplayName,
+            supplierUnitKind: invite.supplierUnitKind,
+          })}${supplierProfile ? ` (${supplierProfile.approvalStatus} · ${supplierProfile.status})` : ''}`,
           inactive:
-            !vendorProfile ||
-            vendorProfile.approvalStatus !== 'approved' ||
-            vendorProfile.status !== 'active',
+            !supplierProfile ||
+            supplierProfile.approvalStatus !== 'approved' ||
+            supplierProfile.status !== 'active',
         }
       }),
-    [selectedRfq?.invitations, vendorDirectory],
+    [selectedRfq?.invitations, supplierDirectory],
   )
 
   if (!canManage) {
@@ -362,16 +400,16 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
           {selectedRfq.status === 'submitted' && (
             <div className="flex flex-wrap items-end gap-2">
               <ControlledSelect
-                label="Invite supplier unit"
-                value={inviteVendorId}
-                onChange={setInviteVendorId}
-                options={vendorPickerOptions}
-                emptyLabel="Invite supplier unit"
+                label="Invite supplier identity or sub-unit"
+                value={inviteSupplierUnitId}
+                onChange={setInviteSupplierUnitId}
+                options={supplierUnitPickerOptions}
+                emptyLabel="Invite supplier identity or sub-unit"
               />
               <button
                 type="button"
                 className="rounded bg-slate-700 px-2 py-1 text-xs text-white"
-                disabled={!inviteVendorId}
+                disabled={!inviteSupplierUnitId}
                 onClick={() => inviteMutation.mutate()}
               >
                 Invite
@@ -382,11 +420,11 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
           {selectedRfq.status === 'submitted' && selectedRfq.invitations.length > 0 && (
             <div className="grid gap-2 sm:grid-cols-4">
               <ControlledSelect
-                label="Quote supplier unit"
-                value={quoteVendorId}
-                onChange={setQuoteVendorId}
-                options={quoteVendorPickerOptions}
-                emptyLabel="Quote supplier unit"
+                label="Quote supplier identity or sub-unit"
+                value={quoteSupplierUnitId}
+                onChange={setQuoteSupplierUnitId}
+                options={quoteSupplierUnitPickerOptions}
+                emptyLabel="Quote supplier identity or sub-unit"
               />
               <ControlledSelect
                 label="Currency"
@@ -425,7 +463,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <button
                 type="button"
                 className="rounded bg-slate-700 px-2 py-1 text-xs text-white"
-                disabled={!quoteVendorId || !quoteKey}
+                disabled={!quoteSupplierUnitId || !quoteKey}
                 onClick={() => createQuoteMutation.mutate()}
               >
                 Start quote
@@ -457,7 +495,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <table className="mt-2 w-full text-left text-xs">
                 <thead>
                   <tr className="text-[var(--color-text-muted)]">
-                    <th className="py-1">Supplier unit</th>
+                    <th className="py-1">Supplier identity or sub-unit</th>
                     <th>Total</th>
                     <th>Lead (max days)</th>
                     <th>Lines</th>
@@ -467,7 +505,10 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                   {comparisonQuery.data.quoteSummaries.map((s) => (
                     <tr key={s.vendorQuoteId} className="border-t border-slate-800 text-slate-200">
                       <td className="py-1">
-                        {s.vendorDisplayName}
+                        <div>{formatSupplierIdentityLabel(s)}</div>
+                        <div className="text-[11px] text-slate-500">
+                          {humanizeSupplierUnitKind(s.supplierUnitKind)} · {formatSupplierServiceTypes(s.supplierServiceTypes)}
+                        </div>
                         {s.isSelected && (
                           <span className="ml-1 text-emerald-400">(awarded)</span>
                         )}
@@ -487,7 +528,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                   <ul className="mt-1 text-slate-400">
                     {row.quotes.map((q) => (
                       <li key={`${row.rfqLineId}-${q.vendorQuoteId}`}>
-                        {q.vendorDisplayName}: {q.unitPrice?.toFixed(2) ?? '—'}
+                        {formatSupplierIdentityLabel(q)}: {q.unitPrice?.toFixed(2) ?? '—'}
                         {q.isLowestPrice ? ' · lowest' : ''}
                         {q.isFastestLeadTime ? ' · fastest' : ''}
                       </li>
@@ -503,15 +544,24 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <h3 className="text-xs font-semibold uppercase text-slate-400">Quote analytics</h3>
               <ul className="mt-2 grid gap-2 sm:grid-cols-2">
                 {quoteAnalytics.map((row) => (
-                  <li key={row.vendorPartyId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
+                  <li key={row.supplierId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <div className="font-medium text-slate-100">{row.vendorDisplayName}</div>
+                        <div className="font-medium text-slate-100">
+                          {formatSupplierIdentityLabel({
+                            supplierDisplayName: row.submittedQuote?.supplierDisplayName ?? row.supplierDisplayName,
+                            parentSupplierDisplayName: row.parentSupplierDisplayName,
+                            supplierUnitKind: row.supplierUnitKind,
+                          })}
+                        </div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                          {humanizeSupplierUnitKind(row.supplierUnitKind)} · {formatSupplierServiceTypes(row.supplierServiceTypes)}
+                        </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
                           {row.submittedQuote ? `Quote ${row.submittedQuote.quoteKey}` : 'No submitted quote'}
                         </div>
                         <div className="mt-1 text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">
-                          {row.approvalStatus} · {row.vendorStatus}
+                          {row.approvalStatus} · {row.supplierStatus}
                         </div>
                       </div>
                       {row.bestPriceCount > 0 ? (
@@ -523,9 +573,9 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                     <p className="mt-2 text-xs text-slate-400">
                       Response time {formatDays(row.responseDays)} · Submitted quotes {row.quoteCount}
                     </p>
-                    {row.approvalStatus !== 'approved' || row.vendorStatus !== 'active' ? (
+                    {row.approvalStatus !== 'approved' || row.supplierStatus !== 'active' ? (
                       <p className="mt-1 text-xs text-amber-300">
-                        Source attention: {row.approvalStatus} · {row.vendorStatus}
+                        Source attention: {row.approvalStatus} · {row.supplierStatus}
                       </p>
                     ) : (
                       <p className="mt-1 text-xs text-emerald-300">Approved source</p>
@@ -536,15 +586,18 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
             </div>
           )}
 
-          {vendorPortalLinks.length > 0 && (
+          {supplierPortalLinks.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold uppercase text-slate-400">Supplier portal access</h3>
               <ul className="mt-2 grid gap-2">
-                {vendorPortalLinks.map((invite) => (
+                {supplierPortalLinks.map((invite) => (
                   <li key={invite.invitationId} className="rounded border border-slate-800 bg-slate-950/50 p-2">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
-                        <div className="font-medium text-slate-100">{invite.vendorDisplayName}</div>
+                        <div className="font-medium text-slate-100">{formatSupplierIdentityLabel(invite)}</div>
+                        <div className="text-[11px] uppercase tracking-wide text-slate-500">
+                          {humanizeSupplierUnitKind(invite.supplierUnitKind)} · {formatSupplierServiceTypes(invite.supplierServiceTypes)}
+                        </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
                           Portal code issued {formatDateTime(invite.portalAccessCodeIssuedAt)} · expires{' '}
                           {formatDateTime(invite.portalAccessExpiresAt)}
@@ -597,15 +650,15 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
                 <select
                   id="rfq-winning-quote"
                   className="mt-1 rounded border border-slate-600 bg-slate-950 px-2 py-1 text-xs"
-                  value={selectedQuoteId}
-                  onChange={(e) => setSelectedQuoteId(e.target.value)}
+                  value={selectedSupplierQuoteId}
+                  onChange={(e) => setSelectedSupplierQuoteId(e.target.value)}
                 >
                   <option value="">Select winning quote</option>
                   {selectedRfq.quotes
                     .filter((q) => q.status === 'submitted')
                     .map((q) => (
                       <option key={q.vendorQuoteId} value={q.vendorQuoteId}>
-                        {q.vendorDisplayName} · {q.totalAmount?.toFixed(2)}
+                        {formatSupplierIdentityLabel(q)} · {q.totalAmount?.toFixed(2)}
                       </option>
                     ))}
                 </select>
@@ -613,7 +666,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, vendors, ven
               <button
                 type="button"
                 className="rounded bg-emerald-700 px-2 py-1 text-xs text-white"
-                disabled={!selectedQuoteId}
+                disabled={!selectedSupplierQuoteId}
                 onClick={() => selectQuoteMutation.mutate()}
               >
                 Award quote

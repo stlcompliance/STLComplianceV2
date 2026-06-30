@@ -3,6 +3,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -15,6 +16,8 @@ public sealed class PurchaseRequestService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<IReadOnlyList<PurchaseRequestResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
@@ -23,6 +26,7 @@ public sealed class PurchaseRequestService(
         var query = db.PurchaseRequests
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .Where(x => x.TenantId == tenantId);
@@ -67,9 +71,11 @@ public sealed class PurchaseRequestService(
                 409);
         }
 
-        if (request.VendorPartyId.HasValue)
+        var selectedSupplierId = request.SupplierUnitId ?? request.SupplierId ?? request.VendorPartyId;
+
+        if (selectedSupplierId.HasValue)
         {
-            await EnsureVendorPartyAsync(tenantId, request.VendorPartyId.Value, cancellationToken);
+            await EnsureSupplierAllowedAsync(tenantId, selectedSupplierId.Value, cancellationToken);
         }
 
         var now = DateTimeOffset.UtcNow;
@@ -81,7 +87,7 @@ public sealed class PurchaseRequestService(
             Title = NormalizeTitle(request.Title),
             Notes = NormalizeNotes(request.Notes),
             Status = PurchaseRequestStatuses.Draft,
-            VendorPartyId = request.VendorPartyId,
+            VendorPartyId = selectedSupplierId,
             RequestedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now
@@ -120,14 +126,16 @@ public sealed class PurchaseRequestService(
         var entity = await LoadTrackedAsync(tenantId, purchaseRequestId, cancellationToken);
         EnsureEditable(entity);
 
-        if (request.VendorPartyId.HasValue)
+        var selectedSupplierId = request.SupplierUnitId ?? request.SupplierId ?? request.VendorPartyId;
+
+        if (selectedSupplierId.HasValue)
         {
-            await EnsureVendorPartyAsync(tenantId, request.VendorPartyId.Value, cancellationToken);
+            await EnsureSupplierAllowedAsync(tenantId, selectedSupplierId.Value, cancellationToken);
         }
 
         entity.Title = NormalizeTitle(request.Title);
         entity.Notes = NormalizeNotes(request.Notes);
-        entity.VendorPartyId = request.VendorPartyId;
+        entity.VendorPartyId = selectedSupplierId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -467,13 +475,13 @@ public sealed class PurchaseRequestService(
         }
     }
 
-    private Task EnsureVendorPartyAsync(
+    private Task EnsureSupplierAllowedAsync(
         Guid tenantId,
-        Guid vendorPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken) =>
         vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
             tenantId,
-            vendorPartyId,
+            supplierId,
             VendorRestrictionScopes.PurchaseRequests,
             cancellationToken);
 
@@ -496,6 +504,7 @@ public sealed class PurchaseRequestService(
         return await db.PurchaseRequests
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -514,6 +523,7 @@ public sealed class PurchaseRequestService(
     {
         return await db.PurchaseRequests
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -532,6 +542,13 @@ public sealed class PurchaseRequestService(
             entity.Title,
             entity.Notes,
             entity.Status,
+            entity.VendorPartyId,
+            entity.VendorParty?.PartyKey,
+            entity.VendorParty?.DisplayName,
+            entity.VendorParty?.ParentExternalPartyId,
+            entity.VendorParty?.ParentExternalParty?.DisplayName,
+            entity.VendorParty?.UnitKind,
+            ParseServiceTypes(entity.VendorParty?.ServiceTypesJson),
             entity.VendorPartyId,
             entity.VendorParty?.PartyKey,
             entity.VendorParty?.DisplayName,
@@ -555,6 +572,23 @@ public sealed class PurchaseRequestService(
                 .ToList(),
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private static PurchaseRequestLineResponse MapLine(PurchaseRequestLine line) =>
         new(

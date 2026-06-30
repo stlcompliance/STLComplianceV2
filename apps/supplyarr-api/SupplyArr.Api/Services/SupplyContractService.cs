@@ -3,6 +3,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -12,9 +13,11 @@ public sealed class SupplyContractService(
 {
     private const int DefaultListLimit = 100;
     private const int MaxListLimit = 500;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<SupplyContractResponse>> ListAsync(
         Guid tenantId,
+        Guid? supplierId,
         Guid? vendorPartyId,
         string? status,
         int? limit,
@@ -26,9 +29,10 @@ public sealed class SupplyContractService(
         var take = NormalizeLimit(limit);
 
         var query = QueryContracts(tenantId);
-        if (vendorPartyId.HasValue)
+        var selectedSupplierId = supplierId ?? vendorPartyId;
+        if (selectedSupplierId.HasValue)
         {
-            query = query.Where(x => x.VendorPartyId == vendorPartyId.Value);
+            query = query.Where(x => x.VendorPartyId == selectedSupplierId.Value);
         }
 
         if (normalizedStatus is not null)
@@ -71,8 +75,12 @@ public sealed class SupplyContractService(
             throw new StlApiException("contracts.duplicate_key", "A contract with this key already exists.", 409);
         }
 
+        var selectedSupplierId = request.SupplierId ?? request.VendorPartyId
+            ?? throw new StlApiException("contracts.supplier_required", "Supplier is required.", 400);
+
         var vendor = await db.ExternalParties.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == request.VendorPartyId, cancellationToken)
+            .Include(x => x.ParentExternalParty)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == selectedSupplierId, cancellationToken)
             ?? throw new StlApiException("contracts.vendor_not_found", "Vendor party was not found.", 404);
 
         if (!string.Equals(vendor.PartyType, "vendor", StringComparison.OrdinalIgnoreCase) &&
@@ -102,7 +110,7 @@ public sealed class SupplyContractService(
             ContractKey = contractKey,
             ContractType = NormalizeRequired(request.ContractType, "contracts.invalid_type", 64),
             Title = NormalizeRequired(request.Title, "contracts.invalid_title", 256),
-            VendorPartyId = request.VendorPartyId,
+            VendorPartyId = selectedSupplierId,
             EffectiveAt = effectiveAt,
             ExpiresAt = request.ExpiresAt,
             RenewalAt = request.RenewalAt,
@@ -135,7 +143,7 @@ public sealed class SupplyContractService(
 
     private IQueryable<SupplyContract> QueryContracts(Guid tenantId) =>
         db.SupplyContracts.AsNoTracking()
-            .Include(x => x.VendorParty)
+            .Include(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
             .Where(x => x.TenantId == tenantId);
 
     private static SupplyContractResponse Map(SupplyContract entity) =>
@@ -144,6 +152,13 @@ public sealed class SupplyContractService(
             entity.ContractKey,
             entity.ContractType,
             entity.Title,
+            entity.VendorPartyId,
+            entity.VendorParty.PartyKey,
+            entity.VendorParty.DisplayName,
+            entity.VendorParty.ParentExternalPartyId,
+            entity.VendorParty.ParentExternalParty?.DisplayName,
+            entity.VendorParty.UnitKind,
+            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
             entity.VendorPartyId,
             entity.VendorParty.PartyKey,
             entity.VendorParty.DisplayName,
@@ -161,6 +176,23 @@ public sealed class SupplyContractService(
             entity.CreatedByUserId,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private static string NormalizeKey(string value)
     {

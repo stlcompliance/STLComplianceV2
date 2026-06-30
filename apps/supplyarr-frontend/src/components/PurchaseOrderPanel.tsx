@@ -4,6 +4,11 @@ import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type { PurchaseOrderResponse, PurchaseRequestResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
 interface PurchaseOrderPanelProps {
   purchaseOrders: PurchaseOrderResponse[]
@@ -75,7 +80,9 @@ export function PurchaseOrderPanel({
     () =>
       approvedPurchaseRequests.map((pr) => ({
         value: pr.purchaseRequestId,
-        label: `${pr.requestKey} — ${pr.title}${pr.vendorDisplayName ? ` · ${pr.vendorDisplayName}` : ''}`,
+        label: `${pr.requestKey} — ${pr.title}${
+          pr.supplierDisplayName ? ` · ${formatSupplierIdentityLabel(pr)}` : ''
+        }`,
       })),
     [approvedPurchaseRequests],
   )
@@ -85,7 +92,11 @@ export function PurchaseOrderPanel({
       (selectedPr
         ? {
             value: selectedPr.purchaseRequestId,
-            label: `${selectedPr.requestKey} — ${selectedPr.title}${selectedPr.vendorDisplayName ? ` · ${selectedPr.vendorDisplayName}` : ''}`,
+            label: `${selectedPr.requestKey} — ${selectedPr.title}${
+              selectedPr.supplierDisplayName
+                ? ` · ${formatSupplierIdentityLabel(selectedPr)}`
+                : ''
+            }`,
           }
         : undefined),
     [purchaseRequestOptions, selectedPurchaseRequestId, selectedPr],
@@ -137,7 +148,7 @@ export function PurchaseOrderPanel({
               </div>
               <div className="mt-1 text-[var(--color-text-secondary)]">{po.title}</div>
               <div className="mt-1 text-xs text-[var(--color-text-muted)]">
-                PR {po.purchaseRequestKey} · {po.vendorDisplayName} · {po.lines.length} line
+                PR {po.purchaseRequestKey} · {formatSupplierIdentityLabel(po)} · {po.lines.length} line
                 {po.lines.length === 1 ? '' : 's'}
               </div>
             </button>
@@ -151,6 +162,13 @@ export function PurchaseOrderPanel({
       {selectedPo ? (
         <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4" data-testid="purchase-order-detail">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Order detail</h3>
+          <div className="mt-2 space-y-1 text-xs text-[var(--color-text-muted)]">
+            <p>Supplier: {formatSupplierIdentityLabel(selectedPo)}</p>
+            <p>
+              {humanizeSupplierUnitKind(selectedPo.supplierUnitKind)} ·{' '}
+              {formatSupplierServiceTypes(selectedPo.supplierServiceTypes)}
+            </p>
+          </div>
           <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-secondary)]" data-testid="purchase-order-line-list">
             {selectedPo.lines.map((line) => (
               <li key={line.lineId} data-testid={`purchase-order-line-${line.lineId}`}>
@@ -232,7 +250,9 @@ export function PurchaseOrderPanel({
             />
             {selectedPr ? (
               <p className="text-xs text-[var(--color-text-muted)]">
-                Supplier: {selectedPr.vendorDisplayName ?? 'none'} · {selectedPr.lines.length} line(s)
+                Supplier: {formatSupplierIdentityLabel(selectedPr)} ·{' '}
+                {humanizeSupplierUnitKind(selectedPr.supplierUnitKind)} ·{' '}
+                {formatSupplierServiceTypes(selectedPr.supplierServiceTypes)} · {selectedPr.lines.length} line(s)
               </p>
             ) : null}
             <GeneratedKeyFieldGroup
@@ -250,7 +270,10 @@ export function PurchaseOrderPanel({
               className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
               onClick={onCreateFromPurchaseRequest}
               disabled={
-                isCreating || !selectedPurchaseRequestId || !orderKey.trim() || !selectedPr?.vendorPartyId
+                isCreating
+                || !selectedPurchaseRequestId
+                || !orderKey.trim()
+                || !selectedPr?.supplierId
               }
             >
               {isCreating ? 'Creating…' : 'Create purchase order'}

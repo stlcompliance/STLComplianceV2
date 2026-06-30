@@ -6,15 +6,20 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getPartSupplyReadiness,
   getProcurementPathReadiness,
-  getVendorSupplyReadiness,
+  getSupplierReadiness,
 } from '../api/client'
-import type { ExternalPartyResponse, PartResponse } from '../api/types'
+import type { SupplierResponse, PartResponse } from '../api/types'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
 interface SupplyReadinessCheckPanelProps {
   accessToken: string
   canRead: boolean
   parts: PartResponse[]
-  vendors: ExternalPartyResponse[]
+  suppliers: SupplierResponse[]
 }
 
 function readinessBadgeClass(status: string): string {
@@ -23,15 +28,36 @@ function readinessBadgeClass(status: string): string {
     : 'bg-rose-500/20 text-rose-200'
 }
 
+function formatSupplierUnitLabel(supplier: SupplierResponse): string {
+  return [
+    humanizeSupplierUnitKind(supplier.unitKind),
+    formatSupplierIdentitySummary({
+      displayName: supplier.displayName,
+      supplierKey: supplier.supplierKey,
+      parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+      supplierUnitKind: supplier.unitKind,
+    }),
+    formatSupplierOperationalContext({
+      supplierServiceTypes: supplier.serviceTypes,
+      addressLine1: supplier.addressLine1,
+      locality: supplier.locality,
+      regionCode: supplier.regionCode,
+      postalCode: supplier.postalCode,
+    }),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 export function SupplyReadinessCheckPanel({
   accessToken,
   canRead,
   parts,
-  vendors,
+  suppliers,
 }: SupplyReadinessCheckPanelProps) {
-  const [checkMode, setCheckMode] = useState<'part' | 'vendor' | 'path'>('part')
+  const [checkMode, setCheckMode] = useState<'part' | 'supplier' | 'path'>('part')
   const [selectedPartId, setSelectedPartId] = useState('')
-  const [selectedVendorId, setSelectedVendorId] = useState('')
+  const [selectedSupplierUnitId, setSelectedSupplierUnitId] = useState('')
   const [requestedQuantity, setRequestedQuantity] = useState('')
 
   const quantity =
@@ -48,17 +74,17 @@ export function SupplyReadinessCheckPanel({
     () => partOptions.find((option) => option.value === selectedPartId),
     [partOptions, selectedPartId],
   )
-  const vendorOptions = useMemo<PickerOption[]>(
+  const supplierUnitOptions = useMemo<PickerOption[]>(
     () =>
-      vendors.map((vendor) => ({
-        value: vendor.partyId,
-        label: `${vendor.partyKey} · ${vendor.displayName}`,
+      suppliers.map((supplier) => ({
+        value: supplier.supplierId,
+        label: formatSupplierUnitLabel(supplier),
       })),
-    [vendors],
+    [suppliers],
   )
-  const selectedVendorOption = useMemo<PickerOption | undefined>(
-    () => vendorOptions.find((option) => option.value === selectedVendorId),
-    [selectedVendorId, vendorOptions],
+  const selectedSupplierUnitOption = useMemo<PickerOption | undefined>(
+    () => supplierUnitOptions.find((option) => option.value === selectedSupplierUnitId),
+    [selectedSupplierUnitId, supplierUnitOptions],
   )
 
   const partQuery = useQuery({
@@ -67,10 +93,10 @@ export function SupplyReadinessCheckPanel({
     enabled: canRead && checkMode === 'part' && Boolean(selectedPartId),
   })
 
-  const vendorQuery = useQuery({
-    queryKey: ['supplyarr-vendor-readiness', accessToken, selectedVendorId],
-    queryFn: () => getVendorSupplyReadiness(accessToken, selectedVendorId),
-    enabled: canRead && checkMode === 'vendor' && Boolean(selectedVendorId),
+  const supplierUnitQuery = useQuery({
+    queryKey: ['supplyarr-supplier-unit-readiness', accessToken, selectedSupplierUnitId],
+    queryFn: () => getSupplierReadiness(accessToken, selectedSupplierUnitId),
+    enabled: canRead && checkMode === 'supplier' && Boolean(selectedSupplierUnitId),
   })
 
   const pathQuery = useQuery({
@@ -78,13 +104,13 @@ export function SupplyReadinessCheckPanel({
       'supplyarr-procurement-path-readiness',
       accessToken,
       selectedPartId,
-      selectedVendorId,
+      selectedSupplierUnitId,
       quantity,
     ],
     queryFn: () =>
-      getProcurementPathReadiness(accessToken, selectedPartId, selectedVendorId, quantity),
+      getProcurementPathReadiness(accessToken, selectedPartId, selectedSupplierUnitId, quantity),
     enabled:
-      canRead && checkMode === 'path' && Boolean(selectedPartId) && Boolean(selectedVendorId),
+      canRead && checkMode === 'path' && Boolean(selectedPartId) && Boolean(selectedSupplierUnitId),
   })
 
   if (!canRead) {
@@ -94,15 +120,15 @@ export function SupplyReadinessCheckPanel({
   const activeResult =
     checkMode === 'part'
       ? partQuery.data
-      : checkMode === 'vendor'
-        ? vendorQuery.data
+      : checkMode === 'supplier'
+        ? supplierUnitQuery.data
         : pathQuery.data
 
   const isLoading =
     checkMode === 'part'
       ? partQuery.isLoading
-      : checkMode === 'vendor'
-        ? vendorQuery.isLoading
+      : checkMode === 'supplier'
+        ? supplierUnitQuery.isLoading
         : pathQuery.isLoading
 
   const blockers = activeResult?.blockers ?? []
@@ -115,11 +141,11 @@ export function SupplyReadinessCheckPanel({
       <h2 className="text-lg font-semibold text-slate-50">Readiness check</h2>
       <p className="mt-1 text-sm text-slate-400">
         Evaluate part availability, supplier approval, and procurement path blockers with stable reason
-        codes for related workflows.
+        codes for related workflows. Supplier checks help confirm which branch or dealer location is ready to source from.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {(['part', 'vendor', 'path'] as const).map((mode) => (
+        {(['part', 'supplier', 'path'] as const).map((mode) => (
           <button
             key={mode}
             type="button"
@@ -130,7 +156,7 @@ export function SupplyReadinessCheckPanel({
             }`}
             onClick={() => setCheckMode(mode)}
           >
-            {mode === 'part' ? 'Part' : mode === 'vendor' ? 'Supplier' : 'Procurement path'}
+            {mode === 'part' ? 'Part' : mode === 'supplier' ? 'Supplier identity or sub-unit' : 'Procurement path'}
           </button>
         ))}
       </div>
@@ -149,16 +175,16 @@ export function SupplyReadinessCheckPanel({
           />
         )}
 
-        {(checkMode === 'vendor' || checkMode === 'path') && (
+        {(checkMode === 'supplier' || checkMode === 'path') && (
           <StaticSearchPicker
-            id="readiness-check-vendor"
+            id="readiness-check-supplier-unit"
             label="Supplier identity or sub-unit"
-            value={selectedVendorId}
-            onChange={setSelectedVendorId}
-            options={vendorOptions}
-            selectedOption={selectedVendorOption}
+            value={selectedSupplierUnitId}
+            onChange={setSelectedSupplierUnitId}
+            options={supplierUnitOptions}
+            selectedOption={selectedSupplierUnitOption}
             placeholder="Search supplier identities or sub-units…"
-            testId="readiness-check-vendor-picker"
+            testId="readiness-check-supplier-unit-picker"
           />
         )}
 
@@ -191,14 +217,14 @@ export function SupplyReadinessCheckPanel({
             {'partKey' in activeResult && (
               <span className="text-sm text-slate-200">
                 {activeResult.partKey}
-                {'partyKey' in activeResult && activeResult.partyKey
-                  ? ` → ${activeResult.partyKey}`
+                {'supplierKey' in activeResult && activeResult.supplierKey
+                  ? ` → ${activeResult.supplierKey}`
                   : ''}
               </span>
             )}
-            {'partyKey' in activeResult &&
+            {'supplierKey' in activeResult &&
               !('partKey' in activeResult && (activeResult as { partKey?: string }).partKey) && (
-                <span className="text-sm text-slate-200">{activeResult.partyKey}</span>
+                <span className="text-sm text-slate-200">{activeResult.supplierKey}</span>
               )}
           </div>
 

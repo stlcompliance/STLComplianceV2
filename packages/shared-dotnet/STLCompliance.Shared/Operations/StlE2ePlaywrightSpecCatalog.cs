@@ -214,8 +214,8 @@ public static class StlE2ePlaywrightSpecCatalog
     public const string SupplyArrReceivingExceptionsSmokeSpec =
         "supplyarr-receiving-exceptions-smoke.spec.ts";
 
-    public const string SupplyArrPartyRegistryMaintenanceSmokeSpec =
-        "supplyarr-party-registry-maintenance-smoke.spec.ts";
+    public const string SupplyArrSupplierDirectoryMaintenanceSmokeSpec =
+        "supplyarr-supplier-directory-maintenance-smoke.spec.ts";
 
     public const string SupplyArrPurchasingDemandProcessingSmokeSpec =
         "supplyarr-purchasing-demand-processing-smoke.spec.ts";
@@ -460,7 +460,7 @@ public static class StlE2ePlaywrightSpecCatalog
         SupplyArrPurchasingPoWorkflowSmokeSpec,
         SupplyArrPurchasingPrWorkflowSmokeSpec,
         SupplyArrReceivingExceptionsSmokeSpec,
-        SupplyArrPartyRegistryMaintenanceSmokeSpec,
+        SupplyArrSupplierDirectoryMaintenanceSmokeSpec,
         SupplyArrPurchasingDemandProcessingSmokeSpec,
         SupplyArrPurchasingProcurementExceptionsSmokeSpec,
         SupplyArrSettingsProcurementExceptionEscalationSmokeSpec,

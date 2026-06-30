@@ -146,6 +146,23 @@ public static class IntegrationEndpoints
         })
         .WithName($"IntegrationGetVendorSupplyReadiness{nameSuffix}");
 
+        integrations.MapGet("/supplier-supply-readiness", async (
+            Guid tenantId,
+            Guid supplierId,
+            HttpContext context,
+            StlServiceTokenValidator tokenValidator,
+            SupplyReadinessService service,
+            CancellationToken cancellationToken) =>
+        {
+            ValidateReadinessServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetSupplierReadinessAsync(
+                tenantId,
+                supplierId,
+                cancellationToken,
+                auditSnapshotKind: SupplyReadinessService.SupplierSnapshotKind));
+        })
+        .WithName($"IntegrationGetSupplierSupplyReadiness{nameSuffix}");
+
         integrations.MapGet("/procurement-path-readiness", async (
             Guid tenantId,
             Guid partId,

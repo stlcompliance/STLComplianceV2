@@ -13,6 +13,7 @@ public static class SupplyContractEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (
+            Guid? supplierId,
             Guid? vendorPartyId,
             string? status,
             int? limit,
@@ -23,7 +24,7 @@ public static class SupplyContractEndpoints
         {
             authorization.RequirePurchaseRequestRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, vendorPartyId, status, limit, cancellationToken));
+            return Results.Ok(await service.ListAsync(tenantId, supplierId, vendorPartyId, status, limit, cancellationToken));
         })
         .WithName("ListContractRecordsV1");
 

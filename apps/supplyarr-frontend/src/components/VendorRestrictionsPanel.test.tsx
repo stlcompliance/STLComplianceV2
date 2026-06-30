@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { VendorRestrictionsPanel } from './VendorRestrictionsPanel'
+import { SupplierRestrictionsPanel } from './VendorRestrictionsPanel'
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@stl/shared-ui')>()
@@ -44,19 +44,25 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
 })
 
 vi.mock('../api/client', () => ({
-  listVendorRestrictions: vi.fn().mockResolvedValue([]),
-  listPartyVendorRestrictions: vi.fn().mockResolvedValue([]),
-  getPartyVendorRestrictionEnforcement: vi.fn().mockResolvedValue({
-    externalPartyId: 'party-1',
+  listSupplierRestrictions: vi.fn().mockResolvedValue([]),
+  listRestrictionsForSupplier: vi.fn().mockResolvedValue([]),
+  getSupplierRestrictionEnforcement: vi.fn().mockResolvedValue({
+    supplierId: 'party-1',
+    supplierKey: 'acme-hq',
+    supplierDisplayName: 'HQ Counter',
+    parentSupplierId: 'parent-1',
+    parentSupplierDisplayName: 'Acme Supply',
+    supplierUnitKind: 'sub_unit',
+    supplierServiceTypes: ['parts'],
     isBlocked: false,
     blockReason: null,
     activeScopes: [],
   }),
-  createPartyVendorRestriction: vi.fn(),
-  liftVendorRestriction: vi.fn(),
+  createSupplierRestriction: vi.fn(),
+  liftSupplierRestriction: vi.fn(),
 }))
 
-describe('VendorRestrictionsPanel', () => {
+describe('SupplierRestrictionsPanel', () => {
   afterEach(() => {
     cleanup()
   })
@@ -65,21 +71,27 @@ describe('VendorRestrictionsPanel', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
-        <VendorRestrictionsPanel
+        <SupplierRestrictionsPanel
           accessToken="token"
           canManage={true}
-          restrictableParties={[
+          restrictableSuppliers={[
             {
-              partyId: 'party-1',
-              partyKey: 'V-1',
-              partyType: 'vendor',
-              unitKind: 'identity',
-              displayName: 'Test Vendor',
+              supplierId: 'party-1',
+              supplierKey: 'acme-hq',
+              parentSupplierId: 'parent-1',
+              parentSupplierDisplayName: 'Acme Supply',
+              unitKind: 'sub_unit',
+              displayName: 'HQ Counter',
               legalName: '',
               taxIdentifier: null,
               approvalStatus: 'approved',
               status: 'active',
               notes: '',
+              serviceTypes: ['parts'],
+              addressLine1: '100 Main St',
+              locality: 'Tulsa',
+              regionCode: 'OK',
+              postalCode: '74101',
               contacts: [],
               createdAt: '',
               updatedAt: '',
@@ -88,7 +100,7 @@ describe('VendorRestrictionsPanel', () => {
         />
       </QueryClientProvider>,
     )
-    expect(await screen.findByTestId('vendor-restrictions-panel')).toBeInTheDocument()
+    expect(await screen.findByTestId('supplier-restrictions-panel')).toBeInTheDocument()
     expect(screen.getByText('Supplier restrictions')).toBeInTheDocument()
   })
 
@@ -96,36 +108,48 @@ describe('VendorRestrictionsPanel', () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
-        <VendorRestrictionsPanel
+        <SupplierRestrictionsPanel
           accessToken="token"
           canManage={true}
-          restrictableParties={[
+          restrictableSuppliers={[
             {
-              partyId: 'party-1',
-              partyKey: 'V-1',
-              partyType: 'vendor',
-              unitKind: 'identity',
-              displayName: 'Test Vendor',
+              supplierId: 'party-1',
+              supplierKey: 'acme-hq',
+              parentSupplierId: 'parent-1',
+              parentSupplierDisplayName: 'Acme Supply',
+              unitKind: 'sub_unit',
+              displayName: 'HQ Counter',
               legalName: '',
               taxIdentifier: null,
               approvalStatus: 'approved',
               status: 'active',
               notes: '',
+              serviceTypes: ['parts'],
+              addressLine1: '100 Main St',
+              locality: 'Tulsa',
+              regionCode: 'OK',
+              postalCode: '74101',
               contacts: [],
               createdAt: '',
               updatedAt: '',
             },
             {
-              partyId: 'party-2',
-              partyKey: 'S-1',
-              partyType: 'supplier',
+              supplierId: 'party-2',
+              supplierKey: 'bravo-west',
+              parentSupplierId: 'parent-2',
+              parentSupplierDisplayName: 'Bravo Supply',
               unitKind: 'sub_unit',
-              displayName: 'Second Supplier',
+              displayName: 'West Service Desk',
               legalName: '',
               taxIdentifier: null,
               approvalStatus: 'approved',
               status: 'active',
               notes: '',
+              serviceTypes: ['maintenance'],
+              addressLine1: '44 Service Ave',
+              locality: 'Oklahoma City',
+              regionCode: 'OK',
+              postalCode: '73102',
               contacts: [],
               createdAt: '',
               updatedAt: '',
@@ -135,26 +159,27 @@ describe('VendorRestrictionsPanel', () => {
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByTestId('vendor-restrictions-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('vendor-restriction-party-picker-options')).toHaveTextContent(
-      'supplier identity · V-1 · Test Vendor',
+    expect(await screen.findByTestId('supplier-restrictions-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-restriction-supplier-picker-options')).toHaveTextContent(
+      'Acme Supply · HQ Counter (acme-hq) · Sub-unit',
     )
-    expect(screen.getByTestId('vendor-restriction-party-picker-options')).toHaveTextContent(
-      'sub-unit · S-1 · Second Supplier',
+    expect(screen.getByTestId('supplier-restriction-supplier-picker-options')).toHaveTextContent(
+      'Bravo Supply · West Service Desk (bravo-west) · Sub-unit',
     )
 
-    fireEvent.change(screen.getByTestId('vendor-restriction-party-picker'), {
+    fireEvent.change(screen.getByTestId('supplier-restriction-supplier-picker'), {
       target: { value: 'party-2' },
     })
 
     expect(screen.getByLabelText(/Restriction reason/i)).toBeInTheDocument()
+    expect(screen.getByText(/Bravo Supply · West Service Desk \(bravo-west\) · Sub-unit · 44 Service Ave, Oklahoma City, OK, 73102 · Maintenance/i)).toBeInTheDocument()
   })
 
   it('returns null when user cannot manage', () => {
     const client = new QueryClient()
     const { container } = render(
       <QueryClientProvider client={client}>
-        <VendorRestrictionsPanel accessToken="token" canManage={false} restrictableParties={[]} />
+        <SupplierRestrictionsPanel accessToken="token" canManage={false} restrictableSuppliers={[]} />
       </QueryClientProvider>,
     )
     expect(container).toBeEmptyDOMElement()

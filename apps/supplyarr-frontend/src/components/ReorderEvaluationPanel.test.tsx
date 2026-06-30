@@ -55,6 +55,9 @@ const baseProps = {
       quantityReserved: 0,
       quantityAvailable: 3,
       suggestedOrderQuantity: 24,
+      preferredSupplierId: 'vendor-1',
+      preferredSupplierKey: 'acme',
+      preferredSupplierDisplayName: 'Acme Supply',
       preferredVendorPartyId: 'vendor-1',
       preferredVendorPartyKey: 'acme',
       preferredVendorDisplayName: 'Acme Supply',
@@ -104,6 +107,7 @@ describe('ReorderEvaluationPanel', () => {
     expect(screen.getByText('filter-01')).toBeInTheDocument()
     expect(screen.getByText('24')).toBeInTheDocument()
     expect(screen.getByText('Acme Supply')).toBeInTheDocument()
+    expect(screen.getByText('Preferred supplier')).toBeInTheDocument()
   })
 
   it('renders a searchable reorder policy part picker', () => {

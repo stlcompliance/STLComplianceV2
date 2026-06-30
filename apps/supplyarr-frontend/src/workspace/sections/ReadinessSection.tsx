@@ -23,7 +23,7 @@ export function ReadinessSection({ state: s }: Props) {
           },
           {
             label: 'Supplier returns',
-            value: s.vendorReturnsQuery.data?.length ?? 0,
+            value: s.supplierReturnsQuery.data?.length ?? 0,
           },
         ]}
       />
@@ -34,7 +34,7 @@ export function ReadinessSection({ state: s }: Props) {
           accessToken={s.accessToken}
           canRead={s.canReadSupplyReadiness}
           parts={s.partsQuery.data ?? []}
-          vendors={s.supplierDirectory}
+          suppliers={s.supplierDirectory}
         />
       </div>
     </div>

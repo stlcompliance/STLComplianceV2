@@ -11,8 +11,10 @@ using SupplyArrRedeemRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 using SupplyArrMeResponse = SupplyArr.Api.Contracts.SupplyArrMeResponse;
 using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using CreateExternalPartyRequest = SupplyArr.Api.Contracts.CreateExternalPartyRequest;
 using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
 using CreatePartyContactRequest = SupplyArr.Api.Contracts.CreatePartyContactRequest;
 using CreateExternalPartyContactRequest = SupplyArr.Api.Contracts.CreateExternalPartyContactRequest;
 using PartyContactResponse = SupplyArr.Api.Contracts.PartyContactResponse;
@@ -29,6 +31,8 @@ using InventoryLocationResponse = SupplyArr.Api.Contracts.InventoryLocationRespo
 using CreateInventoryLocationRequest = SupplyArr.Api.Contracts.CreateInventoryLocationRequest;
 using RegisterVendorDocumentRequest = SupplyArr.Api.Contracts.RegisterVendorDocumentRequest;
 using PartyComplianceDocumentResponse = SupplyArr.Api.Contracts.PartyComplianceDocumentResponse;
+using SupplierComplianceDocumentResponse = SupplyArr.Api.Contracts.SupplierComplianceDocumentResponse;
+using SupplierComplianceDocumentRegistrationRequest = SupplyArr.Api.Contracts.SupplierComplianceDocumentRegistrationRequest;
 using ItemCategorySummaryResponse = SupplyArr.Api.Contracts.ItemCategorySummaryResponse;
 using ManufacturerSummaryResponse = SupplyArr.Api.Contracts.ManufacturerSummaryResponse;
 using VendorItemResponse = SupplyArr.Api.Contracts.VendorItemResponse;
@@ -1160,9 +1164,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/exports", token));
         exportsResponse.EnsureSuccessStatusCode();
         var exports = (await exportsResponse.Content.ReadFromJsonAsync<List<ExportOptionResponse>>())!;
-        Assert.Contains(exports, x => x.ExportType == "vendors_summary_csv");
-        Assert.Contains(exports, x => x.ExportType == "vendor_list_csv");
-        Assert.Contains(exports, x => x.ExportType == "approved_vendor_list_csv");
+        Assert.Contains(exports, x => x.ExportType == "supplier_summary_csv");
+        Assert.Contains(exports, x => x.ExportType == "supplier_list_csv");
+        Assert.Contains(exports, x => x.ExportType == "approved_supplier_list_csv");
         Assert.Contains(exports, x => x.ExportType == "customer_list_csv");
         Assert.Contains(exports, x => x.ExportType == "parts_catalog_csv");
         Assert.Contains(exports, x => x.ExportType == "inventory_valuation_csv");
@@ -3079,16 +3083,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "onboarding-vendor",
-            "Onboarding Vendor",
-            string.Empty,
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "onboarding-supplier",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Onboarding Supplier",
+            "Onboarding Supplier LLC",
+            null,
+            string.Empty,
+            ["parts", "products"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var requirementsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/supplier-onboarding/document-requirements", token));
@@ -3099,7 +3112,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         pendingResponse.EnsureSuccessStatusCode();
 
         var partyDocsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/compliance-documents", token));
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/compliance-documents", token));
         partyDocsResponse.EnsureSuccessStatusCode();
     }
 
@@ -3108,19 +3121,28 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             $"cc-onb-{Guid.NewGuid():N}"[..16],
-            "Compliance Core Onboarding Vendor",
-            string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Compliance Core Onboarding Supplier",
+            "Compliance Core Onboarding Supplier LLC",
+            null,
+            string.Empty,
+            ["parts", "products"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var startRequest = Authorized(HttpMethod.Post, "/api/supplier-onboarding/start", token);
-        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(vendor.PartyId, "Initial onboarding"));
+        startRequest.Content = JsonContent.Create(new StartSupplierOnboardingRequest(supplier.SupplierId, "Initial onboarding"));
         var startResponse = await _supplyarrClient.SendAsync(startRequest);
         startResponse.EnsureSuccessStatusCode();
 
@@ -3133,9 +3155,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         {
             var registerRequest = Authorized(
                 HttpMethod.Post,
-                $"/api/parties/{vendor.PartyId}/compliance-documents",
+                $"/api/suppliers/{supplier.SupplierId}/compliance-documents",
                 token);
-            registerRequest.Content = JsonContent.Create(new RegisterPartyComplianceDocumentRequest(
+            registerRequest.Content = JsonContent.Create(new SupplierComplianceDocumentRegistrationRequest(
                 $"{documentKey}-{Guid.NewGuid():N}"[..16],
                 documentTypeKey,
                 title,
@@ -3147,26 +3169,26 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                 string.Empty));
             var registerResponse = await _supplyarrClient.SendAsync(registerRequest);
             registerResponse.EnsureSuccessStatusCode();
-            var document = (await registerResponse.Content.ReadFromJsonAsync<PartyComplianceDocumentResponse>())!;
+            var document = (await registerResponse.Content.ReadFromJsonAsync<SupplierComplianceDocumentResponse>())!;
 
             var approveDocumentResponse = await _supplyarrClient.SendAsync(
                 Authorized(
                     HttpMethod.Post,
-                    $"/api/parties/{vendor.PartyId}/compliance-documents/{document.DocumentId}/approve",
+                    $"/api/suppliers/{supplier.SupplierId}/compliance-documents/{document.DocumentId}/approve",
                     token));
             approveDocumentResponse.EnsureSuccessStatusCode();
         }
 
         var submitRequest = Authorized(
             HttpMethod.Post,
-            $"/api/supplier-onboarding/parties/{vendor.PartyId}/submit",
+            $"/api/supplier-onboarding/suppliers/{supplier.SupplierId}/submit",
             token);
         submitRequest.Content = JsonContent.Create(new SubmitSupplierOnboardingForReviewRequest("Ready"));
         var submitResponse = await _supplyarrClient.SendAsync(submitRequest);
         submitResponse.EnsureSuccessStatusCode();
 
         var approveResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/supplier-onboarding/parties/{vendor.PartyId}/approve", token));
+            Authorized(HttpMethod.Post, $"/api/supplier-onboarding/suppliers/{supplier.SupplierId}/approve", token));
         approveResponse.EnsureSuccessStatusCode();
         var approved = (await approveResponse.Content.ReadFromJsonAsync<SupplierOnboardingResponse>())!;
         Assert.Equal("approved", approved.OnboardingStatus);
@@ -3187,7 +3209,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             _complianceCoreHandler.Facts,
             x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorIsApproved
                 && x.BooleanValue == true
-                && x.ScopeKey == $"vendor:{vendor.PartyId:D}".ToLowerInvariant());
+                && x.ScopeKey == $"vendor:{supplier.SupplierId:D}".ToLowerInvariant());
     }
 
     [Fact]
@@ -3196,22 +3218,31 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"doc-fact-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             $"{keyPrefix}-vendor",
-            "Document Fact Vendor",
-            string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Document Fact Supplier",
+            "Document Fact Supplier LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var registerRequest = Authorized(
             HttpMethod.Post,
-            $"/api/parties/{vendor.PartyId}/compliance-documents",
+            $"/api/suppliers/{supplier.SupplierId}/compliance-documents",
             token);
-        registerRequest.Content = JsonContent.Create(new RegisterPartyComplianceDocumentRequest(
+        registerRequest.Content = JsonContent.Create(new SupplierComplianceDocumentRegistrationRequest(
             $"{keyPrefix}-insurance",
             "insurance_certificate",
             "Expired insurance certificate",
@@ -3223,12 +3254,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             string.Empty));
         var registerResponse = await _supplyarrClient.SendAsync(registerRequest);
         registerResponse.EnsureSuccessStatusCode();
-        var document = (await registerResponse.Content.ReadFromJsonAsync<PartyComplianceDocumentResponse>())!;
+        var document = (await registerResponse.Content.ReadFromJsonAsync<SupplierComplianceDocumentResponse>())!;
 
         var approveResponse = await _supplyarrClient.SendAsync(
             Authorized(
                 HttpMethod.Post,
-                $"/api/parties/{vendor.PartyId}/compliance-documents/{document.DocumentId}/approve",
+                $"/api/suppliers/{supplier.SupplierId}/compliance-documents/{document.DocumentId}/approve",
                 token));
         approveResponse.EnsureSuccessStatusCode();
 

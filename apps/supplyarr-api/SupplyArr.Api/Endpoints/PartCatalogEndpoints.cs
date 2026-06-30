@@ -215,7 +215,17 @@ public static class PartCatalogEndpoints
         })
         .WithName($"CreatePartSource{nameSuffix}");
 
-        group.MapPost("/{partId:guid}/vendor-links", async (
+        MapPartSupplierLinkRoutes(group, "vendor-links", "VendorLink", nameSuffix);
+        MapPartSupplierLinkRoutes(group, "supplier-links", "SupplierLink", nameSuffix);
+    }
+
+    private static void MapPartSupplierLinkRoutes(
+        RouteGroupBuilder group,
+        string routeSegment,
+        string namePrefix,
+        string nameSuffix)
+    {
+        group.MapPost($"/{{partId:guid}}/{routeSegment}", async (
             Guid partId,
             CreatePartVendorLinkRequest request,
             HttpContext context,
@@ -226,17 +236,17 @@ public static class PartCatalogEndpoints
             authorization.RequirePartsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var link = await service.AddVendorLinkAsync(
+            var link = await service.AddSupplierLinkAsync(
                 tenantId,
                 actorUserId,
                 partId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/parts/{partId}/vendor-links/{link.LinkId}", link);
+            return Results.Created($"/api/parts/{partId}/{routeSegment}/{link.LinkId}", link);
         })
-        .WithName($"CreatePartVendorLink{nameSuffix}");
+        .WithName($"CreatePart{namePrefix}{nameSuffix}");
 
-        group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-price", async (
+        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-price", async (
             Guid partId,
             Guid linkId,
             UpsertPartVendorLinkCatalogPriceRequest request,
@@ -256,9 +266,9 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPartVendorLinkCatalogPrice{nameSuffix}");
+        .WithName($"UpsertPart{namePrefix}CatalogPrice{nameSuffix}");
 
-        group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-lead-time", async (
+        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-lead-time", async (
             Guid partId,
             Guid linkId,
             UpsertPartVendorLinkCatalogLeadTimeRequest request,
@@ -278,9 +288,9 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPartVendorLinkCatalogLeadTime{nameSuffix}");
+        .WithName($"UpsertPart{namePrefix}CatalogLeadTime{nameSuffix}");
 
-        group.MapPut("/{partId:guid}/vendor-links/{linkId:guid}/catalog-availability", async (
+        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-availability", async (
             Guid partId,
             Guid linkId,
             UpsertPartVendorLinkCatalogAvailabilityRequest request,
@@ -300,6 +310,6 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPartVendorLinkCatalogAvailability{nameSuffix}");
+        .WithName($"UpsertPart{namePrefix}CatalogAvailability{nameSuffix}");
     }
 }

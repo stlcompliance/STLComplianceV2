@@ -4,9 +4,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import type { RegisterVendorOrderDocumentRequest, UpdateVendorOrderStatusRequest } from '../../api/types'
 import {
-  getVendorAccessOrder,
-  registerVendorAccessOrderDocument,
-  submitVendorAccessOrderStatus,
+  getSupplierAccessOrder,
+  registerSupplierAccessOrderDocument,
+  submitSupplierAccessOrderStatus,
 } from '../../api/vendorOrderClient'
 import {
   formatVendorOrderDateTime,
@@ -14,8 +14,13 @@ import {
   quantitySummary,
   vendorOrderStatusTone,
 } from './vendorOrderUi'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../../utils/supplierPresentation'
 
-export function VendorOrderPortalPage() {
+export function SupplierOrderPortalPage() {
   const { token } = useParams<{ token: string }>()
   const [statusDraft, setStatusDraft] = useState<UpdateVendorOrderStatusRequest>({
     newStatus: 'acknowledged',
@@ -39,34 +44,42 @@ export function VendorOrderPortalPage() {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
 
   if (!token) {
-    return <Navigate to="/vendor-portal" replace />
+    return <Navigate to="/supplier-portal" replace />
   }
 
   const portalQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-portal', token],
-    queryFn: () => getVendorAccessOrder(token),
+    queryKey: ['supplyarr-supplier-order-portal', token],
+    queryFn: () => getSupplierAccessOrder(token),
   })
 
   const portal = portalQuery.data
   const metadata = portal?.metadata
+  const supplierIdentityLabel = portal
+    ? formatSupplierIdentityLabel({
+        supplierDisplayName: portal.supplierNameSnapshot,
+        vendorDisplayName: portal.vendorNameSnapshot,
+        parentSupplierDisplayName: portal.parentSupplierDisplayName,
+        supplierUnitKind: portal.supplierUnitKind,
+      })
+    : 'Supplier not recorded'
   const latestStatusUpdate = useMemo(
     () => portal?.statusHistory[portal.statusHistory.length - 1] ?? null,
     [portal],
   )
 
   const statusMutation = useMutation({
-    mutationFn: () => submitVendorAccessOrderStatus(token, statusDraft),
+    mutationFn: () => submitSupplierAccessOrderStatus(token, statusDraft),
     onSuccess: async (updated) => {
       setLastSavedAt(updated.statusHistory[updated.statusHistory.length - 1]?.createdAt ?? null)
       await portalQuery.refetch()
     },
     onError: (error) => {
-      console.error('Vendor order status update failed', error)
+      console.error('Supplier order status update failed', error)
     },
   })
 
   const documentMutation = useMutation({
-    mutationFn: () => registerVendorAccessOrderDocument(token, documentDraft),
+    mutationFn: () => registerSupplierAccessOrderDocument(token, documentDraft),
     onSuccess: async (updated) => {
       setDocumentDraft({
         documentType: 'photo',
@@ -80,7 +93,7 @@ export function VendorOrderPortalPage() {
       await portalQuery.refetch()
     },
     onError: (error) => {
-      console.error('Vendor order document registration failed', error)
+      console.error('Supplier order document registration failed', error)
     },
   })
 
@@ -88,7 +101,7 @@ export function VendorOrderPortalPage() {
     return (
       <main className="min-h-screen bg-[var(--color-bg-app)] px-4 py-8 text-[var(--color-text-primary)]">
         <div className="mx-auto max-w-4xl rounded-[2rem] border border-amber-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
-          Loading vendor order…
+          Loading supplier order…
         </div>
       </main>
     )
@@ -98,7 +111,7 @@ export function VendorOrderPortalPage() {
     return (
       <main className="min-h-screen bg-[var(--color-bg-app)] px-4 py-8 text-[var(--color-text-primary)]">
         <div className="mx-auto max-w-4xl rounded-[2rem] border border-rose-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor order link unavailable</h1>
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Supplier order link unavailable</h1>
           <p className="mt-3 text-sm text-[var(--color-text-muted)]">
             This magic link may be invalid, revoked, or expired.
           </p>
@@ -116,10 +129,10 @@ export function VendorOrderPortalPage() {
         <header className="rounded-[2rem] border border-amber-200 bg-[var(--color-bg-surface)] p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-700">SupplyArr vendor portal</p>
-              <h1 className="mt-2 text-3xl font-bold text-[var(--color-text-primary)]">Order readiness confirmation</h1>
+              <p className="text-xs uppercase tracking-[0.25em] text-amber-700">SupplyArr supplier order portal</p>
+              <h1 className="mt-2 text-3xl font-bold text-[var(--color-text-primary)]">Supplier-order readiness confirmation</h1>
               <p className="mt-3 max-w-3xl text-sm text-[var(--color-text-muted)]">
-                Update only the order readiness details for this specific vendor order. Transportation dispatch, pricing,
+                Update only the order readiness details for this specific supplier order. Transportation dispatch, pricing,
                 driver assignment, and broker-only workflow stay outside this portal.
               </p>
             </div>
@@ -162,7 +175,10 @@ export function VendorOrderPortalPage() {
             <section className="rounded-[2rem] border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-6 shadow-sm">
               <h2 className="text-xl font-bold text-[var(--color-text-primary)]">Order summary</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <SummaryField label="Vendor organization" value={portal.vendorNameSnapshot} />
+                <SummaryField label="Supplier identity or sub-unit" value={supplierIdentityLabel} />
+                <SummaryField label="Parent supplier" value={portal.parentSupplierDisplayName ?? 'This supplier record is the parent identity'} />
+                <SummaryField label="Hierarchy role" value={humanizeSupplierUnitKind(portal.supplierUnitKind)} />
+                <SummaryField label="Services provided" value={formatSupplierServiceTypes(portal.supplierServiceTypes)} />
                 <SummaryField label="Item description" value={portal.itemDescription} />
                 <SummaryField label="Ordered quantity" value={`${portal.orderedQuantity} ${portal.quantityUom}`} />
                 <SummaryField label="Current ready quantity" value={`${portal.quantityReady} ${portal.quantityUom}`} />
@@ -348,7 +364,7 @@ export function VendorOrderPortalPage() {
                         fileName: file.name,
                         contentType: file.type || 'application/octet-stream',
                         sizeBytes: file.size,
-                        storageKey: current.storageKey || `vendor-order/${file.name}`,
+                        storageKey: current.storageKey || `supplier-order/${file.name}`,
                       }))
                     }}
                   />
@@ -484,6 +500,8 @@ export function VendorOrderPortalPage() {
     </main>
   )
 }
+
+export const VendorOrderPortalPage = SupplierOrderPortalPage
 
 function PortalCard({
   icon,

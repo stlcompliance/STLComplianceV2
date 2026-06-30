@@ -40,6 +40,8 @@ public static class VendorOrderSettingsEndpoints
             .WithName($"UpsertVendorOrderSettings{nameSuffix}");
         }
 
+        MapRoutes(app.MapGroup("/api/supplier-order-settings"), "Supplier");
+        MapRoutes(app.MapGroup("/api/v1/supplier-order-settings"), "SupplierV1");
         MapRoutes(app.MapGroup("/api/vendor-order-settings"), string.Empty);
         MapRoutes(app.MapGroup("/api/v1/vendor-order-settings"), "V1");
     }

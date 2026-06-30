@@ -39,7 +39,7 @@ export const workspaceSectionHeaders: Record<
   },
   suppliers: {
     title: 'Suppliers',
-    subtitle: 'Vendors, suppliers, dealers, and supplier detail records',
+    subtitle: 'Supplier identities, sub-units, and site-aware sourcing records',
   },
   imports: {
     title: 'Import center',
@@ -50,7 +50,7 @@ export const workspaceSectionHeaders: Record<
     subtitle: 'Supplier qualification, documents, and approval workflow',
   },
   rfqs: { title: 'RFQs', subtitle: 'Supplier sourcing, invitations, and quote intake' },
-  quotes: { title: 'Quotes', subtitle: 'Compare vendor pricing, lead time, and award decisions' },
+  quotes: { title: 'Quotes', subtitle: 'Compare supplier pricing, lead time, and award decisions' },
   'purchase-orders': { title: 'Purchase orders', subtitle: 'PO lifecycle, acknowledgments, and release' },
   catalog: { title: 'Catalogs', subtitle: 'Parts, substitutes, and supplier item relationships' },
   contracts: { title: 'Contracts', subtitle: 'Agreement metadata, terms, and renewal tracking' },
@@ -67,7 +67,7 @@ export const workspaceSectionHeaders: Record<
   },
   reports: {
     title: 'Reports',
-    subtitle: 'Vendor, compliance, inventory, and purchasing dashboards',
+    subtitle: 'Supplier, compliance, inventory, and purchasing dashboards',
   },
   settings: { title: 'Settings', subtitle: 'Notifications, automation, and procurement governance' },
 }

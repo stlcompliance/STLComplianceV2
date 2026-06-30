@@ -2,17 +2,17 @@ import { ProcurementExceptionsPanel } from '../../components/ProcurementExceptio
 import { SupplierIncidentsPanel } from '../../components/SupplierIncidentsPanel'
 import { SupplyReadinessCheckPanel } from '../../components/SupplyReadinessCheckPanel'
 import { SupplyReadinessDashboardPanel } from '../../components/SupplyReadinessDashboardPanel'
-import { VendorRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
+import { SupplierRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 
-function uniqueParties(state: SupplyArrWorkspaceState) {
+function uniqueSuppliers(state: SupplyArrWorkspaceState) {
   return state.supplierDirectory
 }
 
 export function RiskSection({ state: s }: Props) {
-  const parties = uniqueParties(s)
+  const suppliers = uniqueSuppliers(s)
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -24,17 +24,17 @@ export function RiskSection({ state: s }: Props) {
         accessToken={s.accessToken}
         canRead={s.canReadSupplyReadiness}
         parts={s.partsQuery.data ?? []}
-        vendors={parties}
+        suppliers={suppliers}
       />
-      <VendorRestrictionsPanel
+      <SupplierRestrictionsPanel
         accessToken={s.accessToken}
         canManage={s.canManage}
-        restrictableParties={parties}
+        restrictableSuppliers={suppliers}
       />
       <SupplierIncidentsPanel
         accessToken={s.accessToken}
         canManage={s.canManage}
-        incidentParties={parties}
+        supplierUnits={suppliers}
       />
       <ProcurementExceptionsPanel
         accessToken={s.accessToken}

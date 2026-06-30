@@ -3,6 +3,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -12,10 +13,12 @@ public sealed class SupplierIncidentService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<IReadOnlyList<SupplierIncidentResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
-        Guid? externalPartyId = null,
+        Guid? supplierId = null,
         string? severity = null,
         CancellationToken cancellationToken = default)
     {
@@ -29,9 +32,9 @@ public sealed class SupplierIncidentService(
             query = query.Where(x => x.Status == status.Trim().ToLowerInvariant());
         }
 
-        if (externalPartyId is not null)
+        if (supplierId is not null)
         {
-            query = query.Where(x => x.ExternalPartyId == externalPartyId);
+            query = query.Where(x => x.ExternalPartyId == supplierId);
         }
 
         if (!string.IsNullOrWhiteSpace(severity))
@@ -47,14 +50,11 @@ public sealed class SupplierIncidentService(
         return rows.Select(Map).ToList();
     }
 
-    public async Task<IReadOnlyList<SupplierIncidentResponse>> ListByPartyAsync(
+    public Task<IReadOnlyList<SupplierIncidentResponse>> ListBySupplierAsync(
         Guid tenantId,
-        Guid externalPartyId,
-        CancellationToken cancellationToken = default)
-    {
-        await EnsureIncidentPartyAsync(tenantId, externalPartyId, cancellationToken);
-        return await ListAsync(tenantId, externalPartyId: externalPartyId, cancellationToken: cancellationToken);
-    }
+        Guid supplierId,
+        CancellationToken cancellationToken = default) =>
+        ListAsync(tenantId, supplierId: supplierId, cancellationToken: cancellationToken);
 
     public async Task<SupplierIncidentResponse> GetAsync(
         Guid tenantId,
@@ -71,7 +71,7 @@ public sealed class SupplierIncidentService(
         CreateSupplierIncidentRequest request,
         CancellationToken cancellationToken = default)
     {
-        var party = await EnsureIncidentPartyAsync(tenantId, request.ExternalPartyId, cancellationToken);
+        var party = await EnsureIncidentPartyAsync(tenantId, request.SupplierId, cancellationToken);
         var incidentKey = SupplierIncidentRules.NormalizeIncidentKey(request.IncidentKey);
 
         var duplicateKey = await db.SupplierIncidents.AnyAsync(
@@ -440,13 +440,13 @@ public sealed class SupplierIncidentService(
         var party = await db.ExternalParties
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken)
-            ?? throw new StlApiException("supplier_incidents.party_not_found", "Party was not found.", 404);
+            ?? throw new StlApiException("supplier_incidents.supplier_not_found", "Supplier was not found.", 404);
 
         if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
         {
             throw new StlApiException(
-                "supplier_incidents.party_type_not_allowed",
-                "Incidents apply only to vendor or supplier parties.",
+                "supplier_incidents.supplier_type_not_allowed",
+                "Incidents apply only to supplier records.",
                 400);
         }
 
@@ -487,6 +487,7 @@ public sealed class SupplierIncidentService(
         await db.SupplierIncidents
             .AsNoTracking()
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x!.ParentExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken)
             ?? throw new StlApiException("supplier_incidents.not_found", "Supplier incident was not found.", 404);
 
@@ -496,6 +497,7 @@ public sealed class SupplierIncidentService(
         CancellationToken cancellationToken) =>
         await db.SupplierIncidents
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x!.ParentExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken)
             ?? throw new StlApiException("supplier_incidents.not_found", "Supplier incident was not found.", 404);
 
@@ -505,7 +507,10 @@ public sealed class SupplierIncidentService(
             entity.ExternalPartyId,
             entity.ExternalParty.PartyKey,
             entity.ExternalParty.DisplayName,
-            entity.ExternalParty.PartyType,
+            entity.ExternalParty.ParentExternalPartyId,
+            entity.ExternalParty.ParentExternalParty?.DisplayName,
+            entity.ExternalParty.UnitKind,
+            ParseServiceTypes(entity.ExternalParty.ServiceTypesJson),
             entity.IncidentKey,
             entity.Title,
             entity.Description,
@@ -540,4 +545,21 @@ public sealed class SupplierIncidentService(
             entity.ReopenCount,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 }

@@ -2,10 +2,19 @@ import { PartCatalogPanel } from '../../components/PartCatalogPanel'
 import { PartSubstitutionsPanel } from '../../components/PartSubstitutionsPanel'
 import { VendorCatalogApiPanel } from '../../components/VendorCatalogApiPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
+import type { SupplierUnitPickerSource } from '../../forms/controlledFormHelpers'
 
 type Props = { state: SupplyArrWorkspaceState }
 
 export function CatalogSection({ state: s }: Props) {
+  const suppliers: SupplierUnitPickerSource[] = s.supplierDirectory.map((supplier) => ({
+    supplierId: supplier.supplierId,
+    displayName: supplier.displayName,
+    supplierKey: supplier.supplierKey,
+    parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+    unitKind: supplier.unitKind,
+  }))
+
   return (
     <div className="space-y-6">
       <PartCatalogPanel
@@ -29,14 +38,10 @@ export function CatalogSection({ state: s }: Props) {
         partSourceType={s.partSourceType}
         partSourceLabel={s.partSourceLabel}
         partSourceNotes={s.partSourceNotes}
-        vendorPartNumber={s.vendorPartNumber}
+        supplierPartNumber={s.supplierPartNumber}
         selectedPartId={s.selectedPartId}
-        selectedVendorId={s.selectedVendorId}
-        vendors={s.supplierDirectory.map((v) => ({
-          partyId: v.partyId,
-          displayName: v.displayName,
-          partyKey: v.partyKey,
-        }))}
+        selectedSupplierUnitId={s.selectedSupplierUnitId}
+        suppliers={suppliers}
         onCatalogKeyChange={s.setCatalogKey}
         onCatalogNameChange={s.setCatalogName}
         onCatalogDescriptionChange={s.setCatalogDescription}
@@ -53,17 +58,17 @@ export function CatalogSection({ state: s }: Props) {
         onPartSourceTypeChange={s.setPartSourceType}
         onPartSourceLabelChange={s.setPartSourceLabel}
         onPartSourceNotesChange={s.setPartSourceNotes}
-        onVendorPartNumberChange={s.setVendorPartNumber}
+        onSupplierPartNumberChange={s.setSupplierPartNumber}
         onSelectedPartIdChange={s.setSelectedPartId}
-        onSelectedVendorIdChange={s.setSelectedVendorId}
+        onSelectedSupplierUnitIdChange={s.setSelectedSupplierUnitId}
         onCreateCatalog={() => s.createCatalogMutation.mutate()}
         onCreatePart={() => s.createPartMutation.mutate()}
         onCreatePartSource={() => s.createPartSourceMutation.mutate()}
-        onLinkVendor={() => s.linkVendorMutation.mutate()}
+        onLinkSupplierSource={() => s.linkSupplierSourceMutation.mutate()}
         isCreatingCatalog={s.createCatalogMutation.isPending}
         isCreatingPart={s.createPartMutation.isPending}
         isCreatingPartSource={s.createPartSourceMutation.isPending}
-        isLinkingVendor={s.linkVendorMutation.isPending}
+        isLinkingSupplierSource={s.linkSupplierSourceMutation.isPending}
       />
 
       <PartSubstitutionsPanel
@@ -78,11 +83,7 @@ export function CatalogSection({ state: s }: Props) {
         accessToken={s.accessToken}
         canManage={s.canManageCatalog}
         parts={s.partsQuery.data ?? []}
-        vendors={s.supplierDirectory.map((v) => ({
-          partyId: v.partyId,
-          displayName: v.displayName,
-          partyKey: v.partyKey,
-        }))}
+        suppliers={suppliers}
       />
     </div>
   )

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
@@ -10,6 +11,7 @@ namespace SupplyArr.Api.Services;
 public sealed class PurchasingReportService(SupplyArrDbContext db)
 {
     private const int DetailListLimit = 50;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private static readonly HashSet<string> BlockedApprovalStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -26,7 +28,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
     public async Task<PurchasingReportSummaryResponse> GetSummaryAsync(
         Guid tenantId,
         bool? openDocumentsOnly,
-        Guid? vendorPartyId,
+        Guid? supplierId,
         CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
@@ -42,13 +44,13 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .Include(x => x.Lines)
             .ToListAsync(cancellationToken);
 
-        if (vendorPartyId is not null)
+        if (supplierId is not null)
         {
             purchaseRequests = purchaseRequests
-                .Where(x => x.VendorPartyId == vendorPartyId)
+                .Where(x => x.VendorPartyId == supplierId)
                 .ToList();
             purchaseOrders = purchaseOrders
-                .Where(x => x.VendorPartyId == vendorPartyId)
+                .Where(x => x.VendorPartyId == supplierId)
                 .ToList();
         }
 
@@ -67,21 +69,22 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 .Where(x => x.TenantId == tenantId && purchaseOrderIds.Contains(x.PurchaseOrderId))
                 .ToListAsync(cancellationToken);
 
-        var vendorIds = purchaseRequests
+        var supplierIds = purchaseRequests
             .Where(x => x.VendorPartyId != null)
             .Select(x => x.VendorPartyId!.Value)
             .Concat(purchaseOrders.Select(x => x.VendorPartyId))
             .Distinct()
             .ToList();
 
-        var vendors = vendorIds.Count == 0
+        var suppliers = supplierIds.Count == 0
             ? []
             : await db.ExternalParties
                 .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.Id))
+                .Include(x => x.ParentExternalParty)
+                .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id, cancellationToken);
 
-        var blockedVendorCount = await db.ExternalParties
+        var blockedSupplierCount = await db.ExternalParties
             .AsNoTracking()
             .Where(x =>
                 x.TenantId == tenantId
@@ -104,7 +107,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
-        var vendorDocumentExpiringSoonCount = await db.PartyComplianceDocuments
+        var supplierDocumentExpiringSoonCount = await db.PartyComplianceDocuments
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(cancellationToken);
@@ -179,10 +182,10 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 return unitPrice * item.Line.QuantityOrdered;
             });
 
-        string VendorName(Guid? id) =>
-            id is not null && vendors.TryGetValue(id.Value, out var party)
-                ? party.DisplayName
-                : string.Empty;
+        SupplierRecordSnapshot? Supplier(Guid? id) =>
+            id is not null && suppliers.TryGetValue(id.Value, out var supplier)
+                ? MapSupplierSnapshot(supplier)
+                : null;
 
         var prLineCounts = await db.PurchaseRequestLines
             .AsNoTracking()
@@ -202,18 +205,28 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 continue;
             }
 
+            var supplier = Supplier(pr.VendorPartyId);
             documents.Add(new PurchasingDocumentSummaryItemResponse(
                 "purchase_request",
                 pr.Id,
                 pr.RequestKey,
                 pr.Title,
                 pr.Status,
-                pr.VendorPartyId,
-                VendorName(pr.VendorPartyId),
+                supplier?.SupplierId,
+                supplier?.SupplierKey,
+                supplier?.SupplierDisplayName ?? string.Empty,
+                supplier?.ParentSupplierId,
+                supplier?.ParentSupplierDisplayName,
+                supplier?.SupplierUnitKind,
+                supplier?.SupplierServiceTypes ?? [],
+                supplier?.SupplierType,
                 prLines?.Count ?? 0,
                 prLines?.Qty ?? 0m,
                 0m,
-                pr.UpdatedAt));
+                pr.UpdatedAt,
+                pr.VendorPartyId,
+                supplier?.SupplierKey,
+                supplier?.SupplierDisplayName));
         }
 
         foreach (var po in purchaseOrders.OrderByDescending(x => x.UpdatedAt))
@@ -229,18 +242,28 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 continue;
             }
 
+            var supplier = Supplier(po.VendorPartyId);
             documents.Add(new PurchasingDocumentSummaryItemResponse(
                 "purchase_order",
                 po.Id,
                 po.OrderKey,
                 po.Title,
                 po.Status,
-                po.VendorPartyId,
-                VendorName(po.VendorPartyId),
+                supplier?.SupplierId,
+                supplier?.SupplierKey,
+                supplier?.SupplierDisplayName ?? string.Empty,
+                supplier?.ParentSupplierId,
+                supplier?.ParentSupplierDisplayName,
+                supplier?.SupplierUnitKind,
+                supplier?.SupplierServiceTypes ?? [],
+                supplier?.SupplierType,
                 lineCount,
                 qtyOrdered,
                 qtyReceived,
-                po.UpdatedAt));
+                po.UpdatedAt,
+                po.VendorPartyId,
+                supplier?.SupplierKey,
+                supplier?.SupplierDisplayName));
         }
 
         documents = documents.OrderByDescending(x => x.UpdatedAt).ToList();
@@ -271,12 +294,18 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             procurementExceptionCount.Count(x => ProcurementExceptionStatuses.Active.Contains(x.Status)),
             receivingExceptionCount.Count(x => string.Equals(x.Status, ReceivingExceptionStatuses.Open, StringComparison.OrdinalIgnoreCase)),
             warrantyClaimCount.Count(x => WarrantyClaimStatuses.Open.Contains(x.Status)),
-            vendorDocumentExpiringSoonCount.Count(x =>
+            supplierDocumentExpiringSoonCount.Count(x =>
                 x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
                 && x.ExpiresAt != null
                 && x.ExpiresAt >= now
                 && x.ExpiresAt <= now.AddDays(30)),
-            blockedVendorCount.Count(x => BlockedApprovalStatuses.Contains(x.ApprovalStatus)),
+            blockedSupplierCount.Count(x => BlockedApprovalStatuses.Contains(x.ApprovalStatus)),
+            supplierDocumentExpiringSoonCount.Count(x =>
+                x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                && x.ExpiresAt != null
+                && x.ExpiresAt >= now
+                && x.ExpiresAt <= now.AddDays(30)),
+            blockedSupplierCount.Count(x => BlockedApprovalStatuses.Contains(x.ApprovalStatus)),
             averageLeadTimeDays,
             estimatedSpendThisMonth);
 
@@ -409,13 +438,13 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
     public async Task<(string ContentType, string FileName, byte[] Content)> ExportSummaryCsvAsync(
         Guid tenantId,
         bool? openDocumentsOnly,
-        Guid? vendorPartyId,
+        Guid? supplierId,
         CancellationToken cancellationToken = default)
     {
-        var summary = await GetSummaryAsync(tenantId, openDocumentsOnly, vendorPartyId, cancellationToken);
+        var summary = await GetSummaryAsync(tenantId, openDocumentsOnly, supplierId, cancellationToken);
         var builder = new StringBuilder();
         builder.AppendLine(
-            "documentType,documentKey,title,status,vendorDisplayName,lineCount,quantityOrdered,quantityReceived,updatedAt");
+            "documentType,documentKey,title,status,supplierKey,supplierDisplayName,lineCount,quantityOrdered,quantityReceived,updatedAt");
 
         foreach (var doc in summary.Documents)
         {
@@ -427,7 +456,9 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             builder.Append(',');
             builder.Append(CsvEscape(doc.Status));
             builder.Append(',');
-            builder.Append(CsvEscape(doc.VendorDisplayName));
+            builder.Append(CsvEscape(doc.SupplierKey ?? string.Empty));
+            builder.Append(',');
+            builder.Append(CsvEscape(doc.SupplierDisplayName));
             builder.Append(',');
             builder.Append(doc.LineCount);
             builder.Append(',');
@@ -447,13 +478,13 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         PurchaseRequest pr,
         CancellationToken cancellationToken)
     {
-        var vendorName = pr.VendorPartyId is null
-            ? string.Empty
+        var supplier = pr.VendorPartyId is null
+            ? null
             : await db.ExternalParties
                 .AsNoTracking()
+                .Include(x => x.ParentExternalParty)
                 .Where(x => x.TenantId == tenantId && x.Id == pr.VendorPartyId)
-                .Select(x => x.DisplayName)
-                .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+                .FirstOrDefaultAsync(cancellationToken);
 
         var lineStats = await db.PurchaseRequestLines
             .AsNoTracking()
@@ -462,18 +493,29 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .Select(g => new { Count = g.Count(), Qty = g.Sum(l => l.QuantityRequested) })
             .FirstOrDefaultAsync(cancellationToken);
 
+        var supplierSnapshot = supplier is null ? null : MapSupplierSnapshot(supplier);
+
         return new PurchasingDocumentSummaryItemResponse(
             "purchase_request",
             pr.Id,
             pr.RequestKey,
             pr.Title,
             pr.Status,
-            pr.VendorPartyId,
-            vendorName,
+            supplierSnapshot?.SupplierId,
+            supplierSnapshot?.SupplierKey,
+            supplierSnapshot?.SupplierDisplayName ?? string.Empty,
+            supplierSnapshot?.ParentSupplierId,
+            supplierSnapshot?.ParentSupplierDisplayName,
+            supplierSnapshot?.SupplierUnitKind,
+            supplierSnapshot?.SupplierServiceTypes ?? [],
+            supplierSnapshot?.SupplierType,
             lineStats?.Count ?? 0,
             lineStats?.Qty ?? 0m,
             0m,
-            pr.UpdatedAt);
+            pr.UpdatedAt,
+            pr.VendorPartyId,
+            supplierSnapshot?.SupplierKey,
+            supplierSnapshot?.SupplierDisplayName);
     }
 
     private async Task<PurchasingDocumentSummaryItemResponse> BuildPurchaseOrderSummaryAsync(
@@ -481,11 +523,13 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         PurchaseOrder po,
         CancellationToken cancellationToken)
     {
-        var vendorName = await db.ExternalParties
+        var supplier = await db.ExternalParties
             .AsNoTracking()
+            .Include(x => x.ParentExternalParty)
             .Where(x => x.TenantId == tenantId && x.Id == po.VendorPartyId)
-            .Select(x => x.DisplayName)
-            .FirstOrDefaultAsync(cancellationToken) ?? string.Empty;
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var supplierSnapshot = supplier is null ? null : MapSupplierSnapshot(supplier);
 
         return new PurchasingDocumentSummaryItemResponse(
             "purchase_order",
@@ -493,12 +537,49 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             po.OrderKey,
             po.Title,
             po.Status,
-            po.VendorPartyId,
-            vendorName,
+            supplierSnapshot?.SupplierId,
+            supplierSnapshot?.SupplierKey,
+            supplierSnapshot?.SupplierDisplayName ?? string.Empty,
+            supplierSnapshot?.ParentSupplierId,
+            supplierSnapshot?.ParentSupplierDisplayName,
+            supplierSnapshot?.SupplierUnitKind,
+            supplierSnapshot?.SupplierServiceTypes ?? [],
+            supplierSnapshot?.SupplierType,
             po.Lines.Count,
             po.Lines.Sum(x => x.QuantityOrdered),
             po.Lines.Sum(x => x.QuantityReceived),
-            po.UpdatedAt);
+            po.UpdatedAt,
+            po.VendorPartyId,
+            supplierSnapshot?.SupplierKey,
+            supplierSnapshot?.SupplierDisplayName);
+    }
+
+    private static SupplierRecordSnapshot MapSupplierSnapshot(ExternalParty supplier) =>
+        new(
+            supplier.Id,
+            supplier.PartyKey,
+            supplier.DisplayName,
+            supplier.ParentExternalPartyId,
+            supplier.ParentExternalParty?.DisplayName,
+            supplier.UnitKind,
+            DeserializeServiceTypes(supplier.ServiceTypesJson),
+            supplier.PartyType);
+
+    private static IReadOnlyList<string> DeserializeServiceTypes(string? serviceTypesJson)
+    {
+        if (string.IsNullOrWhiteSpace(serviceTypesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(serviceTypesJson, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private static string CsvEscape(string value)
@@ -510,4 +591,14 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
 
         return value;
     }
+
+    private sealed record SupplierRecordSnapshot(
+        Guid SupplierId,
+        string SupplierKey,
+        string SupplierDisplayName,
+        Guid? ParentSupplierId,
+        string? ParentSupplierDisplayName,
+        string? SupplierUnitKind,
+        IReadOnlyList<string> SupplierServiceTypes,
+        string SupplierType);
 }

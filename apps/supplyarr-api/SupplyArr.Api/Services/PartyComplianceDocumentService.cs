@@ -14,12 +14,18 @@ public sealed class PartyComplianceDocumentService(
 {
     private const long MaxDocumentBytes = 10 * 1024 * 1024;
 
-    public async Task<IReadOnlyList<PartyComplianceDocumentResponse>> ListForPartyAsync(
+    public Task<IReadOnlyList<SupplierComplianceDocumentResponse>> ListForSupplierAsync(
+        Guid tenantId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default) =>
+        ListForPartyAsync(tenantId, supplierId, cancellationToken);
+
+    public async Task<IReadOnlyList<SupplierComplianceDocumentResponse>> ListForPartyAsync(
         Guid tenantId,
         Guid externalPartyId,
         CancellationToken cancellationToken = default)
     {
-        await EnsurePartyExistsAsync(tenantId, externalPartyId, cancellationToken);
+        var party = await LoadPartyIdentityAsync(tenantId, externalPartyId, cancellationToken);
 
         var rows = await db.PartyComplianceDocuments
             .AsNoTracking()
@@ -28,17 +34,48 @@ public sealed class PartyComplianceDocumentService(
             .ThenByDescending(x => x.Version)
             .ToListAsync(cancellationToken);
 
-        return rows.Select(Map).ToList();
+        return rows.Select(row => Map(row, party)).ToList();
     }
 
-    public async Task<PartyComplianceDocumentResponse> RegisterAsync(
+    public Task<SupplierComplianceDocumentResponse> RegisterForSupplierAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
+        SupplierComplianceDocumentRegistrationRequest request,
+        CancellationToken cancellationToken = default) =>
+        RegisterAsync(tenantId, actorUserId, supplierId, request, cancellationToken);
+
+    public Task<SupplierComplianceDocumentResponse> RegisterAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid externalPartyId,
         RegisterPartyComplianceDocumentRequest request,
+        CancellationToken cancellationToken = default) =>
+        RegisterAsync(
+            tenantId,
+            actorUserId,
+            externalPartyId,
+            new SupplierComplianceDocumentRegistrationRequest(
+                request.DocumentKey,
+                request.DocumentTypeKey,
+                request.Title,
+                request.ExpiresAt,
+                request.EffectiveAt,
+                request.FileName,
+                request.ContentType,
+                request.SizeBytes,
+                request.Notes,
+                request.ContentBase64),
+            cancellationToken);
+
+    public async Task<SupplierComplianceDocumentResponse> RegisterAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid externalPartyId,
+        SupplierComplianceDocumentRegistrationRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsurePartyExistsAsync(tenantId, externalPartyId, cancellationToken);
+        var party = await LoadPartyIdentityAsync(tenantId, externalPartyId, cancellationToken);
 
         var documentKey = NormalizeDocumentKey(request.DocumentKey);
         var documentTypeKey = NormalizeDocumentTypeKey(request.DocumentTypeKey);
@@ -114,10 +151,10 @@ public sealed class PartyComplianceDocumentService(
             $"Compliance document registered: {entity.DocumentKey}",
             cancellationToken);
 
-        return Map(entity);
+        return Map(entity, party);
     }
 
-    public async Task<(PartyComplianceDocumentResponse Metadata, FileStream Stream)> OpenDocumentContentAsync(
+    public async Task<(SupplierComplianceDocumentResponse Metadata, FileStream Stream)> OpenDocumentContentAsync(
         Guid tenantId,
         Guid documentId,
         CancellationToken cancellationToken = default)
@@ -128,6 +165,7 @@ public sealed class PartyComplianceDocumentService(
                 x => x.TenantId == tenantId && x.Id == documentId,
                 cancellationToken)
             ?? throw new StlApiException("party_compliance_document.not_found", "Compliance document was not found.", 404);
+        var party = await LoadPartyIdentityAsync(tenantId, entity.ExternalPartyId, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(entity.StorageKey)
             || !storage.TryOpenReadStream(entity.StorageKey, out var stream)
@@ -139,10 +177,10 @@ public sealed class PartyComplianceDocumentService(
                 404);
         }
 
-        return (Map(entity), stream);
+        return (Map(entity, party), stream);
     }
 
-    public async Task<PartyComplianceDocumentResponse> ApproveAsync(
+    public async Task<SupplierComplianceDocumentResponse> ApproveAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid documentId,
@@ -180,14 +218,23 @@ public sealed class PartyComplianceDocumentService(
             $"Compliance document approved: {entity.DocumentKey}",
             cancellationToken);
 
-        return Map(entity);
+        var party = await LoadPartyIdentityAsync(tenantId, entity.ExternalPartyId, cancellationToken);
+        return Map(entity, party);
     }
 
-    public async Task<PartyComplianceDocumentResponse> RejectAsync(
+    public Task<SupplierComplianceDocumentResponse> RejectAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid documentId,
         RejectPartyComplianceDocumentRequest request,
+        CancellationToken cancellationToken = default) =>
+        RejectAsync(tenantId, actorUserId, documentId, new RejectSupplierComplianceDocumentRequest(request.Reason), cancellationToken);
+
+    public async Task<SupplierComplianceDocumentResponse> RejectAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid documentId,
+        RejectSupplierComplianceDocumentRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, documentId, cancellationToken);
@@ -225,7 +272,8 @@ public sealed class PartyComplianceDocumentService(
             $"Compliance document rejected: {entity.DocumentKey}",
             cancellationToken);
 
-        return Map(entity);
+        var party = await LoadPartyIdentityAsync(tenantId, entity.ExternalPartyId, cancellationToken);
+        return Map(entity, party);
     }
 
     internal async Task<bool> HasApprovedRequiredDocumentAsync(
@@ -244,15 +292,22 @@ public sealed class PartyComplianceDocumentService(
             cancellationToken);
     }
 
-    private async Task EnsurePartyExistsAsync(Guid tenantId, Guid externalPartyId, CancellationToken cancellationToken)
+    private async Task<PartyIdentitySnapshot> LoadPartyIdentityAsync(
+        Guid tenantId,
+        Guid externalPartyId,
+        CancellationToken cancellationToken)
     {
-        var exists = await db.ExternalParties.AnyAsync(
-            x => x.TenantId == tenantId && x.Id == externalPartyId,
-            cancellationToken);
-        if (!exists)
+        var party = await db.ExternalParties
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id == externalPartyId)
+            .Select(x => new PartyIdentitySnapshot(x.Id, x.PartyKey, x.DisplayName))
+            .FirstOrDefaultAsync(cancellationToken);
+        if (party is null)
         {
             throw new StlApiException("parties.not_found", "External party was not found.", 404);
         }
+
+        return party;
     }
 
     private async Task<PartyComplianceDocument> LoadTrackedAsync(
@@ -278,10 +333,12 @@ public sealed class PartyComplianceDocumentService(
             new IntegrationOutboxPayload(tenantId, summary, entity.ExternalPartyId),
             cancellationToken: cancellationToken);
 
-    private static PartyComplianceDocumentResponse Map(PartyComplianceDocument entity) =>
+    private static SupplierComplianceDocumentResponse Map(PartyComplianceDocument entity, PartyIdentitySnapshot party) =>
         new(
             entity.Id,
-            entity.ExternalPartyId,
+            party.SupplierId,
+            party.SupplierKey,
+            party.SupplierDisplayName,
             entity.DocumentKey,
             entity.DocumentTypeKey,
             entity.Title,
@@ -295,6 +352,11 @@ public sealed class PartyComplianceDocumentService(
             entity.Notes,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private sealed record PartyIdentitySnapshot(
+        Guid SupplierId,
+        string SupplierKey,
+        string SupplierDisplayName);
 
     private static string NormalizeDocumentKey(string value)
     {

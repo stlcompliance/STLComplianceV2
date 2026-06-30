@@ -12,7 +12,7 @@ interface ContractsImportPanelProps {
   onComplete?: () => void
 }
 
-const TEMPLATE = `vendor_party_key,contract_key,contract_type,title,effective_at,expires_at,renewal_at,payment_terms,freight_terms,warranty_terms,minimum_spend,service_level_agreement,approval_status,status,notes
+const TEMPLATE = `supplier_key,contract_key,contract_type,title,effective_at,expires_at,renewal_at,payment_terms,freight_terms,warranty_terms,minimum_spend,service_level_agreement,approval_status,status,notes
 SUP-2048,SC-2048,master_supply_agreement,Supply Agreement 2026,2026-01-15T00:00:00Z,2026-12-31T00:00:00Z,2026-11-01T00:00:00Z,Net 30,FOB destination,12 months from receipt,25000,95% on-time shipment rate,approved,active,Priority partner contract`
 
 function formatHeaderValue(value: number): string {
@@ -87,9 +87,9 @@ export function ContractsImportPanel({ accessToken, canManage, onComplete }: Con
             onChange={(event) => setCsv(event.target.value)}
           />
           <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-            Required headers: vendor_party_key, contract_key, contract_type, title, effective_at, expires_at, renewal_at,
+            Required headers: supplier_key, contract_key, contract_type, title, effective_at, expires_at, renewal_at,
             payment_terms, freight_terms, warranty_terms, minimum_spend, service_level_agreement, approval_status,
-            status, notes.
+            status, notes. Older header names remain accepted for compatibility.
           </p>
         </div>
 

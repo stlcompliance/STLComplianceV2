@@ -1,16 +1,16 @@
 import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
 import { PartsInventoryReportsPanel } from '../../components/PartsInventoryReportsPanel'
 import { PurchasingReportsPanel } from '../../components/PurchasingReportsPanel'
-import { VendorReportsPanel } from '../../components/VendorReportsPanel'
+import { SupplierReportsPanel } from '../../components/VendorReportsPanel'
 import {
   canExportComplianceReports,
   canExportPartsInventoryReports,
   canExportPurchasingReports,
-  canExportVendorReports,
+  canExportSupplierReports,
   canReadComplianceReports,
   canReadPartsInventoryReports,
   canReadPurchasingReports,
-  canReadVendorReports,
+  canReadSupplierReports,
 } from '../../auth/sessionStorage'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -20,8 +20,8 @@ export function ReportsSection({ state: s }: Props) {
   const roleKey = s.me.tenantRoleKey
   const isPlatformAdmin = s.me.isPlatformAdmin
 
-  const vendorCanRead = canReadVendorReports(roleKey, isPlatformAdmin)
-  const vendorCanExport = canExportVendorReports(roleKey, isPlatformAdmin)
+  const supplierCanRead = canReadSupplierReports(roleKey, isPlatformAdmin)
+  const supplierCanExport = canExportSupplierReports(roleKey, isPlatformAdmin)
   const complianceCanRead = canReadComplianceReports(roleKey, isPlatformAdmin)
   const complianceCanExport = canExportComplianceReports(roleKey, isPlatformAdmin)
   const purchasingCanRead = canReadPurchasingReports(roleKey, isPlatformAdmin)
@@ -31,7 +31,7 @@ export function ReportsSection({ state: s }: Props) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <VendorReportsPanel accessToken={s.accessToken} canRead={vendorCanRead} canExport={vendorCanExport} />
+      <SupplierReportsPanel accessToken={s.accessToken} canRead={supplierCanRead} canExport={supplierCanExport} />
       <ComplianceReportsPanel
         accessToken={s.accessToken}
         canRead={complianceCanRead}

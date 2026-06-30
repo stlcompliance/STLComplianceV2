@@ -4,14 +4,20 @@ import { useMemo, useState } from 'react'
 import { StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import {
-  createPartyVendorRestriction,
-  getPartyVendorRestrictionEnforcement,
-  liftVendorRestriction,
-  listPartyVendorRestrictions,
-  listVendorRestrictions,
+  createSupplierRestriction,
+  getSupplierRestrictionEnforcement,
+  liftSupplierRestriction,
+  listRestrictionsForSupplier,
+  listSupplierRestrictions,
 } from '../api/client'
-import type { ExternalPartyResponse } from '../api/types'
+import type { SupplierResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 const SCOPE_OPTIONS = [
   { value: 'purchase_requests', label: 'Purchase requests' },
@@ -21,71 +27,76 @@ const SCOPE_OPTIONS = [
   { value: 'all_procurement', label: 'All procurement' },
 ] as const
 
-interface VendorRestrictionsPanelProps {
+interface SupplierRestrictionsPanelProps {
   accessToken: string
   canManage: boolean
-  restrictableParties: ExternalPartyResponse[]
+  restrictableSuppliers: SupplierResponse[]
 }
 
-export function VendorRestrictionsPanel({
+export function SupplierRestrictionsPanel({
   accessToken,
   canManage,
-  restrictableParties,
-}: VendorRestrictionsPanelProps) {
+  restrictableSuppliers,
+}: SupplierRestrictionsPanelProps) {
   const queryClient = useQueryClient()
-  const [selectedPartyId, setSelectedPartyId] = useState('')
+  const [selectedSupplierId, setSelectedSupplierId] = useState('')
   const [restrictionKey, setRestrictionKey] = useState('')
   const [reason, setReason] = useState('')
   const [selectedScopes, setSelectedScopes] = useState<string[]>(['all_procurement'])
 
   const activeQuery = useQuery({
-    queryKey: ['supplyarr-vendor-restrictions', accessToken],
-    queryFn: () => listVendorRestrictions(accessToken, 'active'),
+    queryKey: ['supplyarr-supplier-restrictions', accessToken, 'active'],
+    queryFn: () => listSupplierRestrictions(accessToken, 'active'),
     enabled: canManage,
   })
 
-  const partyRestrictionsQuery = useQuery({
-    queryKey: ['supplyarr-party-vendor-restrictions', accessToken, selectedPartyId],
-    queryFn: () => listPartyVendorRestrictions(accessToken, selectedPartyId),
-    enabled: Boolean(selectedPartyId),
+  const supplierRestrictionsQuery = useQuery({
+    queryKey: ['supplyarr-supplier-restrictions', accessToken, 'by-supplier', selectedSupplierId],
+    queryFn: () => listRestrictionsForSupplier(accessToken, selectedSupplierId),
+    enabled: Boolean(selectedSupplierId),
   })
 
   const enforcementQuery = useQuery({
-    queryKey: ['supplyarr-vendor-restriction-enforcement', accessToken, selectedPartyId],
-    queryFn: () => getPartyVendorRestrictionEnforcement(accessToken, selectedPartyId),
-    enabled: Boolean(selectedPartyId),
+    queryKey: ['supplyarr-supplier-restriction-enforcement', accessToken, selectedSupplierId],
+    queryFn: () => getSupplierRestrictionEnforcement(accessToken, selectedSupplierId),
+    enabled: Boolean(selectedSupplierId),
   })
 
-  const selectedParty = useMemo(
-    () => restrictableParties.find((p) => p.partyId === selectedPartyId),
-    [restrictableParties, selectedPartyId],
+  const selectedSupplier = useMemo(
+    () => restrictableSuppliers.find((supplier) => resolveSupplierId(supplier) === selectedSupplierId),
+    [restrictableSuppliers, selectedSupplierId],
   )
-  const partyOptions = useMemo<PickerOption[]>(
+  const supplierOptions = useMemo<PickerOption[]>(
     () =>
-      restrictableParties.map((party) => ({
-        value: party.partyId,
-        label: `${party.unitKind === 'sub_unit' ? 'sub-unit' : 'supplier identity'} · ${party.partyKey} · ${party.displayName}`,
+      restrictableSuppliers.map((supplier) => ({
+        value: supplier.supplierId,
+        label: `${formatSupplierIdentitySummary({
+          supplierDisplayName: supplier.displayName,
+          supplierKey: supplier.supplierKey,
+          parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+          supplierUnitKind: supplier.unitKind,
+        })} · ${humanizeSupplierUnitKind(supplier.unitKind)}`,
       })),
-    [restrictableParties],
+    [restrictableSuppliers],
   )
-  const selectedPartyOption = useMemo<PickerOption | undefined>(
-    () => partyOptions.find((option) => option.value === selectedPartyId),
-    [partyOptions, selectedPartyId],
+  const selectedSupplierOption = useMemo<PickerOption | undefined>(
+    () => supplierOptions.find((option) => option.value === selectedSupplierId),
+    [supplierOptions, selectedSupplierId],
   )
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ['supplyarr-vendor-restrictions', accessToken] })
+    void queryClient.invalidateQueries({ queryKey: ['supplyarr-supplier-restrictions', accessToken] })
     void queryClient.invalidateQueries({
-      queryKey: ['supplyarr-party-vendor-restrictions', accessToken, selectedPartyId],
+      queryKey: ['supplyarr-supplier-restrictions', accessToken, 'by-supplier', selectedSupplierId],
     })
     void queryClient.invalidateQueries({
-      queryKey: ['supplyarr-vendor-restriction-enforcement', accessToken, selectedPartyId],
+      queryKey: ['supplyarr-supplier-restriction-enforcement', accessToken, selectedSupplierId],
     })
   }
 
   const createMutation = useMutation({
     mutationFn: () =>
-      createPartyVendorRestriction(accessToken, selectedPartyId, {
+      createSupplierRestriction(accessToken, selectedSupplierId, {
         restrictionKey,
         scopes: selectedScopes,
         reason,
@@ -99,7 +110,7 @@ export function VendorRestrictionsPanel({
 
   const liftMutation = useMutation({
     mutationFn: (restrictionId: string) =>
-      liftVendorRestriction(accessToken, restrictionId, { liftNotes: 'Lifted from parties workspace' }),
+      liftSupplierRestriction(accessToken, restrictionId, { liftNotes: 'Lifted from supplier directory' }),
     onSuccess: invalidate,
   })
 
@@ -110,7 +121,7 @@ export function VendorRestrictionsPanel({
   return (
     <section
       className="rounded-xl border border-slate-700 bg-slate-900/80 p-5 lg:col-span-2"
-      data-testid="vendor-restrictions-panel"
+      data-testid="supplier-restrictions-panel"
     >
       <h2 className="text-lg font-semibold text-slate-50">Supplier restrictions</h2>
       <p className="mt-1 text-sm text-slate-400">
@@ -126,17 +137,35 @@ export function VendorRestrictionsPanel({
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <StaticSearchPicker
-          id="vendor-restriction-party"
+          id="supplier-restriction-supplier"
           label="Supplier identity or sub-unit"
-          value={selectedPartyId}
-          onChange={setSelectedPartyId}
-          options={partyOptions}
-          selectedOption={selectedPartyOption}
+          value={selectedSupplierId}
+          onChange={setSelectedSupplierId}
+          options={supplierOptions}
+          selectedOption={selectedSupplierOption}
           placeholder="Search supplier identities or sub-units…"
-          testId="vendor-restriction-party-picker"
+          testId="supplier-restriction-supplier-picker"
         />
+        {selectedSupplier ? (
+          <p className="md:col-span-2 text-xs text-[var(--color-text-muted)]">
+            {formatSupplierIdentitySummary({
+              supplierDisplayName: selectedSupplier.displayName,
+              supplierKey: selectedSupplier.supplierKey,
+              parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+              supplierUnitKind: selectedSupplier.unitKind,
+            })}{' '}
+            · {humanizeSupplierUnitKind(selectedSupplier.unitKind)} ·{' '}
+            {formatSupplierOperationalContext({
+              supplierServiceTypes: selectedSupplier.serviceTypes,
+              addressLine1: selectedSupplier.addressLine1,
+              locality: selectedSupplier.locality,
+              regionCode: selectedSupplier.regionCode,
+              postalCode: selectedSupplier.postalCode,
+            })}
+          </p>
+        ) : null}
 
-        {selectedParty && enforcementQuery.data && (
+        {selectedSupplier && enforcementQuery.data && (
           <div className="md:col-span-2 rounded-md border border-slate-800 p-3 text-sm">
             <span
               className={
@@ -158,22 +187,22 @@ export function VendorRestrictionsPanel({
           </div>
         )}
 
-        {selectedPartyId && (
+        {selectedSupplierId && (
           <>
             <GeneratedKeyFieldGroup
-              sourceLabel={`${selectedParty?.displayName ?? ''} ${selectedScopes.join(' ')} restriction`}
-              existingKeys={partyRestrictionsQuery.data?.map((restriction) => restriction.restrictionKey) ?? []}
+              sourceLabel={`${selectedSupplier?.displayName ?? ''} ${selectedScopes.join(' ')} restriction`}
+              existingKeys={supplierRestrictionsQuery.data?.map((restriction) => restriction.restrictionKey) ?? []}
               onKeyChange={setRestrictionKey}
-              domain="vendor"
+              domain="supplier"
               kind="restriction"
               maxLength={128}
               label="Restriction key"
               disabled={createMutation.isPending}
             />
-            <label htmlFor="vendor-restriction-reason" className="block text-sm text-slate-400 md:col-span-2">
+            <label htmlFor="supplier-restriction-reason" className="block text-sm text-slate-400 md:col-span-2">
               Restriction reason
               <textarea
-                id="vendor-restriction-reason"
+                id="supplier-restriction-reason"
                 className="mt-1 w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-white"
                 rows={2}
                 value={reason}
@@ -184,9 +213,9 @@ export function VendorRestrictionsPanel({
               <legend className="text-sm font-medium text-slate-300">Scopes</legend>
               <div className="mt-2 flex flex-wrap gap-3">
                 {SCOPE_OPTIONS.map((scope) => (
-                  <label key={scope.value} htmlFor={`vendor-restriction-scope-${scope.value}`} className="flex items-center gap-2 text-sm text-slate-400">
+                  <label key={scope.value} htmlFor={`supplier-restriction-scope-${scope.value}`} className="flex items-center gap-2 text-sm text-slate-400">
                     <input
-                      id={`vendor-restriction-scope-${scope.value}`}
+                      id={`supplier-restriction-scope-${scope.value}`}
                       type="checkbox"
                       checked={selectedScopes.includes(scope.value)}
                       onChange={(event) => {
@@ -219,9 +248,9 @@ export function VendorRestrictionsPanel({
         )}
       </div>
 
-      {partyRestrictionsQuery.data && partyRestrictionsQuery.data.length > 0 && (
+      {supplierRestrictionsQuery.data && supplierRestrictionsQuery.data.length > 0 && (
         <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
-          {partyRestrictionsQuery.data.map((item) => (
+          {supplierRestrictionsQuery.data.map((item) => (
             <li key={item.restrictionId} className="flex flex-wrap items-center justify-between gap-2 px-3 py-3">
               <div>
                 <div className="font-medium text-slate-100">
@@ -247,3 +276,5 @@ export function VendorRestrictionsPanel({
     </section>
   )
 }
+
+export { SupplierRestrictionsPanel as VendorRestrictionsPanel }

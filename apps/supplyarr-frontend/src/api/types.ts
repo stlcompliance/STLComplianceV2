@@ -39,7 +39,7 @@ export interface SupplyArrSessionBootstrapResponse {
   launchableProductKeys: string[]
 }
 
-export interface PartyContactResponse {
+export interface SupplierContactResponse {
   contactId: string
   contactName: string
   email: string
@@ -49,24 +49,23 @@ export interface PartyContactResponse {
   createdAt: string
 }
 
-export interface PartyRegistryCatalogOptionResponse {
+export interface SupplierDirectoryCatalogOptionResponse {
   value: string
   label: string
 }
 
-export interface PartyRegistryMetadataResponse {
-  approvalStatusOptions: PartyRegistryCatalogOptionResponse[]
-  statusOptions: PartyRegistryCatalogOptionResponse[]
-  unitKindOptions?: PartyRegistryCatalogOptionResponse[]
-  serviceTypeOptions?: PartyRegistryCatalogOptionResponse[]
+export interface SupplierDirectoryMetadataResponse {
+  approvalStatusOptions: SupplierDirectoryCatalogOptionResponse[]
+  statusOptions: SupplierDirectoryCatalogOptionResponse[]
+  unitKindOptions?: SupplierDirectoryCatalogOptionResponse[]
+  serviceTypeOptions?: SupplierDirectoryCatalogOptionResponse[]
 }
 
-export interface ExternalPartyResponse {
-  partyId: string
-  partyKey: string
-  partyType: 'vendor' | 'dealer' | 'supplier' | string
-  parentPartyId?: string | null
-  parentPartyDisplayName?: string | null
+export interface SupplierResponse {
+  supplierId: string
+  supplierKey: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
   unitKind?: string
   displayName: string
   legalName: string
@@ -82,14 +81,14 @@ export interface ExternalPartyResponse {
   postalCode?: string
   countryCode?: string
   childUnitCount?: number
-  contacts: PartyContactResponse[]
+  contacts: SupplierContactResponse[]
   createdAt: string
   updatedAt: string
 }
 
-export interface CreateTypedExternalPartyRequest {
-  partyKey: string
-  parentPartyId?: string | null
+export interface CreateSupplierRequest {
+  supplierKey: string
+  parentSupplierId?: string | null
   unitKind?: string | null
   displayName: string
   legalName: string
@@ -104,12 +103,8 @@ export interface CreateTypedExternalPartyRequest {
   countryCode?: string | null
 }
 
-export interface CreateExternalPartyRequest extends CreateTypedExternalPartyRequest {
-  partyType: string
-}
-
-export interface UpdateExternalPartyRequest {
-  parentPartyId?: string | null
+export interface UpdateSupplierRequest {
+  parentSupplierId?: string | null
   unitKind?: string | null
   displayName: string
   legalName: string
@@ -124,23 +119,21 @@ export interface UpdateExternalPartyRequest {
   countryCode?: string | null
 }
 
-export interface UpdateExternalPartyApprovalStatusRequest {
+export interface UpdateSupplierApprovalStatusRequest {
   approvalStatus: string
 }
 
-export interface UpdateExternalPartyStatusRequest {
+export interface UpdateSupplierStatusRequest {
   status: string
 }
 
-export interface CreatePartyContactRequest {
+export interface CreateSupplierContactRequest {
   contactName: string
   email: string
   phone: string
   roleLabel: string
   isPrimary: boolean
 }
-
-export type PartyRegistryRoute = 'vendors' | 'suppliers' | 'dealers'
 
 export interface PartCatalogResponse {
   catalogId: string
@@ -154,9 +147,22 @@ export interface PartCatalogResponse {
 
 export interface PartVendorLinkResponse {
   linkId: string
-  partyId: string
-  partyKey: string
-  partyDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierKey?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  supplierAddressLine1?: string
+  supplierLocality?: string
+  supplierRegionCode?: string
+  supplierPostalCode?: string
+  supplierCountryCode?: string
+  partyId?: string
+  partyKey?: string
+  partyDisplayName?: string
   vendorPartNumber: string
   isPreferred: boolean
   catalogUnitPrice: number | null
@@ -189,7 +195,8 @@ export interface VendorCatalogApiSyncItem {
 }
 
 export interface VendorCatalogApiSyncRequest {
-  vendorPartyKey: string
+  supplierKey: string
+  vendorPartyKey?: string
   dryRun: boolean
   items: VendorCatalogApiSyncItem[]
 }
@@ -272,7 +279,9 @@ export interface CreatePartSourceRequest {
 }
 
 export interface CreatePartVendorLinkRequest {
-  partyId: string
+  supplierUnitId?: string
+  supplierId?: string
+  partyId?: string
   vendorPartNumber: string
   isPreferred: boolean
 }
@@ -341,9 +350,16 @@ export interface PurchaseRequestResponse {
   title: string
   notes: string
   status: string
-  vendorPartyId: string | null
-  vendorPartyKey: string | null
-  vendorDisplayName: string | null
+  supplierId: string | null
+  supplierKey: string | null
+  supplierDisplayName: string | null
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string | null
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   requestedByUserId: string
   submittedAt: string | null
   submittedByUserId: string | null
@@ -369,9 +385,16 @@ export interface EmergencyPurchaseResponse {
   title: string
   notes: string
   status: string
-  vendorPartyId: string | null
-  vendorPartyKey: string | null
-  vendorDisplayName: string | null
+  supplierId?: string | null
+  supplierKey?: string | null
+  supplierDisplayName?: string | null
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string | null
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   emergencyReason: string
   emergencyExpeditedAt: string | null
   managerOverrideApproved: boolean
@@ -391,6 +414,16 @@ export interface IssueEmergencyPurchaseOrderResponse {
   purchaseOrder: PurchaseOrderResponse
 }
 
+export interface CreateEmergencyPurchaseRequest {
+  requestKey: string
+  title: string
+  emergencyReason: string
+  supplierId?: string
+  vendorPartyId?: string
+  notes: string
+  lines: { partId: string; quantityRequested: number; notes: string }[]
+}
+
 export interface CreatePurchaseRequestLineRequest {
   partId: string
   quantityRequested: number
@@ -401,7 +434,9 @@ export interface CreatePurchaseRequestRequest {
   requestKey: string
   title: string
   notes: string
-  vendorPartyId: string | null
+  supplierId?: string | null
+  supplierUnitId?: string | null
+  vendorPartyId?: string | null
   lines?: CreatePurchaseRequestLineRequest[]
 }
 
@@ -433,9 +468,16 @@ export interface PurchaseOrderResponse {
   status: string
   purchaseRequestId: string
   purchaseRequestKey: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   createdByUserId: string
   approvedAt: string | null
   approvedByUserId: string | null
@@ -476,6 +518,13 @@ export interface SupplyContractResponse {
   contractKey: string
   contractType: string
   title: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorPartyId: string
   vendorPartyKey: string
   vendorDisplayName: string
@@ -563,14 +612,21 @@ export interface VendorReturnLineResponse {
   updatedAt: string
 }
 
-export interface VendorReturnResponse {
+export interface SupplierReturnResponse {
   returnId: string
   returnKey: string
   status: string
   sourceType: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   purchaseOrderId: string | null
   purchaseOrderKey: string | null
   purchaseRequestId: string | null
@@ -594,6 +650,8 @@ export interface VendorReturnResponse {
   updatedAt: string
 }
 
+export interface VendorReturnResponse extends SupplierReturnResponse {}
+
 export interface CreateVendorReturnFromStockLineRequest {
   partId: string
   quantity: number
@@ -605,9 +663,16 @@ export interface WarrantyClaimResponse {
   claimKey: string
   status: string
   claimType: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   partId: string
   partKey: string
   partDisplayName: string
@@ -638,10 +703,12 @@ export interface WarrantyClaimResponse {
   updatedAt: string
 }
 
-export interface CreateWarrantyClaimRequest {
+export interface CreateSupplierWarrantyClaimRequest {
   claimKey: string
   claimType: string
-  vendorPartyId: string
+  supplierUnitId?: string
+  supplierId?: string
+  vendorPartyId?: string
   partId: string
   quantityClaimed: number
   problemDescription: string
@@ -651,6 +718,8 @@ export interface CreateWarrantyClaimRequest {
   receivingReceiptLineId?: string | null
   vendorRmaNumber?: string | null
 }
+
+export interface CreateWarrantyClaimRequest extends CreateSupplierWarrantyClaimRequest {}
 
 export interface UpdateWarrantyClaimRequest {
   claimType: string
@@ -685,16 +754,20 @@ export interface CancelWarrantyClaimRequest {
   reason: string
 }
 
-export interface CreateVendorReturnFromStockRequest {
+export interface CreateSupplierReturnFromStockRequest {
   returnKey: string
-  vendorPartyId: string
+  supplierUnitId?: string
+  supplierId?: string
+  vendorPartyId?: string
   inventoryBinId: string
   rmaNumber?: string | null
   notes?: string | null
   lines: CreateVendorReturnFromStockLineRequest[]
 }
 
-export interface CreateVendorReturnFromPurchaseOrderLineRequest {
+export interface CreateVendorReturnFromStockRequest extends CreateSupplierReturnFromStockRequest {}
+
+export interface CreateSupplierReturnFromPurchaseOrderLineRequest {
   returnKey: string
   inventoryBinId: string
   quantity?: number | null
@@ -702,9 +775,13 @@ export interface CreateVendorReturnFromPurchaseOrderLineRequest {
   notes?: string | null
 }
 
-export interface CancelVendorReturnRequest {
+export interface CreateVendorReturnFromPurchaseOrderLineRequest extends CreateSupplierReturnFromPurchaseOrderLineRequest {}
+
+export interface CancelSupplierReturnRequest {
   reason: string
 }
+
+export interface CancelVendorReturnRequest extends CancelSupplierReturnRequest {}
 
 export interface PricingSnapshotResponse {
   pricingSnapshotId: string
@@ -713,9 +790,13 @@ export interface PricingSnapshotResponse {
   partId: string
   partKey: string
   partDisplayName: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorPartNumber: string
   unitPrice: number
   currencyCode: string
@@ -748,9 +829,13 @@ export interface LeadTimeSnapshotResponse {
   partId: string
   partKey: string
   partDisplayName: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorPartNumber: string
   leadTimeDays: number
   effectiveFrom: string
@@ -779,9 +864,13 @@ export interface AvailabilitySnapshotResponse {
   partId: string
   partKey: string
   partDisplayName: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorPartNumber: string
   quantityAvailable: number | null
   availabilityStatus: string
@@ -816,6 +905,9 @@ export interface ReorderSuggestionResponse {
   quantityReserved: number
   quantityAvailable: number
   suggestedOrderQuantity: number
+  preferredSupplierId?: string | null
+  preferredSupplierKey?: string | null
+  preferredSupplierDisplayName?: string | null
   preferredVendorPartyId: string | null
   preferredVendorPartyKey: string | null
   preferredVendorDisplayName: string | null
@@ -938,6 +1030,9 @@ export interface PendingPriceSnapshotCaptureItem {
   partId: string
   partKey: string
   partDisplayName: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
   vendorPartyId: string
   vendorPartyKey: string
   vendorDisplayName: string
@@ -986,6 +1081,9 @@ export interface PendingLeadTimeSnapshotCaptureItem {
   partId: string
   partKey: string
   partDisplayName: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
   vendorPartyId: string
   vendorPartyKey: string
   vendorDisplayName: string
@@ -1031,6 +1129,9 @@ export interface PendingAvailabilitySnapshotCaptureItem {
   partId: string
   partKey: string
   partDisplayName: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
   vendorPartyId: string
   vendorPartyKey: string
   vendorDisplayName: string
@@ -1072,8 +1173,15 @@ export interface ProcurementCoordinationSummaryResponse {
   nextActionRequired: string
   purchaseRequestId: string | null
   purchaseOrderId: string | null
-  vendorPartyId: string | null
-  vendorDisplayName: string
+  supplierId?: string | null
+  supplierKey?: string | null
+  supplierDisplayName?: string | null
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string | null
+  supplierServiceTypes?: string[]
+  vendorPartyId?: string | null
+  vendorDisplayName?: string | null
   documentStatus: string
   lineCount: number
   quantityOrdered: number
@@ -1361,15 +1469,22 @@ export interface RfqLineResponse {
 
 export interface RfqVendorInvitationResponse {
   invitationId: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   status: string
   invitedAt: string
   portalAccessCodeIssuedAt: string
   portalAccessExpiresAt: string
   portalAccessCode: string
   portalUrl: string
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
 }
 
 export interface VendorQuoteLineResponse {
@@ -1388,9 +1503,13 @@ export interface VendorQuoteLineResponse {
 export interface VendorQuoteResponse {
   vendorQuoteId: string
   rfqId: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   quoteKey: string
   status: string
   currencyCode: string
@@ -1401,6 +1520,13 @@ export interface VendorQuoteResponse {
   lines: VendorQuoteLineResponse[]
   createdAt: string
   updatedAt: string
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
+}
+
+export interface SupplierQuoteResponse extends VendorQuoteResponse {
+  supplierQuoteId?: string
 }
 
 export interface RfqResponse {
@@ -1411,9 +1537,15 @@ export interface RfqResponse {
   status: string
   requestedByUserId: string
   submittedAt: string | null
-  awardedVendorPartyId: string | null
-  awardedVendorDisplayName: string | null
+  awardedSupplierId: string | null
+  awardedSupplierKey?: string | null
+  awardedSupplierDisplayName: string | null
+  awardedParentSupplierId?: string | null
+  awardedParentSupplierDisplayName?: string | null
+  awardedSupplierUnitKind?: string | null
+  awardedSupplierServiceTypes?: string[]
   selectedVendorQuoteId: string | null
+  selectedSupplierQuoteId?: string | null
   purchaseRequestId: string | null
   awardedAt: string | null
   lines: RfqLineResponse[]
@@ -1421,6 +1553,9 @@ export interface RfqResponse {
   quotes: VendorQuoteResponse[]
   createdAt: string
   updatedAt: string
+  awardedVendorPartyId?: string | null
+  awardedVendorPartyKey?: string | null
+  awardedVendorDisplayName?: string | null
 }
 
 export interface VendorPortalRfqLineResponse {
@@ -1445,9 +1580,13 @@ export interface VendorPortalRfqResponse {
   title: string
   notes: string
   status: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   invitationId: string
   invitationStatus: string
   invitedAt: string
@@ -1463,6 +1602,9 @@ export interface VendorPortalRfqResponse {
   lines: VendorPortalRfqLineResponse[]
   createdAt: string
   updatedAt: string
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
 }
 
 export interface VendorOrderStatusUpdateResponse {
@@ -1522,6 +1664,12 @@ export interface VendorOrderMetadataResponse {
 export interface VendorOrderListItemResponse {
   vendorOrderId: string
   status: string
+  supplierId?: string
+  supplierNameSnapshot?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorNameSnapshot: string
   itemDescription: string
   orderedQuantity: number
@@ -1536,8 +1684,14 @@ export interface VendorOrderListItemResponse {
 
 export interface VendorOrderResponse {
   vendorOrderId: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   brokerOrderId: string | null
   brokerOrderNumberSnapshot: string | null
+  supplierId?: string
+  supplierNameSnapshot?: string
   vendorId: string
   vendorNameSnapshot: string
   vendorLocationId: string | null
@@ -1573,6 +1727,7 @@ export interface VendorOrderResponse {
 export interface CreateVendorOrderRequest {
   brokerOrderId?: string | null
   brokerOrderNumberSnapshot?: string | null
+  supplierId?: string
   vendorId: string
   vendorLocationId?: string | null
   pickupLocationNameSnapshot?: string | null
@@ -1647,6 +1802,12 @@ export interface RegisterVendorOrderDocumentRequest {
 export interface VendorOrderPortalResponse {
   vendorOrderId: string
   status: string
+  supplierId?: string
+  supplierNameSnapshot?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   vendorNameSnapshot: string
   pickupLocationNameSnapshot: string
   pickupAddressSnapshot: string
@@ -1704,14 +1865,22 @@ export interface UpsertVendorOrderSettingsRequest {
 
 export interface RfqQuoteLineMetric {
   vendorQuoteId: string
-  vendorPartyId: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   quoteStatus: string
   unitPrice: number | null
   lineTotal: number | null
   leadTimeDays: number | null
   isLowestPrice: boolean
   isFastestLeadTime: boolean
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
 }
 
 export interface RfqLineComparisonRow {
@@ -1726,13 +1895,21 @@ export interface RfqLineComparisonRow {
 
 export interface RfqQuoteSummary {
   vendorQuoteId: string
-  vendorPartyId: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   status: string
   totalAmount: number | null
   maxLeadTimeDays: number | null
   linesQuoted: number
   isSelected: boolean
+  vendorPartyId?: string
+  vendorPartyKey?: string
+  vendorDisplayName?: string
 }
 
 export interface RfqQuoteComparisonResponse {
@@ -1764,12 +1941,15 @@ export interface OnboardingDocumentRequirementStatus {
   satisfyingReviewStatus: string | null
 }
 
-export interface VendorRestrictionResponse {
+export interface SupplierRestrictionResponse {
   restrictionId: string
-  externalPartyId: string
-  partyKey: string
-  partyDisplayName: string
-  partyType: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   restrictionKey: string
   scopes: string[]
   reason: string
@@ -1782,9 +1962,18 @@ export interface VendorRestrictionResponse {
   liftNotes: string | null
   createdAt: string
   updatedAt: string
+  supplierRestrictionId?: string
 }
 
-export interface CreateVendorRestrictionRequest {
+export interface VendorRestrictionResponse extends SupplierRestrictionResponse {
+  externalPartyId?: string
+  partyKey?: string
+  partyDisplayName?: string
+  partyType?: string
+  supplierType?: string
+}
+
+export interface CreateSupplierRestrictionRequest {
   restrictionKey: string
   scopes: string[]
   reason: string
@@ -1792,23 +1981,40 @@ export interface CreateVendorRestrictionRequest {
   effectiveUntil?: string | null
 }
 
-export interface LiftVendorRestrictionRequest {
+export interface CreateVendorRestrictionRequest extends CreateSupplierRestrictionRequest {}
+
+export interface LiftSupplierRestrictionRequest {
   liftNotes?: string | null
 }
 
-export interface VendorRestrictionEnforcementResponse {
-  externalPartyId: string
+export interface LiftVendorRestrictionRequest extends LiftSupplierRestrictionRequest {}
+
+export interface SupplierRestrictionEnforcementResponse {
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   isBlocked: boolean
   blockReason: string | null
   activeScopes: string[]
 }
 
+export interface VendorRestrictionEnforcementResponse extends SupplierRestrictionEnforcementResponse {
+  externalPartyId?: string
+}
+
 export interface SupplierIncidentResponse {
   incidentId: string
-  externalPartyId: string
-  partyKey: string
-  partyDisplayName: string
-  partyType: string
+  supplierId: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  supplierKey: string
+  supplierDisplayName: string
   incidentKey: string
   title: string
   description: string
@@ -1819,7 +2025,7 @@ export interface SupplierIncidentResponse {
   purchaseOrderId: string | null
   receivingReceiptId: string | null
   receivingExceptionId: string | null
-  vendorRestrictionId: string | null
+  supplierRestrictionId?: string | null
   reportedByUserId: string
   assignedToUserId: string | null
   resolutionNotes: string
@@ -1839,7 +2045,7 @@ export interface SupplierIncidentResponse {
 }
 
 export interface CreateSupplierIncidentRequest {
-  externalPartyId: string
+  supplierId: string
   incidentKey: string
   title: string
   description: string
@@ -1988,9 +2194,11 @@ export interface ProcurementApprovalAuthorityMirrorResponse {
 
 export interface SupplierOnboardingResponse {
   onboardingId: string
-  externalPartyId: string
-  partyKey: string
-  partyType: string
+  supplierId: string
+  supplierKey: string
+  supplierUnitKind: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
   displayName: string
   onboardingStatus: string
   notes: string
@@ -2012,9 +2220,11 @@ export interface SupplierOnboardingDocumentRequirementsResponse {
   requirements: OnboardingDocumentRequirementDefinition[]
 }
 
-export interface PartyComplianceDocumentResponse {
+export interface SupplierComplianceDocumentResponse {
   documentId: string
-  externalPartyId: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
   documentKey: string
   documentTypeKey: string
   title: string
@@ -2029,6 +2239,8 @@ export interface PartyComplianceDocumentResponse {
   createdAt: string
   updatedAt: string
 }
+
+export interface PartyComplianceDocumentResponse extends SupplierComplianceDocumentResponse {}
 
 export interface UpsertDemandProcessingSettingsRequest {
   isEnabled: boolean
@@ -2221,11 +2433,14 @@ export interface PartSupplyReadinessResponse {
   availability: SupplyReadinessAvailabilitySnapshotResponse
 }
 
-export interface VendorSupplyReadinessResponse {
-  externalPartyId: string
-  partyKey: string
+export interface SupplierSupplyReadinessResponse {
+  supplierId: string
+  supplierKey: string
   displayName: string
-  partyType: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   approvalStatus: string
   status: string
   readinessStatus: string
@@ -2234,11 +2449,17 @@ export interface VendorSupplyReadinessResponse {
   blockers: SupplyReadinessBlockerResponse[]
 }
 
+export interface VendorSupplyReadinessResponse extends SupplierSupplyReadinessResponse {}
+
 export interface ProcurementPathReadinessResponse {
   partId: string
   partKey: string
-  externalPartyId: string
-  partyKey: string
+  supplierId: string
+  supplierKey: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   requestedQuantity: number | null
   readinessStatus: string
   readinessBasis: string
@@ -2251,8 +2472,21 @@ export interface VendorApprovalStatusSummary {
   count: number
 }
 
+export interface SupplierApprovalStatusSummary {
+  approvalStatus: string
+  count: number
+}
+
 export interface VendorReportSummaryItem {
   vendorPartyId: string
+  supplierId?: string
+  supplierKey?: string
+  supplierDisplayName?: string
+  supplierType?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   partyKey: string
   displayName: string
   approvalStatus: string
@@ -2277,6 +2511,41 @@ export interface VendorReportSummaryResponse {
   generatedAt: string
   approvalStatusCounts: VendorApprovalStatusSummary[]
   vendors: VendorReportSummaryItem[]
+}
+
+export interface SupplierReportSummaryItem {
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
+  approvalStatus: string
+  status: string
+  partVendorLinkCount: number
+  preferredPartLinkCount: number
+  openPurchaseRequestCount: number
+  openPurchaseOrderCount: number
+  issuedPurchaseOrderCount: number
+  postedReceivingReceiptCount: number
+  openBackorderCount: number
+  openPurchaseOrderLineQuantity: number
+  averageLeadTimeDays: number | null
+  leadTimeSampleCount: number
+  onTimeDeliveryRate: number | null
+  onTimeDeliverySampleCount: number
+  lastPurchaseOrderAt: string | null
+  lastReceivingPostedAt: string | null
+  vendorPartyId?: string
+  partyKey?: string
+  displayName?: string
+}
+
+export interface SupplierReportSummaryResponse {
+  generatedAt: string
+  approvalStatusCounts: SupplierApprovalStatusSummary[]
+  suppliers: SupplierReportSummaryItem[]
 }
 
 export interface PartsInventoryReportTotals {
@@ -2425,6 +2694,8 @@ export interface PurchasingProcurementAnalytics {
   activeProcurementExceptionCount: number
   openReceivingExceptionCount: number
   openWarrantyClaimCount: number
+  supplierDocumentExpiringSoonCount?: number
+  blockedSupplierCount?: number
   vendorDocumentExpiringSoonCount: number
   blockedVendorCount: number
   averageLeadTimeDays: number | null
@@ -2437,12 +2708,21 @@ export interface PurchasingDocumentSummaryItem {
   documentKey: string
   title: string
   status: string
-  vendorPartyId: string | null
-  vendorDisplayName: string
+  supplierId?: string | null
+  supplierKey?: string | null
+  supplierDisplayName?: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string | null
+  supplierServiceTypes?: string[]
+  supplierType?: string | null
   lineCount: number
   quantityOrdered: number
   quantityReceived: number
   updatedAt: string
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
 }
 
 export interface PurchasingReportSummaryResponse {
@@ -2479,11 +2759,37 @@ export interface ComplianceReportTotals {
   rejectedCount: number
 }
 
+export interface SupplierComplianceReportTotals {
+  supplierCount: number
+  documentCount: number
+  expiredCount: number
+  expiringSoonCount: number
+  reviewPendingCount: number
+  approvedCount: number
+  rejectedCount: number
+}
+
 export interface CompliancePartySummaryItem {
   externalPartyId: string
   partyKey: string
   displayName: string
   partyType: string
+  approvalStatus: string
+  compliancePosture: string
+  documentCount: number
+  expiredCount: number
+  expiringSoonCount: number
+  reviewPendingCount: number
+}
+
+export interface SupplierComplianceSummaryItem {
+  supplierId: string
+  supplierKey: string
+  displayName: string
+  parentSupplierId?: string | null
+  parentSupplierDisplayName?: string | null
+  supplierUnitKind?: string
+  supplierServiceTypes?: string[]
   approvalStatus: string
   compliancePosture: string
   documentCount: number
@@ -2510,11 +2816,35 @@ export interface ComplianceDocumentSummaryItem {
   updatedAt: string
 }
 
+export interface SupplierComplianceDocumentSummaryItem {
+  documentId: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
+  documentKey: string
+  documentTypeKey: string
+  title: string
+  version: number
+  reviewStatus: string
+  effectiveStatus: string
+  isExpired: boolean
+  isExpiringSoon: boolean
+  expiresAt: string | null
+  updatedAt: string
+}
+
 export interface ComplianceReportSummaryResponse {
   generatedAt: string
   totals: ComplianceReportTotals
   parties: CompliancePartySummaryItem[]
   documents: ComplianceDocumentSummaryItem[]
+}
+
+export interface SupplierComplianceReportSummaryResponse {
+  generatedAt: string
+  totals: SupplierComplianceReportTotals
+  suppliers: SupplierComplianceSummaryItem[]
+  documents: SupplierComplianceDocumentSummaryItem[]
 }
 
 export interface ForgivingSearchResultItem {
@@ -2576,6 +2906,71 @@ export interface CompliancePartyDetailResponse {
   }>
 }
 
+export interface SupplierReportDetailResponse {
+  summary: SupplierReportSummaryItem
+  recentPurchaseRequests: Array<{
+    purchaseRequestId: string
+    requestKey: string
+    title: string
+    status: string
+    updatedAt: string
+  }>
+  recentPurchaseOrders: Array<{
+    purchaseOrderId: string
+    orderKey: string
+    title: string
+    status: string
+    lineCount: number
+    quantityOrdered: number
+    quantityReceived: number
+    updatedAt: string
+  }>
+  partLinks: Array<{
+    partVendorLinkId: string
+    supplierId: string
+    supplierKey: string
+    supplierDisplayName: string
+    parentSupplierId?: string | null
+    parentSupplierDisplayName?: string | null
+    supplierUnitKind?: string
+    supplierServiceTypes?: string[]
+    partId: string
+    partKey: string
+    partDisplayName: string
+    vendorPartNumber: string
+    isPreferred: boolean
+    catalogUnitPrice: number | null
+    catalogAvailabilityStatus: string | null
+    vendorPartyId?: string
+    partyKey?: string
+    displayName?: string
+  }>
+}
+
+export interface SupplierComplianceDetailResponse {
+  summary: SupplierComplianceSummaryItem
+  documents: Array<{
+    documentId: string
+    documentKey: string
+    documentTypeKey: string
+    title: string
+    version: number
+    reviewStatus: string
+    effectiveStatus: string
+    isExpired: boolean
+    isExpiringSoon: boolean
+    expiresAt: string | null
+    effectiveAt: string | null
+    fileName: string
+    contentType: string
+    sizeBytes: number
+    notes: string
+    reviewedAt: string | null
+    createdAt: string
+    updatedAt: string
+  }>
+}
+
 export interface PurchasingPurchaseOrderDetailResponse {
   summary: PurchasingDocumentSummaryItem
   lines: Array<{
@@ -2613,9 +3008,12 @@ export interface VendorEmailInboxMessageResponse {
   bodyPreview: string
   matchStatus: string
   matchReason: string
-  vendorPartyId: string | null
-  vendorPartyKey: string | null
-  vendorDisplayName: string | null
+  supplierId?: string | null
+  supplierKey?: string | null
+  supplierDisplayName?: string | null
+  vendorPartyId?: string | null
+  vendorPartyKey?: string | null
+  vendorDisplayName?: string | null
   linkedReferenceType: string | null
   linkedReferenceId: string | null
   linkedReferenceKey: string | null

@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
 import { getMe } from '../../api/client'
 import {
-  canCreateVendorOrders,
-  canManageVendorOrderSettings,
-  canReadVendorOrders,
-  canUpdateVendorOrders,
+  canCreateSupplierOrders,
+  canManageSupplierOrderSettings,
+  canReadSupplierOrders,
+  canUpdateSupplierOrders,
   loadSession,
 } from '../../auth/sessionStorage'
 
@@ -22,9 +22,9 @@ export function useSupplyArrPageAccess() {
   return {
     session,
     meQuery,
-    canReadVendorOrders: canReadVendorOrders(tenantRoleKey, isPlatformAdmin),
-    canCreateVendorOrders: canCreateVendorOrders(tenantRoleKey, isPlatformAdmin),
-    canUpdateVendorOrders: canUpdateVendorOrders(tenantRoleKey, isPlatformAdmin),
-    canManageVendorOrderSettings: canManageVendorOrderSettings(tenantRoleKey, isPlatformAdmin),
+    canReadSupplierOrders: canReadSupplierOrders(tenantRoleKey, isPlatformAdmin),
+    canCreateSupplierOrders: canCreateSupplierOrders(tenantRoleKey, isPlatformAdmin),
+    canUpdateSupplierOrders: canUpdateSupplierOrders(tenantRoleKey, isPlatformAdmin),
+    canManageSupplierOrderSettings: canManageSupplierOrderSettings(tenantRoleKey, isPlatformAdmin),
   }
 }

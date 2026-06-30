@@ -5,10 +5,11 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
-public sealed class VendorOrderService(
+public class SupplierOrderService(
     SupplyArrDbContext db,
     VendorOrderSettingsService settingsService,
     IntegrationOutboxEnqueueService integrationOutbox,
@@ -16,6 +17,7 @@ public sealed class VendorOrderService(
     ISupplyArrAuditService audit)
 {
     public static readonly Guid VendorPortalActorUserId = Guid.Parse("00000000-0000-0000-0000-0000000000f1");
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public VendorOrderMetadataResponse GetMetadata() => BuildMetadata();
 
@@ -27,6 +29,8 @@ public sealed class VendorOrderService(
     {
         var query = db.VendorOrders
             .AsNoTracking()
+            .Include(x => x.Vendor)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Where(x => x.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(status))
@@ -1031,7 +1035,7 @@ public sealed class VendorOrderService(
     }
 
     private static string BuildVendorPortalUrl(string token) =>
-        $"/vendor-portal/orders/{Uri.EscapeDataString(token)}";
+        $"/supplier-order-portal/orders/{Uri.EscapeDataString(token)}";
 
     private static VendorOrder CloneForSplit(
         VendorOrder source,
@@ -1086,6 +1090,8 @@ public sealed class VendorOrderService(
     {
         var entity = await db.VendorOrders
             .AsNoTracking()
+            .Include(x => x.Vendor)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Documents)
             .Include(x => x.BrokerDecisions)
             .Include(x => x.StatusUpdates)
@@ -1101,6 +1107,8 @@ public sealed class VendorOrderService(
         CancellationToken cancellationToken)
     {
         var entity = await db.VendorOrders
+            .Include(x => x.Vendor)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Documents)
             .Include(x => x.BrokerDecisions)
             .Include(x => x.StatusUpdates)
@@ -1149,6 +1157,12 @@ public sealed class VendorOrderService(
         new(
             entity.Id,
             entity.Status,
+            entity.VendorId,
+            entity.VendorNameSnapshot,
+            entity.Vendor?.ParentExternalPartyId,
+            entity.Vendor?.ParentExternalParty?.DisplayName,
+            entity.Vendor?.UnitKind ?? "identity",
+            ParseServiceTypes(entity.Vendor?.ServiceTypesJson),
             entity.VendorNameSnapshot,
             entity.ItemDescription,
             entity.OrderedQuantity,
@@ -1163,6 +1177,12 @@ public sealed class VendorOrderService(
     private static VendorOrderResponse Map(VendorOrder entity) =>
         new(
             entity.Id,
+            entity.VendorId,
+            entity.VendorNameSnapshot,
+            entity.Vendor?.ParentExternalPartyId,
+            entity.Vendor?.ParentExternalParty?.DisplayName,
+            entity.Vendor?.UnitKind ?? "identity",
+            ParseServiceTypes(entity.Vendor?.ServiceTypesJson),
             entity.BrokerOrderId,
             entity.BrokerOrderNumberSnapshot,
             entity.VendorId,
@@ -1276,6 +1296,12 @@ public sealed class VendorOrderService(
         new(
             entity.Id,
             entity.Status,
+            entity.VendorId,
+            entity.VendorNameSnapshot,
+            entity.Vendor?.ParentExternalPartyId,
+            entity.Vendor?.ParentExternalParty?.DisplayName,
+            entity.Vendor?.UnitKind ?? "identity",
+            ParseServiceTypes(entity.Vendor?.ServiceTypesJson),
             entity.VendorNameSnapshot,
             entity.PickupLocationNameSnapshot ?? entity.VendorNameSnapshot,
             entity.PickupAddressSnapshot,
@@ -1299,6 +1325,23 @@ public sealed class VendorOrderService(
                 .ToList(),
             entity.StatusUpdates.OrderBy(x => x.CreatedAt).Select(MapStatusUpdate).ToList(),
             BuildMetadata());
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private static IntegrationVendorOrderResponse MapIntegration(VendorOrder entity) =>
         new(
@@ -1455,3 +1498,11 @@ public sealed class VendorOrderService(
         return normalized;
     }
 }
+
+public sealed class VendorOrderService(
+    SupplyArrDbContext db,
+    VendorOrderSettingsService settingsService,
+    IntegrationOutboxEnqueueService integrationOutbox,
+    RecordArrVendorOrderClient recordArrClient,
+    ISupplyArrAuditService audit)
+    : SupplierOrderService(db, settingsService, integrationOutbox, recordArrClient, audit);

@@ -1,24 +1,31 @@
 import { ControlledSelect, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
 
 import type {
-  ExternalPartyResponse,
+  SupplierResponse,
   LeadTimeSnapshotResponse,
   PartResponse,
   PricingSnapshotResponse,
 } from '../api/types'
 import { CURRENCY_OPTIONS } from '../forms/controlledFormHelpers'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierOperationalContext,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 interface PricingLeadTimePanelProps {
   parts: PartResponse[]
-  vendors: ExternalPartyResponse[]
+  suppliers: SupplierResponse[]
   pricingSnapshots: PricingSnapshotResponse[]
   leadTimeSnapshots: LeadTimeSnapshotResponse[]
   canManage: boolean
   isLoading: boolean
   pricingSnapshotKey: string
   leadTimeSnapshotKey: string
-  selectedVendorLinkId: string
+  selectedSourceLinkId: string
   unitPrice: string
   currencyCode: string
   minimumOrderQuantity: string
@@ -27,7 +34,7 @@ interface PricingLeadTimePanelProps {
   currentOnlyFilter: boolean
   onPricingSnapshotKeyChange: (value: string) => void
   onLeadTimeSnapshotKeyChange: (value: string) => void
-  onSelectedVendorLinkIdChange: (value: string) => void
+  onSelectedSourceLinkIdChange: (value: string) => void
   onUnitPriceChange: (value: string) => void
   onCurrencyCodeChange: (value: string) => void
   onMinimumOrderQuantityChange: (value: string) => void
@@ -42,14 +49,14 @@ interface PricingLeadTimePanelProps {
 
 export function PricingLeadTimePanel({
   parts,
-  vendors,
+  suppliers,
   pricingSnapshots,
   leadTimeSnapshots,
   canManage,
   isLoading,
   pricingSnapshotKey,
   leadTimeSnapshotKey,
-  selectedVendorLinkId,
+  selectedSourceLinkId,
   unitPrice,
   currencyCode,
   minimumOrderQuantity,
@@ -58,7 +65,7 @@ export function PricingLeadTimePanel({
   currentOnlyFilter,
   onPricingSnapshotKeyChange,
   onLeadTimeSnapshotKeyChange,
-  onSelectedVendorLinkIdChange,
+  onSelectedSourceLinkIdChange,
   onUnitPriceChange,
   onCurrencyCodeChange,
   onMinimumOrderQuantityChange,
@@ -70,49 +77,71 @@ export function PricingLeadTimePanel({
   isCreatingPricing,
   isCreatingLeadTime,
 }: PricingLeadTimePanelProps) {
-  const vendorsById = new Map(vendors.map((vendor) => [vendor.partyId, vendor]))
-  const vendorLinks = parts.flatMap((part) =>
+  const suppliersById = new Map(
+    suppliers.map((supplier) => [supplier.supplierId, supplier]),
+  )
+  const supplierSourceLinks = parts.flatMap((part) =>
     part.vendorLinks.map((link) => ({
       linkId: link.linkId,
       partId: part.partId,
       partKey: part.partKey,
       partDisplayName: part.displayName,
-      vendorPartyId: link.partyId,
-      vendorPartyKey: link.partyKey,
-      vendorDisplayName: link.partyDisplayName,
+      supplierId: resolveSupplierId(link) ?? '',
+      supplierKey: link.supplierKey,
+      supplierDisplayName: link.supplierDisplayName,
       vendorPartNumber: link.vendorPartNumber,
       isPreferred: link.isPreferred,
       catalogUnitPrice: link.catalogUnitPrice,
       catalogLeadTimeDays: link.catalogLeadTimeDays,
-      label: `${part.partKey} · ${link.partyKey} · ${link.vendorPartNumber}`,
-      vendorApprovalStatus: vendorsById.get(link.partyId)?.approvalStatus ?? 'unknown',
-      vendorStatus: vendorsById.get(link.partyId)?.status ?? 'unknown',
+      parentSupplierDisplayName: suppliersById.get(resolveSupplierId(link) ?? '')?.parentSupplierDisplayName ?? null,
+      label: `${part.partKey} · ${formatSupplierIdentitySummary({
+        supplierDisplayName: link.supplierDisplayName,
+        supplierKey: link.supplierKey,
+        parentSupplierDisplayName: suppliersById.get(resolveSupplierId(link) ?? '')?.parentSupplierDisplayName ?? null,
+        supplierUnitKind: suppliersById.get(resolveSupplierId(link) ?? '')?.unitKind ?? 'identity',
+      })} · ${link.vendorPartNumber}`,
+      supplierApprovalStatus: suppliersById.get(resolveSupplierId(link) ?? '')?.approvalStatus ?? 'unknown',
+      supplierStatus: suppliersById.get(resolveSupplierId(link) ?? '')?.status ?? 'unknown',
+      unitKind: suppliersById.get(resolveSupplierId(link) ?? '')?.unitKind ?? 'identity',
+      supplierServiceTypes: suppliersById.get(resolveSupplierId(link) ?? '')?.serviceTypes ?? link.supplierServiceTypes ?? [],
+      addressLine1: suppliersById.get(resolveSupplierId(link) ?? '')?.addressLine1 ?? link.supplierAddressLine1 ?? null,
+      locality: suppliersById.get(resolveSupplierId(link) ?? '')?.locality ?? link.supplierLocality ?? null,
+      regionCode: suppliersById.get(resolveSupplierId(link) ?? '')?.regionCode ?? link.supplierRegionCode ?? null,
+      postalCode: suppliersById.get(resolveSupplierId(link) ?? '')?.postalCode ?? link.supplierPostalCode ?? null,
     })),
   )
-  const vendorLinkOptions: PickerOption[] = vendorLinks.map((link) => ({
+  const supplierSourceLinkOptions: PickerOption[] = supplierSourceLinks.map((link) => ({
     value: link.linkId,
-    label: link.label,
-    description: `${link.partKey} · ${link.vendorDisplayName} · ${link.vendorPartNumber}`,
+    label: `${humanizeSupplierUnitKind(link.unitKind)} · ${link.partKey} · ${formatSupplierIdentitySummary({
+      supplierDisplayName: link.supplierDisplayName,
+      supplierKey: link.supplierKey,
+      parentSupplierDisplayName: link.parentSupplierDisplayName,
+      supplierUnitKind: link.unitKind,
+    })} · ${link.vendorPartNumber}`,
+    description:
+      link.unitKind === 'sub_unit' && link.parentSupplierDisplayName
+        ? `${link.parentSupplierDisplayName} · ${link.supplierDisplayName} · ${link.vendorPartNumber}`
+        : `${link.partKey} · ${link.supplierDisplayName} · ${link.vendorPartNumber}`,
     keywords: [
       link.partKey,
       link.partDisplayName,
-      link.vendorPartyKey,
-      link.vendorDisplayName,
+      link.supplierKey,
+      link.supplierDisplayName,
       link.vendorPartNumber,
     ],
   }))
-  const selectedLink = vendorLinks.find((link) => link.linkId === selectedVendorLinkId)
+  const selectedLink = supplierSourceLinks.find((link) => link.linkId === selectedSourceLinkId)
   const selectedPart = selectedLink ? parts.find((part) => part.partId === selectedLink.partId) : null
   const pricingKeySource = selectedLink ? `${selectedLink.label}-price` : ''
   const leadTimeKeySource = selectedLink ? `${selectedLink.label}-lead` : ''
   const existingPricingKeys = pricingSnapshots.map((row) => row.snapshotKey)
   const existingLeadTimeKeys = leadTimeSnapshots.map((row) => row.snapshotKey)
   const selectedPartLinks = selectedPart
-    ? vendorLinks.filter((link) => link.partId === selectedPart.partId)
+    ? supplierSourceLinks.filter((link) => link.partId === selectedPart.partId)
     : []
   const linkMetrics = selectedPartLinks.map((link) => {
     const isApprovedAndActive =
-      link.vendorApprovalStatus === 'approved' && link.vendorStatus === 'active'
+      link.supplierApprovalStatus === 'approved' && link.supplierStatus === 'active'
     const currentPricingSnapshot =
       pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId && snapshot.isCurrent) ??
       pricingSnapshots.find((snapshot) => snapshot.partVendorLinkId === link.linkId)
@@ -134,10 +163,10 @@ export function PricingLeadTimePanel({
       combinedScore: priceScore + leadTimeScore + preferredBonus + compliancePenalty,
       isApprovedAndActive,
       needsApprovalReason:
-        link.vendorApprovalStatus !== 'approved'
-          ? `Supplier approval is ${link.vendorApprovalStatus}.`
-          : link.vendorStatus !== 'active'
-            ? `Supplier status is ${link.vendorStatus}.`
+        link.supplierApprovalStatus !== 'approved'
+          ? `Supplier approval is ${link.supplierApprovalStatus}.`
+          : link.supplierStatus !== 'active'
+            ? `Supplier status is ${link.supplierStatus}.`
             : null,
     }
   })
@@ -293,7 +322,20 @@ export function PricingLeadTimePanel({
                   ) : null}
                 </div>
                 <p className="mt-1 text-slate-400">
-                  {row.partKey} · {row.vendorPartyKey} · {row.unitPrice} {row.currencyCode}
+                  {row.partKey} ·{' '}
+                  {formatSupplierIdentitySummary({
+                    supplierDisplayName: row.supplierDisplayName,
+                    supplierKey: row.supplierKey,
+                    parentSupplierDisplayName:
+                      row.parentSupplierDisplayName ??
+                      supplierSourceLinks.find((link) => link.linkId === row.partVendorLinkId)?.parentSupplierDisplayName ??
+                      null,
+                    supplierUnitKind:
+                      row.supplierUnitKind ??
+                      supplierSourceLinks.find((link) => link.linkId === row.partVendorLinkId)?.unitKind ??
+                      'identity',
+                  })}{' '}
+                  · {row.unitPrice} {row.currencyCode}
                 </p>
                 <p className="text-xs text-[var(--color-text-muted)]">
                   effective {new Date(row.effectiveFrom).toLocaleDateString()}
@@ -326,7 +368,20 @@ export function PricingLeadTimePanel({
                   ) : null}
                 </div>
                 <p className="mt-1 text-slate-400">
-                  {row.partKey} · {row.vendorPartyKey} · {row.leadTimeDays} days
+                  {row.partKey} ·{' '}
+                  {formatSupplierIdentitySummary({
+                    supplierDisplayName: row.supplierDisplayName,
+                    supplierKey: row.supplierKey,
+                    parentSupplierDisplayName:
+                      row.parentSupplierDisplayName ??
+                      supplierSourceLinks.find((link) => link.linkId === row.partVendorLinkId)?.parentSupplierDisplayName ??
+                      null,
+                    supplierUnitKind:
+                      row.supplierUnitKind ??
+                      supplierSourceLinks.find((link) => link.linkId === row.partVendorLinkId)?.unitKind ??
+                      'identity',
+                  })}{' '}
+                  · {row.leadTimeDays} days
                 </p>
                 <p className="text-xs text-[var(--color-text-muted)]">
                   effective {new Date(row.effectiveFrom).toLocaleDateString()}
@@ -354,7 +409,7 @@ export function PricingLeadTimePanel({
                 Recommended source for {selectedPart.partKey} · {selectedPart.displayName}
               </p>
               <p className="mt-1 text-xs text-slate-400">
-                Based on current price, current lead time, preferred-source status, and supplier approval.
+                Based on current price, current lead time, preferred-source status, supplier approval, and which supplier sub-unit can fulfill the part best right now.
               </p>
             </div>
             <span className="rounded-full bg-sky-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-200">
@@ -385,13 +440,26 @@ export function PricingLeadTimePanel({
                 </div>
                 {item.link ? (
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <Metric label="Supplier" value={`${item.link.vendorPartyKey} · ${item.link.vendorDisplayName}`} />
-                    <Metric label="Part source" value={item.link.vendorPartNumber} />
+                    <Metric
+                      label="Supplier identity or sub-unit"
+                      value={formatSupplierIdentitySummary({
+                        supplierDisplayName: item.link.supplierDisplayName,
+                        supplierKey: item.link.supplierKey,
+                        parentSupplierDisplayName: item.link.parentSupplierDisplayName,
+                        supplierUnitKind: item.link.unitKind,
+                      })}
+                    />
+                    <Metric
+                      label="Coverage"
+                      value={`${humanizeSupplierUnitKind(item.link.unitKind)} · ${formatSupplierServiceTypes(item.link.supplierServiceTypes)}`}
+                    />
+                    <Metric label="Supplier part" value={item.link.vendorPartNumber} />
+                    <Metric label="Location" value={formatSupplierOperationalContext(item.link)} />
                     <Metric label="Unit price" value={formatMoney(item.link.unitPrice)} />
                     <Metric label="Lead time" value={formatDays(item.link.leadTimeDays)} />
                     <Metric
                       label="Approval"
-                      value={`${item.link.vendorApprovalStatus} · ${item.link.vendorStatus}`}
+                      value={`${item.link.supplierApprovalStatus} · ${item.link.supplierStatus}`}
                     />
                     <Metric
                       label="Snapshots"
@@ -421,10 +489,15 @@ export function PricingLeadTimePanel({
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <div className="font-medium text-slate-100">
-                          {link.vendorPartyKey} · {link.vendorDisplayName}
+                          {formatSupplierIdentitySummary({
+                            supplierDisplayName: link.supplierDisplayName,
+                            supplierKey: link.supplierKey,
+                            parentSupplierDisplayName: link.parentSupplierDisplayName,
+                            supplierUnitKind: link.unitKind,
+                          })}
                         </div>
                         <div className="mt-1 text-xs text-[var(--color-text-muted)]">
-                          {link.vendorPartNumber}
+                          {humanizeSupplierUnitKind(link.unitKind)} · {link.vendorPartNumber}
                           {link.isPreferred ? ' · preferred' : ''}
                           {link.isApprovedAndActive ? '' : ' · approval needed'}
                         </div>
@@ -436,7 +509,7 @@ export function PricingLeadTimePanel({
                       ) : null}
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
-                      Price {formatMoney(link.unitPrice)} · Lead time {formatDays(link.leadTimeDays)}
+                      {formatSupplierOperationalContext(link)} · Price {formatMoney(link.unitPrice)} · Lead time {formatDays(link.leadTimeDays)}
                     </p>
                   </li>
                 ))}
@@ -449,15 +522,15 @@ export function PricingLeadTimePanel({
       {canManage ? (
         <div className="mt-6 space-y-4 rounded-lg border border-slate-800 bg-slate-950/40 p-4">
           <div>
-            <label className="mb-1 block text-sm text-slate-400" htmlFor="pricing-lead-time-vendor-link">
-              Supplier source link
+            <label className="mb-1 block text-sm text-slate-400" htmlFor="pricing-lead-time-supplier-source-link">
+              Supplier part source
             </label>
             <StaticSearchPicker
-              id="pricing-lead-time-vendor-link"
-              placeholder="Search supplier source links…"
-              value={selectedVendorLinkId}
-              options={vendorLinkOptions}
-              onChange={onSelectedVendorLinkIdChange}
+              id="pricing-lead-time-supplier-source-link"
+              placeholder="Search supplier part sources…"
+              value={selectedSourceLinkId}
+              options={supplierSourceLinkOptions}
+              onChange={onSelectedSourceLinkIdChange}
             />
           </div>
 
@@ -538,7 +611,7 @@ export function PricingLeadTimePanel({
             <button
               type="button"
               className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-              disabled={isCreatingPricing || !selectedVendorLinkId || !pricingSnapshotKey || !unitPrice}
+              disabled={isCreatingPricing || !selectedSourceLinkId || !pricingSnapshotKey || !unitPrice}
               onClick={onCreatePricingSnapshot}
             >
               {isCreatingPricing ? 'Saving price…' : 'Record pricing'}
@@ -547,7 +620,7 @@ export function PricingLeadTimePanel({
               type="button"
               className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500 disabled:opacity-50"
               disabled={
-                isCreatingLeadTime || !selectedVendorLinkId || !leadTimeSnapshotKey || !leadTimeDays
+                isCreatingLeadTime || !selectedSourceLinkId || !leadTimeSnapshotKey || !leadTimeDays
               }
               onClick={onCreateLeadTimeSnapshot}
             >

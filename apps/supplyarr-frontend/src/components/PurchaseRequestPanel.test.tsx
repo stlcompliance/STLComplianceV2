@@ -54,9 +54,13 @@ const baseProps = {
       title: 'Shop restock',
       notes: 'Weekly filters',
       status: 'submitted',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'acme',
-      vendorDisplayName: 'Acme Parts',
+      supplierId: 'vendor-1',
+      supplierKey: 'acme',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Parts',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
       requestedByUserId: 'user-1',
       submittedAt: '2026-01-02T00:00:00Z',
       submittedByUserId: 'user-1',
@@ -94,9 +98,13 @@ const baseProps = {
       title: 'Rejected request',
       notes: '',
       status: 'rejected',
-      vendorPartyId: 'vendor-1',
-      vendorPartyKey: 'acme',
-      vendorDisplayName: 'Acme Parts',
+      supplierId: 'vendor-1',
+      supplierKey: 'acme',
+      supplierDisplayName: 'North Yard Counter',
+      parentSupplierId: 'supplier-1',
+      parentSupplierDisplayName: 'Acme Parts',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts'],
       requestedByUserId: 'user-1',
       submittedAt: '2026-01-01T00:00:00Z',
       submittedByUserId: 'user-1',
@@ -117,14 +125,24 @@ const baseProps = {
     },
   ],
   parts: [],
-  vendors: [],
+  suppliers: [
+    {
+      supplierId: 'vendor-1',
+      partyId: 'vendor-1',
+      displayName: 'North Yard Counter',
+      supplierKey: 'acme-north-yard',
+      partyKey: 'acme-north-yard',
+      parentSupplierDisplayName: 'Acme Parts',
+      unitKind: 'sub_unit',
+    },
+  ],
   canCreate: true,
   canApprove: true,
   isLoading: false,
   requestKey: '',
   title: '',
   notes: '',
-  selectedVendorId: '',
+  selectedSupplierUnitId: '',
   selectedPartId: '',
   lineQuantity: '',
   lineNotes: '',
@@ -133,7 +151,7 @@ const baseProps = {
   onRequestKeyChange: vi.fn(),
   onTitleChange: vi.fn(),
   onNotesChange: vi.fn(),
-  onSelectedVendorIdChange: vi.fn(),
+  onSelectedSupplierUnitIdChange: vi.fn(),
   onSelectedPartIdChange: vi.fn(),
   onLineQuantityChange: vi.fn(),
   onLineNotesChange: vi.fn(),
@@ -155,11 +173,13 @@ describe('PurchaseRequestPanel', () => {
 
     expect(screen.getByTestId('supplyarr-purchasing-pr-workspace')).toBeInTheDocument()
     expect(screen.getByText('pr-2026-001')).toBeInTheDocument()
+    expect(within(screen.getByTestId('purchase-request-detail')).getByText(/Acme Parts · North Yard Counter/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Approve' })).toBeInTheDocument()
     expect(screen.getByTestId('purchase-request-line-line-1')).toHaveTextContent('6 each requested')
     expect(screen.getByTestId('purchase-request-create-form')).toBeInTheDocument()
-    expect(screen.getByLabelText('Supplier unit (optional)')).toBeInTheDocument()
+    expect(screen.getByLabelText('Supplier identity or sub-unit (optional)')).toBeInTheDocument()
     expect(screen.getByLabelText('Part for first line')).toBeInTheDocument()
+    expect(screen.getByText('Sub-unit · Parts, Maintenance')).toBeInTheDocument()
   })
 
   it('shows reject controls for submitted purchase requests', () => {

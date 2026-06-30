@@ -29,9 +29,19 @@ public sealed record PartManufacturerAliasResponse(
 
 public sealed record PartVendorLinkResponse(
     Guid LinkId,
-    Guid PartyId,
-    string PartyKey,
-    string PartyDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierKey,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
+    string SupplierAddressLine1,
+    string SupplierLocality,
+    string SupplierRegionCode,
+    string SupplierPostalCode,
+    string SupplierCountryCode,
     string VendorPartNumber,
     bool IsPreferred,
     decimal? CatalogUnitPrice,
@@ -40,7 +50,14 @@ public sealed record PartVendorLinkResponse(
     int? CatalogLeadTimeDays,
     decimal? CatalogQuantityAvailable,
     string? CatalogAvailabilityStatus,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt)
+{
+    public Guid PartyId => SupplierId;
+
+    public string PartyKey => SupplierKey;
+
+    public string PartyDisplayName => SupplierDisplayName;
+}
 
 public sealed record PartSourceResponse(
     Guid SourceId,
@@ -110,6 +127,17 @@ public sealed record CreatePartSourceRequest(
     string Notes);
 
 public sealed record CreatePartVendorLinkRequest(
-    Guid PartyId,
+    Guid? SupplierUnitId,
+    Guid? SupplierId,
+    Guid? PartyId,
     string VendorPartNumber,
-    bool IsPreferred);
+    bool IsPreferred)
+{
+    public CreatePartVendorLinkRequest(
+        Guid? partyId,
+        string vendorPartNumber,
+        bool isPreferred)
+        : this(partyId, partyId, partyId, vendorPartNumber, isPreferred)
+    {
+    }
+}

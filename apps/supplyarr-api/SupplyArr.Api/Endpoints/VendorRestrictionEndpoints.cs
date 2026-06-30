@@ -8,9 +8,52 @@ public static class VendorRestrictionEndpoints
 {
     public static void MapSupplyArrVendorRestrictionEndpoints(this WebApplication app)
     {
-        static void MapRoutes(RouteGroupBuilder group, string nameSuffix)
+        static VendorRestrictionResponse MapVendorAlias(SupplierRestrictionResponse response)
+            => new(
+                response.RestrictionId,
+                response.SupplierId,
+                response.SupplierKey,
+                response.SupplierDisplayName,
+                response.ParentSupplierId,
+                response.ParentSupplierDisplayName,
+                response.SupplierUnitKind,
+                response.SupplierServiceTypes,
+                response.RestrictionKey,
+                response.Scopes,
+                response.Reason,
+                response.Status,
+                response.EffectiveFrom,
+                response.EffectiveUntil,
+                response.CreatedByUserId,
+                response.LiftedByUserId,
+                response.LiftedAt,
+                response.LiftNotes,
+                response.CreatedAt,
+                response.UpdatedAt,
+                response.SupplierRestrictionId ?? response.RestrictionId,
+                response.SupplierId,
+                response.SupplierKey,
+                response.SupplierDisplayName,
+                "supplier",
+                "supplier");
+
+        static VendorRestrictionEnforcementResponse MapVendorEnforcementAlias(SupplierRestrictionEnforcementResponse response)
+            => new(
+                response.SupplierId,
+                response.SupplierKey,
+                response.SupplierDisplayName,
+                response.ParentSupplierId,
+                response.ParentSupplierDisplayName,
+                response.SupplierUnitKind,
+                response.SupplierServiceTypes,
+                response.IsBlocked,
+                response.BlockReason,
+                response.ActiveScopes,
+                response.SupplierId);
+
+        static void MapRoutes(RouteGroupBuilder group, string nameSuffix, string tagName, bool useVendorAliasResponse = false)
         {
-            group = group.WithTags("VendorRestrictions").RequireAuthorization();
+            group = group.WithTags(tagName).RequireAuthorization();
 
             group.MapGet("/", async (
                 string? status,
@@ -21,9 +64,10 @@ public static class VendorRestrictionEndpoints
             {
                 authorization.RequirePartiesRead(context.User);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.ListAsync(tenantId, status, cancellationToken));
+                var rows = await service.ListAsync(tenantId, status, cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? rows.Select(MapVendorAlias) : rows);
             })
-            .WithName($"ListVendorRestrictions{nameSuffix}");
+            .WithName($"ListSupplierRestrictions{nameSuffix}");
 
             group.MapGet("/{restrictionId:guid}", async (
                 Guid restrictionId,
@@ -34,13 +78,14 @@ public static class VendorRestrictionEndpoints
             {
                 authorization.RequirePartiesRead(context.User);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.GetAsync(tenantId, restrictionId, cancellationToken));
+                var response = await service.GetAsync(tenantId, restrictionId, cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? MapVendorAlias(response) : response);
             })
-            .WithName($"GetVendorRestriction{nameSuffix}");
+            .WithName($"GetSupplierRestriction{nameSuffix}");
 
             group.MapPost("/{restrictionId:guid}/lift", async (
                 Guid restrictionId,
-                LiftVendorRestrictionRequest request,
+                LiftSupplierRestrictionRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
                 VendorRestrictionService service,
@@ -49,18 +94,19 @@ public static class VendorRestrictionEndpoints
                 authorization.RequirePartiesManage(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.LiftAsync(
+                var response = await service.LiftAsync(
                     tenantId,
                     actorUserId,
                     restrictionId,
                     request,
-                    cancellationToken));
+                    cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? MapVendorAlias(response) : response);
             })
-            .WithName($"LiftVendorRestriction{nameSuffix}");
+            .WithName($"LiftSupplierRestriction{nameSuffix}");
 
             group.MapPut("/{restrictionId:guid}", async (
                 Guid restrictionId,
-                UpdateVendorRestrictionRequest request,
+                UpdateSupplierRestrictionRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
                 VendorRestrictionService service,
@@ -69,22 +115,23 @@ public static class VendorRestrictionEndpoints
                 authorization.RequirePartiesManage(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.UpdateAsync(
+                var response = await service.UpdateAsync(
                     tenantId,
                     actorUserId,
                     restrictionId,
                     request,
-                    cancellationToken));
+                    cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? MapVendorAlias(response) : response);
             })
-            .WithName($"UpdateVendorRestriction{nameSuffix}");
+            .WithName($"UpdateSupplierRestriction{nameSuffix}");
         }
 
-        static void MapPartyRoutes(RouteGroupBuilder partyGroup, string nameSuffix)
+        static void MapSupplierRoutes(RouteGroupBuilder supplierGroup, string nameSuffix, string tagName, bool useVendorAliasResponse = false)
         {
-            partyGroup = partyGroup.WithTags("VendorRestrictions").RequireAuthorization();
+            supplierGroup = supplierGroup.WithTags(tagName).RequireAuthorization();
 
-            partyGroup.MapGet("/", async (
-                Guid partyId,
+            supplierGroup.MapGet("/", async (
+                Guid supplierId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
                 VendorRestrictionService service,
@@ -92,13 +139,14 @@ public static class VendorRestrictionEndpoints
             {
                 authorization.RequirePartiesRead(context.User);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.ListByPartyAsync(tenantId, partyId, cancellationToken));
+                var rows = await service.ListBySupplierAsync(tenantId, supplierId, cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? rows.Select(MapVendorAlias) : rows);
             })
-            .WithName($"ListVendorRestrictionsByParty{nameSuffix}");
+            .WithName($"ListSupplierRestrictionsBySupplier{nameSuffix}");
 
-            partyGroup.MapPost("/", async (
-                Guid partyId,
-                CreateVendorRestrictionRequest request,
+            supplierGroup.MapPost("/", async (
+                Guid supplierId,
+                CreateSupplierRestrictionRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
                 VendorRestrictionService service,
@@ -107,17 +155,18 @@ public static class VendorRestrictionEndpoints
                 authorization.RequirePartiesManage(context.User);
                 var tenantId = context.User.GetTenantId();
                 var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.CreateAsync(
+                var response = await service.CreateAsync(
                     tenantId,
                     actorUserId,
-                    partyId,
+                    supplierId,
                     request,
-                    cancellationToken));
+                    cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? MapVendorAlias(response) : response);
             })
-            .WithName($"CreateVendorRestrictionForParty{nameSuffix}");
+            .WithName($"CreateSupplierRestrictionForSupplier{nameSuffix}");
 
-            partyGroup.MapGet("/enforcement", async (
-                Guid partyId,
+            supplierGroup.MapGet("/enforcement", async (
+                Guid supplierId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
                 VendorRestrictionService service,
@@ -125,15 +174,22 @@ public static class VendorRestrictionEndpoints
             {
                 authorization.RequirePartiesRead(context.User);
                 var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.GetEnforcementAsync(tenantId, partyId, cancellationToken));
+                var response = await service.GetEnforcementAsync(tenantId, supplierId, cancellationToken);
+                return Results.Ok(useVendorAliasResponse ? MapVendorEnforcementAlias(response) : response);
             })
-            .WithName($"GetVendorRestrictionEnforcement{nameSuffix}");
+            .WithName($"GetSupplierRestrictionEnforcementBySupplier{nameSuffix}");
         }
 
-        MapRoutes(app.MapGroup("/api/vendor-restrictions"), string.Empty);
-        MapRoutes(app.MapGroup("/api/v1/vendor-restrictions"), "V1");
+        MapRoutes(app.MapGroup("/api/supplier-restrictions"), string.Empty, "SupplierRestrictions");
+        MapRoutes(app.MapGroup("/api/v1/supplier-restrictions"), "V1", "SupplierRestrictions");
+        MapRoutes(app.MapGroup("/api/vendor-restrictions"), "VendorAlias", "VendorRestrictions", useVendorAliasResponse: true);
+        MapRoutes(app.MapGroup("/api/v1/vendor-restrictions"), "V1VendorAlias", "VendorRestrictions", useVendorAliasResponse: true);
 
-        MapPartyRoutes(app.MapGroup("/api/parties/{partyId:guid}/vendor-restrictions"), string.Empty);
-        MapPartyRoutes(app.MapGroup("/api/v1/parties/{partyId:guid}/vendor-restrictions"), "V1");
+        MapSupplierRoutes(app.MapGroup("/api/suppliers/{supplierId:guid}/restrictions"), "BySupplier", "SupplierRestrictions");
+        MapSupplierRoutes(app.MapGroup("/api/v1/suppliers/{supplierId:guid}/restrictions"), "V1BySupplier", "SupplierRestrictions");
+        MapSupplierRoutes(app.MapGroup("/api/suppliers/{supplierId:guid}/vendor-restrictions"), "SupplierVendorAlias", "VendorRestrictions", useVendorAliasResponse: true);
+        MapSupplierRoutes(app.MapGroup("/api/v1/suppliers/{supplierId:guid}/vendor-restrictions"), "V1SupplierVendorAlias", "VendorRestrictions", useVendorAliasResponse: true);
+        MapSupplierRoutes(app.MapGroup("/api/parties/{supplierId:guid}/vendor-restrictions"), "PartyAlias", "VendorRestrictions", useVendorAliasResponse: true);
+        MapSupplierRoutes(app.MapGroup("/api/v1/parties/{supplierId:guid}/vendor-restrictions"), "V1PartyAlias", "VendorRestrictions", useVendorAliasResponse: true);
     }
 }

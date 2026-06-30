@@ -3,14 +3,16 @@ import {
   getApprovalReminderSettings,
   getApprovalRemindersDashboard,
   listVendorRestrictions,
-  listPartyVendorRestrictions,
-  getPartyVendorRestrictionEnforcement,
-  createPartyVendorRestriction,
-  liftVendorRestriction,
+  listSupplierRestrictionsBySupplier,
+  getSupplierRestrictionEnforcement,
+  createSupplierRestriction,
+  liftSupplierRestriction,
   getSupplierOnboardingDocumentRequirements,
   listPendingSupplierOnboarding,
-  listPartyComplianceDocuments,
-  approvePartyComplianceDocument,
+  startSupplierOnboarding,
+  getSupplierOnboarding,
+  listSupplierComplianceDocuments,
+  approveSupplierComplianceDocument,
   getEmergencyPurchases,
   listPendingEmergencyPurchases,
   expeditedSubmitEmergencyPurchase,
@@ -19,7 +21,7 @@ import {
   forgivingSearch,
   listAuditHistory,
   listSupplierIncidents,
-  listPartySupplierIncidents,
+  listSupplierIncidentsForSupplier,
   createSupplierIncident,
   startSupplierIncidentInvestigation,
   applySupplierIncidentProcurementRestriction,
@@ -43,10 +45,15 @@ import {
   getPurchaseOrders,
   getBackorders,
   getVendorReturns,
+  getVendorEmailInbox,
+  ingestVendorEmailInbox,
   getPricingSnapshots,
   getLeadTimeSnapshots,
   getPurchaseRequests,
-  getVendors,
+  getPurchasingReportSummary,
+  getSupplierReportDetail,
+  getSupplierReportSummary,
+  getSupplierDirectory,
   getSupplyReadinessDashboard,
   SupplyArrApiError,
 } from './client'
@@ -56,16 +63,16 @@ describe('supplyarr api client', () => {
     vi.restoreAllMocks()
   })
 
-  it('loads vendors on success', async () => {
+  it('loads the supplier directory on success', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => [
           {
-            partyId: '11111111-1111-1111-1111-111111111111',
-            partyKey: 'acme-parts',
-            partyType: 'vendor',
+            supplierId: '11111111-1111-1111-1111-111111111111',
+            supplierKey: 'acme-parts',
+            supplierType: 'supplier',
             displayName: 'Acme Parts Co.',
             legalName: 'Acme Parts Company LLC',
             taxIdentifier: null,
@@ -80,9 +87,9 @@ describe('supplyarr api client', () => {
       }),
     )
 
-    const vendors = await getVendors('token')
-    expect(vendors).toHaveLength(1)
-    expect(vendors[0].partyKey).toBe('acme-parts')
+    const suppliers = await getSupplierDirectory('token')
+    expect(suppliers).toHaveLength(1)
+    expect(suppliers[0].supplierKey).toBe('acme-parts')
   })
 
   it('loads parts on success', async () => {
@@ -154,6 +161,13 @@ describe('supplyarr api client', () => {
           title: 'Restock',
           notes: '',
           status: 'draft',
+          supplierId: null,
+          supplierKey: null,
+          supplierDisplayName: null,
+          parentSupplierId: null,
+          parentSupplierDisplayName: null,
+          supplierUnitKind: null,
+          supplierServiceTypes: [],
           vendorPartyId: null,
           vendorPartyKey: null,
           vendorDisplayName: null,
@@ -183,7 +197,7 @@ describe('supplyarr api client', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [
-          {
+        {
             purchaseOrderId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
             orderKey: 'po-001',
             title: 'Vendor order',
@@ -191,6 +205,13 @@ describe('supplyarr api client', () => {
             status: 'draft',
             purchaseRequestId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
             purchaseRequestKey: 'pr-001',
+            supplierId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+            supplierKey: 'vendor-a',
+            supplierDisplayName: 'Acme',
+            parentSupplierId: null,
+            parentSupplierDisplayName: null,
+            supplierUnitKind: 'identity',
+            supplierServiceTypes: ['parts'],
             vendorPartyId: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
             vendorPartyKey: 'vendor-a',
             vendorDisplayName: 'Acme',
@@ -271,9 +292,16 @@ describe('supplyarr api client', () => {
             returnKey: 'ret-001',
             status: 'posted',
             sourceType: 'stock',
+            supplierId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+            supplierKey: 'acme',
+            supplierDisplayName: 'Acme North Yard',
+            parentSupplierId: '11111111-1111-1111-1111-111111111111',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
             vendorPartyId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
             vendorPartyKey: 'acme',
-            vendorDisplayName: 'Acme',
+            vendorDisplayName: 'Acme North Yard',
             purchaseOrderId: null,
             purchaseOrderKey: null,
             purchaseRequestId: null,
@@ -303,6 +331,9 @@ describe('supplyarr api client', () => {
     const returns = await getVendorReturns('token', { status: 'posted' })
     expect(returns).toHaveLength(1)
     expect(returns[0].rmaNumber).toBe('RMA-42')
+    expect(returns[0].supplierId).toBe('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+    expect(returns[0].parentSupplierDisplayName).toBe('Acme Supply')
+    expect(returns[0].supplierUnitKind).toBe('sub_unit')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/returns?status=posted', expect.any(Object))
   })
 
@@ -317,9 +348,13 @@ describe('supplyarr api client', () => {
             partId: '33333333-3333-3333-3333-333333333333',
             partKey: 'filter-001',
             partDisplayName: 'Oil Filter',
-            vendorPartyId: '44444444-4444-4444-4444-444444444444',
-            vendorPartyKey: 'acme',
-            vendorDisplayName: 'Acme',
+            supplierId: '44444444-4444-4444-4444-444444444444',
+            supplierKey: 'acme',
+            supplierDisplayName: 'North Yard Counter',
+            parentSupplierId: '11111111-1111-1111-1111-111111111111',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
             vendorPartNumber: 'V-001',
             unitPrice: 19.99,
             currencyCode: 'USD',
@@ -340,6 +375,9 @@ describe('supplyarr api client', () => {
     const snapshots = await getPricingSnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].isCurrent).toBe(true)
+    expect(snapshots[0].supplierId).toBe('44444444-4444-4444-4444-444444444444')
+    expect(snapshots[0].parentSupplierDisplayName).toBe('Acme Supply')
+    expect(snapshots[0].supplierServiceTypes).toEqual(['parts', 'maintenance'])
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/pricing-snapshots', expect.any(Object))
   })
 
@@ -354,9 +392,13 @@ describe('supplyarr api client', () => {
             partId: '33333333-3333-3333-3333-333333333333',
             partKey: 'filter-001',
             partDisplayName: 'Oil Filter',
-            vendorPartyId: '44444444-4444-4444-4444-444444444444',
-            vendorPartyKey: 'acme',
-            vendorDisplayName: 'Acme',
+            supplierId: '44444444-4444-4444-4444-444444444444',
+            supplierKey: 'acme',
+            supplierDisplayName: 'North Yard Counter',
+            parentSupplierId: '11111111-1111-1111-1111-111111111111',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
             vendorPartNumber: 'V-001',
             leadTimeDays: 7,
             effectiveFrom: '2026-05-01T00:00:00Z',
@@ -375,6 +417,8 @@ describe('supplyarr api client', () => {
     const snapshots = await getLeadTimeSnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].leadTimeDays).toBe(7)
+    expect(snapshots[0].supplierId).toBe('44444444-4444-4444-4444-444444444444')
+    expect(snapshots[0].parentSupplierDisplayName).toBe('Acme Supply')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/lead-time-snapshots', expect.any(Object))
   })
 
@@ -389,9 +433,13 @@ describe('supplyarr api client', () => {
             partId: '33333333-3333-3333-3333-333333333333',
             partKey: 'filter-001',
             partDisplayName: 'Oil Filter',
-            vendorPartyId: '44444444-4444-4444-4444-444444444444',
-            vendorPartyKey: 'acme',
-            vendorDisplayName: 'Acme',
+            supplierId: '44444444-4444-4444-4444-444444444444',
+            supplierKey: 'acme',
+            supplierDisplayName: 'North Yard Counter',
+            parentSupplierId: '11111111-1111-1111-1111-111111111111',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
             vendorPartNumber: 'V-001',
             quantityAvailable: 50,
             availabilityStatus: 'in_stock',
@@ -412,6 +460,8 @@ describe('supplyarr api client', () => {
     const snapshots = await getAvailabilitySnapshots('token')
     expect(snapshots).toHaveLength(1)
     expect(snapshots[0].availabilityStatus).toBe('in_stock')
+    expect(snapshots[0].supplierId).toBe('44444444-4444-4444-4444-444444444444')
+    expect(snapshots[0].parentSupplierDisplayName).toBe('Acme Supply')
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/availability-snapshots', expect.any(Object))
   })
 
@@ -433,6 +483,9 @@ describe('supplyarr api client', () => {
               quantityReserved: 0,
               quantityAvailable: 2,
               suggestedOrderQuantity: 24,
+              preferredSupplierId: null,
+              preferredSupplierKey: null,
+              preferredSupplierDisplayName: null,
               preferredVendorPartyId: null,
               preferredVendorPartyKey: null,
               preferredVendorDisplayName: null,
@@ -447,6 +500,7 @@ describe('supplyarr api client', () => {
     const evaluation = await getReorderEvaluation('token')
     expect(evaluation.suggestions).toHaveLength(1)
     expect(evaluation.suggestions[0].suggestedOrderQuantity).toBe(24)
+    expect(evaluation.suggestions[0].preferredSupplierId).toBeNull()
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/reorder-evaluation', expect.any(Object))
   })
 
@@ -460,7 +514,7 @@ describe('supplyarr api client', () => {
       }),
     )
 
-    await expect(getVendors('token')).rejects.toBeInstanceOf(SupplyArrApiError)
+    await expect(getSupplierDirectory('token')).rejects.toBeInstanceOf(SupplyArrApiError)
   })
 
   it('surfaces problem details title/detail in API errors', async () => {
@@ -477,7 +531,7 @@ describe('supplyarr api client', () => {
       }),
     )
 
-    await expect(getVendors('token')).rejects.toMatchObject({
+    await expect(getSupplierDirectory('token')).rejects.toMatchObject({
       status: 400,
       message: 'Vendor export blocked - Missing procurement report permission.',
     })
@@ -500,7 +554,7 @@ describe('supplyarr api client', () => {
       }),
     )
 
-    await expect(getVendors('token')).rejects.toMatchObject({
+    await expect(getSupplierDirectory('token')).rejects.toMatchObject({
       status: 422,
       message:
         'Validation failed - externalPartyId: External party is required.; partyType: Party type is invalid.',
@@ -542,16 +596,360 @@ describe('supplyarr api client', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/rfqs', expect.any(Object))
   })
 
-  it('loads warranty claims from v1 endpoint', async () => {
+  it('loads purchasing report summary with supplier-first document normalization', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => [],
+      json: async () => ({
+        generatedAt: '2026-05-27T00:00:00Z',
+        totals: {
+          purchaseRequestCount: 1,
+          openPurchaseRequestCount: 1,
+          purchaseOrderCount: 1,
+          openPurchaseOrderCount: 1,
+          issuedPurchaseOrderCount: 0,
+          draftReceivingReceiptCount: 0,
+          postedReceivingReceiptCount: 0,
+          openBackorderCount: 0,
+          openPurchaseOrderLineQuantity: 2,
+          purchaseOrderQuantityReceived: 0,
+        },
+        analytics: {
+          pendingPurchaseRequestCount: 1,
+          emergencyPurchaseRequestCount: 0,
+          activeProcurementExceptionCount: 0,
+          openReceivingExceptionCount: 0,
+          openWarrantyClaimCount: 0,
+          vendorDocumentExpiringSoonCount: 2,
+          blockedVendorCount: 1,
+          averageLeadTimeDays: 5,
+          estimatedSpendThisMonth: 120,
+        },
+        purchaseRequestStatusCounts: [{ status: 'submitted', count: 1 }],
+        purchaseOrderStatusCounts: [{ status: 'draft', count: 1 }],
+        documents: [
+          {
+            documentType: 'purchase_request',
+            documentId: 'pr-1',
+            documentKey: 'PR-001',
+            title: 'North yard restock',
+            status: 'submitted',
+            supplierId: 'supplier-unit-1',
+            supplierKey: 'ACME-NY',
+            supplierDisplayName: 'North Yard Counter',
+            parentSupplierId: 'supplier-1',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts'],
+            lineCount: 2,
+            quantityOrdered: 2,
+            quantityReceived: 0,
+            updatedAt: '2026-05-27T00:00:00Z',
+          },
+          {
+            documentType: 'purchase_order',
+            documentId: 'po-1',
+            documentKey: 'PO-001',
+            title: 'Unassigned order',
+            status: 'draft',
+            supplierId: null,
+            supplierKey: null,
+            supplierDisplayName: '',
+            parentSupplierId: null,
+            parentSupplierDisplayName: null,
+            supplierUnitKind: null,
+            supplierServiceTypes: [],
+            lineCount: 1,
+            quantityOrdered: 1,
+            quantityReceived: 0,
+            updatedAt: '2026-05-27T00:00:00Z',
+          },
+        ],
+      }),
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const claims = await listWarrantyClaims('token')
-    expect(claims).toEqual([])
-    expect(fetchMock).toHaveBeenCalledWith('/api/v1/warranty-claims', expect.any(Object))
+    const summary = await getPurchasingReportSummary('token', {
+      openDocumentsOnly: true,
+      supplierId: 'supplier-unit-1',
+    })
+
+    expect(summary.analytics.supplierDocumentExpiringSoonCount).toBe(2)
+    expect(summary.analytics.blockedSupplierCount).toBe(1)
+    expect(summary.documents[0].vendorPartyId).toBe('supplier-unit-1')
+    expect(summary.documents[0].vendorDisplayName).toBe('North Yard Counter')
+    expect(summary.documents[1].supplierUnitKind).toBeNull()
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/reports/purchasing/summary?openDocumentsOnly=true&supplierId=supplier-unit-1',
+      expect.any(Object),
+    )
+  })
+
+  it('loads supplier report summary and detail with supplier-first normalization', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          generatedAt: '2026-05-27T00:00:00Z',
+          approvalStatusCounts: [{ approvalStatus: 'approved', count: 1 }],
+          suppliers: [
+            {
+              supplierId: 'supplier-unit-1',
+              supplierKey: 'ACME-NY',
+              supplierDisplayName: 'North Yard Counter',
+              supplierType: 'supplier',
+              parentSupplierId: 'supplier-1',
+              parentSupplierDisplayName: 'Acme Supply',
+              supplierUnitKind: 'sub_unit',
+              supplierServiceTypes: ['parts', 'maintenance'],
+              approvalStatus: 'approved',
+              status: 'active',
+              partVendorLinkCount: 2,
+              preferredPartLinkCount: 1,
+              openPurchaseRequestCount: 1,
+              openPurchaseOrderCount: 1,
+              issuedPurchaseOrderCount: 0,
+              postedReceivingReceiptCount: 3,
+              openBackorderCount: 0,
+              openPurchaseOrderLineQuantity: 10,
+              averageLeadTimeDays: 4,
+              leadTimeSampleCount: 2,
+              onTimeDeliveryRate: 100,
+              onTimeDeliverySampleCount: 1,
+              lastPurchaseOrderAt: '2026-05-27T00:00:00Z',
+              lastReceivingPostedAt: '2026-05-27T00:00:00Z',
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          summary: {
+            supplierId: 'supplier-unit-1',
+            supplierKey: 'ACME-NY',
+            supplierDisplayName: 'North Yard Counter',
+            supplierType: 'supplier',
+            parentSupplierId: 'supplier-1',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
+            approvalStatus: 'approved',
+            status: 'active',
+            partVendorLinkCount: 2,
+            preferredPartLinkCount: 1,
+            openPurchaseRequestCount: 1,
+            openPurchaseOrderCount: 1,
+            issuedPurchaseOrderCount: 0,
+            postedReceivingReceiptCount: 3,
+            openBackorderCount: 0,
+            openPurchaseOrderLineQuantity: 10,
+            averageLeadTimeDays: 4,
+            leadTimeSampleCount: 2,
+            onTimeDeliveryRate: 100,
+            onTimeDeliverySampleCount: 1,
+            lastPurchaseOrderAt: '2026-05-27T00:00:00Z',
+            lastReceivingPostedAt: '2026-05-27T00:00:00Z',
+          },
+          recentPurchaseRequests: [],
+          recentPurchaseOrders: [],
+          partLinks: [
+            {
+              partVendorLinkId: 'link-1',
+              supplierId: 'supplier-unit-1',
+              supplierKey: 'ACME-NY',
+              supplierDisplayName: 'North Yard Counter',
+              parentSupplierDisplayName: 'Acme Supply',
+              supplierUnitKind: 'sub_unit',
+              supplierServiceTypes: ['parts', 'maintenance'],
+              partId: 'part-1',
+              partKey: 'FILTER-001',
+              partDisplayName: 'Oil Filter',
+              vendorPartNumber: 'AC-100',
+              isPreferred: true,
+              catalogUnitPrice: 12.5,
+              catalogAvailabilityStatus: 'in_stock',
+            },
+          ],
+        }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const summary = await getSupplierReportSummary('token', {
+      approvalStatus: 'approved',
+      activeOnly: true,
+    })
+    const detail = await getSupplierReportDetail('token', 'supplier-unit-1')
+
+    expect(summary.suppliers[0].supplierDisplayName).toBe('North Yard Counter')
+    expect(summary.suppliers[0].parentSupplierDisplayName).toBe('Acme Supply')
+    expect(summary.suppliers[0].supplierServiceTypes).toEqual(['parts', 'maintenance'])
+    expect(summary.suppliers[0].vendorPartyId).toBe('supplier-unit-1')
+    expect(detail.summary.supplierUnitKind).toBe('sub_unit')
+    expect(detail.partLinks[0].supplierDisplayName).toBe('North Yard Counter')
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/reports/suppliers/summary?approvalStatus=approved&activeOnly=true',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/reports/suppliers/supplier-unit-1',
+      expect.any(Object),
+    )
+  })
+
+  it('loads and ingests supplier email inbox messages with supplier-first normalization', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          items: [
+            {
+              messageId: 'message-1',
+              messageKey: 'mail-001',
+              messageKind: 'quote_received',
+              senderEmail: 'supplier@example.com',
+              senderName: 'Acme Counter',
+              subject: 'RFQ-001 quote attached',
+              bodyPreview: 'Quote attached.',
+              matchStatus: 'matched',
+              matchReason: 'matched explicit reference key',
+              vendorPartyId: 'supplier-unit-1',
+              vendorPartyKey: 'ACME-NY',
+              vendorDisplayName: 'North Yard Counter',
+              linkedReferenceType: 'rfq',
+              linkedReferenceId: 'rfq-1',
+              linkedReferenceKey: 'RFQ-001',
+              receivedAt: '2026-05-27T00:00:00Z',
+              createdAt: '2026-05-27T00:00:00Z',
+              updatedAt: '2026-05-27T00:00:00Z',
+              processedAt: '2026-05-27T00:00:00Z',
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          wasDuplicate: false,
+          message: {
+            messageId: 'message-2',
+            messageKey: 'mail-002',
+            messageKind: 'order_confirmation_received',
+            senderEmail: 'supplier@example.com',
+            senderName: 'Acme Counter',
+            subject: 'PO-001 confirmation',
+            bodyPreview: 'Confirmed.',
+            matchStatus: 'matched',
+            matchReason: 'matched sender email to supplier reference',
+            supplierId: 'supplier-unit-1',
+            supplierKey: 'ACME-NY',
+            supplierDisplayName: 'North Yard Counter',
+            linkedReferenceType: 'purchase_order',
+            linkedReferenceId: 'po-1',
+            linkedReferenceKey: 'PO-001',
+            receivedAt: '2026-05-27T00:00:00Z',
+            createdAt: '2026-05-27T00:00:00Z',
+            updatedAt: '2026-05-27T00:00:00Z',
+            processedAt: '2026-05-27T00:00:00Z',
+          },
+        }),
+      })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const inbox = await getVendorEmailInbox('token', 10)
+    const ingested = await ingestVendorEmailInbox('token', {
+      messageKey: 'mail-002',
+      messageKind: 'order_confirmation_received',
+      senderEmail: 'supplier@example.com',
+      senderName: 'Acme Counter',
+      subject: 'PO-001 confirmation',
+      body: 'Confirmed.',
+      referenceKey: 'PO-001',
+    })
+
+    expect(inbox.items[0].supplierId).toBe('supplier-unit-1')
+    expect(inbox.items[0].supplierKey).toBe('ACME-NY')
+    expect(inbox.items[0].supplierDisplayName).toBe('North Yard Counter')
+    expect(ingested.message.vendorPartyId).toBe('supplier-unit-1')
+    expect(ingested.message.vendorDisplayName).toBe('North Yard Counter')
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/vendor-email-inbox?limit=10',
+      expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/vendor-email-inbox',
+      expect.objectContaining({ method: 'POST' }),
+    )
+  })
+
+  it('loads warranty claims from v1 endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          warrantyClaimId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          claimKey: 'wc-001',
+          status: 'draft',
+          claimType: 'replacement',
+          supplierId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          supplierKey: 'acme',
+          supplierDisplayName: 'Acme North Yard',
+          parentSupplierId: '11111111-1111-1111-1111-111111111111',
+          parentSupplierDisplayName: 'Acme Supply',
+          supplierUnitKind: 'sub_unit',
+          supplierServiceTypes: ['parts'],
+          vendorPartyId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+          vendorPartyKey: 'acme',
+          vendorDisplayName: 'Acme North Yard',
+          partId: 'part-1',
+          partKey: 'FILTER-001',
+          partDisplayName: 'Oil Filter',
+          purchaseOrderId: null,
+          purchaseOrderKey: null,
+          purchaseOrderLineId: null,
+          receivingReceiptId: null,
+          receivingReceiptKey: null,
+          receivingReceiptLineId: null,
+          quantityClaimed: 1,
+          problemDescription: 'Damaged in box',
+          vendorRmaNumber: '',
+          vendorDisposition: '',
+          vendorResponseNotes: '',
+          closureNotes: '',
+          denialReason: '',
+          createdByUserId: 'user-1',
+          submittedByUserId: null,
+          submittedAt: null,
+          vendorRespondedByUserId: null,
+          vendorRespondedAt: null,
+          closedByUserId: null,
+          closedAt: null,
+          deniedByUserId: null,
+          deniedAt: null,
+          cancellationReason: '',
+          createdAt: '2026-05-27T00:00:00Z',
+          updatedAt: '2026-05-27T00:00:00Z',
+        },
+      ],
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const claims = await listWarrantyClaims('token', {
+      supplierId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    })
+    expect(claims).toHaveLength(1)
+    expect(claims[0].supplierId).toBe('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
+    expect(claims[0].parentSupplierDisplayName).toBe('Acme Supply')
+    expect(claims[0].supplierServiceTypes).toEqual(['parts'])
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/warranty-claims?supplierId=bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+      expect.any(Object),
+    )
   })
 
   it('loads demand refs from v1 endpoint', async () => {
@@ -777,26 +1175,26 @@ describe('supplyarr api client', () => {
 
     await listSupplierIncidents('token', {
       status: 'open',
-      externalPartyId: '11111111-1111-1111-1111-111111111111',
+      supplierId: '11111111-1111-1111-1111-111111111111',
       severity: 'high',
     })
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/supplier-incidents?status=open&externalPartyId=11111111-1111-1111-1111-111111111111&severity=high',
+      '/api/v1/supplier-incidents?status=open&supplierId=11111111-1111-1111-1111-111111111111&severity=high',
       expect.any(Object),
     )
   })
 
-  it('loads party supplier incidents from v1 endpoint', async () => {
+  it('loads supplier incidents for a supplier record from v1 endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [],
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    await listPartySupplierIncidents('token', '22222222-2222-2222-2222-222222222222')
+    await listSupplierIncidentsForSupplier('token', '22222222-2222-2222-2222-222222222222')
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/parties/22222222-2222-2222-2222-222222222222/supplier-incidents',
+      '/api/v1/suppliers/22222222-2222-2222-2222-222222222222/supplier-incidents',
       expect.any(Object),
     )
   })
@@ -806,22 +1204,121 @@ describe('supplyarr api client', () => {
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+        json: async () => ({
+          incidentId: '33333333-3333-3333-3333-333333333333',
+          externalPartyId: '44444444-4444-4444-4444-444444444444',
+          partyKey: 'ACME',
+          partyDisplayName: 'Acme Supply',
+          partyType: 'supplier',
+          incidentKey: 'inc-001',
+          title: 'Quality deviation',
+          description: 'Batch mismatch',
+          incidentType: 'quality',
+          severity: 'high',
+          status: 'open',
+          purchaseRequestId: null,
+          purchaseOrderId: null,
+          receivingReceiptId: null,
+          receivingExceptionId: null,
+          vendorRestrictionId: null,
+          reportedByUserId: 'u1',
+          assignedToUserId: null,
+          resolutionNotes: '',
+          resolvedByUserId: null,
+          resolvedAt: null,
+          closedByUserId: null,
+          closedAt: null,
+          cancellationReason: '',
+          cancelledByUserId: null,
+          cancelledAt: null,
+          reopenedByUserId: null,
+          reopenedAt: null,
+          lastReopenReason: '',
+          reopenCount: 0,
+          createdAt: '',
+          updatedAt: '',
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+        json: async () => ({
+          incidentId: '33333333-3333-3333-3333-333333333333',
+          externalPartyId: '44444444-4444-4444-4444-444444444444',
+          partyKey: 'ACME',
+          partyDisplayName: 'Acme Supply',
+          partyType: 'supplier',
+          incidentKey: 'inc-001',
+          title: 'Quality deviation',
+          description: 'Batch mismatch',
+          incidentType: 'quality',
+          severity: 'high',
+          status: 'investigating',
+          purchaseRequestId: null,
+          purchaseOrderId: null,
+          receivingReceiptId: null,
+          receivingExceptionId: null,
+          vendorRestrictionId: null,
+          reportedByUserId: 'u1',
+          assignedToUserId: null,
+          resolutionNotes: '',
+          resolvedByUserId: null,
+          resolvedAt: null,
+          closedByUserId: null,
+          closedAt: null,
+          cancellationReason: '',
+          cancelledByUserId: null,
+          cancelledAt: null,
+          reopenedByUserId: null,
+          reopenedAt: null,
+          lastReopenReason: '',
+          reopenCount: 0,
+          createdAt: '',
+          updatedAt: '',
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ incidentId: '33333333-3333-3333-3333-333333333333' }),
+        json: async () => ({
+          incidentId: '33333333-3333-3333-3333-333333333333',
+          externalPartyId: '44444444-4444-4444-4444-444444444444',
+          partyKey: 'ACME',
+          partyDisplayName: 'Acme Supply',
+          partyType: 'supplier',
+          incidentKey: 'inc-001',
+          title: 'Quality deviation',
+          description: 'Batch mismatch',
+          incidentType: 'quality',
+          severity: 'high',
+          status: 'investigating',
+          purchaseRequestId: null,
+          purchaseOrderId: null,
+          receivingReceiptId: null,
+          receivingExceptionId: null,
+          vendorRestrictionId: 'vr-1',
+          reportedByUserId: 'u1',
+          assignedToUserId: null,
+          resolutionNotes: '',
+          resolvedByUserId: null,
+          resolvedAt: null,
+          closedByUserId: null,
+          closedAt: null,
+          cancellationReason: '',
+          cancelledByUserId: null,
+          cancelledAt: null,
+          reopenedByUserId: null,
+          reopenedAt: null,
+          lastReopenReason: '',
+          reopenCount: 0,
+          createdAt: '',
+          updatedAt: '',
+        }),
       })
     vi.stubGlobal('fetch', fetchMock)
 
     const incidentId = '33333333-3333-3333-3333-333333333333'
-    await createSupplierIncident('token', {
+    const created = await createSupplierIncident('token', {
       incidentKey: 'inc-001',
-      externalPartyId: '44444444-4444-4444-4444-444444444444',
+      supplierId: '44444444-4444-4444-4444-444444444444',
       title: 'Quality deviation',
       description: 'Batch mismatch',
       incidentType: 'quality',
@@ -834,10 +1331,14 @@ describe('supplyarr api client', () => {
       reason: 'Safety review',
     })
 
+    expect(created.supplierId).toBe('44444444-4444-4444-4444-444444444444')
+
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       '/api/v1/supplier-incidents',
-      expect.any(Object),
+      expect.objectContaining({
+        body: expect.stringContaining('"supplierId":"44444444-4444-4444-4444-444444444444"'),
+      }),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
@@ -851,7 +1352,7 @@ describe('supplyarr api client', () => {
     )
   })
 
-  it('loads vendor restrictions from v1 endpoint with status filter', async () => {
+  it('loads supplier restrictions from the supplier-first v1 endpoint with status filter', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => [],
@@ -860,12 +1361,12 @@ describe('supplyarr api client', () => {
 
     await listVendorRestrictions('token', { status: 'active' })
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/v1/vendor-restrictions?status=active',
+      '/api/v1/supplier-restrictions?status=active',
       expect.any(Object),
     )
   })
 
-  it('loads party vendor restrictions and enforcement from v1 endpoints', async () => {
+  it('loads supplier restrictions and enforcement from v1 endpoints', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
@@ -883,23 +1384,23 @@ describe('supplyarr api client', () => {
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
-    await listPartyVendorRestrictions('token', partyId)
-    await getPartyVendorRestrictionEnforcement('token', partyId)
+    const supplierId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    await listSupplierRestrictionsBySupplier('token', supplierId)
+    await getSupplierRestrictionEnforcement('token', supplierId)
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions',
+      '/api/v1/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/restrictions',
       expect.any(Object),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions/enforcement',
+      '/api/v1/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/restrictions/enforcement',
       expect.any(Object),
     )
   })
 
-  it('creates and lifts vendor restrictions on v1 endpoints', async () => {
+  it('creates and lifts supplier restrictions on v1 endpoints', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
@@ -912,27 +1413,27 @@ describe('supplyarr api client', () => {
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const supplierId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
     const restrictionId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
-    await createPartyVendorRestriction('token', partyId, {
+    await createSupplierRestriction('token', supplierId, {
       restrictionKey: 'hold-vendor',
       scopes: ['purchase_orders'],
       reason: 'Pending insurance renewal',
       effectiveFrom: null,
       effectiveUntil: null,
     })
-    await liftVendorRestriction('token', restrictionId, {
+    await liftSupplierRestriction('token', restrictionId, {
       liftNotes: 'Insurance completed',
     })
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/vendor-restrictions',
+      '/api/v1/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/restrictions',
       expect.any(Object),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/v1/vendor-restrictions/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/lift',
+      '/api/v1/supplier-restrictions/bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb/lift',
       expect.any(Object),
     )
   })
@@ -946,12 +1447,77 @@ describe('supplyarr api client', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => [],
+        json: async () => [
+          {
+            onboardingId: 'onb-1',
+            supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            supplierKey: 'ACME',
+            supplierUnitKind: 'identity',
+            parentSupplierId: null,
+            parentSupplierDisplayName: null,
+            displayName: 'Acme Supply',
+            onboardingStatus: 'draft',
+            notes: '',
+            submittedAt: null,
+            reviewedAt: null,
+            rejectionReason: '',
+            documentRequirements: [],
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          onboardingId: 'onb-1',
+          supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          supplierKey: 'ACME',
+          supplierUnitKind: 'identity',
+          parentSupplierId: null,
+          parentSupplierDisplayName: null,
+          displayName: 'Acme Supply',
+          onboardingStatus: 'draft',
+          notes: '',
+          submittedAt: null,
+          reviewedAt: null,
+          rejectionReason: '',
+          documentRequirements: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          onboardingId: 'onb-1',
+          supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          supplierKey: 'ACME',
+          supplierUnitKind: 'identity',
+          parentSupplierId: null,
+          parentSupplierDisplayName: null,
+          displayName: 'Acme Supply',
+          onboardingStatus: 'draft',
+          notes: '',
+          submittedAt: null,
+          reviewedAt: null,
+          rejectionReason: '',
+          documentRequirements: [],
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        }),
       })
     vi.stubGlobal('fetch', fetchMock)
 
     await getSupplierOnboardingDocumentRequirements('token')
-    await listPendingSupplierOnboarding('token')
+    const pending = await listPendingSupplierOnboarding('token')
+    const started = await startSupplierOnboarding('token', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+    const onboarding = await getSupplierOnboarding('token', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+
+    expect(pending[0].supplierId).toBe('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+    expect(pending[0].supplierKey).toBe('ACME')
+    expect(started.supplierId).toBe('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+    expect(onboarding.supplierKey).toBe('ACME')
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -963,34 +1529,90 @@ describe('supplyarr api client', () => {
       '/api/v1/supplier-onboarding/pending',
       expect.any(Object),
     )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      '/api/v1/supplier-onboarding/start',
+      expect.objectContaining({
+        body: JSON.stringify({
+          supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          notes: null,
+        }),
+      }),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      4,
+      '/api/v1/supplier-onboarding/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+      expect.any(Object),
+    )
   })
 
-  it('loads and approves party compliance documents on v1 routes', async () => {
+  it('loads and approves supplier compliance documents on v1 routes', async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => [],
+        json: async () => [
+          {
+            documentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+            supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            supplierKey: 'ACME',
+            supplierDisplayName: 'Acme Supply',
+            documentKey: 'COI-1',
+            documentTypeKey: 'insurance',
+            title: 'Insurance',
+            version: 1,
+            reviewStatus: 'approved',
+            expiresAt: null,
+            effectiveAt: null,
+            fileName: 'insurance.pdf',
+            contentType: 'application/pdf',
+            sizeBytes: 42,
+            notes: '',
+            createdAt: '2026-01-01T00:00:00Z',
+            updatedAt: '2026-01-01T00:00:00Z',
+          },
+        ],
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ documentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc' }),
+        json: async () => ({
+          documentId: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+          supplierId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          supplierKey: 'ACME',
+          supplierDisplayName: 'Acme Supply',
+          documentKey: 'COI-1',
+          documentTypeKey: 'insurance',
+          title: 'Insurance',
+          version: 1,
+          reviewStatus: 'approved',
+          expiresAt: null,
+          effectiveAt: null,
+          fileName: 'insurance.pdf',
+          contentType: 'application/pdf',
+          sizeBytes: 42,
+          notes: '',
+          createdAt: '2026-01-01T00:00:00Z',
+          updatedAt: '2026-01-01T00:00:00Z',
+        }),
       })
     vi.stubGlobal('fetch', fetchMock)
 
-    const partyId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+    const supplierId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
     const documentId = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
-    await listPartyComplianceDocuments('token', partyId)
-    await approvePartyComplianceDocument('token', partyId, documentId)
+    const documents = await listSupplierComplianceDocuments('token', supplierId)
+    const approved = await approveSupplierComplianceDocument('token', supplierId, documentId)
+
+    expect(documents[0].supplierId).toBe(supplierId)
+    expect(approved.supplierId).toBe(supplierId)
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
-      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents',
+      '/api/v1/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents',
       expect.any(Object),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      '/api/v1/parties/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents/cccccccc-cccc-cccc-cccc-cccccccccccc/approve',
+      '/api/v1/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/compliance-documents/cccccccc-cccc-cccc-cccc-cccccccccccc/approve',
       expect.any(Object),
     )
   })

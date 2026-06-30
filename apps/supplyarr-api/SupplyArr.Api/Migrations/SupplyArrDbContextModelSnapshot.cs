@@ -2317,6 +2317,13 @@ namespace SupplyArr.Api.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("ParentSupplierDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("ParentSupplierId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("PurchaseOrderId")
                         .HasColumnType("uuid");
 
@@ -2342,6 +2349,28 @@ namespace SupplyArr.Api.Migrations
 
                     b.Property<string>("SubjectType")
                         .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SupplierDisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<Guid?>("SupplierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SupplierKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("SupplierServiceTypesJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)")
+                        .HasDefaultValue("[]");
+
+                    b.Property<string>("SupplierUnitKind")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 

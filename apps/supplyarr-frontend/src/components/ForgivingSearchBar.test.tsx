@@ -12,12 +12,12 @@ vi.mock('../api/client', () => ({
     totalCount: 1,
     results: [
       {
-        entityType: 'vendor',
-        entityId: 'vendor-1',
+        entityType: 'supplier',
+        entityId: 'supplier-1',
         primaryKey: 'ACME',
         title: 'Acme Supply',
-        subtitle: 'vendor · approved',
-        deepLinkPath: '/parties',
+        subtitle: 'supplier identity · approved',
+        deepLinkPath: '/suppliers',
         matchScore: 85,
       },
     ],

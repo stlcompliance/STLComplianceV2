@@ -76,12 +76,12 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                 }
 
                 return new ForgivingSearchResultItemResponse(
-                    party.PartyType,
+                    "supplier",
                     party.Id,
                     party.PartyKey,
                     party.DisplayName,
-                    $"{party.PartyType} · {party.ApprovalStatus}",
-                    "/parties",
+                    $"{(party.UnitKind == "sub_unit" ? "supplier sub-unit" : "supplier identity")} · {party.ApprovalStatus}",
+                    "/suppliers",
                     score);
             })
             .Where(x => x is not null)
@@ -172,7 +172,7 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     link.Id,
                     link.VendorPartNumber,
                     $"{link.Part.PartKey} @ {link.ExternalParty.DisplayName}",
-                    $"Vendor SKU · {link.ExternalParty.PartyKey}",
+                    $"Supplier SKU · {link.ExternalParty.PartyKey}",
                     "/catalog",
                     score);
             })
@@ -300,7 +300,7 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     document.DocumentKey,
                     document.Title,
                     $"{document.ExternalParty.DisplayName} · {document.DocumentTypeKey}",
-                    "/parties",
+                    "/suppliers",
                     score);
             })
             .Where(x => x is not null)

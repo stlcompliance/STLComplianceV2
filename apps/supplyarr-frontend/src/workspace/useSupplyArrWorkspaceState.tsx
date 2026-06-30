@@ -31,10 +31,7 @@ import {
   getDemandRefs,
 
   createSupplier,
-  updateParty,
-  updatePartyApprovalStatus,
-  updatePartyStatus,
-  createPartyContact,
+  createSupplierContact,
   getContractRecords,
 
   approvePurchaseRequest,
@@ -54,7 +51,10 @@ import {
 
   getPurchaseOrders,
 
-  getSuppliers,
+  getSupplierDirectory,
+  updateSupplier,
+  updateSupplierApprovalStatus,
+  updateSupplierStatus,
 
   issuePurchaseOrder,
 
@@ -64,14 +64,14 @@ import {
 
 } from '../api/client'
 
-import type { UpdateExternalPartyRequest } from '../api/types'
+import type { UpdateSupplierRequest } from '../api/types'
 
 import {
   canApprovePurchaseOrders,
   canApprovePurchaseRequests,
   canCreatePurchaseOrders,
   canCreatePurchaseRequests,
-  canReadParties as userCanReadParties,
+  canReadSuppliers as userCanReadSuppliers,
   canReadPartSubstitutions as userCanReadPartSubstitutions,
   canReadProcurementRecords as userCanReadProcurementRecords,
   canUseForgivingSearch as userCanUseForgivingSearch,
@@ -104,7 +104,7 @@ export function useSupplyArrWorkspaceState() {
   const [supplierLegalName, setSupplierLegalName] = useState('')
   const [supplierTaxId, setSupplierTaxId] = useState('')
   const [supplierNotes, setSupplierNotes] = useState('')
-  const [supplierParentPartyId, setSupplierParentPartyId] = useState('')
+  const [supplierParentUnitId, setSupplierParentUnitId] = useState('')
   const [supplierUnitKind, setSupplierUnitKind] = useState('identity')
   const [supplierServiceTypes, setSupplierServiceTypes] = useState('products,parts')
   const [supplierAddressLine1, setSupplierAddressLine1] = useState('')
@@ -148,9 +148,9 @@ export function useSupplyArrWorkspaceState() {
 
   const [partSourceNotes, setPartSourceNotes] = useState('')
 
-  const [selectedVendorId, setSelectedVendorId] = useState('')
+  const [selectedSupplierUnitId, setSelectedSupplierUnitId] = useState('')
 
-  const [vendorPartNumber, setVendorPartNumber] = useState('')
+  const [supplierPartNumber, setSupplierPartNumber] = useState('')
 
   const [prRequestKey, setPrRequestKey] = useState('')
 
@@ -158,7 +158,7 @@ export function useSupplyArrWorkspaceState() {
 
   const [prNotes, setPrNotes] = useState('')
 
-  const [prVendorId, setPrVendorId] = useState('')
+  const [prSupplierUnitId, setPrSupplierUnitId] = useState('')
 
   const [prPartId, setPrPartId] = useState('')
 
@@ -182,7 +182,7 @@ export function useSupplyArrWorkspaceState() {
 
   const [leadTimeSnapshotKey, setLeadTimeSnapshotKey] = useState('')
 
-  const [selectedSnapshotVendorLinkId, setSelectedSnapshotVendorLinkId] = useState('')
+  const [selectedPricingSourceLinkId, setSelectedPricingSourceLinkId] = useState('')
 
   const [snapshotUnitPrice, setSnapshotUnitPrice] = useState('')
 
@@ -198,7 +198,7 @@ export function useSupplyArrWorkspaceState() {
 
   const [availabilitySnapshotKey, setAvailabilitySnapshotKey] = useState('')
 
-  const [selectedAvailabilityVendorLinkId, setSelectedAvailabilityVendorLinkId] = useState('')
+  const [selectedAvailabilitySourceLinkId, setSelectedAvailabilitySourceLinkId] = useState('')
 
   const [availabilityQuantity, setAvailabilityQuantity] = useState('')
 
@@ -243,7 +243,7 @@ export function useSupplyArrWorkspaceState() {
 
     queryKey: ['supplyarr-suppliers', session?.accessToken],
 
-    queryFn: () => getSuppliers(session!.accessToken),
+    queryFn: () => getSupplierDirectory(session!.accessToken),
 
     enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
 
@@ -315,7 +315,7 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const vendorReturnsQuery = useQuery({
+  const supplierReturnsQuery = useQuery({
 
     queryKey: ['supplyarr-returns', session?.accessToken],
 
@@ -324,6 +324,8 @@ export function useSupplyArrWorkspaceState() {
       getVendorReturns(session!.accessToken, {
 
         status: undefined,
+
+        supplierId: undefined,
 
       }),
 
@@ -394,9 +396,8 @@ export function useSupplyArrWorkspaceState() {
   const createSupplierMutation = useMutation({
     mutationFn: () =>
       createSupplier(session!.accessToken, {
-        partyKey: supplierKey,
-        partyType: 'supplier',
-        parentPartyId: supplierParentPartyId || null,
+        supplierKey,
+        parentSupplierId: supplierParentUnitId || null,
         unitKind: supplierUnitKind,
         displayName: supplierName,
         legalName: supplierLegalName,
@@ -418,7 +419,7 @@ export function useSupplyArrWorkspaceState() {
       setSupplierLegalName('')
       setSupplierTaxId('')
       setSupplierNotes('')
-      setSupplierParentPartyId('')
+      setSupplierParentUnitId('')
       setSupplierUnitKind('identity')
       setSupplierServiceTypes('products,parts')
       setSupplierAddressLine1('')
@@ -429,62 +430,54 @@ export function useSupplyArrWorkspaceState() {
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
-  const updatePartyMutation = useMutation({
+  const updateSupplierMutation = useMutation({
     mutationFn: ({
-      route,
-      partyId,
+      supplierId,
       request,
     }: {
-      route: 'vendors' | 'suppliers' | 'dealers'
-      partyId: string
-      request: UpdateExternalPartyRequest
-    }) => updateParty(session!.accessToken, route, partyId, request),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+      supplierId: string
+      request: UpdateSupplierRequest
+    }) => updateSupplier(session!.accessToken, supplierId, request),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
 
-  const updatePartyApprovalMutation = useMutation({
+  const updateSupplierApprovalMutation = useMutation({
     mutationFn: ({
-      route,
-      partyId,
+      supplierId,
       approvalStatus,
     }: {
-      route: 'vendors' | 'suppliers' | 'dealers'
-      partyId: string
+      supplierId: string
       approvalStatus: string
     }) =>
-      updatePartyApprovalStatus(session!.accessToken, route, partyId, {
+      updateSupplierApprovalStatus(session!.accessToken, supplierId, {
         approvalStatus,
       }),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
 
-  const updatePartyStatusMutation = useMutation({
+  const updateSupplierStatusMutation = useMutation({
     mutationFn: ({
-      route,
-      partyId,
+      supplierId,
       status,
     }: {
-      route: 'vendors' | 'suppliers' | 'dealers'
-      partyId: string
+      supplierId: string
       status: string
-    }) => updatePartyStatus(session!.accessToken, route, partyId, { status }),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    }) => updateSupplierStatus(session!.accessToken, supplierId, { status }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
 
-  const addPartyContactMutation = useMutation({
+  const addSupplierContactMutation = useMutation({
     mutationFn: ({
-      route,
-      partyId,
+      supplierId,
       request,
     }: {
-      route: 'vendors' | 'suppliers' | 'dealers'
-      partyId: string
+      supplierId: string
       request: {
         contactName: string
         email: string
@@ -492,9 +485,9 @@ export function useSupplyArrWorkspaceState() {
         roleLabel: string
         isPrimary: boolean
       }
-    }) => createPartyContact(session!.accessToken, route, partyId, request),
-    onSuccess: async (_data, variables) => {
-      await queryClient.invalidateQueries({ queryKey: [`supplyarr-${variables.route}`] })
+    }) => createSupplierContact(session!.accessToken, supplierId, request),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
   })
 
@@ -612,15 +605,13 @@ export function useSupplyArrWorkspaceState() {
 
 
 
-  const linkVendorMutation = useMutation({
+  const linkSupplierSourceMutation = useMutation({
 
     mutationFn: () =>
 
       createPartVendorLink(session!.accessToken, selectedPartId, {
-
-        partyId: selectedVendorId,
-
-        vendorPartNumber,
+        supplierUnitId: selectedSupplierUnitId,
+        vendorPartNumber: supplierPartNumber,
 
         isPreferred: true,
 
@@ -628,7 +619,7 @@ export function useSupplyArrWorkspaceState() {
 
     onSuccess: async () => {
 
-      setVendorPartNumber('')
+      setSupplierPartNumber('')
 
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-parts'] })
 
@@ -650,7 +641,7 @@ export function useSupplyArrWorkspaceState() {
 
         notes: prNotes,
 
-        vendorPartyId: prVendorId || null,
+        supplierUnitId: prSupplierUnitId || null,
 
         lines: [
 
@@ -676,7 +667,7 @@ export function useSupplyArrWorkspaceState() {
 
       setPrNotes('')
 
-      setPrVendorId('')
+      setPrSupplierUnitId('')
 
       setPrPartId('')
 
@@ -830,7 +821,8 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: pricingSnapshotKey,
 
-        partVendorLinkId: selectedSnapshotVendorLinkId,
+        partVendorLinkId: selectedPricingSourceLinkId,
+        
 
         unitPrice: Number(snapshotUnitPrice),
 
@@ -872,7 +864,7 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: leadTimeSnapshotKey,
 
-        partVendorLinkId: selectedSnapshotVendorLinkId,
+        partVendorLinkId: selectedPricingSourceLinkId,
 
         leadTimeDays: Number(snapshotLeadTimeDays),
 
@@ -904,7 +896,7 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: availabilitySnapshotKey,
 
-        partVendorLinkId: selectedAvailabilityVendorLinkId,
+        partVendorLinkId: selectedAvailabilitySourceLinkId,
 
         quantityAvailable: availabilityQuantity ? Number(availabilityQuantity) : null,
 
@@ -1050,8 +1042,8 @@ export function useSupplyArrWorkspaceState() {
     ? canManageNotificationSettings(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
-  const canReadParties = me
-    ? userCanReadParties(me.tenantRoleKey, me.isPlatformAdmin)
+  const canReadSuppliers = me
+    ? userCanReadSuppliers(me.tenantRoleKey, me.isPlatformAdmin)
     : false
 
   const canReadPartSubstitutions = me
@@ -1092,7 +1084,7 @@ export function useSupplyArrWorkspaceState() {
 
   const approvedPurchaseRequests =
 
-    purchaseRequestsQuery.data?.filter((pr) => pr.status === 'approved' && pr.vendorPartyId) ?? []
+    purchaseRequestsQuery.data?.filter((pr) => pr.status === 'approved' && pr.supplierId) ?? []
 
   const issuedPurchaseOrders =
 
@@ -1116,7 +1108,7 @@ export function useSupplyArrWorkspaceState() {
     supplierLegalName,
     supplierTaxId,
     supplierNotes,
-    supplierParentPartyId,
+    supplierParentUnitId,
     supplierUnitKind,
     supplierServiceTypes,
     supplierAddressLine1,
@@ -1142,12 +1134,12 @@ export function useSupplyArrWorkspaceState() {
     partSourceType,
     partSourceLabel,
     partSourceNotes,
-    selectedVendorId,
-    vendorPartNumber,
+    selectedSupplierUnitId,
+    supplierPartNumber,
     prRequestKey,
     prTitle,
     prNotes,
-    prVendorId,
+    prSupplierUnitId,
     prPartId,
     prLineQty,
     prLineNotes,
@@ -1159,7 +1151,7 @@ export function useSupplyArrWorkspaceState() {
     poCancellationReason,
     pricingSnapshotKey,
     leadTimeSnapshotKey,
-    selectedSnapshotVendorLinkId,
+    selectedPricingSourceLinkId,
     snapshotUnitPrice,
     snapshotCurrencyCode,
     snapshotMinimumOrderQty,
@@ -1167,7 +1159,7 @@ export function useSupplyArrWorkspaceState() {
     snapshotNotes,
     snapshotCurrentOnly,
     availabilitySnapshotKey,
-    selectedAvailabilityVendorLinkId,
+    selectedAvailabilitySourceLinkId,
     availabilityQuantity,
     availabilityStatus,
     availabilityNotes,
@@ -1192,7 +1184,7 @@ export function useSupplyArrWorkspaceState() {
     purchaseRequestsQuery,
     purchaseOrdersQuery,
     backordersQuery,
-    vendorReturnsQuery,
+    supplierReturnsQuery,
     pricingSnapshotsQuery,
     leadTimeSnapshotsQuery,
     availabilitySnapshotsQuery,
@@ -1200,14 +1192,14 @@ export function useSupplyArrWorkspaceState() {
     contractsQuery,
     demandRefsQuery,
     createSupplierMutation,
-    updatePartyMutation,
-    updatePartyApprovalMutation,
-    updatePartyStatusMutation,
-    addPartyContactMutation,
+    updateSupplierMutation,
+    updateSupplierApprovalMutation,
+    updateSupplierStatusMutation,
+    addSupplierContactMutation,
     createCatalogMutation,
     createPartMutation,
     createPartSourceMutation,
-    linkVendorMutation,
+    linkSupplierSourceMutation,
     createPurchaseRequestMutation,
     submitPurchaseRequestMutation,
     approvePurchaseRequestMutation,
@@ -1232,7 +1224,7 @@ export function useSupplyArrWorkspaceState() {
     canCreatePo,
     canApprovePo,
     canManageNotifications,
-    canReadParties,
+    canReadSuppliers,
     canReadPartSubstitutions,
     canUseForgivingSearch,
     canReadAuditHistory,
@@ -1244,7 +1236,7 @@ export function useSupplyArrWorkspaceState() {
     setSupplierLegalName,
     setSupplierTaxId,
     setSupplierNotes,
-    setSupplierParentPartyId,
+    setSupplierParentUnitId,
     setSupplierUnitKind,
     setSupplierServiceTypes,
     setSupplierAddressLine1,
@@ -1270,12 +1262,12 @@ export function useSupplyArrWorkspaceState() {
     setPartSourceType,
     setPartSourceLabel,
     setPartSourceNotes,
-    setSelectedVendorId,
-    setVendorPartNumber,
+    setSelectedSupplierUnitId,
+    setSupplierPartNumber,
     setPrRequestKey,
     setPrTitle,
     setPrNotes,
-    setPrVendorId,
+    setPrSupplierUnitId,
     setPrPartId,
     setPrLineQty,
     setPrLineNotes,
@@ -1287,7 +1279,7 @@ export function useSupplyArrWorkspaceState() {
     setPoCancellationReason,
     setPricingSnapshotKey,
     setLeadTimeSnapshotKey,
-    setSelectedSnapshotVendorLinkId,
+    setSelectedPricingSourceLinkId,
     setSnapshotUnitPrice,
     setSnapshotCurrencyCode,
     setSnapshotMinimumOrderQty,
@@ -1295,7 +1287,7 @@ export function useSupplyArrWorkspaceState() {
     setSnapshotNotes,
     setSnapshotCurrentOnly,
     setAvailabilitySnapshotKey,
-    setSelectedAvailabilityVendorLinkId,
+    setSelectedAvailabilitySourceLinkId,
     setAvailabilityQuantity,
     setAvailabilityStatus,
     setAvailabilityNotes,

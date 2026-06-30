@@ -8,7 +8,7 @@ import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
 
-function combineParties(state: SupplyArrWorkspaceState) {
+function combineSuppliers(state: SupplyArrWorkspaceState) {
   return state.supplierDirectory
 }
 
@@ -28,9 +28,9 @@ function countOpenOrders(state: SupplyArrWorkspaceState): number {
   )
 }
 
-function countWatchParties(state: SupplyArrWorkspaceState): number {
-  return combineParties(state).filter(
-    (party) => party.status !== 'active' || party.approvalStatus !== 'approved',
+function countWatchSuppliers(state: SupplyArrWorkspaceState): number {
+  return combineSuppliers(state).filter(
+    (supplier) => supplier.status !== 'active' || supplier.approvalStatus !== 'approved',
   ).length
 }
 
@@ -53,11 +53,11 @@ function MetricCard({
 }
 
 export function DashboardSection({ state: s }: Props) {
-  const parties = combineParties(s)
-  const approvedParties = parties.filter(
-    (party) => party.status === 'active' && party.approvalStatus === 'approved',
+  const suppliers = combineSuppliers(s)
+  const approvedSuppliers = suppliers.filter(
+    (supplier) => supplier.status === 'active' && supplier.approvalStatus === 'approved',
   ).length
-  const watchParties = countWatchParties(s)
+  const watchSuppliers = countWatchSuppliers(s)
   const openPurchaseRequests = countOpenRequests(s)
   const openPurchaseOrders = countOpenOrders(s)
   const issuedPurchaseOrders =
@@ -105,8 +105,8 @@ export function DashboardSection({ state: s }: Props) {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Approved suppliers"
-          value={approvedParties.toString()}
-          note={`${watchParties} suppliers need attention or review`}
+          value={approvedSuppliers.toString()}
+          note={`${watchSuppliers} suppliers need attention or review`}
         />
         <MetricCard
           label="Open purchase requests"

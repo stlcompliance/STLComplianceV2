@@ -113,6 +113,21 @@ public static class RfqEndpoints
         })
         .WithName($"SubmitRfq{nameSuffix}");
 
+        group.MapPost("/{rfqId:guid}/invite-suppliers", async (
+            Guid rfqId,
+            InviteRfqSuppliersRequest request,
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            RfqService service,
+            CancellationToken cancellationToken) =>
+        {
+            authorization.RequireRfqManage(context.User);
+            var tenantId = context.User.GetTenantId();
+            var actorUserId = context.User.GetUserId();
+            return Results.Ok(await service.InviteSuppliersAsync(tenantId, actorUserId, rfqId, request, cancellationToken));
+        })
+        .WithName($"InviteRfqSuppliers{nameSuffix}");
+
         group.MapPost("/{rfqId:guid}/invite-vendors", async (
             Guid rfqId,
             InviteRfqVendorsRequest request,
@@ -130,7 +145,7 @@ public static class RfqEndpoints
 
         group.MapPost("/{rfqId:guid}/quotes", async (
             Guid rfqId,
-            CreateVendorQuoteRequest request,
+            CreateSupplierQuoteRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             RfqService service,
@@ -139,7 +154,7 @@ public static class RfqEndpoints
             authorization.RequireRfqManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var created = await service.CreateVendorQuoteAsync(tenantId, actorUserId, rfqId, request, cancellationToken);
+            var created = await service.CreateSupplierQuoteAsync(tenantId, actorUserId, rfqId, request, cancellationToken);
             return Results.Created($"/api/rfqs/{rfqId}/quotes/{created.VendorQuoteId}", created);
         })
         .WithName($"CreateVendorQuote{nameSuffix}");
@@ -201,7 +216,7 @@ public static class RfqEndpoints
 
         group.MapPost("/{rfqId:guid}/select-quote", async (
             Guid rfqId,
-            SelectVendorQuoteRequest request,
+            SelectSupplierQuoteRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             RfqService service,
@@ -210,7 +225,7 @@ public static class RfqEndpoints
             authorization.RequireRfqAward(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.SelectVendorQuoteAsync(
+            return Results.Ok(await service.SelectSupplierQuoteAsync(
                 tenantId,
                 actorUserId,
                 rfqId,

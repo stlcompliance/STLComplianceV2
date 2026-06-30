@@ -4,13 +4,18 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { syncVendorCatalogApi } from '../api/client'
 import type { PartResponse, VendorCatalogApiSyncItem, VendorCatalogApiSyncResponse } from '../api/types'
-import { toPartyPickerOptions } from '../forms/controlledFormHelpers'
+import { toSupplierUnitPickerOptions, type SupplierUnitPickerSource } from '../forms/controlledFormHelpers'
+import {
+  formatSupplierIdentitySummary,
+  humanizeSupplierUnitKind,
+  resolveSupplierId,
+} from '../utils/supplierPresentation'
 
 interface VendorCatalogApiPanelProps {
   accessToken: string
   canManage: boolean
   parts: PartResponse[]
-  vendors: { partyId: string; displayName: string; partyKey: string }[]
+  suppliers: SupplierUnitPickerSource[]
 }
 
 type VendorCatalogEntryRow = {
@@ -18,9 +23,9 @@ type VendorCatalogEntryRow = {
   partId: string
   partKey: string
   partDisplayName: string
-  vendorPartyId: string
-  vendorPartyKey: string
-  vendorDisplayName: string
+  supplierId: string
+  supplierKey: string
+  supplierDisplayName: string
   vendorPartNumber: string
   isPreferred: boolean
   catalogUnitPrice: number | null
@@ -29,6 +34,8 @@ type VendorCatalogEntryRow = {
   catalogLeadTimeDays: number | null
   catalogQuantityAvailable: number | null
   catalogAvailabilityStatus: string | null
+  parentSupplierDisplayName: string | null
+  unitKind: string | null
 }
 
 function formatMoney(value: number | null): string {
@@ -40,35 +47,57 @@ function formatMoney(value: number | null): string {
   }).format(value)
 }
 
-export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }: VendorCatalogApiPanelProps) {
+function formatSupplierUnitLabel(
+  displayName: string,
+  supplierKey: string,
+  parentSupplierDisplayName: string | null,
+  unitKind: string | null,
+): string {
+  return `${humanizeSupplierUnitKind(unitKind)} · ${formatSupplierIdentitySummary({
+    displayName,
+    supplierKey,
+    parentSupplierDisplayName,
+    supplierUnitKind: unitKind,
+  })}`
+}
+
+export function VendorCatalogApiPanel({ accessToken, canManage, parts, suppliers }: VendorCatalogApiPanelProps) {
   const queryClient = useQueryClient()
-  const [selectedVendorId, setSelectedVendorId] = useState('')
+  const [selectedSupplierUnitId, setSelectedSupplierUnitId] = useState('')
   const [payloadJson, setPayloadJson] = useState('[]')
   const [dryRun, setDryRun] = useState(true)
   const [syncResult, setSyncResult] = useState<VendorCatalogApiSyncResponse | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
-  const vendorOptions = useMemo<PickerOption[]>(() => toPartyPickerOptions(vendors), [vendors])
-  const selectedVendor = useMemo(
-    () => vendors.find((vendor) => vendor.partyId === selectedVendorId) ?? null,
-    [selectedVendorId, vendors],
+  const supplierOptions = useMemo<PickerOption[]>(
+    () => toSupplierUnitPickerOptions(suppliers),
+    [suppliers],
   )
-  const selectedVendorOption = useMemo<PickerOption | undefined>(
+  const selectedSupplierUnit = useMemo(
+    () => suppliers.find((supplier) => resolveSupplierId(supplier) === selectedSupplierUnitId) ?? null,
+    [selectedSupplierUnitId, suppliers],
+  )
+  const selectedSupplierUnitOption = useMemo<PickerOption | undefined>(
     () =>
-      vendorOptions.find((option) => option.value === selectedVendorId) ??
-      (selectedVendor
+      supplierOptions.find((option) => option.value === selectedSupplierUnitId) ??
+      (selectedSupplierUnit
         ? {
-            value: selectedVendor.partyId,
-            label: `${selectedVendor.partyKey} — ${selectedVendor.displayName}`,
+            value: selectedSupplierUnit.supplierId,
+            label: formatSupplierUnitLabel(
+              selectedSupplierUnit.displayName,
+              selectedSupplierUnit.supplierKey,
+              selectedSupplierUnit.parentSupplierDisplayName ?? null,
+              selectedSupplierUnit.unitKind ?? null,
+            ),
           }
         : undefined),
-    [selectedVendor, selectedVendorId, vendorOptions],
+    [selectedSupplierUnit, selectedSupplierUnitId, supplierOptions],
   )
 
   useEffect(() => {
-    if (!selectedVendorId && vendors[0]) {
-      setSelectedVendorId(vendors[0].partyId)
+    if (!selectedSupplierUnitId && suppliers[0]) {
+      setSelectedSupplierUnitId(suppliers[0].supplierId)
     }
-  }, [selectedVendorId, vendors])
+  }, [selectedSupplierUnitId, suppliers])
 
   const currentEntries = useMemo<VendorCatalogEntryRow[]>(
     () =>
@@ -79,9 +108,9 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
             partId: part.partId,
             partKey: part.partKey,
             partDisplayName: part.displayName,
-            vendorPartyId: link.partyId,
-            vendorPartyKey: link.partyKey,
-            vendorDisplayName: link.partyDisplayName,
+            supplierId: link.supplierId,
+            supplierKey: link.supplierKey,
+            supplierDisplayName: link.supplierDisplayName,
             vendorPartNumber: link.vendorPartNumber,
             isPreferred: link.isPreferred,
             catalogUnitPrice: link.catalogUnitPrice,
@@ -90,22 +119,28 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
             catalogLeadTimeDays: link.catalogLeadTimeDays,
             catalogQuantityAvailable: link.catalogQuantityAvailable,
             catalogAvailabilityStatus: link.catalogAvailabilityStatus,
+            parentSupplierDisplayName:
+              suppliers.find((supplier) => resolveSupplierId(supplier) === (resolveSupplierId(link) ?? ''))
+                ?.parentSupplierDisplayName ?? null,
+            unitKind:
+              suppliers.find((supplier) => resolveSupplierId(supplier) === (resolveSupplierId(link) ?? ''))
+                ?.unitKind ?? null,
           })),
         )
-        .filter((entry) => !selectedVendorId || entry.vendorPartyId === selectedVendorId)
+        .filter((entry) => !selectedSupplierUnitId || entry.supplierId === selectedSupplierUnitId)
         .sort((left, right) => {
-          if (left.vendorDisplayName !== right.vendorDisplayName) {
-            return left.vendorDisplayName.localeCompare(right.vendorDisplayName)
+          if (left.supplierDisplayName !== right.supplierDisplayName) {
+            return left.supplierDisplayName.localeCompare(right.supplierDisplayName)
           }
           return left.partDisplayName.localeCompare(right.partDisplayName)
         }),
-    [parts, selectedVendorId],
+    [parts, selectedSupplierUnitId, suppliers],
   )
 
   const syncMutation = useMutation({
-    mutationFn: (vars: { vendorPartyKey: string; items: VendorCatalogApiSyncItem[] }) =>
+    mutationFn: (vars: { supplierKey: string; items: VendorCatalogApiSyncItem[] }) =>
       syncVendorCatalogApi(accessToken, {
-        vendorPartyKey: vars.vendorPartyKey,
+        supplierKey: vars.supplierKey,
         dryRun,
         items: vars.items,
       }),
@@ -113,7 +148,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
       setSyncResult(result)
       setSyncError(null)
       await queryClient.invalidateQueries({ queryKey: ['supplyarr-parts'] })
-      await queryClient.invalidateQueries({ queryKey: ['supplyarr-vendors'] })
+      await queryClient.invalidateQueries({ queryKey: ['supplyarr-suppliers'] })
     },
     onError: (error: unknown) => {
       setSyncError(error instanceof Error ? error.message : 'Failed to sync supplier catalog feed.')
@@ -121,8 +156,8 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
   })
 
   const handleSync = () => {
-    if (!selectedVendor) {
-      setSyncError('Select a supplier unit before syncing source data.')
+    if (!selectedSupplierUnit) {
+      setSyncError('Select a supplier identity or sub-unit before syncing source data.')
       return
     }
 
@@ -156,7 +191,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
 
       setSyncError(null)
       syncMutation.mutate({
-        vendorPartyKey: selectedVendor.partyKey,
+        supplierKey: selectedSupplierUnit.supplierKey,
         items: normalizedItems,
       })
     } catch (error) {
@@ -165,12 +200,12 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
   }
 
   return (
-    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="vendor-catalog-api-panel">
+    <section className="rounded-xl border border-slate-700 bg-slate-900/60 p-5" data-testid="supplier-catalog-api-panel">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-medium text-white">Supplier catalog APIs</h2>
           <p className="mt-1 text-sm text-slate-400">
-            Sync catalog facts from external supplier APIs while keeping sourcing facts attached to the right supplier unit.
+            Sync catalog facts from external supplier APIs while keeping sourcing facts attached to the right supplier identity or sub-unit.
           </p>
         </div>
         <span className="rounded-full border border-slate-700 px-3 py-1 text-xs uppercase tracking-wide text-slate-400">
@@ -181,23 +216,36 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         <div className="space-y-4">
           <StaticSearchPicker
-            id="vendor-catalog-api-vendor"
-            label="Supplier unit"
-            value={selectedVendorId}
+            id="supplier-catalog-api-supplier-unit"
+            label="Supplier identity or sub-unit"
+            value={selectedSupplierUnitId}
             onChange={(value) => {
-              setSelectedVendorId(value)
+              setSelectedSupplierUnitId(value)
               setSyncError(null)
             }}
-            options={vendorOptions}
-            selectedOption={selectedVendorOption}
-            placeholder="Select supplier unit"
-            testId="vendor-catalog-api-vendor-picker"
+            options={supplierOptions}
+            selectedOption={selectedSupplierUnitOption}
+            placeholder="Select supplier identity or sub-unit"
+            testId="supplier-catalog-api-supplier-unit-picker"
           />
 
           <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
             <div className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Current feed status</div>
             <div className="mt-2 space-y-1 text-sm text-slate-300">
-              <div>Selected supplier unit: {selectedVendor?.displayName ?? 'Not selected'}</div>
+              <div>
+                Selected supplier identity or sub-unit: {selectedSupplierUnit?.displayName ?? 'Not selected'}
+              </div>
+              {selectedSupplierUnit ? (
+                <div>
+                  Supplier hierarchy:{' '}
+                  {formatSupplierUnitLabel(
+                    selectedSupplierUnit.displayName,
+                    selectedSupplierUnit.supplierKey,
+                    selectedSupplierUnit.parentSupplierDisplayName ?? null,
+                    selectedSupplierUnit.unitKind ?? null,
+                  )}
+                </div>
+              ) : null}
               <div>Linked parts in view: {currentEntries.length}</div>
               <div>Sync mode: JSON API payload</div>
             </div>
@@ -230,7 +278,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
             <button
               type="button"
               className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
-              disabled={!canManage || !selectedVendor || syncMutation.isPending}
+              disabled={!canManage || !selectedSupplierUnit || syncMutation.isPending}
               onClick={handleSync}
             >
               {syncMutation.isPending ? 'Syncing…' : 'Sync feed'}
@@ -286,7 +334,7 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
               <thead className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">
                 <tr>
                   <th className="border-b border-slate-800 px-3 py-2">Part</th>
-                  <th className="border-b border-slate-800 px-3 py-2">Supplier unit</th>
+                  <th className="border-b border-slate-800 px-3 py-2">Supplier identity or sub-unit</th>
                   <th className="border-b border-slate-800 px-3 py-2">Supplier part #</th>
                   <th className="border-b border-slate-800 px-3 py-2">Price</th>
                   <th className="border-b border-slate-800 px-3 py-2">Lead time</th>
@@ -300,7 +348,14 @@ export function VendorCatalogApiPanel({ accessToken, canManage, parts, vendors }
                       <div className="font-medium">{entry.partDisplayName}</div>
                       <div className="text-xs text-[var(--color-text-muted)]">{entry.partKey}</div>
                     </td>
-                    <td className="px-3 py-2 text-slate-300">{entry.vendorDisplayName}</td>
+                    <td className="px-3 py-2 text-slate-300">
+                      {formatSupplierUnitLabel(
+                        entry.supplierDisplayName,
+                        entry.supplierKey,
+                        entry.parentSupplierDisplayName,
+                        entry.unitKind,
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-slate-300">
                       {entry.vendorPartNumber}
                       {entry.isPreferred ? (

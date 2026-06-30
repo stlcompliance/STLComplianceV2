@@ -42,6 +42,7 @@ public sealed class PartRegistryService(
             .Include(x => x.Sources)
             .Include(x => x.VendorLinks)
             .ThenInclude(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .Where(x => x.TenantId == tenantId);
 
         if (catalogId is not null)
@@ -314,7 +315,15 @@ public sealed class PartRegistryService(
         return MapSource(entity);
     }
 
-    public async Task<PartVendorLinkResponse> AddVendorLinkAsync(
+    public Task<PartVendorLinkResponse> AddVendorLinkAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid partId,
+        CreatePartVendorLinkRequest request,
+        CancellationToken cancellationToken = default) =>
+        AddSupplierLinkAsync(tenantId, actorUserId, partId, request, cancellationToken);
+
+    public async Task<PartVendorLinkResponse> AddSupplierLinkAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid partId,
@@ -329,31 +338,41 @@ public sealed class PartRegistryService(
             throw new StlApiException("parts.not_found", "Part was not found.", 404);
         }
 
-        var party = await db.ExternalParties.FirstOrDefaultAsync(
-            x => x.TenantId == tenantId && x.Id == request.PartyId,
-            cancellationToken);
-        if (party is null)
-        {
-            throw new StlApiException("parties.not_found", "External party was not found.", 404);
-        }
-
-        if (!string.Equals(party.PartyType, "vendor", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(party.PartyType, "supplier", StringComparison.OrdinalIgnoreCase))
+        var supplierId = request.SupplierUnitId ?? request.SupplierId ?? request.PartyId;
+        if (supplierId is null)
         {
             throw new StlApiException(
                 "parts.validation",
-                "Vendor links require a vendor or supplier party.",
+                "Supplier identity or sub-unit is required.",
+                400);
+        }
+
+        var party = await db.ExternalParties
+            .Include(x => x.ParentExternalParty)
+            .FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == supplierId,
+            cancellationToken);
+        if (party is null)
+        {
+            throw new StlApiException("suppliers.not_found", "Supplier was not found.", 404);
+        }
+
+        if (!string.Equals(party.PartyType, "supplier", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new StlApiException(
+                "parts.validation",
+                "Supplier links require a supplier identity or sub-unit.",
                 400);
         }
 
         var duplicate = await db.PartVendorLinks.AnyAsync(
-            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == request.PartyId,
+            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == supplierId,
             cancellationToken);
         if (duplicate)
         {
             throw new StlApiException(
                 "parts.vendor_link_duplicate",
-                "This part is already linked to the vendor.",
+                "This part is already linked to the supplier unit.",
                 409);
         }
 
@@ -375,7 +394,7 @@ public sealed class PartRegistryService(
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = partId,
-            ExternalPartyId = request.PartyId,
+            ExternalPartyId = supplierId.Value,
             VendorPartNumber = NormalizeVendorPartNumber(request.VendorPartNumber),
             IsPreferred = request.IsPreferred,
             CreatedAt = now,
@@ -406,6 +425,7 @@ public sealed class PartRegistryService(
     {
         var link = await db.PartVendorLinks
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
@@ -442,6 +462,7 @@ public sealed class PartRegistryService(
     {
         var link = await db.PartVendorLinks
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
@@ -476,6 +497,7 @@ public sealed class PartRegistryService(
     {
         var link = await db.PartVendorLinks
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
@@ -542,6 +564,7 @@ public sealed class PartRegistryService(
             .Include(x => x.Sources.OrderBy(s => s.CreatedAt))
             .Include(x => x.VendorLinks)
             .ThenInclude(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == partId, cancellationToken);
         if (entity is null)
         {
@@ -607,6 +630,16 @@ public sealed class PartRegistryService(
             party.Id,
             party.PartyKey,
             party.DisplayName,
+            party.ParentExternalPartyId,
+            party.ParentExternalParty?.PartyKey,
+            party.ParentExternalParty?.DisplayName,
+            party.UnitKind,
+            ParseServiceTypes(party.ServiceTypesJson),
+            party.AddressLine1,
+            party.Locality,
+            party.RegionCode,
+            party.PostalCode,
+            party.CountryCode,
             entity.VendorPartNumber,
             entity.IsPreferred,
             entity.CatalogUnitPrice,
@@ -616,6 +649,23 @@ public sealed class PartRegistryService(
             entity.CatalogQuantityAvailable,
             entity.CatalogAvailabilityStatus,
             entity.CreatedAt);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(value) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
+    }
 
     private static decimal NormalizeCatalogUnitPrice(decimal unitPrice)
     {

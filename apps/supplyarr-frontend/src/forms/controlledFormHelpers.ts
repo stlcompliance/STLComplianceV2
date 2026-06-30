@@ -1,4 +1,5 @@
 import { buildSemanticKey, slugifyKey, type PickerOption } from '@stl/shared-ui'
+import { formatSupplierIdentitySummary, humanizeSupplierUnitKind } from '../utils/supplierPresentation'
 
 export const CURRENCY_OPTIONS: PickerOption[] = [
   { value: 'USD', label: 'USD — US Dollar' },
@@ -31,7 +32,7 @@ export const PROCUREMENT_REJECTION_REASON_OPTIONS: PickerOption[] = [
   { value: 'budget_exceeded', label: 'Budget exceeded' },
   { value: 'wrong_part', label: 'Wrong part or specification' },
   { value: 'duplicate_request', label: 'Duplicate request' },
-  { value: 'vendor_unavailable', label: 'Vendor unavailable' },
+  { value: 'vendor_unavailable', label: 'Supplier unavailable' },
   { value: 'policy_exception', label: 'Policy exception' },
   { value: 'other', label: 'Other (explain in notes)' },
 ]
@@ -39,7 +40,7 @@ export const PROCUREMENT_REJECTION_REASON_OPTIONS: PickerOption[] = [
 export const PROCUREMENT_CANCEL_REASON_OPTIONS: PickerOption[] = [
   { value: 'no_longer_needed', label: 'No longer needed' },
   { value: 'sourced_elsewhere', label: 'Sourced elsewhere' },
-  { value: 'vendor_cancelled', label: 'Vendor cancelled' },
+  { value: 'vendor_cancelled', label: 'Supplier cancelled' },
   { value: 'data_entry_error', label: 'Data entry error' },
   { value: 'other', label: 'Other (explain in notes)' },
 ]
@@ -59,6 +60,15 @@ export const EMERGENCY_PURCHASE_REASON_OPTIONS: PickerOption[] = [
   { value: 'sole_source', label: 'Sole source / no substitute' },
   { value: 'other', label: 'Other (explain in notes)' },
 ]
+
+export interface SupplierUnitPickerSource {
+  supplierId: string
+  displayName: string
+  supplierKey: string
+  parentSupplierDisplayName?: string | null
+  unitKind?: string | null
+  partyId?: string
+}
 
 export function formatProcurementReason(code: string, notes: string): string {
   const trimmedCode = code.trim()
@@ -124,12 +134,17 @@ export function distinctCategoryOptions(parts: { categoryKey: string }[]): Picke
   return [...keys].sort().map((value) => ({ value, label: value }))
 }
 
-export function toPartyPickerOptions(
-  parties: { partyId: string; displayName: string; partyKey: string }[],
+export function toSupplierUnitPickerOptions(
+  suppliers: SupplierUnitPickerSource[],
 ): PickerOption[] {
-  return parties.map((party) => ({
-    value: party.partyId,
-    label: `${party.displayName} (${party.partyKey})`,
+  return suppliers.map((supplier) => ({
+    value: supplier.supplierId,
+    label: `${humanizeSupplierUnitKind(supplier.unitKind)} · ${formatSupplierIdentitySummary({
+      displayName: supplier.displayName,
+      supplierKey: supplier.supplierKey,
+      parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+      supplierUnitKind: supplier.unitKind,
+    })}`,
   }))
 }
 

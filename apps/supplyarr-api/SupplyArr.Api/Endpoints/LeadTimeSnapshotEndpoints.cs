@@ -15,6 +15,7 @@ public static class LeadTimeSnapshotEndpoints
         group.MapGet("/", async (
             Guid? partVendorLinkId,
             Guid? partId,
+            Guid? supplierId,
             Guid? vendorPartyId,
             DateTimeOffset? asOf,
             HttpContext context,
@@ -28,7 +29,7 @@ public static class LeadTimeSnapshotEndpoints
                 tenantId,
                 partVendorLinkId,
                 partId,
-                vendorPartyId,
+                supplierId ?? vendorPartyId,
                 asOf,
                 cancellationToken));
         })

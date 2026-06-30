@@ -36,7 +36,7 @@ public static class SettingsEndpoints
                     new("procurement_exception_escalation_settings", "/api/v1/procurement-exception-escalation-settings", "Exception escalation thresholds and behavior."),
                     new("demand_processing_settings", "/api/v1/demand-processing-settings", "Demand processing worker controls and publication settings."),
                     new("integration_event_settings", "/api/v1/integration-event-settings", "Integration outbox and processing worker settings."),
-                    new("vendor_order_settings", "/api/v1/vendor-order-settings", "Vendor-order portal visibility and magic-link TTL settings."),
+                    new("supplier_order_settings", "/api/v1/supplier-order-settings", "Supplier-order portal visibility and magic-link TTL settings."),
                 ]);
 
                 return Results.Ok(response);

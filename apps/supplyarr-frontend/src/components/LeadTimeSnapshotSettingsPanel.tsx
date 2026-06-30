@@ -8,6 +8,7 @@ import {
   getPendingLeadTimeSnapshotCaptures,
   upsertLeadTimeSnapshotSettings,
 } from '../api/client'
+import { formatSupplierSummary } from '../utils/supplierPresentation'
 
 interface LeadTimeSnapshotSettingsPanelProps {
   accessToken: string
@@ -144,7 +145,7 @@ export function LeadTimeSnapshotSettingsPanel({ accessToken, canManage }: LeadTi
             {pendingQuery.data.items.map((item) => (
               <li key={item.partVendorLinkId} className="px-3 py-2 text-slate-300">
                 <div className="font-medium text-slate-100">
-                  {item.partKey} · {item.vendorDisplayName}
+                  {item.partKey} · {formatSupplierSummary(item)}
                 </div>
                 <div className="text-xs text-[var(--color-text-muted)]">
                   Catalog {item.catalogLeadTimeDays} days

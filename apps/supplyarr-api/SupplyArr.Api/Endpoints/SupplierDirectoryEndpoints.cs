@@ -4,9 +4,9 @@ using STLCompliance.Shared.Auth;
 
 namespace SupplyArr.Api.Endpoints;
 
-public static class PartyRegistryEndpoints
+public static class SupplierDirectoryEndpoints
 {
-    public static void MapSupplyArrPartyRegistryEndpoints(this WebApplication app)
+    public static void MapSupplyArrSupplierDirectoryEndpoints(this WebApplication app)
     {
         MapPartyGroup(app, "/api/parties", null);
         MapPartyGroup(app, "/api/v1/parties", null);
@@ -24,29 +24,32 @@ public static class PartyRegistryEndpoints
         MapContactsGroup(app, "/api/v1/contacts");
     }
 
+    public static void MapSupplyArrPartyRegistryEndpoints(this WebApplication app) =>
+        app.MapSupplyArrSupplierDirectoryEndpoints();
+
     private static void MapPartyGroup(WebApplication app, string routePrefix, string? fixedPartyType)
     {
-        var group = app.MapGroup(routePrefix).WithTags("PartyRegistry").RequireAuthorization();
+        var group = app.MapGroup(routePrefix).WithTags("ExternalParties").RequireAuthorization();
 
         group.MapGet("/", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.ListAsync(tenantId, fixedPartyType, cancellationToken));
+            return Results.Ok(await service.ListExternalPartiesAsync(tenantId, fixedPartyType, cancellationToken));
         })
         .WithName($"ListParties{RouteSuffix(routePrefix)}");
 
         group.MapGet("/metadata", (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service) =>
+            SupplierDirectoryService service) =>
         {
             authorization.RequirePartiesRead(context.User);
-            return Results.Ok(service.GetMetadata());
+            return Results.Ok(service.GetExternalPartyMetadata());
         })
         .WithName($"GetPartyMetadata{RouteSuffix(routePrefix)}");
 
@@ -54,14 +57,14 @@ public static class PartyRegistryEndpoints
             Guid partyId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var party = await service.GetAsync(tenantId, partyId, cancellationToken);
+            var party = await service.GetExternalPartyAsync(tenantId, partyId, cancellationToken);
             if (fixedPartyType is not null
-                && !string.Equals(party.PartyType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+                && !MatchesFixedPartyType(party.PartyType, fixedPartyType))
             {
                 return Results.NotFound();
             }
@@ -73,7 +76,7 @@ public static class PartyRegistryEndpoints
         group.MapPost("/", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
@@ -88,7 +91,7 @@ public static class PartyRegistryEndpoints
                     return Results.BadRequest();
                 }
 
-                var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
+                var created = await service.CreateExternalPartyAsync(tenantId, actorUserId, request, cancellationToken);
                 return Results.Created($"{routePrefix}/{created.PartyId}", created);
             }
 
@@ -98,7 +101,7 @@ public static class PartyRegistryEndpoints
                 return Results.BadRequest();
             }
 
-            var typedCreated = await service.CreateTypedAsync(
+            var typedCreated = await service.CreateTypedExternalPartyAsync(
                 tenantId,
                 actorUserId,
                 fixedPartyType,
@@ -113,15 +116,15 @@ public static class PartyRegistryEndpoints
             UpdateExternalPartyRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateAsync(tenantId, actorUserId, partyId, request, cancellationToken);
+            var updated = await service.UpdateExternalPartyAsync(tenantId, actorUserId, partyId, request, cancellationToken);
             if (fixedPartyType is not null
-                && !string.Equals(updated.PartyType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+                && !MatchesFixedPartyType(updated.PartyType, fixedPartyType))
             {
                 return Results.NotFound();
             }
@@ -135,20 +138,20 @@ public static class PartyRegistryEndpoints
             UpdateExternalPartyApprovalStatusRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateApprovalStatusAsync(
+            var updated = await service.UpdateExternalPartyApprovalStatusAsync(
                 tenantId,
                 actorUserId,
                 partyId,
                 request,
                 cancellationToken);
             if (fixedPartyType is not null
-                && !string.Equals(updated.PartyType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+                && !MatchesFixedPartyType(updated.PartyType, fixedPartyType))
             {
                 return Results.NotFound();
             }
@@ -162,20 +165,20 @@ public static class PartyRegistryEndpoints
             UpdateExternalPartyStatusRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateStatusAsync(
+            var updated = await service.UpdateExternalPartyStatusAsync(
                 tenantId,
                 actorUserId,
                 partyId,
                 request,
                 cancellationToken);
             if (fixedPartyType is not null
-                && !string.Equals(updated.PartyType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+                && !MatchesFixedPartyType(updated.PartyType, fixedPartyType))
             {
                 return Results.NotFound();
             }
@@ -189,7 +192,7 @@ public static class PartyRegistryEndpoints
             CreatePartyContactRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
@@ -198,14 +201,14 @@ public static class PartyRegistryEndpoints
 
             if (fixedPartyType is not null)
             {
-                var party = await service.GetAsync(tenantId, partyId, cancellationToken);
-                if (!string.Equals(party.PartyType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+                var party = await service.GetExternalPartyAsync(tenantId, partyId, cancellationToken);
+                if (!MatchesFixedPartyType(party.PartyType, fixedPartyType))
                 {
                     return Results.NotFound();
                 }
             }
 
-            var contact = await service.AddContactAsync(
+            var contact = await service.AddExternalPartyContactAsync(
                 tenantId,
                 actorUserId,
                 partyId,
@@ -223,127 +226,115 @@ public static class PartyRegistryEndpoints
         group.MapGet("/", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var parties = await service.ListAsync(tenantId, null, cancellationToken);
-            return Results.Ok(parties.Where(IsSupplierDirectoryMember).ToList());
+            return Results.Ok(await service.ListSuppliersAsync(tenantId, cancellationToken));
         })
         .WithName($"ListSupplierDirectory{RouteSuffix(routePrefix)}");
 
         group.MapGet("/metadata", (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service) =>
+            SupplierDirectoryService service) =>
         {
             authorization.RequirePartiesRead(context.User);
-            return Results.Ok(service.GetMetadata());
+            return Results.Ok(service.GetSupplierMetadata());
         })
         .WithName($"GetSupplierDirectoryMetadata{RouteSuffix(routePrefix)}");
 
-        group.MapGet("/{partyId:guid}", async (
-            Guid partyId,
+        group.MapGet("/{supplierId:guid}", async (
+            Guid supplierId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var supplier = await service.GetAsync(tenantId, partyId, cancellationToken);
-            return IsSupplierDirectoryMember(supplier) ? Results.Ok(supplier) : Results.NotFound();
+            return Results.Ok(await service.GetSupplierAsync(tenantId, supplierId, cancellationToken));
         })
         .WithName($"GetSupplierDirectoryItem{RouteSuffix(routePrefix)}");
 
         group.MapPost("/", async (
-            CreateExternalPartyRequest request,
+            CreateSupplierRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            if (!IsSupplierDirectoryMember(request.PartyType))
-            {
-                return Results.BadRequest(new { error = "Suppliers directory accepts supplier, vendor, or dealer records only." });
-            }
-
-            var created = await service.CreateAsync(tenantId, actorUserId, request, cancellationToken);
-            return Results.Created($"{routePrefix}/{created.PartyId}", created);
+            var created = await service.CreateSupplierAsync(
+                tenantId,
+                actorUserId,
+                request,
+                cancellationToken);
+            return Results.Created($"{routePrefix}/{created.SupplierId}", created);
         })
         .WithName($"CreateSupplierDirectoryItem{RouteSuffix(routePrefix)}");
 
-        group.MapPut("/{partyId:guid}", async (
-            Guid partyId,
-            UpdateExternalPartyRequest request,
+        group.MapPut("/{supplierId:guid}", async (
+            Guid supplierId,
+            UpdateSupplierRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateAsync(tenantId, actorUserId, partyId, request, cancellationToken);
-            return IsSupplierDirectoryMember(updated) ? Results.Ok(updated) : Results.NotFound();
+            return Results.Ok(await service.UpdateSupplierAsync(tenantId, actorUserId, supplierId, request, cancellationToken));
         })
         .WithName($"UpdateSupplierDirectoryItem{RouteSuffix(routePrefix)}");
 
-        group.MapPatch("/{partyId:guid}/approval-status", async (
-            Guid partyId,
-            UpdateExternalPartyApprovalStatusRequest request,
+        group.MapPatch("/{supplierId:guid}/approval-status", async (
+            Guid supplierId,
+            UpdateSupplierApprovalStatusRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateApprovalStatusAsync(tenantId, actorUserId, partyId, request, cancellationToken);
-            return IsSupplierDirectoryMember(updated) ? Results.Ok(updated) : Results.NotFound();
+            return Results.Ok(await service.UpdateSupplierApprovalStatusAsync(tenantId, actorUserId, supplierId, request, cancellationToken));
         })
         .WithName($"UpdateSupplierDirectoryApprovalStatus{RouteSuffix(routePrefix)}");
 
-        group.MapPatch("/{partyId:guid}/status", async (
-            Guid partyId,
-            UpdateExternalPartyStatusRequest request,
+        group.MapPatch("/{supplierId:guid}/status", async (
+            Guid supplierId,
+            UpdateSupplierStatusRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var updated = await service.UpdateStatusAsync(tenantId, actorUserId, partyId, request, cancellationToken);
-            return IsSupplierDirectoryMember(updated) ? Results.Ok(updated) : Results.NotFound();
+            return Results.Ok(await service.UpdateSupplierStatusAsync(tenantId, actorUserId, supplierId, request, cancellationToken));
         })
         .WithName($"UpdateSupplierDirectoryStatus{RouteSuffix(routePrefix)}");
 
-        group.MapPost("/{partyId:guid}/contacts", async (
-            Guid partyId,
-            CreatePartyContactRequest request,
+        group.MapPost("/{supplierId:guid}/contacts", async (
+            Guid supplierId,
+            CreateSupplierContactRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var supplier = await service.GetAsync(tenantId, partyId, cancellationToken);
-            if (!IsSupplierDirectoryMember(supplier))
-            {
-                return Results.NotFound();
-            }
-
-            var contact = await service.AddContactAsync(tenantId, actorUserId, partyId, request, cancellationToken);
-            return Results.Created($"{routePrefix}/{partyId}/contacts/{contact.ContactId}", contact);
+            var contact = await service.AddSupplierContactAsync(tenantId, actorUserId, supplierId, request, cancellationToken);
+            return Results.Created($"{routePrefix}/{supplierId}/contacts/{contact.ContactId}", contact);
         })
         .WithName($"CreateSupplierDirectoryContact{RouteSuffix(routePrefix)}");
     }
@@ -367,24 +358,24 @@ public static class PartyRegistryEndpoints
 
     private static void MapContactsGroup(WebApplication app, string routePrefix)
     {
-        var group = app.MapGroup(routePrefix).WithTags("PartyRegistry").RequireAuthorization();
+        var group = app.MapGroup(routePrefix).WithTags("ExternalParties").RequireAuthorization();
 
         group.MapGet("/", async (
             Guid? partyId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesRead(context.User);
             var tenantId = context.User.GetTenantId();
             if (partyId.HasValue)
             {
-                var party = await service.GetAsync(tenantId, partyId.Value, cancellationToken);
+                var party = await service.GetExternalPartyAsync(tenantId, partyId.Value, cancellationToken);
                 return Results.Ok(party.Contacts);
             }
 
-            var parties = await service.ListAsync(tenantId, null, cancellationToken);
+            var parties = await service.ListExternalPartiesAsync(tenantId, null, cancellationToken);
             var contacts = parties
                 .SelectMany(p => p.Contacts)
                 .ToList();
@@ -396,13 +387,13 @@ public static class PartyRegistryEndpoints
             CreateExternalPartyContactRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartyService service,
+            SupplierDirectoryService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequirePartiesManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var contact = await service.AddContactAsync(
+            var contact = await service.AddExternalPartyContactAsync(
                 tenantId,
                 actorUserId,
                 request.PartyId,
@@ -421,9 +412,15 @@ public static class PartyRegistryEndpoints
     private static string ContactsRouteSuffix(string routePrefix) =>
         routePrefix.Contains("/v1/", StringComparison.OrdinalIgnoreCase) ? "V1" : string.Empty;
 
-    private static bool IsSupplierDirectoryMember(ExternalPartyResponse party) =>
-        party.PartyType is "supplier" or "vendor" or "dealer";
+    private static bool MatchesFixedPartyType(string actualType, string fixedPartyType)
+    {
+        if (string.Equals(actualType, fixedPartyType, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
 
-    private static bool IsSupplierDirectoryMember(string partyType) =>
-        partyType is "supplier" or "vendor" or "dealer";
+        return string.Equals(actualType, "supplier", StringComparison.OrdinalIgnoreCase)
+            && (string.Equals(fixedPartyType, "vendor", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(fixedPartyType, "dealer", StringComparison.OrdinalIgnoreCase));
+    }
 }

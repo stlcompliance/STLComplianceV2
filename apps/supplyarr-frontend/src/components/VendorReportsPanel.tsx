@@ -3,30 +3,35 @@ import { useState } from 'react'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import {
-  exportVendorReportSummaryCsv,
-  getCompliancePartyDetail,
-  getVendorReportDetail,
-  getVendorReportSummary,
+  exportSupplierReportSummaryCsv,
+  getComplianceSupplierDetail,
+  getSupplierReportDetail,
+  getSupplierReportSummary,
+  getSupplierReturns,
   getRfqs,
-  getVendorReturns,
-  listWarrantyClaims,
+  listSupplierWarrantyClaims,
 } from '../api/client'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
-interface VendorReportsPanelProps {
+interface SupplierReportsPanelProps {
   accessToken: string
   canRead: boolean
   canExport: boolean
 }
 
-export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorReportsPanelProps) {
+export function SupplierReportsPanel({ accessToken, canRead, canExport }: SupplierReportsPanelProps) {
   const [approvalFilter, setApprovalFilter] = useState('')
   const [activeOnly, setActiveOnly] = useState(false)
-  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null)
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null)
 
   const summaryQuery = useQuery({
-    queryKey: ['supplyarr-vendor-report-summary', accessToken, approvalFilter, activeOnly],
+    queryKey: ['supplyarr-supplier-report-summary', accessToken, approvalFilter, activeOnly],
     queryFn: () =>
-      getVendorReportSummary(accessToken, {
+      getSupplierReportSummary(accessToken, {
         approvalStatus: approvalFilter || undefined,
         activeOnly: activeOnly || undefined,
       }),
@@ -34,38 +39,38 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
   })
 
   const detailQuery = useQuery({
-    queryKey: ['supplyarr-vendor-report-detail', accessToken, selectedVendorId],
-    queryFn: () => getVendorReportDetail(accessToken, selectedVendorId!),
-    enabled: canRead && Boolean(selectedVendorId),
+    queryKey: ['supplyarr-supplier-report-detail', accessToken, selectedSupplierId],
+    queryFn: () => getSupplierReportDetail(accessToken, selectedSupplierId!),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
   const rfqsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-report-rfqs', accessToken, selectedVendorId],
+    queryKey: ['supplyarr-supplier-report-rfqs', accessToken, selectedSupplierId],
     queryFn: () => getRfqs(accessToken),
-    enabled: canRead && Boolean(selectedVendorId),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
   const complianceDetailQuery = useQuery({
-    queryKey: ['supplyarr-vendor-compliance-detail', accessToken, selectedVendorId],
-    queryFn: () => getCompliancePartyDetail(accessToken, selectedVendorId!),
-    enabled: canRead && Boolean(selectedVendorId),
+    queryKey: ['supplyarr-supplier-compliance-detail', accessToken, selectedSupplierId],
+    queryFn: () => getComplianceSupplierDetail(accessToken, selectedSupplierId!),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
-  const vendorReturnsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-report-returns', accessToken, selectedVendorId],
-    queryFn: () => getVendorReturns(accessToken, { vendorPartyId: selectedVendorId! }),
-    enabled: canRead && Boolean(selectedVendorId),
+  const supplierReturnsQuery = useQuery({
+    queryKey: ['supplyarr-supplier-report-returns', accessToken, selectedSupplierId],
+    queryFn: () => getSupplierReturns(accessToken, { supplierId: selectedSupplierId! }),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
   const warrantyClaimsQuery = useQuery({
-    queryKey: ['supplyarr-vendor-report-warranty-claims', accessToken, selectedVendorId],
-    queryFn: () => listWarrantyClaims(accessToken, { vendorPartyId: selectedVendorId! }),
-    enabled: canRead && Boolean(selectedVendorId),
+    queryKey: ['supplyarr-supplier-report-warranty-claims', accessToken, selectedSupplierId],
+    queryFn: () => listSupplierWarrantyClaims(accessToken, { supplierId: selectedSupplierId! }),
+    enabled: canRead && Boolean(selectedSupplierId),
   })
 
   const exportMutation = useMutation({
     mutationFn: () =>
-      exportVendorReportSummaryCsv(accessToken, {
+      exportSupplierReportSummaryCsv(accessToken, {
         approvalStatus: approvalFilter || undefined,
         activeOnly: activeOnly || undefined,
       }),
@@ -73,7 +78,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       const url = URL.createObjectURL(blob)
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `supplyarr-vendor-report-${new Date().toISOString().slice(0, 10)}.csv`
+      anchor.download = `supplyarr-supplier-report-${new Date().toISOString().slice(0, 10)}.csv`
       anchor.click()
       URL.revokeObjectURL(url)
     },
@@ -82,7 +87,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
   const scorecard = detailQuery.data
     ? (() => {
         const summary = detailQuery.data.summary
-        const returnCount = vendorReturnsQuery.data?.length ?? 0
+        const returnCount = supplierReturnsQuery.data?.length ?? 0
         const warrantyClaimCount = warrantyClaimsQuery.data?.length ?? 0
         const averageLeadTimeDays = summary.averageLeadTimeDays
         const onTimeDeliveryRate = summary.onTimeDeliveryRate
@@ -90,16 +95,18 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
           summary.partVendorLinkCount > 0
             ? Math.round((summary.leadTimeSampleCount / summary.partVendorLinkCount) * 100)
             : 0
-        const vendorRfqs = (rfqsQuery.data ?? []).filter(
+        const supplierRfqs = (rfqsQuery.data ?? []).filter(
           (rfq) =>
-            rfq.invitations.some((invite) => invite.vendorPartyId === selectedVendorId) ||
-            rfq.quotes.some((quote) => quote.vendorPartyId === selectedVendorId),
+            rfq.invitations.some((invite) => (invite.supplierId || invite.vendorPartyId) === selectedSupplierId) ||
+            rfq.quotes.some((quote) => (quote.supplierId || quote.vendorPartyId) === selectedSupplierId),
         )
-        const vendorQuotes = vendorRfqs.flatMap((rfq) =>
+        const supplierQuotes = supplierRfqs.flatMap((rfq) =>
           rfq.quotes
-            .filter((quote) => quote.vendorPartyId === selectedVendorId)
+            .filter((quote) => (quote.supplierId || quote.vendorPartyId) === selectedSupplierId)
             .map((quote) => {
-              const invitation = rfq.invitations.find((invite) => invite.vendorPartyId === selectedVendorId)
+              const invitation = rfq.invitations.find(
+                (invite) => (invite.supplierId || invite.vendorPartyId) === selectedSupplierId,
+              )
               return {
                 rfqId: rfq.rfqId,
                 rfqKey: rfq.rfqKey,
@@ -108,7 +115,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
               }
             }),
         )
-        const quoteResponseDurations = vendorQuotes
+        const quoteResponseDurations = supplierQuotes
           .filter((entry) => entry.invitation?.invitedAt && entry.quote.submittedAt)
           .map((entry) => {
             const invitedAt = new Date(entry.invitation!.invitedAt).getTime()
@@ -120,9 +127,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             ? Math.round((quoteResponseDurations.reduce((total, days) => total + days, 0) / quoteResponseDurations.length) * 10) / 10
             : null
         const quoteCompetitiveness =
-          vendorQuotes.length > 0
+          supplierQuotes.length > 0
             ? Math.round(
-                (vendorQuotes.filter((entry) => {
+                (supplierQuotes.filter((entry) => {
                   const submittedQuotes = (rfqsQuery.data ?? [])
                     .find((rfq) => rfq.rfqId === entry.rfqId)
                     ?.quotes.filter((quote) => quote.status === 'submitted')
@@ -131,7 +138,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
                   )
                   return entry.quote.totalAmount != null && entry.quote.totalAmount === lowestAmount
                 }).length /
-                  vendorQuotes.length) *
+                  supplierQuotes.length) *
                   100,
               )
             : null
@@ -253,7 +260,7 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
   return (
     <section
       className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5 shadow-[var(--shadow-surface)] lg:col-span-2"
-      data-testid="vendor-reports-panel"
+      data-testid="supplier-reports-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -275,10 +282,10 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
       </div>
 
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
-        <label htmlFor="vendor-report-approval-filter" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+        <label htmlFor="supplier-report-approval-filter" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
           Supplier approval filter
           <select
-            id="vendor-report-approval-filter"
+            id="supplier-report-approval-filter"
             className="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-2 py-1 text-[var(--color-text-primary)]"
             value={approvalFilter}
             onChange={(event) => setApprovalFilter(event.target.value)}
@@ -289,9 +296,9 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             <option value="restricted">Restricted</option>
           </select>
         </label>
-        <label htmlFor="vendor-report-active-only" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
+        <label htmlFor="supplier-report-active-only" className="flex items-center gap-2 text-[var(--color-text-secondary)]">
           <input
-            id="vendor-report-active-only"
+            id="supplier-report-active-only"
             type="checkbox"
             checked={activeOnly}
             onChange={(event) => setActiveOnly(event.target.checked)}
@@ -339,38 +346,48 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
             ))}
           </div>
 
-          {summaryQuery.data.vendors.length === 0 ? (
+          {summaryQuery.data.suppliers.length === 0 ? (
             <p className="mt-4 text-sm text-[var(--color-text-muted)]">No suppliers match the current filters.</p>
           ) : (
             <ul className="mt-4 divide-y divide-[var(--color-border-subtle)] rounded-md border border-[var(--color-border-subtle)] text-sm">
-              {summaryQuery.data.vendors.map((vendor) => (
+              {summaryQuery.data.suppliers.map((supplier) => (
                 <li
-                  key={vendor.vendorPartyId}
+                  key={supplier.supplierId}
                   className={`px-3 py-3 transition ${
-                    selectedVendorId === vendor.vendorPartyId ? 'bg-[var(--color-bg-control-hover)]' : ''
+                    selectedSupplierId === supplier.supplierId ? 'bg-[var(--color-bg-control-hover)]' : ''
                   }`}
                 >
                   <button
                     type="button"
                     className="w-full text-left"
-                    onClick={() => setSelectedVendorId(vendor.vendorPartyId)}
+                    onClick={() => setSelectedSupplierId(supplier.supplierId)}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
                         <div className="font-medium text-[var(--color-text-primary)]">
-                          {vendor.partyKey} · {vendor.displayName}
+                          {formatSupplierIdentitySummary({
+                            supplierDisplayName: supplier.supplierDisplayName,
+                            supplierKey: supplier.supplierKey,
+                            parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+                            supplierUnitKind: supplier.supplierUnitKind,
+                          })}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)]">
-                          {vendor.approvalStatus} · {vendor.status}
+                          {humanizeSupplierUnitKind(supplier.supplierUnitKind)} · {supplier.approvalStatus} · {supplier.status}
                         </div>
+                        {supplier.supplierServiceTypes?.length ? (
+                          <div className="mt-1 text-xs text-[var(--color-text-muted)]">
+                            {formatSupplierServiceTypes(supplier.supplierServiceTypes)}
+                          </div>
+                        ) : null}
                       </div>
                       <span className="text-xs text-[var(--color-text-muted)]">
-                          {vendor.partVendorLinkCount} source links
+                          {supplier.partVendorLinkCount} source links
                       </span>
                     </div>
                     <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-                      Open PR {vendor.openPurchaseRequestCount} · Open PO {vendor.openPurchaseOrderCount}{' '}
-                      · Issued PO {vendor.issuedPurchaseOrderCount} · Backorders {vendor.openBackorderCount}
+                      Open PR {supplier.openPurchaseRequestCount} · Open PO {supplier.openPurchaseOrderCount}{' '}
+                      · Issued PO {supplier.issuedPurchaseOrderCount} · Backorders {supplier.openBackorderCount}
                     </p>
                   </button>
                 </li>
@@ -380,14 +397,27 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
         </>
       )}
 
-      {selectedVendorId && detailQuery.data && (
+      {selectedSupplierId && detailQuery.data && (
         <div className="mt-6 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
           <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-            Detail · {detailQuery.data.summary.displayName}
+            Detail · {formatSupplierIdentitySummary({
+              supplierDisplayName:
+                detailQuery.data.summary.supplierDisplayName
+                ?? detailQuery.data.summary.displayName
+                ?? 'Supplier',
+              supplierKey: detailQuery.data.summary.supplierKey,
+              parentSupplierDisplayName: detailQuery.data.summary.parentSupplierDisplayName,
+              supplierUnitKind: detailQuery.data.summary.supplierUnitKind,
+            })}
           </h3>
           <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-            Receipts posted {detailQuery.data.summary.postedReceivingReceiptCount} · Open line qty {detailQuery.data.summary.openPurchaseOrderLineQuantity}
+            {humanizeSupplierUnitKind(detailQuery.data.summary.supplierUnitKind)} · Receipts posted {detailQuery.data.summary.postedReceivingReceiptCount} · Open line qty {detailQuery.data.summary.openPurchaseOrderLineQuantity}
           </p>
+          {detailQuery.data.summary.supplierServiceTypes?.length ? (
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              Services provided: {formatSupplierServiceTypes(detailQuery.data.summary.supplierServiceTypes)}
+            </p>
+          ) : null}
 
           {scorecard ? (
             <div className="mt-4 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
@@ -503,6 +533,8 @@ export function VendorReportsPanel({ accessToken, canRead, canExport }: VendorRe
     </section>
   )
 }
+
+export { SupplierReportsPanel as VendorReportsPanel }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (

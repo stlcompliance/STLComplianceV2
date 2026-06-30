@@ -6,16 +6,20 @@ import { describe, expect, it, vi } from 'vitest'
 import { VendorOrdersPage } from './VendorOrdersPage'
 
 vi.mock('../../api/client', () => ({
-  getVendors: vi.fn().mockResolvedValue([
+  getSupplierDirectory: vi.fn().mockResolvedValue([
     {
-      partyId: 'vendor-1',
-      displayName: 'Acme Aggregates',
+      supplierId: 'vendor-1',
+      displayName: 'North Yard Counter',
+      supplierKey: 'ACME-NORTH',
+      parentSupplierDisplayName: 'Acme Aggregates',
+      unitKind: 'sub_unit',
+      serviceTypes: ['parts', 'maintenance'],
     },
   ]),
 }))
 
 vi.mock('../../api/vendorOrderClient', () => ({
-  getVendorOrderMetadata: vi.fn().mockResolvedValue({
+  getSupplierOrderMetadata: vi.fn().mockResolvedValue({
     filterStatusOptions: [
       { value: 'draft', label: 'Draft', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
       { value: 'partially_ready', label: 'Partially ready', owner: 'supplyarr', sourceOfTruth: 'supplyarr.vendor_order.workflow' },
@@ -26,11 +30,16 @@ vi.mock('../../api/vendorOrderClient', () => ({
     documentTypeOptions: [],
     brokerDecisionTypeOptions: [],
   }),
-  getVendorOrders: vi.fn().mockResolvedValue([
+  getSupplierOrders: vi.fn().mockResolvedValue([
     {
       vendorOrderId: 'vendor-order-1',
+      supplierId: 'vendor-1',
+      supplierNameSnapshot: 'North Yard Counter',
       vendorId: 'vendor-1',
       vendorNameSnapshot: 'Acme Aggregates',
+      parentSupplierDisplayName: 'Acme Aggregates',
+      supplierUnitKind: 'sub_unit',
+      supplierServiceTypes: ['parts', 'maintenance'],
       itemDescription: 'Crushed stone',
       orderedQuantity: 520,
       quantityReady: 200,
@@ -51,36 +60,39 @@ vi.mock('./useSupplyArrPageAccess', () => ({
       tenantDisplayName: 'Acme Tenant',
     },
     meQuery: { isLoading: false },
-    canReadVendorOrders: true,
-    canCreateVendorOrders: true,
-    canUpdateVendorOrders: true,
-    canManageVendorOrderSettings: true,
+    canReadSupplierOrders: true,
+    canCreateSupplierOrders: true,
+    canUpdateSupplierOrders: true,
+    canManageSupplierOrderSettings: true,
   })),
 }))
 
 describe('VendorOrdersPage', () => {
-  it('renders vendor orders with create and detail links', async () => {
+  it('renders supplier orders with create and detail links', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
       <QueryClientProvider client={client}>
-        <MemoryRouter initialEntries={['/purchasing/vendor-orders']}>
+        <MemoryRouter initialEntries={['/purchasing/supplier-orders']}>
           <Routes>
-            <Route path="/purchasing/vendor-orders" element={<VendorOrdersPage />} />
+            <Route path="/purchasing/supplier-orders" element={<VendorOrdersPage />} />
           </Routes>
         </MemoryRouter>
       </QueryClientProvider>,
     )
 
-    expect(await screen.findByText('Vendor order readiness')).toBeInTheDocument()
+    expect(await screen.findByText('Supplier order readiness')).toBeInTheDocument()
     expect(await screen.findByText('Crushed stone')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Create vendor order' })).toHaveAttribute(
+    expect(screen.getByText('Acme Aggregates · North Yard Counter')).toBeInTheDocument()
+    expect(screen.getByText('Sub-unit')).toBeInTheDocument()
+    expect(screen.getByText('Parts, Maintenance')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Create supplier order' })).toHaveAttribute(
       'href',
-      '/purchasing/vendor-orders/create',
+      '/purchasing/supplier-orders/create',
     )
     expect(screen.getByRole('link', { name: 'Open detail' })).toHaveAttribute(
       'href',
-      '/purchasing/vendor-orders/vendor-order-1',
+      '/purchasing/supplier-orders/vendor-order-1',
     )
   })
 })

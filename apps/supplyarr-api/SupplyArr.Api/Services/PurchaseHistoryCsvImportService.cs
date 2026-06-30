@@ -18,7 +18,7 @@ public sealed class PurchaseHistoryCsvImportService(
         "order_key",
         "request_key",
         "receipt_key",
-        "vendor_party_key",
+        "supplier_key",
         "part_key",
         "quantity_ordered",
         "quantity_received",
@@ -43,7 +43,7 @@ public sealed class PurchaseHistoryCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, 0, 0, issues);
         }
 
-        var vendorsByKey = await db.ExternalParties
+        var suppliersByKey = await db.ExternalParties
             .Where(x => x.TenantId == tenantId
                 && (x.PartyType == "vendor" || x.PartyType == "supplier"))
             .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
@@ -77,7 +77,7 @@ public sealed class PurchaseHistoryCsvImportService(
         {
             ValidateGroup(
                 group.OrderBy(x => x.LineNumber).ToList(),
-                vendorsByKey,
+                suppliersByKey,
                 partsByKey,
                 binsByKey,
                 existingOrderKeys,
@@ -106,11 +106,11 @@ public sealed class PurchaseHistoryCsvImportService(
                 tenantId,
                 actorUserId,
                 new CreatePurchaseRequestRequest(
-                    first.RequestKey,
-                    first.Title,
-                    first.OrderNotes,
-                    vendorsByKey[first.VendorPartyKey],
-                    orderRows
+                    RequestKey: first.RequestKey,
+                    Title: first.Title,
+                    Notes: first.OrderNotes,
+                    SupplierId: suppliersByKey[first.SupplierKey],
+                    Lines: orderRows
                         .Select(row => new CreatePurchaseRequestLineRequest(
                             partsByKey[row.PartKey],
                             row.QuantityOrdered,
@@ -221,9 +221,12 @@ public sealed class PurchaseHistoryCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
+        var normalizedHeaders = headerFields
+            .Select(header => string.Equals(header, "vendor_party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
+            .ToArray();
+        if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new PurchaseHistoryCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
+            issues.Add(new PurchaseHistoryCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy vendor_party_key remains accepted."));
             return [];
         }
 
@@ -261,7 +264,7 @@ public sealed class PurchaseHistoryCsvImportService(
 
     private static void ValidateGroup(
         IReadOnlyList<ImportRow> rows,
-        IReadOnlyDictionary<string, Guid> vendorsByKey,
+        IReadOnlyDictionary<string, Guid> suppliersByKey,
         IReadOnlyDictionary<string, Guid> partsByKey,
         IReadOnlyDictionary<string, Guid> binsByKey,
         ISet<string> existingOrderKeys,
@@ -276,7 +279,7 @@ public sealed class PurchaseHistoryCsvImportService(
         ValidateLength(first.LineNumber, "order_key", first.OrderKey, 1, 128, issues);
         ValidateLength(first.LineNumber, "request_key", first.RequestKey, 1, 128, issues);
         ValidateLength(first.LineNumber, "receipt_key", first.ReceiptKey, 1, 128, issues);
-        ValidateLength(first.LineNumber, "vendor_party_key", first.VendorPartyKey, 2, 128, issues);
+        ValidateLength(first.LineNumber, "supplier_key", first.SupplierKey, 2, 128, issues);
         ValidateLength(first.LineNumber, "inventory_bin_key", first.InventoryBinKey, 1, 128, issues);
         ValidateLength(first.LineNumber, "title", first.Title, 1, 256, issues);
 
@@ -310,9 +313,9 @@ public sealed class PurchaseHistoryCsvImportService(
             issues.Add(new PurchaseHistoryCsvImportIssue(first.LineNumber, "receiving_receipt.duplicate_in_file", "Receipt key appears in multiple import groups."));
         }
 
-        if (!vendorsByKey.ContainsKey(first.VendorPartyKey))
+        if (!suppliersByKey.ContainsKey(first.SupplierKey))
         {
-            issues.Add(new PurchaseHistoryCsvImportIssue(first.LineNumber, "vendor.not_found", "Vendor or supplier party key was not found."));
+            issues.Add(new PurchaseHistoryCsvImportIssue(first.LineNumber, "supplier.not_found", "supplier_key was not found."));
         }
 
         if (!binsByKey.ContainsKey(first.InventoryBinKey))
@@ -325,7 +328,7 @@ public sealed class PurchaseHistoryCsvImportService(
         {
             ValidateGroupValue(row, first, x => x.RequestKey, "purchase_request.mismatch", "Rows for the same order key must use the same request key.", issues);
             ValidateGroupValue(row, first, x => x.ReceiptKey, "receiving_receipt.mismatch", "Rows for the same order key must use the same receipt key.", issues);
-            ValidateGroupValue(row, first, x => x.VendorPartyKey, "vendor.mismatch", "Rows for the same order key must use the same vendor party key.", issues);
+            ValidateGroupValue(row, first, x => x.SupplierKey, "supplier.mismatch", "Rows for the same order key must use the same supplier key.", issues);
             ValidateGroupValue(row, first, x => x.InventoryBinKey, "inventory_bin.mismatch", "Rows for the same order key must use the same inventory bin key.", issues);
 
             ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
@@ -462,7 +465,7 @@ public sealed class PurchaseHistoryCsvImportService(
         string OrderKey,
         string RequestKey,
         string ReceiptKey,
-        string VendorPartyKey,
+        string SupplierKey,
         string PartKey,
         decimal QuantityOrdered,
         decimal QuantityReceived,

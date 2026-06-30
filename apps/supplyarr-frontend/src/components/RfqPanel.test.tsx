@@ -53,6 +53,8 @@ const mockData = vi.hoisted(() => ({
     status: 'submitted',
     requestedByUserId: 'user-1',
     submittedAt: '2026-05-01T00:00:00Z',
+    awardedSupplierId: null,
+    awardedSupplierDisplayName: null,
     awardedVendorPartyId: null,
     awardedVendorDisplayName: null,
     selectedVendorQuoteId: null,
@@ -75,9 +77,12 @@ const mockData = vi.hoisted(() => ({
     invitations: [
       {
         invitationId: 'inv-1',
-        vendorPartyId: 'vendor-1',
-        vendorPartyKey: 'ACME',
-        vendorDisplayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         status: 'invited',
         invitedAt: '2026-05-01T00:00:00Z',
         portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
@@ -87,9 +92,12 @@ const mockData = vi.hoisted(() => ({
       },
       {
         invitationId: 'inv-2',
-        vendorPartyId: 'vendor-2',
-        vendorPartyKey: 'BETA',
-        vendorDisplayName: 'Beta Parts',
+        supplierId: 'vendor-2',
+        supplierKey: 'BETA',
+        supplierDisplayName: 'South Branch',
+        parentSupplierDisplayName: 'Beta Parts',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts'],
         status: 'invited',
         invitedAt: '2026-05-01T00:00:00Z',
         portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
@@ -102,9 +110,12 @@ const mockData = vi.hoisted(() => ({
       {
         vendorQuoteId: 'vq-1',
         rfqId: 'rfq-1',
-        vendorPartyId: 'vendor-1',
-        vendorPartyKey: 'ACME',
-        vendorDisplayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         quoteKey: 'Q-ACME-1',
         status: 'submitted',
         currencyCode: 'USD',
@@ -119,9 +130,12 @@ const mockData = vi.hoisted(() => ({
       {
         vendorQuoteId: 'vq-2',
         rfqId: 'rfq-1',
-        vendorPartyId: 'vendor-2',
-        vendorPartyKey: 'BETA',
-        vendorDisplayName: 'Beta Parts',
+        supplierId: 'vendor-2',
+        supplierKey: 'BETA',
+        supplierDisplayName: 'South Branch',
+        parentSupplierDisplayName: 'Beta Parts',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts'],
         quoteKey: 'Q-BETA-1',
         status: 'submitted',
         currencyCode: 'USD',
@@ -149,8 +163,12 @@ vi.mock('../api/client', () => ({
     quoteSummaries: [
       {
         vendorQuoteId: 'vq-1',
-        vendorPartyId: 'vendor-1',
-        vendorDisplayName: 'Acme Supply',
+        supplierId: 'vendor-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'North Yard Counter',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         status: 'submitted',
         totalAmount: 100,
         maxLeadTimeDays: 14,
@@ -159,8 +177,12 @@ vi.mock('../api/client', () => ({
       },
       {
         vendorQuoteId: 'vq-2',
-        vendorPartyId: 'vendor-2',
-        vendorDisplayName: 'Beta Parts',
+        supplierId: 'vendor-2',
+        supplierKey: 'BETA',
+        supplierDisplayName: 'South Branch',
+        parentSupplierDisplayName: 'Beta Parts',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts'],
         status: 'submitted',
         totalAmount: 120,
         maxLeadTimeDays: 10,
@@ -179,8 +201,12 @@ vi.mock('../api/client', () => ({
         quotes: [
           {
             vendorQuoteId: 'vq-1',
-            vendorPartyId: 'vendor-1',
-            vendorDisplayName: 'Acme Supply',
+            supplierId: 'vendor-1',
+            supplierKey: 'ACME',
+            supplierDisplayName: 'North Yard Counter',
+            parentSupplierDisplayName: 'Acme Supply',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts', 'maintenance'],
             quoteStatus: 'submitted',
             unitPrice: 10,
             lineTotal: 100,
@@ -190,8 +216,12 @@ vi.mock('../api/client', () => ({
           },
           {
             vendorQuoteId: 'vq-2',
-            vendorPartyId: 'vendor-2',
-            vendorDisplayName: 'Beta Parts',
+            supplierId: 'vendor-2',
+            supplierKey: 'BETA',
+            supplierDisplayName: 'South Branch',
+            parentSupplierDisplayName: 'Beta Parts',
+            supplierUnitKind: 'sub_unit',
+            supplierServiceTypes: ['parts'],
             quoteStatus: 'submitted',
             unitPrice: 12,
             lineTotal: 120,
@@ -223,30 +253,42 @@ describe('RfqPanel', () => {
         canManage={true}
         canAward={true}
         parts={[]}
-        vendors={[
+        suppliers={[
           {
+            supplierId: 'vendor-1',
             partyId: 'vendor-1',
-            displayName: 'Acme Supply',
-            partyKey: 'ACME',
+            displayName: 'North Yard Counter',
+            supplierKey: 'ACME',
+            parentSupplierDisplayName: 'Acme Supply',
+            unitKind: 'sub_unit',
           },
           {
+            supplierId: 'vendor-2',
             partyId: 'vendor-2',
-            displayName: 'Beta Parts',
-            partyKey: 'BETA',
+            displayName: 'South Branch',
+            supplierKey: 'BETA',
+            parentSupplierDisplayName: 'Beta Parts',
+            unitKind: 'sub_unit',
           },
         ]}
-        vendorDirectory={[
+        supplierDirectory={[
           {
+            supplierId: 'vendor-1',
             partyId: 'vendor-1',
-            displayName: 'Acme Supply',
-            partyKey: 'ACME',
+            displayName: 'North Yard Counter',
+            supplierKey: 'ACME',
+            parentSupplierDisplayName: 'Acme Supply',
+            unitKind: 'sub_unit',
             approvalStatus: 'approved',
             status: 'active',
           },
           {
+            supplierId: 'vendor-2',
             partyId: 'vendor-2',
-            displayName: 'Beta Parts',
-            partyKey: 'BETA',
+            displayName: 'South Branch',
+            supplierKey: 'BETA',
+            parentSupplierDisplayName: 'Beta Parts',
+            unitKind: 'sub_unit',
             approvalStatus: 'restricted',
             status: 'active',
           },
@@ -261,13 +303,13 @@ describe('RfqPanel', () => {
 
     fireEvent.change(screen.getByTestId('rfq-picker'), { target: { value: 'rfq-1' } })
     expect(await screen.findByText(/Quote analytics/i)).toBeInTheDocument()
-    const inviteVendorSelect = screen.getByLabelText(/Invite supplier unit/i)
-    expect(within(inviteVendorSelect).getByRole('option', { name: /Acme Supply \(ACME\)/i })).not.toBeDisabled()
-    expect(within(inviteVendorSelect).getByRole('option', { name: /Beta Parts \(BETA\) \(inactive\)/i })).toBeDisabled()
+    const inviteVendorSelect = screen.getByLabelText(/Invite supplier identity or sub-unit/i)
+    expect(within(inviteVendorSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(ACME\)/i })).not.toBeDisabled()
+    expect(within(inviteVendorSelect).getByRole('option', { name: /Beta Parts · South Branch \(BETA\) \(inactive\)/i })).toBeDisabled()
 
-    const quoteVendorSelect = screen.getByLabelText(/Quote supplier unit/i)
-    expect(within(quoteVendorSelect).getByRole('option', { name: /Acme Supply \(approved · active\)/i })).not.toBeDisabled()
-    expect(within(quoteVendorSelect).getByRole('option', { name: /Beta Parts \(restricted · active\) \(inactive\)/i })).toBeDisabled()
+    const quoteVendorSelect = screen.getByLabelText(/Quote supplier identity or sub-unit/i)
+    expect(within(quoteVendorSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(approved · active\)/i })).not.toBeDisabled()
+    expect(within(quoteVendorSelect).getByRole('option', { name: /Beta Parts · South Branch \(restricted · active\) \(inactive\)/i })).toBeDisabled()
     expect(screen.getByText(/Quote Q-ACME-1/i)).toBeInTheDocument()
     expect(screen.getByText(/Response time 2 days/i)).toBeInTheDocument()
     expect(screen.getByText(/Best price/i)).toBeInTheDocument()
@@ -275,6 +317,7 @@ describe('RfqPanel', () => {
     expect(screen.getByText(/Response time 4 days/i)).toBeInTheDocument()
     expect(screen.getByText(/Approved source/i)).toBeInTheDocument()
     expect(screen.getByText(/Source attention: restricted/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/Sub-unit · Parts, Maintenance/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Supplier portal access/i)).toBeInTheDocument()
     expect(screen.getByDisplayValue('portal-code-1')).toBeInTheDocument()
   })
@@ -288,8 +331,8 @@ describe('RfqPanel', () => {
           canManage={false}
           canAward={false}
           parts={[]}
-          vendors={[]}
-          vendorDirectory={[]}
+          suppliers={[]}
+          supplierDirectory={[]}
         />
       </QueryClientProvider>,
     )

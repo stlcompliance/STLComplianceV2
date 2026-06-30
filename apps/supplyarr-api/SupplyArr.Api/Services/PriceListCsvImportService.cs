@@ -14,7 +14,7 @@ public sealed class PriceListCsvImportService(
 
     private static readonly string[] Headers =
     [
-        "vendor_party_key",
+        "supplier_key",
         "part_key",
         "snapshot_key",
         "unit_price",
@@ -119,7 +119,7 @@ public sealed class PriceListCsvImportService(
             return [];
         }
 
-        var headerFields = ParseRow(lines[0]);
+        var headerFields = NormalizeHeaderFields(ParseRow(lines[0]));
         if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
             issues.Add(new PriceListCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
@@ -162,12 +162,12 @@ public sealed class PriceListCsvImportService(
         ISet<string> seenKeys,
         List<PriceListCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "vendor_party_key", row.VendorPartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.VendorPartyKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "snapshot_key", row.SnapshotKey, 1, 128, issues);
         if (!links.ContainsKey(LinkLookupKey(row)))
         {
-            issues.Add(new PriceListCsvImportIssue(row.LineNumber, "vendor_link.not_found", "Vendor/part link was not found."));
+            issues.Add(new PriceListCsvImportIssue(row.LineNumber, "supplier_link.not_found", "Supplier/part link was not found."));
         }
 
         if (row.UnitPrice <= 0)
@@ -307,6 +307,13 @@ public sealed class PriceListCsvImportService(
         fields.Add(current.ToString().Trim());
         return fields;
     }
+
+    private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
+        headerFields
+            .Select(field => string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
+                ? "supplier_key"
+                : field)
+            .ToList();
 
     private static string NormalizeKey(string value) => value.Trim().ToLowerInvariant();
 

@@ -6,13 +6,13 @@ namespace SupplyArr.Api.Services;
 
 public sealed class ContactsCsvImportService(
     SupplyArrDbContext db,
-    ExternalPartyService parties)
+    SupplierDirectoryService parties)
 {
     private const string ImportType = "contacts_csv";
 
     private static readonly string[] Headers =
     [
-        "party_key",
+        "supplier_key",
         "contact_name",
         "email",
         "phone",
@@ -33,14 +33,14 @@ public sealed class ContactsCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var partyIdsByKey = await db.ExternalParties
+        var supplierIdsByKey = await db.ExternalParties
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
         var accepted = 0;
 
         foreach (var row in rows)
         {
-            ValidateRow(row, partyIdsByKey, issues);
+            ValidateRow(row, supplierIdsByKey, issues);
             if (issues.Any(x => x.LineNumber == row.LineNumber))
             {
                 continue;
@@ -57,10 +57,10 @@ public sealed class ContactsCsvImportService(
         var created = 0;
         foreach (var row in rows)
         {
-            await parties.AddContactAsync(
+            await parties.AddExternalPartyContactAsync(
                 tenantId,
                 actorUserId,
-                partyIdsByKey[row.PartyKey],
+                supplierIdsByKey[row.SupplierKey],
                 new CreatePartyContactRequest(
                     row.ContactName,
                     row.Email,
@@ -101,9 +101,12 @@ public sealed class ContactsCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
+        var normalizedHeaders = headerFields
+            .Select(header => string.Equals(header, "party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
+            .ToArray();
+        if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new ContactsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
+            issues.Add(new ContactsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy party_key remains accepted."));
             return [];
         }
 
@@ -135,14 +138,14 @@ public sealed class ContactsCsvImportService(
 
     private static void ValidateRow(
         ImportRow row,
-        IReadOnlyDictionary<string, Guid> partyIdsByKey,
+        IReadOnlyDictionary<string, Guid> supplierIdsByKey,
         List<ContactsCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "party_key", row.PartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.SupplierKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "contact_name", row.ContactName, 2, 128, issues);
-        if (!partyIdsByKey.ContainsKey(row.PartyKey))
+        if (!supplierIdsByKey.ContainsKey(row.SupplierKey))
         {
-            issues.Add(new ContactsCsvImportIssue(row.LineNumber, "party.not_found", "Party key was not found."));
+            issues.Add(new ContactsCsvImportIssue(row.LineNumber, "supplier.not_found", "Supplier key was not found."));
         }
     }
 
@@ -236,7 +239,7 @@ public sealed class ContactsCsvImportService(
 
     private sealed record ImportRow(
         int LineNumber,
-        string PartyKey,
+        string SupplierKey,
         string ContactName,
         string Email,
         string Phone,

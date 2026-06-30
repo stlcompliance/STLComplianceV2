@@ -45,13 +45,12 @@ vi.mock('@stl/shared-ui', async (importOriginal) => {
 
 vi.mock('../api/client', () => ({
   listSupplierIncidents: vi.fn().mockResolvedValue([]),
-  listPartySupplierIncidents: vi.fn().mockResolvedValue([
+  listSupplierIncidentsForSupplier: vi.fn().mockResolvedValue([
     {
       incidentId: 'inc-open',
-      externalPartyId: 'party-1',
-      partyKey: 'V-1',
-      partyDisplayName: 'Acme Supply',
-      partyType: 'vendor',
+      supplierId: 'party-1',
+      supplierKey: 'V-1',
+      supplierDisplayName: 'Acme Supply',
       incidentKey: 'SI-OPEN',
       title: 'Open incident',
       description: '',
@@ -62,7 +61,7 @@ vi.mock('../api/client', () => ({
       purchaseOrderId: null,
       receivingReceiptId: null,
       receivingExceptionId: null,
-      vendorRestrictionId: null,
+      supplierRestrictionId: null,
       reportedByUserId: 'u1',
       assignedToUserId: null,
       resolutionNotes: '',
@@ -82,10 +81,9 @@ vi.mock('../api/client', () => ({
     },
     {
       incidentId: 'inc-cancelled',
-      externalPartyId: 'party-1',
-      partyKey: 'V-1',
-      partyDisplayName: 'Acme Supply',
-      partyType: 'vendor',
+      supplierId: 'party-1',
+      supplierKey: 'V-1',
+      supplierDisplayName: 'Acme Supply',
       incidentKey: 'SI-CANCEL',
       title: 'Cancelled incident',
       description: '',
@@ -96,7 +94,7 @@ vi.mock('../api/client', () => ({
       purchaseOrderId: null,
       receivingReceiptId: null,
       receivingExceptionId: null,
-      vendorRestrictionId: null,
+      supplierRestrictionId: null,
       reportedByUserId: 'u1',
       assignedToUserId: null,
       resolutionNotes: '',
@@ -136,18 +134,25 @@ describe('SupplierIncidentsPanel', () => {
         <SupplierIncidentsPanel
           accessToken="token"
           canManage
-          incidentParties={[
+          supplierUnits={[
             {
-              partyId: 'party-1',
-              partyKey: 'V-1',
-              displayName: 'Acme Supply',
-              partyType: 'vendor',
-              unitKind: 'identity',
+              supplierId: 'party-1',
+              supplierKey: 'acme-hq',
+              supplierType: 'supplier',
+              parentSupplierId: 'parent-1',
+              parentSupplierDisplayName: 'Acme Supply',
+              displayName: 'HQ Counter',
+              unitKind: 'sub_unit',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Acme Supply LLC',
               taxIdentifier: null,
               notes: '',
+              serviceTypes: ['parts', 'maintenance'],
+              addressLine1: '100 Main St',
+              locality: 'Tulsa',
+              regionCode: 'OK',
+              postalCode: '74101',
               contacts: [],
               createdAt: '',
               updatedAt: '',
@@ -169,40 +174,54 @@ describe('SupplierIncidentsPanel', () => {
     expect(screen.getByTestId('supplier-incident-status-inc-cancelled')).toHaveTextContent('cancelled')
   })
 
-  it('uses a searchable party picker for incident creation', async () => {
+  it('uses a searchable supplier picker for incident creation', async () => {
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={queryClient}>
         <SupplierIncidentsPanel
           accessToken="token"
           canManage
-          incidentParties={[
+          supplierUnits={[
             {
-              partyId: 'party-1',
-              partyKey: 'V-1',
-              displayName: 'Acme Supply',
-              partyType: 'vendor',
-              unitKind: 'identity',
+              supplierId: 'party-1',
+              supplierKey: 'acme-hq',
+              supplierType: 'supplier',
+              parentSupplierId: 'parent-1',
+              parentSupplierDisplayName: 'Acme Supply',
+              displayName: 'HQ Counter',
+              unitKind: 'sub_unit',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Acme Supply LLC',
               taxIdentifier: null,
               notes: '',
+              serviceTypes: ['parts', 'maintenance'],
+              addressLine1: '100 Main St',
+              locality: 'Tulsa',
+              regionCode: 'OK',
+              postalCode: '74101',
               contacts: [],
               createdAt: '',
               updatedAt: '',
             },
             {
-              partyId: 'party-2',
-              partyKey: 'S-1',
-              displayName: 'Bravo Logistics',
-              partyType: 'supplier',
+              supplierId: 'party-2',
+              supplierKey: 'bravo-west',
+              supplierType: 'supplier',
+              parentSupplierId: 'parent-2',
+              parentSupplierDisplayName: 'Bravo Supply',
+              displayName: 'West Service Desk',
               unitKind: 'sub_unit',
               status: 'active',
               approvalStatus: 'approved',
               legalName: 'Bravo Logistics Inc',
               taxIdentifier: null,
               notes: '',
+              serviceTypes: ['maintenance'],
+              addressLine1: '44 Service Ave',
+              locality: 'Oklahoma City',
+              regionCode: 'OK',
+              postalCode: '73102',
               contacts: [],
               createdAt: '',
               updatedAt: '',
@@ -213,17 +232,18 @@ describe('SupplierIncidentsPanel', () => {
     )
 
     expect(screen.getByTestId('supplier-incidents-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
-      'supplier identity · V-1 · Acme Supply',
+    expect(screen.getByTestId('supplier-incident-supplier-picker-options')).toHaveTextContent(
+      'Acme Supply · HQ Counter (acme-hq) · Sub-unit',
     )
-    expect(screen.getByTestId('supplier-incident-party-picker-options')).toHaveTextContent(
-      'sub-unit · S-1 · Bravo Logistics',
+    expect(screen.getByTestId('supplier-incident-supplier-picker-options')).toHaveTextContent(
+      'Bravo Supply · West Service Desk (bravo-west) · Sub-unit',
     )
 
-    fireEvent.change(screen.getByTestId('supplier-incident-party-picker'), {
+    fireEvent.change(screen.getByTestId('supplier-incident-supplier-picker'), {
       target: { value: 'party-2' },
     })
 
     expect(screen.getByLabelText(/Incident title/i)).toBeInTheDocument()
+    expect(screen.getByText(/Bravo Supply · West Service Desk \(bravo-west\) · Sub-unit · 44 Service Ave, Oklahoma City, OK, 73102 · Maintenance/i)).toBeInTheDocument()
   })
 })

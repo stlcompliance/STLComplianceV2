@@ -1,6 +1,7 @@
 import { ContractsImportPanel } from '../../components/ContractsImportPanel'
 import { AuditHistoryPanel } from '../../components/AuditHistoryPanel'
 import type { SupplyContractResponse } from '../../api/types'
+import { resolveSupplierDisplayName } from '../../utils/supplierPresentation'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -21,7 +22,7 @@ function ContractCard({ contract }: { contract: SupplyContractResponse }) {
           <p className="text-sm font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</p>
           <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
           <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-            {contract.vendorDisplayName} · {contract.contractType.replaceAll('_', ' ')}
+            {resolveSupplierDisplayName(contract)} · {contract.contractType.replaceAll('_', ' ')}
           </p>
         </div>
         <span className="rounded-full bg-[var(--color-bg-control-hover)] px-3 py-1 text-xs uppercase tracking-wide text-[var(--color-text-secondary)]">

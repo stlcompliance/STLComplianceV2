@@ -2,10 +2,13 @@ namespace SupplyArr.Api.Contracts;
 
 public sealed record SupplierIncidentResponse(
     Guid IncidentId,
-    Guid ExternalPartyId,
-    string PartyKey,
-    string PartyDisplayName,
-    string PartyType,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string IncidentKey,
     string Title,
     string Description,
@@ -16,7 +19,7 @@ public sealed record SupplierIncidentResponse(
     Guid? PurchaseOrderId,
     Guid? ReceivingReceiptId,
     Guid? ReceivingExceptionId,
-    Guid? VendorRestrictionId,
+    Guid? SupplierRestrictionId,
     Guid ReportedByUserId,
     Guid? AssignedToUserId,
     Guid? InvolvedStaffarrPersonId,
@@ -39,10 +42,21 @@ public sealed record SupplierIncidentResponse(
     string LastReopenReason,
     int ReopenCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt)
+{
+    public Guid ExternalPartyId => SupplierId;
+
+    public string PartyKey => SupplierKey;
+
+    public string PartyDisplayName => SupplierDisplayName;
+
+    public string PartyType => "supplier";
+
+    public Guid? VendorRestrictionId => SupplierRestrictionId;
+}
 
 public sealed record CreateSupplierIncidentRequest(
-    Guid ExternalPartyId,
+    Guid SupplierId,
     string IncidentKey,
     string Title,
     string Description,

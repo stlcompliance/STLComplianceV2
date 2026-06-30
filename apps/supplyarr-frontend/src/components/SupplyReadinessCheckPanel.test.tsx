@@ -74,7 +74,7 @@ vi.mock('../api/client', () => ({
       openBackorderCount: 0,
     },
   }),
-  getVendorSupplyReadiness: vi.fn(),
+  getSupplierReadiness: vi.fn(),
   getProcurementPathReadiness: vi.fn(),
 }))
 
@@ -99,7 +99,7 @@ describe('SupplyReadinessCheckPanel', () => {
               status: 'active',
             } as never,
           ]}
-          vendors={[]}
+          suppliers={[]}
         />
       </QueryClientProvider>,
     )
@@ -110,7 +110,7 @@ describe('SupplyReadinessCheckPanel', () => {
     expect(screen.getByText('not_ready')).toBeInTheDocument()
   })
 
-  it('renders searchable supplier picker in supplier mode', async () => {
+  it('renders searchable supplier-unit picker in supplier mode', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
     render(
@@ -119,12 +119,14 @@ describe('SupplyReadinessCheckPanel', () => {
           accessToken="token"
           canRead
           parts={[]}
-          vendors={[
+          suppliers={[
             {
-              partyId: 'vendor-1',
-              partyKey: 'ACME',
-              displayName: 'Acme Supply',
-              partyType: 'vendor',
+              supplierId: 'vendor-1',
+              supplierKey: 'ACME',
+              displayName: 'North Yard Counter',
+              parentSupplierDisplayName: 'Acme Supply',
+              unitKind: 'sub_unit',
+              serviceTypes: ['parts', 'maintenance'],
               status: 'active',
               approvalStatus: 'approved',
               legalName: '',
@@ -139,11 +141,11 @@ describe('SupplyReadinessCheckPanel', () => {
       </QueryClientProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Supplier' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Supplier identity or sub-unit' }))
 
-    expect(await screen.findByTestId('readiness-check-vendor-picker')).toBeInTheDocument()
-    expect(screen.getByTestId('readiness-check-vendor-picker-options')).toHaveTextContent(
-      'ACME · Acme Supply',
+    expect(await screen.findByTestId('readiness-check-supplier-unit-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('readiness-check-supplier-unit-picker-options')).toHaveTextContent(
+      'Sub-unit · Acme Supply · North Yard Counter (ACME) · Parts, Maintenance',
     )
   })
 
@@ -151,7 +153,7 @@ describe('SupplyReadinessCheckPanel', () => {
     const client = new QueryClient()
     const { container } = render(
       <QueryClientProvider client={client}>
-        <SupplyReadinessCheckPanel accessToken="token" canRead={false} parts={[]} vendors={[]} />
+        <SupplyReadinessCheckPanel accessToken="token" canRead={false} parts={[]} suppliers={[]} />
       </QueryClientProvider>,
     )
     expect(container).toBeEmptyDOMElement()

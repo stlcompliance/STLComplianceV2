@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -10,11 +11,13 @@ public sealed class AvailabilitySnapshotService(
     SupplyArrDbContext db,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<IReadOnlyList<AvailabilitySnapshotResponse>> ListAsync(
         Guid tenantId,
         Guid? partVendorLinkId = null,
         Guid? partId = null,
-        Guid? vendorPartyId = null,
+        Guid? supplierId = null,
         DateTimeOffset? asOf = null,
         CancellationToken cancellationToken = default)
     {
@@ -30,9 +33,9 @@ public sealed class AvailabilitySnapshotService(
             query = query.Where(x => x.PartVendorLink.PartId == partId);
         }
 
-        if (vendorPartyId is not null)
+        if (supplierId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.ExternalPartyId == vendorPartyId);
+            query = query.Where(x => x.PartVendorLink.ExternalPartyId == supplierId);
         }
 
         if (asOf is not null)
@@ -174,6 +177,7 @@ public sealed class AvailabilitySnapshotService(
                 .ThenInclude(x => x.Part)
             .Include(x => x.PartVendorLink)
                 .ThenInclude(x => x.ExternalParty)
+                    .ThenInclude(x => x.ParentExternalParty)
             .Where(x => x.TenantId == tenantId);
 
     private async Task<PartVendorAvailabilitySnapshot> LoadAsync(
@@ -199,6 +203,7 @@ public sealed class AvailabilitySnapshotService(
         var link = await db.PartVendorLinks
             .Include(x => x.Part)
             .Include(x => x.ExternalParty)
+                .ThenInclude(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == partVendorLinkId,
                 cancellationToken);
@@ -261,8 +266,9 @@ public sealed class AvailabilitySnapshotService(
     {
         var link = entity.PartVendorLink;
         var part = link.Part;
-        var party = link.ExternalParty;
+        var supplier = link.ExternalParty;
         var now = DateTimeOffset.UtcNow;
+        var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
         return new AvailabilitySnapshotResponse(
             entity.Id,
@@ -271,9 +277,13 @@ public sealed class AvailabilitySnapshotService(
             part.Id,
             part.PartKey,
             part.DisplayName,
-            party.Id,
-            party.PartyKey,
-            party.DisplayName,
+            supplier.Id,
+            supplier.PartyKey,
+            supplier.DisplayName,
+            supplier.ParentExternalPartyId,
+            supplier.ParentExternalParty?.DisplayName,
+            supplier.UnitKind,
+            serviceTypes,
             link.VendorPartNumber,
             entity.QuantityAvailable,
             entity.AvailabilityStatus,
@@ -285,6 +295,23 @@ public sealed class AvailabilitySnapshotService(
             entity.CreatedByUserId,
             entity.CreatedAt,
             entity.UpdatedAt);
+    }
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private static string NormalizeSnapshotKey(string snapshotKey)

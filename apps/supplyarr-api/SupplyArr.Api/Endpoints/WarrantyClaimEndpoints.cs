@@ -14,6 +14,7 @@ public static class WarrantyClaimEndpoints
 
         group.MapGet("/", async (
             string? status,
+            Guid? supplierId,
             Guid? vendorPartyId,
             Guid? partId,
             Guid? purchaseOrderId,
@@ -27,7 +28,7 @@ public static class WarrantyClaimEndpoints
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 status,
-                vendorPartyId,
+                supplierId ?? vendorPartyId,
                 partId,
                 purchaseOrderId,
                 cancellationToken));
@@ -48,7 +49,7 @@ public static class WarrantyClaimEndpoints
         .WithName($"GetWarrantyClaim{nameSuffix}");
 
         group.MapPost("/", async (
-            CreateWarrantyClaimRequest request,
+            CreateSupplierWarrantyClaimRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             WarrantyClaimService service,

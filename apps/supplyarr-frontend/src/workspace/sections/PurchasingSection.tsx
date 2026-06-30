@@ -11,6 +11,7 @@ import { ContractsImportPanel } from '../../components/ContractsImportPanel'
 import { VendorEmailInboxPanel } from '../../components/VendorEmailInboxPanel'
 import { Link, useLocation } from 'react-router-dom'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
+import type { SupplierUnitPickerSource } from '../../forms/controlledFormHelpers'
 
 type Props = { state: SupplyArrWorkspaceState }
 type PurchasingViewMode = 'procurement' | 'approvals' | 'exceptions'
@@ -22,10 +23,12 @@ export function PurchasingSection({ state: s }: Props) {
     : location.pathname.startsWith('/purchasing/approvals')
       ? 'approvals'
       : 'procurement'
-  const suppliers = s.supplierDirectory.map((v) => ({
-    partyId: v.partyId,
-    displayName: v.displayName,
-    partyKey: v.partyKey,
+  const suppliers: SupplierUnitPickerSource[] = s.supplierDirectory.map((supplier) => ({
+    supplierId: supplier.supplierId,
+    displayName: supplier.displayName,
+    supplierKey: supplier.supplierKey,
+    parentSupplierDisplayName: supplier.parentSupplierDisplayName,
+    unitKind: supplier.unitKind,
   }))
 
   return (
@@ -40,17 +43,17 @@ export function PurchasingSection({ state: s }: Props) {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              to="/purchasing/vendor-orders"
+              to="/purchasing/supplier-orders"
               className="rounded-lg border border-slate-600 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
             >
-              Open supplier orders
+              Open supplier order portal
             </Link>
             {s.canCreatePr ? (
               <Link
-                to="/purchasing/vendor-orders/create"
+                to="/purchasing/supplier-orders/create"
                 className="rounded-lg bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
               >
-                Create supplier order
+                Create supplier order request
               </Link>
             ) : null}
           </div>
@@ -67,28 +70,28 @@ export function PurchasingSection({ state: s }: Props) {
         canCreate={s.canCreateEmergencyPurchase}
         canOverrideApprove={s.canManagerOverrideEmergencyPurchase}
         parts={s.partsQuery.data ?? []}
-        vendors={suppliers}
+        suppliers={suppliers}
       />
       <RfqPanel
         accessToken={s.accessToken}
         canManage={s.canCreatePr}
         canAward={s.canApprovePr}
         parts={s.partsQuery.data ?? []}
-        vendors={suppliers}
-        vendorDirectory={s.supplierDirectory}
+        suppliers={suppliers}
+        supplierDirectory={s.supplierDirectory}
       />
       <VendorEmailInboxPanel accessToken={s.accessToken} canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo} />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}
         parts={s.partsQuery.data ?? []}
-        vendors={suppliers}
+        suppliers={suppliers}
         canCreate={s.canCreatePr}
         canApprove={s.canApprovePr}
         isLoading={s.purchaseRequestsQuery.isLoading}
         requestKey={s.prRequestKey}
         title={s.prTitle}
         notes={s.prNotes}
-        selectedVendorId={s.prVendorId}
+        selectedSupplierUnitId={s.prSupplierUnitId}
         selectedPartId={s.prPartId}
         lineQuantity={s.prLineQty}
         lineNotes={s.prLineNotes}
@@ -97,7 +100,7 @@ export function PurchasingSection({ state: s }: Props) {
         onRequestKeyChange={s.setPrRequestKey}
         onTitleChange={s.setPrTitle}
         onNotesChange={s.setPrNotes}
-        onSelectedVendorIdChange={s.setPrVendorId}
+        onSelectedSupplierUnitIdChange={s.setPrSupplierUnitId}
         onSelectedPartIdChange={s.setPrPartId}
         onLineQuantityChange={s.setPrLineQty}
         onLineNotesChange={s.setPrLineNotes}

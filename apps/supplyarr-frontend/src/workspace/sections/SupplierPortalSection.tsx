@@ -54,8 +54,8 @@ export function SupplierPortalSection({ state: s }: Props) {
         <PortalCard
           title="Supplier order portal"
           description="Magic-link order status for suppliers and carriers is handled on the supplier order portal surfaces."
-          actionLabel="Review supplier orders"
-          to="/purchasing/vendor-orders"
+          actionLabel="Review supplier order portal"
+          to="/purchasing/supplier-orders"
         />
         <PortalCard
           title="Supplier onboarding"

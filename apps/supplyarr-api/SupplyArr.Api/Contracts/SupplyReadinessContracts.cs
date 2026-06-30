@@ -108,11 +108,14 @@ public sealed record PartSupplyReadinessResponse(
     SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
     SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);
 
-public sealed record VendorSupplyReadinessResponse(
-    Guid ExternalPartyId,
-    string PartyKey,
+public record SupplierSupplyReadinessResponse(
+    Guid SupplierId,
+    string SupplierKey,
     string DisplayName,
-    string PartyType,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string ApprovalStatus,
     string Status,
     string ReadinessStatus,
@@ -122,11 +125,48 @@ public sealed record VendorSupplyReadinessResponse(
     SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
     SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);
 
+public sealed record VendorSupplyReadinessResponse(
+    Guid SupplierId,
+    string SupplierKey,
+    string DisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
+    string ApprovalStatus,
+    string Status,
+    string ReadinessStatus,
+    string ReadinessBasis,
+    DateTimeOffset CalculatedAt,
+    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
+    SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
+    SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null)
+    : SupplierSupplyReadinessResponse(
+        SupplierId,
+        SupplierKey,
+        DisplayName,
+        ParentSupplierId,
+        ParentSupplierDisplayName,
+        SupplierUnitKind,
+        SupplierServiceTypes,
+        ApprovalStatus,
+        Status,
+        ReadinessStatus,
+        ReadinessBasis,
+        CalculatedAt,
+        Blockers,
+        SourceSnapshot,
+        AuditSnapshot);
+
 public sealed record ProcurementPathReadinessResponse(
     Guid PartId,
     string PartKey,
-    Guid ExternalPartyId,
-    string PartyKey,
+    Guid SupplierId,
+    string SupplierKey,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     decimal? RequestedQuantity,
     string ReadinessStatus,
     string ReadinessBasis,

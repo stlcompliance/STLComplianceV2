@@ -51,6 +51,12 @@ public sealed record VendorOrderMetadataResponse(
 
 public sealed record VendorOrderResponse(
     Guid VendorOrderId,
+    Guid SupplierId,
+    string SupplierNameSnapshot,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     Guid? BrokerOrderId,
     string? BrokerOrderNumberSnapshot,
     Guid VendorId,
@@ -87,6 +93,12 @@ public sealed record VendorOrderResponse(
 public sealed record VendorOrderListItemResponse(
     Guid VendorOrderId,
     string Status,
+    Guid SupplierId,
+    string SupplierNameSnapshot,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string VendorNameSnapshot,
     string ItemDescription,
     decimal OrderedQuantity,
@@ -169,6 +181,12 @@ public sealed record RegisterVendorOrderDocumentRequest(
 public sealed record VendorOrderPortalResponse(
     Guid VendorOrderId,
     string Status,
+    Guid SupplierId,
+    string SupplierNameSnapshot,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     string VendorNameSnapshot,
     string PickupLocationNameSnapshot,
     string PickupAddressSnapshot,

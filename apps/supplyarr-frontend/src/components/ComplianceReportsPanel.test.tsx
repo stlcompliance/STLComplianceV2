@@ -8,7 +8,7 @@ vi.mock('../api/client', () => ({
   getComplianceReportSummary: vi.fn().mockResolvedValue({
     generatedAt: new Date().toISOString(),
     totals: {
-      partyCount: 1,
+      supplierCount: 1,
       documentCount: 2,
       expiredCount: 1,
       expiringSoonCount: 0,
@@ -16,12 +16,15 @@ vi.mock('../api/client', () => ({
       approvedCount: 0,
       rejectedCount: 0,
     },
-    parties: [
+    suppliers: [
       {
-        externalPartyId: 'party-1',
-        partyKey: 'ACME',
-        displayName: 'Acme Supply',
-        partyType: 'vendor',
+        supplierId: 'party-1',
+        supplierKey: 'ACME',
+        displayName: 'North Yard Counter',
+        parentSupplierId: 'parent-1',
+        parentSupplierDisplayName: 'Acme Supply',
+        supplierUnitKind: 'sub_unit',
+        supplierServiceTypes: ['parts', 'maintenance'],
         approvalStatus: 'approved',
         compliancePosture: 'expired',
         documentCount: 2,
@@ -33,10 +36,9 @@ vi.mock('../api/client', () => ({
     documents: [
       {
         documentId: 'doc-1',
-        externalPartyId: 'party-1',
-        partyKey: 'ACME',
-        partyDisplayName: 'Acme Supply',
-        partyType: 'vendor',
+        supplierId: 'party-1',
+        supplierKey: 'ACME',
+        supplierDisplayName: 'Acme Supply',
         documentKey: 'COI-2024',
         documentTypeKey: 'certificate_of_insurance',
         title: 'Certificate of Insurance',
@@ -50,7 +52,7 @@ vi.mock('../api/client', () => ({
       },
     ],
   }),
-  getCompliancePartyDetail: vi.fn(),
+  getComplianceSupplierDetail: vi.fn(),
   exportComplianceReportSummaryCsv: vi.fn(),
 }))
 
@@ -64,7 +66,8 @@ describe('ComplianceReportsPanel', () => {
     )
 
     expect(await screen.findByTestId('compliance-reports-panel')).toBeInTheDocument()
-    expect(await screen.findByText(/ACME · Acme Supply/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Acme Supply · North Yard Counter \(ACME\)/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Sub-unit · Parts, Maintenance/i)).toBeInTheDocument()
     expect(await screen.findByText(/COI-2024 · Certificate of Insurance/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Export CSV/i })).toBeInTheDocument()
   })

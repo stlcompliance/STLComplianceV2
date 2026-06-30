@@ -9,14 +9,14 @@ export function PricingSection({ state: s }: Props) {
     <div className="grid gap-6 lg:grid-cols-2" data-testid="supplyarr-pricing-snapshots-workspace">
       <PricingLeadTimePanel
         parts={s.partsQuery.data ?? []}
-        vendors={s.supplierDirectory}
+        suppliers={s.supplierDirectory}
         pricingSnapshots={s.pricingSnapshotsQuery.data ?? []}
         leadTimeSnapshots={s.leadTimeSnapshotsQuery.data ?? []}
         canManage={s.canManageCatalog}
         isLoading={s.pricingSnapshotsQuery.isLoading || s.leadTimeSnapshotsQuery.isLoading}
         pricingSnapshotKey={s.pricingSnapshotKey}
         leadTimeSnapshotKey={s.leadTimeSnapshotKey}
-        selectedVendorLinkId={s.selectedSnapshotVendorLinkId}
+        selectedSourceLinkId={s.selectedPricingSourceLinkId}
         unitPrice={s.snapshotUnitPrice}
         currencyCode={s.snapshotCurrencyCode}
         minimumOrderQuantity={s.snapshotMinimumOrderQty}
@@ -25,7 +25,7 @@ export function PricingSection({ state: s }: Props) {
         currentOnlyFilter={s.snapshotCurrentOnly}
         onPricingSnapshotKeyChange={s.setPricingSnapshotKey}
         onLeadTimeSnapshotKeyChange={s.setLeadTimeSnapshotKey}
-        onSelectedVendorLinkIdChange={s.setSelectedSnapshotVendorLinkId}
+        onSelectedSourceLinkIdChange={s.setSelectedPricingSourceLinkId}
         onUnitPriceChange={s.setSnapshotUnitPrice}
         onCurrencyCodeChange={s.setSnapshotCurrencyCode}
         onMinimumOrderQuantityChange={s.setSnapshotMinimumOrderQty}
@@ -43,13 +43,13 @@ export function PricingSection({ state: s }: Props) {
         canManage={s.canManageCatalog}
         isLoading={s.availabilitySnapshotsQuery.isLoading}
         snapshotKey={s.availabilitySnapshotKey}
-        selectedVendorLinkId={s.selectedAvailabilityVendorLinkId}
+        selectedSourceLinkId={s.selectedAvailabilitySourceLinkId}
         quantityAvailable={s.availabilityQuantity}
         availabilityStatus={s.availabilityStatus}
         snapshotNotes={s.availabilityNotes}
         currentOnlyFilter={s.availabilityCurrentOnly}
         onSnapshotKeyChange={s.setAvailabilitySnapshotKey}
-        onSelectedVendorLinkIdChange={s.setSelectedAvailabilityVendorLinkId}
+        onSelectedSourceLinkIdChange={s.setSelectedAvailabilitySourceLinkId}
         onQuantityAvailableChange={s.setAvailabilityQuantity}
         onAvailabilityStatusChange={s.setAvailabilityStatus}
         onSnapshotNotesChange={s.setAvailabilityNotes}

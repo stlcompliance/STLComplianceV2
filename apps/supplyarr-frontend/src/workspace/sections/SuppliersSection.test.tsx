@@ -3,14 +3,14 @@ import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
 
-import { PartiesSection } from './PartiesSection'
+import { SuppliersSection } from './SuppliersSection'
 
 const supplier = {
-  partyId: 'supplier-1',
-  partyKey: 'sup-2048',
-  partyType: 'supplier',
-  parentPartyId: null,
-  parentPartyDisplayName: null,
+  supplierId: 'supplier-1',
+  supplierKey: 'sup-2048',
+  supplierType: 'supplier',
+  parentSupplierId: null,
+  parentSupplierDisplayName: null,
   unitKind: 'identity',
   displayName: 'Midwest Fleet Parts & Service',
   legalName: 'Midwest Fleet Parts & Service LLC',
@@ -43,10 +43,10 @@ const supplier = {
 
 const subUnit = {
   ...supplier,
-  partyId: 'supplier-2',
-  partyKey: 'sup-2048-kc',
-  parentPartyId: 'supplier-1',
-  parentPartyDisplayName: 'Midwest Fleet Parts & Service',
+  supplierId: 'supplier-2',
+  supplierKey: 'sup-2048-kc',
+  parentSupplierId: 'supplier-1',
+  parentSupplierDisplayName: 'Midwest Fleet Parts & Service',
   unitKind: 'sub_unit',
   displayName: 'Midwest Fleet Parts & Service - Kansas City',
   childUnitCount: 0,
@@ -81,29 +81,21 @@ const baseState = {
   accessToken: '',
   canManage: true,
   canApprovePr: true,
-  canReadParties: false,
+  canReadSuppliers: false,
   canReadAuditHistory: false,
   canReadSupplyReadiness: false,
-  vendors: [],
-  vendorsQuery: { data: [], isLoading: false },
   suppliersQuery: { data: [], isLoading: false },
   supplierDirectory: [],
-  dealersQuery: { data: [], isLoading: false },
   contractsQuery: { data: [], isLoading: false },
   partsQuery: { data: [], isLoading: false },
   purchaseOrdersQuery: { data: [], isLoading: false },
   purchaseRequestsQuery: { data: [], isLoading: false },
-  vendorKey: '',
-  vendorName: '',
-  vendorLegalName: '',
-  vendorTaxId: '',
-  vendorNotes: '',
   supplierKey: '',
   supplierName: '',
   supplierLegalName: '',
   supplierTaxId: '',
   supplierNotes: '',
-  supplierParentPartyId: '',
+  supplierParentUnitId: '',
   supplierUnitKind: 'identity',
   supplierServiceTypes: 'products,parts',
   supplierAddressLine1: '',
@@ -111,22 +103,12 @@ const baseState = {
   supplierRegionCode: '',
   supplierPostalCode: '',
   supplierCountryCode: 'US',
-  dealerKey: '',
-  dealerName: '',
-  dealerLegalName: '',
-  dealerTaxId: '',
-  dealerNotes: '',
-  setVendorKey: () => {},
-  setVendorName: () => {},
-  setVendorLegalName: () => {},
-  setVendorTaxId: () => {},
-  setVendorNotes: () => {},
   setSupplierKey: () => {},
   setSupplierName: () => {},
   setSupplierLegalName: () => {},
   setSupplierTaxId: () => {},
   setSupplierNotes: () => {},
-  setSupplierParentPartyId: () => {},
+  setSupplierParentUnitId: () => {},
   setSupplierUnitKind: () => {},
   setSupplierServiceTypes: () => {},
   setSupplierAddressLine1: () => {},
@@ -134,21 +116,14 @@ const baseState = {
   setSupplierRegionCode: () => {},
   setSupplierPostalCode: () => {},
   setSupplierCountryCode: () => {},
-  setDealerKey: () => {},
-  setDealerName: () => {},
-  setDealerLegalName: () => {},
-  setDealerTaxId: () => {},
-  setDealerNotes: () => {},
-  createVendorMutation: { mutate: () => {}, isPending: false },
   createSupplierMutation: { mutate: () => {}, isPending: false },
-  createDealerMutation: { mutate: () => {}, isPending: false },
-  updatePartyMutation: { mutate: () => {}, isPending: false },
-  updatePartyApprovalMutation: { mutate: () => {}, isPending: false },
-  updatePartyStatusMutation: { mutate: () => {}, isPending: false },
-  addPartyContactMutation: { mutate: () => {}, isPending: false },
+  updateSupplierMutation: { mutate: () => {}, isPending: false },
+  updateSupplierApprovalMutation: { mutate: () => {}, isPending: false },
+  updateSupplierStatusMutation: { mutate: () => {}, isPending: false },
+  addSupplierContactMutation: { mutate: () => {}, isPending: false },
 }
 
-function renderPartiesSection(path = '/parties/drawer', state: unknown = baseState) {
+function renderSuppliersSection(path = '/suppliers/drawer', state: unknown = baseState) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -158,22 +133,22 @@ function renderPartiesSection(path = '/parties/drawer', state: unknown = baseSta
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
-        <PartiesSection state={state as never} />
+        <SuppliersSection state={state as never} />
       </MemoryRouter>
     </QueryClientProvider>,
   )
 }
 
-describe('PartiesSection', () => {
+describe('SuppliersSection', () => {
   it('renders the unified supplier directory workspace', () => {
-    renderPartiesSection()
+    renderSuppliersSection()
     expect(screen.getByTestId('supplyarr-supplier-directory')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Supplier directory' })).toBeInTheDocument()
     expect(screen.getByText('0 supplier identities · 0 sub-units')).toBeInTheDocument()
   })
 
   it('renders the replacement supplier profile detail view', () => {
-    const view = renderPartiesSection('/suppliers/details', {
+    const view = renderSuppliersSection('/suppliers/details', {
       ...baseState,
       suppliersQuery: { data: [supplier, subUnit], isLoading: false },
       supplierDirectory: [supplier, subUnit],
@@ -187,6 +162,9 @@ describe('PartiesSection', () => {
     expect(page.getByText('Contracts & terms')).toBeInTheDocument()
     expect(page.getByText('SC-2048')).toBeInTheDocument()
     expect(page.getAllByText('Sub-units').at(-1)).toBeInTheDocument()
+    expect(page.getByText('Sourcing readiness')).toBeInTheDocument()
+    expect(page.getByText('Stock and parts sourcing')).toBeInTheDocument()
+    expect(page.getByText('Use this identity when sourcing can route across multiple supplier locations.')).toBeInTheDocument()
     expect(page.getByText('Midwest Fleet Parts & Service - Kansas City')).toBeInTheDocument()
     expect(page.getAllByText(/Products, Parts/i).length).toBeGreaterThan(0)
   })

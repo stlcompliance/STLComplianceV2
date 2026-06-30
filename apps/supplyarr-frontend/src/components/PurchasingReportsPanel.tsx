@@ -9,6 +9,11 @@ import {
   getPurchasingPurchaseRequestDetail,
   getPurchasingReportSummary,
 } from '../api/client'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../utils/supplierPresentation'
 
 interface PurchasingReportsPanelProps {
   accessToken: string
@@ -215,12 +220,18 @@ export function PurchasingReportsPanel({
               />
               <MetricCard
                 label="Supplier docs expiring"
-                value={String(summaryQuery.data.analytics.vendorDocumentExpiringSoonCount)}
+                value={String(
+                  summaryQuery.data.analytics.supplierDocumentExpiringSoonCount ??
+                    summaryQuery.data.analytics.vendorDocumentExpiringSoonCount,
+                )}
                 detail="Approved supplier compliance documents expiring in the next 30 days."
               />
               <MetricCard
                 label="Blocked suppliers"
-                value={String(summaryQuery.data.analytics.blockedVendorCount)}
+                value={String(
+                  summaryQuery.data.analytics.blockedSupplierCount ??
+                    summaryQuery.data.analytics.blockedVendorCount,
+                )}
                 detail="Active supplier identities or sub-units blocked by approval status."
               />
               <MetricCard
@@ -244,34 +255,57 @@ export function PurchasingReportsPanel({
             <ul className="mt-4 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
               {summaryQuery.data.documents.map((doc) => (
                 <li key={`${doc.documentType}-${doc.documentId}`} className="px-3 py-3">
-                  <button
-                    type="button"
-                    className="w-full text-left"
-                    onClick={() => {
-                      if (doc.documentType === 'purchase_request') {
-                        setSelectedPrId(doc.documentId)
-                        setSelectedPoId(null)
-                      } else {
-                        setSelectedPoId(doc.documentId)
-                        setSelectedPrId(null)
-                      }
-                    }}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <div className="font-medium text-slate-100">
-                          {formatDocumentType(doc.documentType)} {doc.documentKey} · {doc.title}
+                  {(() => {
+                    const hasSupplierIdentity = Boolean(doc.supplierId || doc.supplierDisplayName)
+                    const supplierSummary = hasSupplierIdentity
+                      ? formatSupplierIdentitySummary({
+                          supplierDisplayName: doc.supplierDisplayName,
+                          supplierKey: doc.supplierKey,
+                          parentSupplierDisplayName: doc.parentSupplierDisplayName,
+                          supplierUnitKind: doc.supplierUnitKind,
+                        })
+                      : 'No supplier'
+                    const supplierUnitKind = hasSupplierIdentity
+                      ? humanizeSupplierUnitKind(doc.supplierUnitKind)
+                      : null
+
+                    return (
+                      <button
+                        type="button"
+                        className="w-full text-left"
+                        onClick={() => {
+                          if (doc.documentType === 'purchase_request') {
+                            setSelectedPrId(doc.documentId)
+                            setSelectedPoId(null)
+                          } else {
+                            setSelectedPoId(doc.documentId)
+                            setSelectedPrId(null)
+                          }
+                        }}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <div className="font-medium text-slate-100">
+                              {formatDocumentType(doc.documentType)} {doc.documentKey} · {doc.title}
+                            </div>
+                            <div className="text-xs text-[var(--color-text-muted)]">
+                              {supplierSummary}
+                              {supplierUnitKind ? ` · ${supplierUnitKind}` : ''} · {doc.status}
+                            </div>
+                            {doc.supplierServiceTypes?.length ? (
+                              <div className="mt-1 text-xs text-slate-400">
+                                {formatSupplierServiceTypes(doc.supplierServiceTypes)}
+                              </div>
+                            ) : null}
+                          </div>
+                          <span className="text-xs text-slate-400">{doc.lineCount} lines</span>
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)]">
-                          {doc.vendorDisplayName || 'No supplier'} · {doc.status}
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-400">{doc.lineCount} lines</span>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-400">
-                      Ordered {doc.quantityOrdered} · Received {doc.quantityReceived}
-                    </p>
-                  </button>
+                        <p className="mt-2 text-xs text-slate-400">
+                          Ordered {doc.quantityOrdered} · Received {doc.quantityReceived}
+                        </p>
+                      </button>
+                    )
+                  })()}
                 </li>
               ))}
             </ul>

@@ -73,10 +73,10 @@ public sealed class SupplierOnboardingService(
         StartSupplierOnboardingRequest request,
         CancellationToken cancellationToken = default)
     {
-        var party = await LoadOnboardablePartyAsync(tenantId, request.ExternalPartyId, cancellationToken);
+        var supplier = await LoadOnboardableSupplierAsync(tenantId, request.SupplierId, cancellationToken);
 
         var existing = await db.PartySupplierOnboardings
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == party.Id, cancellationToken);
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == supplier.Id, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         if (existing is not null)
@@ -86,7 +86,7 @@ public sealed class SupplierOnboardingService(
             {
                 throw new StlApiException(
                     "supplier_onboarding.already_active",
-                    "An onboarding record already exists for this party.",
+                    "An onboarding record already exists for this supplier.",
                     409);
             }
 
@@ -105,7 +105,7 @@ public sealed class SupplierOnboardingService(
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                ExternalPartyId = party.Id,
+                ExternalPartyId = supplier.Id,
                 OnboardingStatus = SupplierOnboardingStatuses.Draft,
                 Notes = NormalizeNotes(request.Notes),
                 CreatedAt = now,
@@ -114,8 +114,8 @@ public sealed class SupplierOnboardingService(
             db.PartySupplierOnboardings.Add(existing);
         }
 
-        party.ApprovalStatus = "pending";
-        party.UpdatedAt = now;
+        supplier.ApprovalStatus = "pending";
+        supplier.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -135,10 +135,16 @@ public sealed class SupplierOnboardingService(
         Guid tenantId,
         Guid externalPartyId,
         CancellationToken cancellationToken = default)
+        => await GetBySupplierAsync(tenantId, externalPartyId, cancellationToken);
+
+    public async Task<SupplierOnboardingResponse> GetBySupplierAsync(
+        Guid tenantId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default)
     {
         var onboarding = await db.PartySupplierOnboardings
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == externalPartyId, cancellationToken)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == supplierId, cancellationToken)
             ?? throw new StlApiException("supplier_onboarding.not_found", "Supplier onboarding was not found.", 404);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
@@ -167,11 +173,11 @@ public sealed class SupplierOnboardingService(
     public async Task<SupplierOnboardingResponse> SubmitForReviewAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid externalPartyId,
+        Guid supplierId,
         SubmitSupplierOnboardingForReviewRequest request,
         CancellationToken cancellationToken = default)
     {
-        var onboarding = await LoadOnboardingTrackedAsync(tenantId, externalPartyId, cancellationToken);
+        var onboarding = await LoadOnboardingTrackedAsync(tenantId, supplierId, cancellationToken);
         if (!SupplierOnboardingStatuses.Editable.Contains(onboarding.OnboardingStatus))
         {
             throw new StlApiException(
@@ -187,7 +193,7 @@ public sealed class SupplierOnboardingService(
         {
             var satisfied = await complianceDocuments.HasApprovedRequiredDocumentAsync(
                 tenantId,
-                externalPartyId,
+                supplierId,
                 requirement.DocumentTypeKey,
                 asOf,
                 cancellationToken);
@@ -235,13 +241,29 @@ public sealed class SupplierOnboardingService(
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
 
-    public async Task<SupplierOnboardingResponse> ApproveAsync(
+    public Task<SupplierOnboardingResponse> SubmitForReviewByPartyAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid externalPartyId,
+        SubmitSupplierOnboardingForReviewRequest request,
+        CancellationToken cancellationToken = default) =>
+        SubmitForReviewAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
+
+    public Task<SupplierOnboardingResponse> SubmitForReviewBySupplierAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
+        SubmitSupplierOnboardingForReviewRequest request,
+        CancellationToken cancellationToken = default) =>
+        SubmitForReviewAsync(tenantId, actorUserId, supplierId, request, cancellationToken);
+
+    public async Task<SupplierOnboardingResponse> ApproveAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
         CancellationToken cancellationToken = default)
     {
-        var onboarding = await LoadOnboardingTrackedAsync(tenantId, externalPartyId, cancellationToken);
+        var onboarding = await LoadOnboardingTrackedAsync(tenantId, supplierId, cancellationToken);
         if (!SupplierOnboardingStatuses.Reviewable.Contains(onboarding.OnboardingStatus))
         {
             throw new StlApiException(
@@ -281,14 +303,28 @@ public sealed class SupplierOnboardingService(
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
 
-    public async Task<SupplierOnboardingResponse> RejectAsync(
+    public Task<SupplierOnboardingResponse> ApproveByPartyAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid externalPartyId,
+        CancellationToken cancellationToken = default) =>
+        ApproveAsync(tenantId, actorUserId, externalPartyId, cancellationToken);
+
+    public Task<SupplierOnboardingResponse> ApproveSupplierAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
+        CancellationToken cancellationToken = default) =>
+        ApproveAsync(tenantId, actorUserId, supplierId, cancellationToken);
+
+    public async Task<SupplierOnboardingResponse> RejectAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
         RejectSupplierOnboardingRequest request,
         CancellationToken cancellationToken = default)
     {
-        var onboarding = await LoadOnboardingTrackedAsync(tenantId, externalPartyId, cancellationToken);
+        var onboarding = await LoadOnboardingTrackedAsync(tenantId, supplierId, cancellationToken);
         if (!SupplierOnboardingStatuses.Reviewable.Contains(onboarding.OnboardingStatus))
         {
             throw new StlApiException(
@@ -331,14 +367,30 @@ public sealed class SupplierOnboardingService(
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
 
-    public async Task<SupplierOnboardingResponse> SuspendAsync(
+    public Task<SupplierOnboardingResponse> RejectByPartyAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid externalPartyId,
+        RejectSupplierOnboardingRequest request,
+        CancellationToken cancellationToken = default) =>
+        RejectAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
+
+    public Task<SupplierOnboardingResponse> RejectSupplierAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
+        RejectSupplierOnboardingRequest request,
+        CancellationToken cancellationToken = default) =>
+        RejectAsync(tenantId, actorUserId, supplierId, request, cancellationToken);
+
+    public async Task<SupplierOnboardingResponse> SuspendAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
         SuspendSupplierOnboardingRequest request,
         CancellationToken cancellationToken = default)
     {
-        var onboarding = await LoadOnboardingTrackedAsync(tenantId, externalPartyId, cancellationToken);
+        var onboarding = await LoadOnboardingTrackedAsync(tenantId, supplierId, cancellationToken);
         if (onboarding.OnboardingStatus != SupplierOnboardingStatuses.Approved)
         {
             throw new StlApiException(
@@ -380,6 +432,22 @@ public sealed class SupplierOnboardingService(
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
 
+    public Task<SupplierOnboardingResponse> SuspendByPartyAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid externalPartyId,
+        SuspendSupplierOnboardingRequest request,
+        CancellationToken cancellationToken = default) =>
+        SuspendAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
+
+    public Task<SupplierOnboardingResponse> SuspendSupplierAsync(
+        Guid tenantId,
+        Guid actorUserId,
+        Guid supplierId,
+        SuspendSupplierOnboardingRequest request,
+        CancellationToken cancellationToken = default) =>
+        SuspendAsync(tenantId, actorUserId, supplierId, request, cancellationToken);
+
     private async Task<SupplierOnboardingResponse> MapOnboardingResponseAsync(
         Guid tenantId,
         Guid onboardingId,
@@ -388,6 +456,7 @@ public sealed class SupplierOnboardingService(
         var onboarding = await db.PartySupplierOnboardings
             .AsNoTracking()
             .Include(x => x.ExternalParty)
+            .ThenInclude(x => x.ParentExternalParty)
             .FirstAsync(x => x.TenantId == tenantId && x.Id == onboardingId, cancellationToken);
 
         var requirements = await LoadRequirementDefinitionsAsync(tenantId, cancellationToken);
@@ -418,7 +487,9 @@ public sealed class SupplierOnboardingService(
             onboarding.Id,
             onboarding.ExternalPartyId,
             onboarding.ExternalParty.PartyKey,
-            onboarding.ExternalParty.PartyType,
+            onboarding.ExternalParty.UnitKind,
+            onboarding.ExternalParty.ParentExternalPartyId,
+            onboarding.ExternalParty.ParentExternalParty?.DisplayName,
             onboarding.ExternalParty.DisplayName,
             onboarding.OnboardingStatus,
             onboarding.Notes,
@@ -459,25 +530,25 @@ public sealed class SupplierOnboardingService(
             true)).ToList();
     }
 
-    private async Task<ExternalParty> LoadOnboardablePartyAsync(
+    private async Task<ExternalParty> LoadOnboardableSupplierAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken)
     {
-        var party = await db.ExternalParties.FirstOrDefaultAsync(
-            x => x.TenantId == tenantId && x.Id == externalPartyId,
+        var supplier = await db.ExternalParties.FirstOrDefaultAsync(
+            x => x.TenantId == tenantId && x.Id == supplierId,
             cancellationToken)
-            ?? throw new StlApiException("parties.not_found", "External party was not found.", 404);
+            ?? throw new StlApiException("parties.not_found", "Supplier was not found.", 404);
 
-        if (!SupplierOnboardingPartyTypes.Allowed.Contains(party.PartyType))
+        if (!SupplierIdentityRecordTypes.Allowed.Contains(supplier.PartyType))
         {
             throw new StlApiException(
                 "supplier_onboarding.party_type",
-                "Onboarding is only available for vendor and supplier parties.",
+                "Onboarding is only available for supplier records.",
                 409);
         }
 
-        return party;
+        return supplier;
     }
 
     private async Task<PartySupplierOnboarding> LoadOnboardingTrackedAsync(

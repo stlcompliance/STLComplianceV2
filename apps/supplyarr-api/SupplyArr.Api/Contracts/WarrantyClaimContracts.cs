@@ -5,9 +5,16 @@ public sealed record WarrantyClaimResponse(
     string ClaimKey,
     string Status,
     string ClaimType,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
+    Guid? VendorPartyId,
+    string? VendorPartyKey,
+    string? VendorDisplayName,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
@@ -37,10 +44,12 @@ public sealed record WarrantyClaimResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
-public sealed record CreateWarrantyClaimRequest(
+public record CreateSupplierWarrantyClaimRequest(
     string ClaimKey,
     string ClaimType,
-    Guid VendorPartyId,
+    Guid? SupplierUnitId,
+    Guid? SupplierId,
+    Guid? VendorPartyId,
     Guid PartId,
     decimal QuantityClaimed,
     string ProblemDescription,
@@ -49,6 +58,65 @@ public sealed record CreateWarrantyClaimRequest(
     Guid? ReceivingReceiptId,
     Guid? ReceivingReceiptLineId,
     string? VendorRmaNumber);
+
+public sealed record CreateWarrantyClaimRequest(
+    string ClaimKey,
+    string ClaimType,
+    Guid? SupplierUnitId,
+    Guid? SupplierId,
+    Guid? VendorPartyId,
+    Guid PartId,
+    decimal QuantityClaimed,
+    string ProblemDescription,
+    Guid? PurchaseOrderId,
+    Guid? PurchaseOrderLineId,
+    Guid? ReceivingReceiptId,
+    Guid? ReceivingReceiptLineId,
+    string? VendorRmaNumber)
+    : CreateSupplierWarrantyClaimRequest(
+        ClaimKey,
+        ClaimType,
+        SupplierUnitId,
+        SupplierId,
+        VendorPartyId,
+        PartId,
+        QuantityClaimed,
+        ProblemDescription,
+        PurchaseOrderId,
+        PurchaseOrderLineId,
+        ReceivingReceiptId,
+        ReceivingReceiptLineId,
+        VendorRmaNumber)
+{
+    public CreateWarrantyClaimRequest(
+        string claimKey,
+        string claimType,
+        Guid vendorPartyId,
+        Guid partId,
+        decimal quantityClaimed,
+        string problemDescription,
+        Guid? purchaseOrderId,
+        Guid? purchaseOrderLineId,
+        Guid? receivingReceiptId,
+        Guid? receivingReceiptLineId,
+        string? vendorRmaNumber)
+        : this(
+            claimKey,
+            claimType,
+            vendorPartyId,
+            vendorPartyId,
+            vendorPartyId,
+            partId,
+            quantityClaimed,
+            problemDescription,
+            purchaseOrderId,
+            purchaseOrderLineId,
+            receivingReceiptId,
+            receivingReceiptLineId,
+            vendorRmaNumber)
+    {
+    }
+}
 
 public sealed record UpdateWarrantyClaimRequest(
     string ClaimType,

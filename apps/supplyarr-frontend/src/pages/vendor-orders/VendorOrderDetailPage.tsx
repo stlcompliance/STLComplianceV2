@@ -13,19 +13,24 @@ import { Navigate, useParams } from 'react-router-dom'
 import { DetailBadge, DetailEmptyState, ProfileDetailsLayout, type DetailRailSectionConfig } from '@stl/shared-ui'
 import type { RegisterVendorOrderDocumentRequest, UpdateVendorOrderStatusRequest } from '../../api/types'
 import {
-  createVendorOrderBrokerDecision,
-  createVendorOrderMagicLink,
-  getVendorOrder,
-  getVendorOrderMetadata,
-  getVendorOrders,
-  getVendorOrderHistory,
-  registerVendorOrderDocument,
-  sendVendorOrderToVendor,
-  splitVendorOrder,
-  submitVendorOrderStatus,
+  createSupplierOrderBrokerDecision,
+  createSupplierOrderMagicLink,
+  getSupplierOrder,
+  getSupplierOrderMetadata,
+  getSupplierOrders,
+  getSupplierOrderHistory,
+  registerSupplierOrderDocument,
+  sendSupplierOrderToSupplier,
+  splitSupplierOrder,
+  submitSupplierOrderStatus,
 } from '../../api/vendorOrderClient'
 import { listRoutArrTripsByVendorOrder } from '../../api/routarrReferenceClient'
 import { useSupplyArrPageAccess } from './useSupplyArrPageAccess'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+} from '../../utils/supplierPresentation'
 import {
   formatVendorOrderDateTime,
   humanizeVendorOrderValue,
@@ -33,9 +38,9 @@ import {
   vendorOrderStatusTone,
 } from './vendorOrderUi'
 
-export function VendorOrderDetailPage() {
+export function SupplierOrderDetailPage() {
   const { vendorOrderId } = useParams<{ vendorOrderId: string }>()
-  const { session, meQuery, canReadVendorOrders, canUpdateVendorOrders } = useSupplyArrPageAccess()
+  const { session, meQuery, canReadSupplierOrders, canUpdateSupplierOrders } = useSupplyArrPageAccess()
   const [latestMagicLink, setLatestMagicLink] = useState<{
     url: string
     expiresAt?: string | null
@@ -71,23 +76,23 @@ export function VendorOrderDetailPage() {
   const [splitPickupWindowEnd, setSplitPickupWindowEnd] = useState('')
 
   if (!session) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor order…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier order…</p>
   }
 
   if (!vendorOrderId) {
-    return <Navigate to="/purchasing/vendor-orders" replace />
+    return <Navigate to="/purchasing/supplier-orders" replace />
   }
 
   if (meQuery.isLoading) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor-order access…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier-order access…</p>
   }
 
-  if (!canReadVendorOrders) {
+  if (!canReadSupplierOrders) {
     return (
       <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor-order detail</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Supplier-order detail</h1>
         <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-          You do not have permission to view vendor orders.
+          You do not have permission to view supplier orders.
         </p>
       </section>
     )
@@ -95,17 +100,17 @@ export function VendorOrderDetailPage() {
 
   const vendorOrderQuery = useQuery({
     queryKey: ['supplyarr-vendor-order', session.accessToken, vendorOrderId],
-    queryFn: () => getVendorOrder(session.accessToken, vendorOrderId),
+    queryFn: () => getSupplierOrder(session.accessToken, vendorOrderId),
   })
 
   const metadataQuery = useQuery({
     queryKey: ['supplyarr-vendor-order-metadata', session.accessToken],
-    queryFn: () => getVendorOrderMetadata(session.accessToken),
+    queryFn: () => getSupplierOrderMetadata(session.accessToken),
   })
 
   const historyQuery = useQuery({
     queryKey: ['supplyarr-vendor-order-history', session.accessToken, vendorOrderId],
-    queryFn: () => getVendorOrderHistory(session.accessToken, vendorOrderId),
+    queryFn: () => getSupplierOrderHistory(session.accessToken, vendorOrderId),
     enabled: vendorOrderQuery.isSuccess,
   })
 
@@ -116,9 +121,12 @@ export function VendorOrderDetailPage() {
   })
 
   const lineageQuery = useQuery({
-    queryKey: ['supplyarr-vendor-order-lineage', session.accessToken, vendorOrderQuery.data?.vendorId],
-    queryFn: () => getVendorOrders(session.accessToken, { vendorId: vendorOrderQuery.data?.vendorId }),
-    enabled: Boolean(vendorOrderQuery.data?.vendorId),
+    queryKey: ['supplyarr-vendor-order-lineage', session.accessToken, vendorOrderQuery.data?.supplierId ?? vendorOrderQuery.data?.vendorId],
+    queryFn: () =>
+      getSupplierOrders(session.accessToken, {
+        supplierId: vendorOrderQuery.data?.supplierId ?? vendorOrderQuery.data?.vendorId,
+      }),
+    enabled: Boolean(vendorOrderQuery.data?.supplierId ?? vendorOrderQuery.data?.vendorId),
   })
 
   const refreshAll = async () => {
@@ -129,38 +137,38 @@ export function VendorOrderDetailPage() {
   }
 
   const sendMutation = useMutation({
-    mutationFn: () => sendVendorOrderToVendor(session.accessToken, vendorOrderId),
+    mutationFn: () => sendSupplierOrderToSupplier(session.accessToken, vendorOrderId),
     onSuccess: async (result) => {
       setLatestMagicLink({
         url: result.magicLinkUrl,
         expiresAt: result.expiresAt,
-        description: 'Vendor magic link issued from send flow.',
+        description: 'Supplier magic link issued from send flow.',
       })
       await refreshAll()
     },
   })
 
   const magicLinkMutation = useMutation({
-    mutationFn: () => createVendorOrderMagicLink(session.accessToken, vendorOrderId),
+    mutationFn: () => createSupplierOrderMagicLink(session.accessToken, vendorOrderId),
     onSuccess: async (result) => {
       setLatestMagicLink({
         url: result.url,
         expiresAt: result.expiresAt,
-        description: 'Vendor magic link regenerated.',
+        description: 'Supplier magic link regenerated.',
       })
       await refreshAll()
     },
   })
 
   const statusMutation = useMutation({
-    mutationFn: () => submitVendorOrderStatus(session.accessToken, vendorOrderId, statusDraft),
+    mutationFn: () => submitSupplierOrderStatus(session.accessToken, vendorOrderId, statusDraft),
     onSuccess: async () => {
       await refreshAll()
     },
   })
 
   const documentMutation = useMutation({
-    mutationFn: () => registerVendorOrderDocument(session.accessToken, vendorOrderId, documentDraft),
+    mutationFn: () => registerSupplierOrderDocument(session.accessToken, vendorOrderId, documentDraft),
     onSuccess: async () => {
       setDocumentDraft({
         documentType: 'photo',
@@ -176,7 +184,7 @@ export function VendorOrderDetailPage() {
 
   const decisionMutation = useMutation({
     mutationFn: () =>
-      createVendorOrderBrokerDecision(session.accessToken, vendorOrderId, {
+      createSupplierOrderBrokerDecision(session.accessToken, vendorOrderId, {
         decisionType,
         authorizedQuantity: decisionQuantity ? Number(decisionQuantity) : null,
         selectedTripId: decisionTripId || null,
@@ -191,7 +199,7 @@ export function VendorOrderDetailPage() {
 
   const splitMutation = useMutation({
     mutationFn: () =>
-      splitVendorOrder(session.accessToken, vendorOrderId, {
+      splitSupplierOrder(session.accessToken, vendorOrderId, {
         selectedTripId: splitTripId || null,
         splitReason: splitReason || null,
         remainingExpectedReadyAt: splitExpectedReadyAt || null,
@@ -202,7 +210,7 @@ export function VendorOrderDetailPage() {
       setLatestMagicLink({
         url: result.remainingVendorOrderUrl,
         expiresAt: null,
-        description: 'New remaining-child vendor link issued after split.',
+        description: 'New remaining-child supplier link issued after split.',
       })
       await refreshAll()
     },
@@ -223,15 +231,15 @@ export function VendorOrderDetailPage() {
   }, [vendorOrderQuery.data])
 
   if (vendorOrderQuery.isLoading) {
-    return <p className="text-sm text-[var(--color-text-muted)]">Loading vendor order…</p>
+    return <p className="text-sm text-[var(--color-text-muted)]">Loading supplier order…</p>
   }
 
   if (vendorOrderQuery.isError || !vendorOrderQuery.data) {
     return (
       <section className="rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-8">
-        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Vendor-order detail unavailable</h1>
+        <h1 className="text-2xl font-bold text-[var(--color-text-primary)]">Supplier-order detail unavailable</h1>
         <p className="mt-3 text-sm text-[var(--tone-danger-text)]">
-          Unable to load this vendor order right now.
+          Unable to load this supplier order right now.
         </p>
       </section>
     )
@@ -239,32 +247,41 @@ export function VendorOrderDetailPage() {
 
   const order = vendorOrderQuery.data
   const metadata = metadataQuery.data
+  const supplierIdentityLabel = formatSupplierIdentityLabel({
+    supplierDisplayName: order.supplierNameSnapshot,
+    vendorDisplayName: order.vendorNameSnapshot,
+    parentSupplierDisplayName: order.parentSupplierDisplayName,
+    supplierUnitKind: order.supplierUnitKind,
+  })
+  const supplierParentLabel = order.parentSupplierDisplayName ?? 'This supplier record is the parent identity.'
+  const supplierUnitKindLabel = humanizeSupplierUnitKind(order.supplierUnitKind)
+  const supplierServiceSummary = formatSupplierServiceTypes(order.supplierServiceTypes)
   const splitChildren =
     (lineageQuery.data ?? []).filter((item) => item.parentVendorOrderId === order.vendorOrderId) ?? []
-  const activeVendorBlockTrips =
+  const activeSupplierBlockTrips =
     (relatedTripsQuery.data ?? []).filter((trip) =>
       (trip.dispatchBlocks ?? []).some(
         (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
       ),
     ) ?? []
-  const readyTripCount = (relatedTripsQuery.data ?? []).length - activeVendorBlockTrips.length
+  const readyTripCount = (relatedTripsQuery.data ?? []).length - activeSupplierBlockTrips.length
   const decisionSummary =
     order.status === 'completed_ready_for_dispatch'
-      ? 'Vendor released this order for dispatch.'
+      ? 'Supplier released this order for dispatch.'
       : order.status === 'partially_ready'
         ? 'Broker decision required for partial readiness.'
         : order.status === 'unable_to_fulfill'
-          ? 'Vendor reported that this order cannot be fulfilled.'
-          : 'Waiting on vendor readiness confirmation.'
+          ? 'Supplier reported that this order cannot be fulfilled.'
+          : 'Waiting on supplier readiness confirmation.'
 
   const decisionDetail =
     order.status === 'completed_ready_for_dispatch'
-      ? 'The vendor-ready confirmation is in. Dispatch can proceed once the trip is unblocked and manually released.'
+      ? 'The supplier-ready confirmation is in. Dispatch can proceed once the trip is unblocked and manually released.'
       : order.status === 'partially_ready'
-        ? 'The vendor reported a partial quantity. Decide whether to wait, authorize a partial dispatch, or split the remaining quantity.'
+        ? 'The supplier reported a partial quantity. Decide whether to wait, authorize a partial dispatch, or split the remaining quantity.'
         : order.status === 'unable_to_fulfill'
-          ? 'Keep the trip blocked and follow the vendor exception path until the broker resolves the order.'
-          : 'The vendor workflow will publish readiness once the vendor confirms pickup readiness.'
+          ? 'Keep the trip blocked and follow the supplier exception path until the broker resolves the order.'
+          : 'The supplier workflow will publish readiness once the supplier confirms pickup readiness.'
 
   const railSections: DetailRailSectionConfig[] = [
     {
@@ -292,7 +309,7 @@ export function VendorOrderDetailPage() {
                     />
                   </div>
                   <p className="mt-3 text-xs text-[var(--color-text-secondary)]">
-                    Vendor status snapshot: {humanizeVendorOrderValue(trip.vendorReadinessStatusSnapshot)}
+                    Supplier status snapshot: {humanizeVendorOrderValue(trip.vendorReadinessStatusSnapshot)}
                   </p>
                   <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                     {quantitySummary(
@@ -325,7 +342,7 @@ export function VendorOrderDetailPage() {
         ) : relatedTripsQuery.isLoading ? (
           <p className="text-sm text-[var(--color-text-muted)]">Loading related trips…</p>
         ) : (
-          <DetailEmptyState text="No trips reference this vendor order yet." />
+          <DetailEmptyState text="No trips reference this supplier order yet." />
         ),
     },
     {
@@ -348,12 +365,12 @@ export function VendorOrderDetailPage() {
               ))}
             </ul>
           ) : (
-            <DetailEmptyState text="No vendor-order documents have been registered yet." />
+            <DetailEmptyState text="No supplier-order documents have been registered yet." />
           )}
 
-          {canUpdateVendorOrders ? (
+          {canUpdateSupplierOrders ? (
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
-              <h3 className="font-medium text-[var(--color-text-primary)]">Register vendor-order document</h3>
+              <h3 className="font-medium text-[var(--color-text-primary)]">Register supplier-order document</h3>
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 This records the document metadata. Storage details are available in support information.
               </p>
@@ -374,7 +391,7 @@ export function VendorOrderDetailPage() {
                         fileName: file.name,
                         contentType: file.type || 'application/octet-stream',
                         sizeBytes: file.size,
-                        storageKey: current.storageKey || `vendor-order/${file.name}`,
+                        storageKey: current.storageKey || `supplier-order/${file.name}`,
                       }))
                     }}
                   />
@@ -485,33 +502,34 @@ export function VendorOrderDetailPage() {
             ))}
           </ol>
         ) : (
-          <DetailEmptyState text="No immutable vendor-order status updates have been recorded yet." />
+          <DetailEmptyState text="No immutable supplier-order status updates have been recorded yet." />
         ),
     },
   ]
 
   return (
     <ProfileDetailsLayout
-      testId="supplyarr-vendor-order-detail"
-      backLabel="Vendor orders"
-      backTo="/purchasing/vendor-orders"
-      breadcrumbs={['Vendor orders', order.itemDescription]}
+      testId="supplyarr-supplier-order-detail"
+      backLabel="Supplier orders"
+      backTo="/purchasing/supplier-orders"
+      breadcrumbs={['Supplier orders', order.itemDescription]}
       icon={<PackageCheck className="h-9 w-9" />}
       title={order.itemDescription}
       subtitle={
         <span className="flex flex-wrap items-center gap-2">
-          <span>{order.vendorNameSnapshot}</span>
+          <span>{supplierIdentityLabel}</span>
           <span className="text-[var(--color-text-muted)]">/</span>
           <span>{order.vendorOrderId}</span>
         </span>
       }
       badges={[
-        { label: 'Vendor order', tone: 'info' },
+        { label: 'Supplier order', tone: 'info' },
+        { label: supplierUnitKindLabel, tone: order.parentSupplierId ? 'neutral' : 'info' },
         { label: humanizeVendorOrderValue(order.status), tone: vendorOrderStatusTone(order.status) },
         { label: order.brokerOrderNumberSnapshot ?? 'Order ref pending', tone: order.brokerOrderNumberSnapshot ? 'neutral' : 'warn' },
       ]}
       actions={
-        canUpdateVendorOrders ? (
+        canUpdateSupplierOrders ? (
           <>
             <button
               type="button"
@@ -519,7 +537,7 @@ export function VendorOrderDetailPage() {
               disabled={sendMutation.isPending}
               onClick={() => sendMutation.mutate()}
             >
-              {sendMutation.isPending ? 'Sending…' : 'Send to vendor'}
+              {sendMutation.isPending ? 'Sending…' : 'Send to supplier'}
             </button>
             <button
               type="button"
@@ -550,9 +568,9 @@ export function VendorOrderDetailPage() {
         {
           label: 'Linked trips',
           value: String(relatedTripsQuery.data?.length ?? 0),
-          hint: `${activeVendorBlockTrips.length} blocked · ${readyTripCount} ready`,
+          hint: `${activeSupplierBlockTrips.length} blocked · ${readyTripCount} ready`,
           icon: <Route className="h-5 w-5" />,
-          tone: activeVendorBlockTrips.length > 0 ? 'warn' : 'good',
+          tone: activeSupplierBlockTrips.length > 0 ? 'warn' : 'good',
         },
         {
           label: 'Documents',
@@ -563,11 +581,14 @@ export function VendorOrderDetailPage() {
         },
       ]}
       tabs={['Overview', 'Readiness', 'Related records', 'Documents', 'History']}
-      snapshotTitle="Vendor-order snapshot"
-      snapshotSubtitle="Vendor readiness, pickup snapshots, and order details."
+      snapshotTitle="Supplier-order snapshot"
+      snapshotSubtitle="Supplier hierarchy, service coverage, pickup snapshots, and readiness details."
       snapshotFields={[
-        { label: 'Vendor order ID', value: order.vendorOrderId, source: 'Order details' },
-        { label: 'Vendor', value: order.vendorNameSnapshot, source: 'Vendor details' },
+        { label: 'Supplier order ID', value: order.vendorOrderId, source: 'Order details' },
+        { label: 'Supplier identity or sub-unit', value: supplierIdentityLabel, source: 'SupplyArr supplier record' },
+        { label: 'Parent supplier', value: supplierParentLabel, source: 'SupplyArr supplier hierarchy' },
+        { label: 'Hierarchy role', value: supplierUnitKindLabel, source: 'SupplyArr supplier hierarchy' },
+        { label: 'Services provided', value: supplierServiceSummary, source: 'SupplyArr supplier coverage' },
         { label: 'Broker order snapshot', value: order.brokerOrderNumberSnapshot ?? 'Not recorded', source: 'Order snapshot' },
         { label: 'Pickup location snapshot', value: order.pickupLocationNameSnapshot ?? 'Not recorded', source: 'Pickup details' },
         { label: 'Pickup address snapshot', value: order.pickupAddressSnapshot, source: 'Pickup details' },
@@ -585,7 +606,7 @@ export function VendorOrderDetailPage() {
             <section className="rounded-2xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Latest vendor access link</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">Latest supplier access link</h3>
                   {latestMagicLink.description ? (
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{latestMagicLink.description}</p>
                   ) : null}
@@ -608,9 +629,9 @@ export function VendorOrderDetailPage() {
           <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
             <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Broker actions</h3>
           <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-              Record status decisions separately from transportation execution. The vendor portal keeps vendor responses and readiness updates in one place.
+              Record status decisions separately from transportation execution. The supplier portal keeps supplier responses and readiness updates in one place.
             </p>
-            {canUpdateVendorOrders ? (
+            {canUpdateSupplierOrders ? (
               <div className="mt-4 grid gap-5 lg:grid-cols-2">
                 <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                   <h4 className="font-semibold text-[var(--color-text-primary)]">Internal status update</h4>
@@ -729,7 +750,7 @@ export function VendorOrderDetailPage() {
                   <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                     <h4 className="font-semibold text-[var(--color-text-primary)]">Partial readiness decision</h4>
                     <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                      Keep the vendor order blocked, authorize a partial dispatch, or prepare the split flow.
+                      Keep the supplier order blocked, authorize a partial dispatch, or prepare the split flow.
                     </p>
                     <div className="mt-3 grid gap-3">
                       <label className="text-sm text-[var(--color-text-secondary)]">
@@ -863,14 +884,14 @@ export function VendorOrderDetailPage() {
             <h3 className="text-lg font-bold text-[var(--color-text-primary)]">Split lineage</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Parent vendor order</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Parent supplier order</p>
                 <p className="mt-2 text-sm font-medium text-[var(--color-text-primary)]">{order.parentVendorOrderId ?? 'This is the parent order.'}</p>
                 {order.splitReason ? (
                   <p className="mt-2 text-xs text-[var(--color-text-muted)]">Split reason: {order.splitReason}</p>
                 ) : null}
               </div>
               <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
-                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Child vendor orders</p>
+                <p className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Child supplier orders</p>
                 {splitChildren.length > 0 ? (
                   <ul className="mt-2 space-y-2">
                     {splitChildren.map((child) => (
@@ -883,7 +904,7 @@ export function VendorOrderDetailPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No child vendor orders have been created from this parent yet.</p>
+                  <p className="mt-2 text-sm text-[var(--color-text-muted)]">No child supplier orders have been created from this parent yet.</p>
                 )}
               </div>
             </div>
@@ -898,8 +919,8 @@ export function VendorOrderDetailPage() {
             : order.status === 'partially_ready'
               ? 'Broker decision required'
               : order.status === 'unable_to_fulfill'
-                ? 'Blocked by vendor'
-                : 'Waiting on vendor',
+                ? 'Blocked by supplier'
+                : 'Waiting on supplier',
         tone:
           order.status === 'completed_ready_for_dispatch'
             ? 'good'
@@ -923,13 +944,15 @@ export function VendorOrderDetailPage() {
       ].filter(Boolean).length}
       blockedChecks={[
         order.status !== 'completed_ready_for_dispatch',
-        activeVendorBlockTrips.length > 0,
+        activeSupplierBlockTrips.length > 0,
         order.status === 'unable_to_fulfill',
       ].filter(Boolean).length}
       railSections={railSections}
     />
   )
 }
+
+export const VendorOrderDetailPage = SupplierOrderDetailPage
 
 function fromDatetimeLocalValue(value: string): string | null {
   if (!value) {

@@ -15,6 +15,8 @@ public sealed record SupplyReferenceResolutionResponse(
 
 public static class SupplyReferenceTypes
 {
+    public const string Supplier = "supplier";
+
     public const string ExternalParty = "external_party";
 
     public const string Part = "part";
@@ -31,6 +33,7 @@ public static class SupplyReferenceTypes
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
+        Supplier,
         ExternalParty,
         Part,
         PurchaseRequest,

@@ -6,6 +6,13 @@ public sealed record EmergencyPurchaseResponse(
     string Title,
     string Notes,
     string Status,
+    Guid? SupplierId,
+    string? SupplierKey,
+    string? SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string? SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
     Guid? VendorPartyId,
     string? VendorPartyKey,
     string? VendorDisplayName,
@@ -24,9 +31,22 @@ public sealed record CreateEmergencyPurchaseRequest(
     string RequestKey,
     string Title,
     string EmergencyReason,
-    Guid VendorPartyId,
+    Guid? SupplierId,
+    Guid? VendorPartyId,
     string Notes,
-    IReadOnlyList<CreatePurchaseRequestLineRequest> Lines);
+    IReadOnlyList<CreatePurchaseRequestLineRequest> Lines)
+{
+    public CreateEmergencyPurchaseRequest(
+        string requestKey,
+        string title,
+        string emergencyReason,
+        Guid vendorPartyId,
+        string notes,
+        IReadOnlyList<CreatePurchaseRequestLineRequest> lines)
+        : this(requestKey, title, emergencyReason, vendorPartyId, vendorPartyId, notes, lines)
+    {
+    }
+}
 
 public sealed record ExpeditedSubmitEmergencyPurchaseRequest(string? Notes);
 

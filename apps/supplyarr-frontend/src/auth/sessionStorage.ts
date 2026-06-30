@@ -95,24 +95,29 @@ export function canApprovePurchaseOrders(tenantRoleKey: string, isPlatformAdmin:
   return canApprovePurchaseRequests(tenantRoleKey, isPlatformAdmin)
 }
 
-export function canReadVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+export function canReadSupplierOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canReadProcurementRecords(tenantRoleKey, isPlatformAdmin)
 }
 
-export function canCreateVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+export function canCreateSupplierOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   return canCreatePurchaseRequests(tenantRoleKey, isPlatformAdmin)
 }
 
-export function canUpdateVendorOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
-  return canCreateVendorOrders(tenantRoleKey, isPlatformAdmin)
+export function canUpdateSupplierOrders(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+  return canCreateSupplierOrders(tenantRoleKey, isPlatformAdmin)
 }
 
-export function canManageVendorOrderSettings(
+export function canManageSupplierOrderSettings(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
   return canManageNotificationSettings(tenantRoleKey, isPlatformAdmin)
 }
+
+export const canReadVendorOrders = canReadSupplierOrders
+export const canCreateVendorOrders = canCreateSupplierOrders
+export const canUpdateVendorOrders = canUpdateSupplierOrders
+export const canManageVendorOrderSettings = canManageSupplierOrderSettings
 
 export function canPerformReceiving(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
@@ -139,7 +144,7 @@ const supplyarrProcurementReadRoles = [
   'supplyarr_buyer',
 ]
 
-export function canReadParties(
+export function canReadSuppliers(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
@@ -147,11 +152,13 @@ export function canReadParties(
   return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
 }
 
+export const canReadParties = canReadSuppliers
+
 export function canReadPartSubstitutions(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
-  return canReadParties(tenantRoleKey, isPlatformAdmin)
+  return canReadSuppliers(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canReadProcurementRecords(
@@ -166,7 +173,7 @@ export function canUseForgivingSearch(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
-  return canReadParties(tenantRoleKey, isPlatformAdmin)
+  return canReadSuppliers(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canReadAuditHistory(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
@@ -184,15 +191,19 @@ export function canReadSupplyReadiness(tenantRoleKey: string, isPlatformAdmin: b
   ].includes(tenantRoleKey.toLowerCase())
 }
 
-export function canReadVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+export function canReadSupplierReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return supplyarrReadRoles.includes(tenantRoleKey.toLowerCase())
 }
 
-export function canExportVendorReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
+export function canExportSupplierReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
 }
+
+export const canReadVendorReports = canReadSupplierReports
+
+export const canExportVendorReports = canExportSupplierReports
 
 export function canReadPurchasingReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
@@ -204,7 +215,7 @@ export function canExportPurchasingReports(tenantRoleKey: string, isPlatformAdmi
 }
 
 export function canReadComplianceReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
-  return canReadVendorReports(tenantRoleKey, isPlatformAdmin)
+  return canReadSupplierReports(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canExportComplianceReports(
@@ -218,7 +229,7 @@ export function canReadPartsInventoryReports(
   tenantRoleKey: string,
   isPlatformAdmin: boolean,
 ): boolean {
-  return canReadParties(tenantRoleKey, isPlatformAdmin)
+  return canReadSuppliers(tenantRoleKey, isPlatformAdmin)
 }
 
 export function canExportPartsInventoryReports(

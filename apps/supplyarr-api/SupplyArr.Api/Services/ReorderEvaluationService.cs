@@ -114,7 +114,7 @@ public sealed class ReorderEvaluationService(
                 409);
         }
 
-        var vendorPartyId = ResolveVendorPartyId(selected);
+        var supplierId = ResolveSupplierId(selected);
         var lines = selected
             .Select(x => new CreatePurchaseRequestLineRequest(
                 x.PartId,
@@ -126,11 +126,12 @@ public sealed class ReorderEvaluationService(
             tenantId,
             actorUserId,
             new CreatePurchaseRequestRequest(
-                request.RequestKey,
-                request.Title,
-                request.Notes,
-                vendorPartyId,
-                lines),
+                RequestKey: request.RequestKey,
+                Title: request.Title,
+                Notes: request.Notes,
+                SupplierId: supplierId,
+                VendorPartyId: supplierId,
+                Lines: lines),
             cancellationToken);
 
         await audit.WriteAsync(
@@ -216,19 +217,20 @@ public sealed class ReorderEvaluationService(
 
         if (request.CreateDraftPurchaseRequests && actionable.Count > 0)
         {
-            foreach (var vendorGroup in actionable.GroupBy(x => x.PreferredVendorPartyId))
+            foreach (var supplierGroup in actionable.GroupBy(x => x.PreferredSupplierId))
             {
-                var groupItems = vendorGroup.ToList();
+                var groupItems = supplierGroup.ToList();
                 var requestKey = $"reorder-{evaluatedAt:yyyyMMddHHmmss}-{createdPurchaseRequestIds.Count + 1}";
                 var created = await purchaseRequests.CreateAsync(
                     request.TenantId.Value,
                     WorkerActorUserId,
                     new CreatePurchaseRequestRequest(
-                        requestKey,
-                        "Auto reorder evaluation",
-                        "Draft purchase request created by reorder evaluation worker.",
-                        vendorGroup.Key,
-                        groupItems
+                        RequestKey: requestKey,
+                        Title: "Auto reorder evaluation",
+                        Notes: "Draft purchase request created by reorder evaluation worker.",
+                        SupplierId: supplierGroup.Key,
+                        VendorPartyId: supplierGroup.Key,
+                        Lines: groupItems
                             .Select(x => new CreatePurchaseRequestLineRequest(
                                 x.PartId,
                                 x.SuggestedOrderQuantity,
@@ -379,6 +381,9 @@ public sealed class ReorderEvaluationService(
                 preferredVendor?.ExternalPartyId,
                 preferredVendor?.ExternalParty.PartyKey,
                 preferredVendor?.ExternalParty.DisplayName,
+                preferredVendor?.ExternalPartyId,
+                preferredVendor?.ExternalParty.PartyKey,
+                preferredVendor?.ExternalParty.DisplayName,
                 hasOpenPurchaseRequest,
                 hasOpenPurchaseRequest ? "open_purchase_request" : null));
         }
@@ -455,16 +460,16 @@ public sealed class ReorderEvaluationService(
             part.ReorderQuantity,
             part.UpdatedAt);
 
-    private static Guid? ResolveVendorPartyId(IReadOnlyList<ReorderSuggestionResponse> selected)
+    private static Guid? ResolveSupplierId(IReadOnlyList<ReorderSuggestionResponse> selected)
     {
-        var vendorIds = selected
-            .Select(x => x.PreferredVendorPartyId)
+        var supplierIds = selected
+            .Select(x => x.PreferredSupplierId)
             .Where(x => x.HasValue)
             .Select(x => x!.Value)
             .Distinct()
             .ToList();
 
-        return vendorIds.Count == 1 ? vendorIds[0] : null;
+        return supplierIds.Count == 1 ? supplierIds[0] : null;
     }
 
     private static int NormalizeBatchSize(int batchSize) =>

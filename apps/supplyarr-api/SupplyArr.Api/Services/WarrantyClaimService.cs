@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -14,7 +15,7 @@ public sealed class WarrantyClaimService(
     public async Task<IReadOnlyList<WarrantyClaimResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
-        Guid? vendorPartyId = null,
+        Guid? supplierId = null,
         Guid? partId = null,
         Guid? purchaseOrderId = null,
         CancellationToken cancellationToken = default)
@@ -22,6 +23,7 @@ public sealed class WarrantyClaimService(
         var query = db.WarrantyClaims
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -32,9 +34,9 @@ public sealed class WarrantyClaimService(
             query = query.Where(x => x.Status == status.Trim().ToLowerInvariant());
         }
 
-        if (vendorPartyId is not null)
+        if (supplierId is not null)
         {
-            query = query.Where(x => x.VendorPartyId == vendorPartyId);
+            query = query.Where(x => x.VendorPartyId == supplierId);
         }
 
         if (partId is not null)
@@ -67,12 +69,18 @@ public sealed class WarrantyClaimService(
     public async Task<WarrantyClaimResponse> CreateAsync(
         Guid tenantId,
         Guid actorUserId,
-        CreateWarrantyClaimRequest request,
+        CreateSupplierWarrantyClaimRequest request,
         CancellationToken cancellationToken = default)
     {
-        await EnsureVendorPartyAsync(tenantId, request.VendorPartyId, cancellationToken);
+        var supplierId = request.SupplierUnitId ?? request.SupplierId ?? request.VendorPartyId
+            ?? throw new StlApiException(
+                "warranty_claims.supplier_required",
+                "Supplier is required.",
+                400);
+
+        await EnsureSupplierAsync(tenantId, supplierId, cancellationToken);
         await EnsurePartAsync(tenantId, request.PartId, cancellationToken);
-        await ValidateRelatedEntitiesAsync(tenantId, request, cancellationToken);
+        await ValidateRelatedEntitiesAsync(tenantId, supplierId, request, cancellationToken);
 
         var claimKey = WarrantyClaimRules.NormalizeClaimKey(request.ClaimKey);
         var duplicateKey = await db.WarrantyClaims.AnyAsync(
@@ -94,7 +102,7 @@ public sealed class WarrantyClaimService(
             ClaimKey = claimKey,
             Status = WarrantyClaimStatuses.Draft,
             ClaimType = WarrantyClaimRules.NormalizeClaimType(request.ClaimType),
-            VendorPartyId = request.VendorPartyId,
+            VendorPartyId = supplierId,
             PartId = request.PartId,
             PurchaseOrderId = request.PurchaseOrderId,
             PurchaseOrderLineId = request.PurchaseOrderLineId,
@@ -383,11 +391,12 @@ public sealed class WarrantyClaimService(
 
     private async Task ValidateRelatedEntitiesAsync(
         Guid tenantId,
-        CreateWarrantyClaimRequest request,
+        Guid supplierId,
+        CreateSupplierWarrantyClaimRequest request,
         CancellationToken cancellationToken) =>
         await ValidateRelatedEntitiesAsync(
             tenantId,
-            request.VendorPartyId,
+            supplierId,
             request.PartId,
             request.PurchaseOrderId,
             request.PurchaseOrderLineId,
@@ -397,7 +406,7 @@ public sealed class WarrantyClaimService(
 
     private async Task ValidateRelatedEntitiesAsync(
         Guid tenantId,
-        Guid vendorPartyId,
+        Guid supplierId,
         Guid partId,
         Guid? purchaseOrderId,
         Guid? purchaseOrderLineId,
@@ -412,11 +421,11 @@ public sealed class WarrantyClaimService(
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == poId, cancellationToken)
                 ?? throw new StlApiException("warranty_claims.purchase_order_not_found", "Purchase order was not found.", 404);
 
-            if (po.VendorPartyId != vendorPartyId)
+            if (po.VendorPartyId != supplierId)
             {
                 throw new StlApiException(
-                    "warranty_claims.purchase_order_vendor_mismatch",
-                    "Purchase order vendor does not match the claim vendor.",
+                    "warranty_claims.purchase_order_supplier_mismatch",
+                    "Purchase order supplier does not match the claim supplier.",
                     400);
             }
         }
@@ -480,21 +489,21 @@ public sealed class WarrantyClaimService(
         }
     }
 
-    private async Task EnsureVendorPartyAsync(
+    private async Task EnsureSupplierAsync(
         Guid tenantId,
-        Guid vendorPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken)
     {
         var party = await db.ExternalParties
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == vendorPartyId, cancellationToken)
-            ?? throw new StlApiException("warranty_claims.party_not_found", "Vendor party was not found.", 404);
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == supplierId, cancellationToken)
+            ?? throw new StlApiException("warranty_claims.supplier_not_found", "Supplier was not found.", 404);
 
         if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
         {
             throw new StlApiException(
-                "warranty_claims.party_type_not_allowed",
-                "Warranty claims apply only to vendor or supplier parties.",
+                "warranty_claims.supplier_type_not_allowed",
+                "Warranty claims apply only to supplier records.",
                 400);
         }
     }
@@ -541,6 +550,7 @@ public sealed class WarrantyClaimService(
         await db.WarrantyClaims
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -553,6 +563,7 @@ public sealed class WarrantyClaimService(
         CancellationToken cancellationToken) =>
         await db.WarrantyClaims
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -565,6 +576,13 @@ public sealed class WarrantyClaimService(
             entity.ClaimKey,
             entity.Status,
             entity.ClaimType,
+            entity.VendorPartyId,
+            entity.VendorParty.PartyKey,
+            entity.VendorParty.DisplayName,
+            entity.VendorParty.ParentExternalPartyId,
+            entity.VendorParty.ParentExternalParty?.DisplayName,
+            entity.VendorParty.UnitKind,
+            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
             entity.VendorPartyId,
             entity.VendorParty.PartyKey,
             entity.VendorParty.DisplayName,
@@ -596,4 +614,23 @@ public sealed class WarrantyClaimService(
             entity.CancellationReason,
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 }

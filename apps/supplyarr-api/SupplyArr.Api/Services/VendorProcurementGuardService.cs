@@ -25,6 +25,7 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
     {
         var party = await db.ExternalParties
             .AsNoTracking()
+            .Include(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == vendorPartyId,
                 cancellationToken);
@@ -78,13 +79,14 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
         }
     }
 
-    public async Task<VendorRestrictionEnforcementResponse> GetEnforcementAsync(
+    public async Task<SupplierRestrictionEnforcementResponse> GetEnforcementAsync(
         Guid tenantId,
         Guid externalPartyId,
         CancellationToken cancellationToken = default)
     {
         var party = await db.ExternalParties
             .AsNoTracking()
+            .Include(x => x.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == externalPartyId,
                 cancellationToken)
@@ -99,10 +101,17 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
         if (BlockedApprovalStatuses.Contains(party.ApprovalStatus))
         {
             activeScopes.Add(VendorRestrictionScopes.AllProcurement);
-            return new VendorRestrictionEnforcementResponse(
+            var serviceTypes = DeserializeServiceTypes(party.ServiceTypesJson);
+            return new SupplierRestrictionEnforcementResponse(
                 externalPartyId,
+                party.PartyKey,
+                party.DisplayName,
+                party.ParentExternalPartyId,
+                party.ParentExternalParty?.DisplayName,
+                party.UnitKind,
+                serviceTypes,
                 IsBlocked: true,
-                BlockReason: $"Party approval status is {party.ApprovalStatus}.",
+                BlockReason: $"Supplier approval status is {party.ApprovalStatus}.",
                 activeScopes.OrderBy(x => x).ToList());
         }
 
@@ -129,8 +138,15 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
             blockReason ??= restriction.Reason;
         }
 
-        return new VendorRestrictionEnforcementResponse(
+        var activeServiceTypes = DeserializeServiceTypes(party.ServiceTypesJson);
+        return new SupplierRestrictionEnforcementResponse(
             externalPartyId,
+            party.PartyKey,
+            party.DisplayName,
+            party.ParentExternalPartyId,
+            party.ParentExternalParty?.DisplayName,
+            party.UnitKind,
+            activeServiceTypes,
             IsBlocked: activeScopes.Count > 0,
             blockReason,
             activeScopes.OrderBy(x => x).ToList());
@@ -141,6 +157,23 @@ public sealed class VendorProcurementGuardService(SupplyArrDbContext db)
         try
         {
             return JsonSerializer.Deserialize<List<string>>(scopesJson, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static IReadOnlyList<string> DeserializeServiceTypes(string? serviceTypesJson)
+    {
+        if (string.IsNullOrWhiteSpace(serviceTypesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(serviceTypesJson, JsonOptions) ?? [];
         }
         catch (JsonException)
         {

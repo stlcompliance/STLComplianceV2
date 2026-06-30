@@ -8,8 +8,8 @@ import {
   type PickerOption,
 } from '@stl/shared-ui'
 
-import { getPartyRegistryMetadata } from '../../api/client'
-import type { ExternalPartyResponse } from '../../api/types'
+import { getSupplierDirectoryMetadata } from '../../api/client'
+import type { SupplierResponse } from '../../api/types'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -35,14 +35,14 @@ function humanize(value: string | null | undefined): string {
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-function formatAddress(party: ExternalPartyResponse | null): string {
-  if (!party) return 'Not recorded'
+function formatAddress(supplier: SupplierResponse | null): string {
+  if (!supplier) return 'Not recorded'
   const parts = [
-    party.addressLine1,
-    party.locality,
-    party.regionCode,
-    party.postalCode,
-    party.countryCode,
+    supplier.addressLine1,
+    supplier.locality,
+    supplier.regionCode,
+    supplier.postalCode,
+    supplier.countryCode,
   ].filter(Boolean)
   return parts.length > 0 ? parts.join(', ') : 'Not recorded'
 }
@@ -50,6 +50,26 @@ function formatAddress(party: ExternalPartyResponse | null): string {
 function formatServiceCoverage(serviceTypes: string[] | undefined): string {
   if (!serviceTypes || serviceTypes.length === 0) return 'Not recorded'
   return serviceTypes.map((serviceType) => humanize(serviceType)).join(', ')
+}
+
+function describeSupplierUseCase(serviceTypes: string[] | undefined): string {
+  const normalized = new Set((serviceTypes ?? []).map((value) => value.toLowerCase()))
+  const cues: string[] = []
+
+  if (normalized.has('products') || normalized.has('parts')) {
+    cues.push('Stock and parts sourcing')
+  }
+  if (normalized.has('maintenance') || normalized.has('repair') || normalized.has('field_service')) {
+    cues.push('Maintenance and service dispatch')
+  }
+  if (normalized.has('warranty')) {
+    cues.push('Warranty recovery')
+  }
+  if (normalized.has('logistics')) {
+    cues.push('Freight and transfer coordination')
+  }
+
+  return cues.length > 0 ? cues.join(' · ') : 'General supplier reference'
 }
 
 function formatTimestamp(value: string | null | undefined): string {
@@ -69,31 +89,31 @@ function EmptyPanel({ title, description }: { title: string; description: string
   )
 }
 
-function sortSupplierDirectory(parties: ExternalPartyResponse[]): ExternalPartyResponse[] {
-  const roots = parties
-    .filter((party) => !party.parentPartyId)
+function sortSupplierDirectory(suppliers: SupplierResponse[]): SupplierResponse[] {
+  const roots = suppliers
+    .filter((supplier) => !supplier.parentSupplierId)
     .sort((left, right) => left.displayName.localeCompare(right.displayName))
-  const childrenByParent = new Map<string, ExternalPartyResponse[]>()
-  for (const party of parties.filter((item) => item.parentPartyId)) {
-    const siblings = childrenByParent.get(party.parentPartyId!) ?? []
-    siblings.push(party)
-    childrenByParent.set(party.parentPartyId!, siblings)
+  const childrenByParent = new Map<string, SupplierResponse[]>()
+  for (const supplier of suppliers.filter((item) => item.parentSupplierId)) {
+    const siblings = childrenByParent.get(supplier.parentSupplierId!) ?? []
+    siblings.push(supplier)
+    childrenByParent.set(supplier.parentSupplierId!, siblings)
   }
   for (const siblings of childrenByParent.values()) {
     siblings.sort((left, right) => left.displayName.localeCompare(right.displayName))
   }
 
-  const ordered: ExternalPartyResponse[] = []
+  const ordered: SupplierResponse[] = []
   for (const root of roots) {
     ordered.push(root)
-    ordered.push(...(childrenByParent.get(root.partyId) ?? []))
+    ordered.push(...(childrenByParent.get(root.supplierId!) ?? []))
   }
 
-  const orphanChildren = parties
-    .filter((party) => party.parentPartyId && !parties.some((candidate) => candidate.partyId === party.parentPartyId))
+  const orphanChildren = suppliers
+    .filter((supplier) => supplier.parentSupplierId && !suppliers.some((candidate) => candidate.supplierId === supplier.parentSupplierId))
     .sort((left, right) => left.displayName.localeCompare(right.displayName))
   for (const orphan of orphanChildren) {
-    if (!ordered.some((candidate) => candidate.partyId === orphan.partyId)) {
+    if (!ordered.some((candidate) => candidate.supplierId === orphan.supplierId)) {
       ordered.push(orphan)
     }
   }
@@ -104,40 +124,46 @@ function sortSupplierDirectory(parties: ExternalPartyResponse[]): ExternalPartyR
 function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorkspaceState; mode: SuppliersViewMode }) {
   const metadataQuery = useQuery({
     queryKey: ['supplyarr-supplier-directory-metadata', s.accessToken],
-    queryFn: () => getPartyRegistryMetadata(s.accessToken),
-    enabled: Boolean(s.accessToken && s.canReadParties),
+    queryFn: () => getSupplierDirectoryMetadata(s.accessToken),
+    enabled: Boolean(s.accessToken && s.canReadSuppliers),
   })
 
-  const parties = useMemo(
+  const suppliers = useMemo(
     () => sortSupplierDirectory(s.suppliersQuery.data ?? []),
     [s.suppliersQuery.data],
   )
   const [selectedSupplierId, setSelectedSupplierId] = useState('')
   const selectedSupplier = useMemo(
-    () => parties.find((party) => party.partyId === selectedSupplierId)
-      ?? parties.find((party) => !party.parentPartyId)
-      ?? parties[0]
+    () => suppliers.find((supplier) => supplier.supplierId === selectedSupplierId)
+      ?? suppliers.find((supplier) => !supplier.parentSupplierId)
+      ?? suppliers[0]
       ?? null,
-    [parties, selectedSupplierId],
+    [suppliers, selectedSupplierId],
   )
   const childUnits = useMemo(
-    () => parties.filter((party) => party.parentPartyId === selectedSupplier?.partyId),
-    [parties, selectedSupplier?.partyId],
+    () => suppliers.filter((supplier) => supplier.parentSupplierId === selectedSupplier?.supplierId),
+    [suppliers, selectedSupplier?.supplierId],
   )
-  const rootSupplierOptions = parties
-    .filter((party) => !party.parentPartyId)
-    .map<PickerOption>((party) => ({ value: party.partyId, label: party.displayName }))
+  const rootSupplierOptions = suppliers
+    .filter((supplier) => !supplier.parentSupplierId)
+    .map<PickerOption>((supplier) => ({ value: supplier.supplierId, label: supplier.displayName }))
   const unitKindOptions = (metadataQuery.data?.unitKindOptions ?? fallbackUnitKindOptions)
     .map<PickerOption>((option) => ({ value: option.value, label: option.label }))
   const serviceTypeOptions = (metadataQuery.data?.serviceTypeOptions ?? fallbackServiceTypeOptions)
     .map<PickerOption>((option) => ({ value: option.value, label: option.label }))
-  const selectedPartyContracts = (s.contractsQuery.data ?? []).filter(
-    (contract) => contract.vendorPartyId === selectedSupplier?.partyId,
+  const selectedSupplierContracts = (s.contractsQuery.data ?? []).filter(
+    (contract) => (contract.supplierId ?? contract.vendorPartyId) === selectedSupplier?.supplierId,
   )
   const linkedItems = (s.partsQuery.data ?? []).flatMap((part) =>
     part.vendorLinks
-      .filter((link) => link.partyId === selectedSupplier?.partyId)
+      .filter((link) => link.supplierId === selectedSupplier?.supplierId)
       .map((link) => ({ part, link })),
+  )
+  const siblingUnits = useMemo(
+    () => selectedSupplier?.parentSupplierId
+      ? suppliers.filter((supplier) => supplier.parentSupplierId === selectedSupplier.parentSupplierId && supplier.supplierId !== selectedSupplier.supplierId)
+      : [],
+    [selectedSupplier?.parentSupplierId, selectedSupplier?.supplierId, suppliers],
   )
   const selectedServiceValues = s.supplierServiceTypes
     .split(',')
@@ -150,13 +176,13 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
         <div>
           <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Supplier directory</h1>
           <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-secondary)]">
-            Manage supplier identities and their sub-units in one hierarchy. Service coverage and site context live on each supplier unit so sourcing, maintenance, and purchasing can work from the same supplier record.
+            Manage supplier identities and their sub-units in one hierarchy. Service coverage and supplier-location context live on each supplier identity or sub-unit so sourcing, maintenance, and purchasing can work from the same supplier record, while internal site truth stays in StaffArr.
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
-          {parties.filter((party) => !party.parentPartyId).length} supplier identities
+          {suppliers.filter((supplier) => !supplier.parentSupplierId).length} supplier identities
           {' · '}
-          {parties.filter((party) => party.parentPartyId).length} sub-units
+          {suppliers.filter((supplier) => supplier.parentSupplierId).length} sub-units
         </div>
       </header>
 
@@ -181,7 +207,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                 retryLabel="Retry"
               />
             ) : null}
-            {!s.suppliersQuery.isLoading && parties.length === 0 ? (
+            {!s.suppliersQuery.isLoading && suppliers.length === 0 ? (
               <div className="mt-4">
                 <EmptyPanel
                   title="No suppliers yet"
@@ -190,35 +216,35 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               </div>
             ) : null}
             <div className="mt-4 space-y-2">
-              {parties.map((party) => {
-                const active = selectedSupplier?.partyId === party.partyId
-                const isChild = Boolean(party.parentPartyId)
+              {suppliers.map((supplier) => {
+                const active = selectedSupplier?.supplierId === supplier.supplierId
+                const isChild = Boolean(supplier.parentSupplierId)
                 return (
                   <button
-                    key={party.partyId}
+                    key={supplier.supplierId}
                     type="button"
                     className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                       active
                         ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)]'
                         : 'border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] hover:border-[var(--color-accent-border)]'
                     }`}
-                    onClick={() => setSelectedSupplierId(party.partyId)}
+                    onClick={() => setSelectedSupplierId(supplier.supplierId!)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className={isChild ? 'pl-5' : ''}>
                         <p className="text-sm font-semibold text-[var(--color-text-primary)]">
                           {isChild ? 'Sub-unit · ' : 'Identity · '}
-                          {party.displayName}
+                          {supplier.displayName}
                         </p>
                         <p className="mt-1 text-xs text-[var(--color-text-secondary)]">
-                          {party.parentPartyDisplayName ? `${party.parentPartyDisplayName} · ` : ''}
-                          {formatServiceCoverage(party.serviceTypes)}
+                          {supplier.parentSupplierDisplayName ? `${supplier.parentSupplierDisplayName} · ` : ''}
+                          {formatServiceCoverage(supplier.serviceTypes)}
                         </p>
-                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(party)}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(supplier)}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs font-medium text-[var(--color-text-secondary)]">{humanize(party.approvalStatus)}</p>
-                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{humanize(party.status)}</p>
+                        <p className="text-xs font-medium text-[var(--color-text-secondary)]">{humanize(supplier.approvalStatus)}</p>
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">{humanize(supplier.status)}</p>
                       </div>
                     </div>
                   </button>
@@ -229,25 +255,25 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
 
           <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
             <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">
-              {mode === 'create' ? 'Create supplier unit' : 'Add supplier or sub-unit'}
+              {mode === 'create' ? 'Create supplier identity or sub-unit' : 'Add supplier or sub-unit'}
             </h2>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Start with a supplier identity, then create sub-units for regional branches, dealer locations, maintenance shops, or other site-specific sourcing nodes.
+              Start with a supplier identity, then create sub-units for regional branches, service locations, maintenance shops, or other site-specific sourcing nodes.
             </p>
 
             <div className="mt-4 grid gap-3">
               <ControlledSelect
-                label="Record kind"
+                label="Supplier level"
                 value={s.supplierUnitKind}
                 onChange={s.setSupplierUnitKind}
                 options={unitKindOptions}
-                emptyLabel="Select record kind"
+                emptyLabel="Select supplier level"
               />
               {s.supplierUnitKind === 'sub_unit' ? (
                 <ControlledSelect
                   label="Parent supplier identity"
-                  value={s.supplierParentPartyId}
-                  onChange={s.setSupplierParentPartyId}
+                  value={s.supplierParentUnitId}
+                  onChange={s.setSupplierParentUnitId}
                   options={rootSupplierOptions}
                   emptyLabel="Select supplier identity"
                 />
@@ -298,8 +324,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                 </select>
               </label>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm font-medium text-[var(--color-text-primary)]">
-                  Address line
+                    <label className="text-sm font-medium text-[var(--color-text-primary)]">
+                  Supplier address
                   <input
                     className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                     value={s.supplierAddressLine1}
@@ -371,7 +397,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                   s.createSupplierMutation.isPending
                   || !s.supplierKey.trim()
                   || !s.supplierName.trim()
-                  || (s.supplierUnitKind === 'sub_unit' && !s.supplierParentPartyId)
+                  || (s.supplierUnitKind === 'sub_unit' && !s.supplierParentUnitId)
                 }
                 onClick={() => s.createSupplierMutation.mutate()}
               >
@@ -406,9 +432,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     type="button"
                     className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
                     onClick={() =>
-                      s.updatePartyApprovalMutation.mutate({
-                        route: 'suppliers',
-                        partyId: selectedSupplier.partyId,
+                      s.updateSupplierApprovalMutation.mutate({
+                        supplierId: selectedSupplier.supplierId,
                         approvalStatus: selectedSupplier.approvalStatus === 'approved' ? 'pending' : 'approved',
                       })
                     }
@@ -419,9 +444,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     type="button"
                     className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)] hover:border-[var(--color-accent-border)]"
                     onClick={() =>
-                      s.updatePartyStatusMutation.mutate({
-                        route: 'suppliers',
-                        partyId: selectedSupplier.partyId,
+                      s.updateSupplierStatusMutation.mutate({
+                        supplierId: selectedSupplier.supplierId,
                         status: selectedSupplier.status === 'active' ? 'inactive' : 'active',
                       })
                     }
@@ -441,11 +465,11 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               </div>
             ) : (
               <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                <DetailCard label="Supplier key" value={selectedSupplier.partyKey} />
+                <DetailCard label="Supplier key" value={selectedSupplier.supplierKey} />
                 <DetailCard label="Legal name" value={selectedSupplier.legalName || selectedSupplier.displayName} />
-                <DetailCard label="Parent supplier" value={selectedSupplier.parentPartyDisplayName || 'Root supplier identity'} />
+                <DetailCard label="Parent supplier" value={selectedSupplier.parentSupplierDisplayName || 'Root supplier identity'} />
                 <DetailCard label="Service coverage" value={formatServiceCoverage(selectedSupplier.serviceTypes)} />
-                <DetailCard label="Address" value={formatAddress(selectedSupplier)} />
+                <DetailCard label="Supplier location" value={formatAddress(selectedSupplier)} />
                 <DetailCard label="Sub-units" value={String(selectedSupplier.childUnitCount ?? childUnits.length)} />
                 <DetailCard label="Approval state" value={humanize(selectedSupplier.approvalStatus)} />
                 <DetailCard label="Lifecycle status" value={humanize(selectedSupplier.status)} />
@@ -456,24 +480,27 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
 
           {selectedSupplier ? (
             <div className="grid gap-4 xl:grid-cols-2">
-              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sub-units</h3>
-                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  Location-specific supplier nodes for sourcing, service, or maintenance coverage.
+                <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sub-units</h3>
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    Location-specific supplier nodes for sourcing, service, or maintenance coverage.
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  Internal tenant sites are selected later from StaffArr when a workflow needs a company-owned origin, destination, or receiving location.
                 </p>
                 <div className="mt-4 space-y-3">
-                  {childUnits.length > 0 ? childUnits.map((party) => (
-                    <div key={party.partyId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  {childUnits.length > 0 ? childUnits.map((supplier) => (
+                    <div key={supplier.supplierId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-[var(--color-text-primary)]">{party.displayName}</p>
-                          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{formatServiceCoverage(party.serviceTypes)}</p>
-                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(party)}</p>
+                          <p className="font-semibold text-[var(--color-text-primary)]">{supplier.displayName}</p>
+                          <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{formatServiceCoverage(supplier.serviceTypes)}</p>
+                          <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatAddress(supplier)}</p>
                         </div>
                         <button
                           type="button"
                           className="text-sm font-medium text-[var(--color-accent)]"
-                          onClick={() => setSelectedSupplierId(party.partyId)}
+                          onClick={() => setSelectedSupplierId(supplier.supplierId!)}
                         >
                           View
                         </button>
@@ -485,6 +512,38 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                       description="Add regional branches or site-level supplier nodes so sourcing can prefer the closest capable location."
                     />
                   )}
+                </div>
+              </section>
+
+              <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+                <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sourcing readiness</h3>
+                <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                  Use supplier identities as umbrella records and sub-units as the location-aware sourcing nodes for parts, maintenance, and service routing.
+                </p>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  <DetailCard label="Best fit" value={describeSupplierUseCase(selectedSupplier.serviceTypes)} />
+                  <DetailCard
+                    label="Location strategy"
+                    value={
+                      selectedSupplier.parentSupplierId
+                        ? 'Use this sub-unit when the closest capable supplier location matters.'
+                        : 'Use this identity when sourcing can route across multiple supplier locations.'
+                    }
+                  />
+                  <DetailCard label="Linked items in scope" value={String(linkedItems.length)} />
+                  <DetailCard label="Contracts in scope" value={String(selectedSupplierContracts.length)} />
+                  <DetailCard
+                    label="Nearby supplier nodes"
+                    value={
+                      selectedSupplier.parentSupplierId
+                        ? `${siblingUnits.length} sibling sub-units under ${selectedSupplier.parentSupplierDisplayName ?? 'the parent supplier'}`
+                        : `${childUnits.length} direct sub-units available for location-specific routing`
+                    }
+                  />
+                  <DetailCard
+                    label="Internal-site ownership"
+                    value="StaffArr owns tenant sites, docks, and yards used as internal origins, destinations, and receiving points."
+                  />
                 </div>
               </section>
 
@@ -527,7 +586,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Contracts & terms</h3>
                 <div className="mt-4 space-y-3">
-                  {selectedPartyContracts.length > 0 ? selectedPartyContracts.slice(0, 4).map((contract) => (
+                  {selectedSupplierContracts.length > 0 ? selectedSupplierContracts.slice(0, 4).map((contract) => (
                     <div key={contract.contractId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                       <p className="font-semibold text-[var(--color-text-primary)]">{contract.contractKey}</p>
                       <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{contract.title}</p>
@@ -557,7 +616,7 @@ function DetailCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function PartiesSection({ state: s }: Props) {
+export function SuppliersSection({ state: s }: Props) {
   const location = useLocation()
   const mode: SuppliersViewMode = location.pathname.startsWith('/suppliers/create')
     ? 'create'

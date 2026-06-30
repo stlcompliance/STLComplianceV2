@@ -22,6 +22,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<HandoffAuthService>();
         builder.Services.AddScoped<MeService>();
         builder.Services.AddScoped<SupplyArrAuthorizationService>();
+        builder.Services.AddScoped<SupplierDirectoryService>();
         builder.Services.AddScoped<ExternalPartyService>();
         builder.Services.AddScoped<PartCatalogService>();
         builder.Services.AddScoped<PartRegistryService>();
@@ -50,6 +51,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<FieldInboxService>();
         builder.Services.AddScoped<ReceivingExceptionService>();
         builder.Services.AddScoped<BackorderService>();
+        builder.Services.AddScoped<SupplierReturnService>();
         builder.Services.AddScoped<VendorReturnService>();
         builder.Services.AddScoped<PricingSnapshotService>();
         builder.Services.AddScoped<LeadTimeSnapshotService>();
@@ -78,6 +80,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<IntegrationOutboxEnqueueService>();
         builder.Services.AddScoped<IntegrationInboxEnqueueService>();
         builder.Services.AddScoped<RfqService>();
+        builder.Services.AddScoped<SupplierOrderService>();
         builder.Services.AddScoped<VendorOrderService>();
         builder.Services.AddScoped<VendorOrderSettingsService>();
         builder.Services.AddSingleton<SupplyArrDocumentStorageService>();
@@ -113,6 +116,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<StaffArrProductIncidentPublisherService>();
         builder.Services.AddScoped<TrainArrSupplierIncidentPublisherService>();
         builder.Services.AddScoped<EmergencyPurchaseService>();
+        builder.Services.AddScoped<SupplierReportService>();
         builder.Services.AddScoped<VendorReportService>();
         builder.Services.AddScoped<PartsInventoryReportService>();
         builder.Services.AddScoped<PurchasingReportService>();

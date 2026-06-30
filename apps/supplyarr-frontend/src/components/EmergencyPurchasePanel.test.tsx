@@ -82,19 +82,23 @@ describe('EmergencyPurchasePanel', () => {
               updatedAt: '',
             },
           ]}
-          vendors={[
+          suppliers={[
             {
+              supplierId: 'vendor-1',
               partyId: 'vendor-1',
-              displayName: 'Acme Supply',
-              partyKey: 'acme',
+              displayName: 'North Yard Counter',
+              supplierKey: 'acme-north-yard',
+              parentSupplierDisplayName: 'Acme Supply',
+              unitKind: 'sub_unit',
             },
           ]}
         />
       </QueryClientProvider>,
     )
     expect(await screen.findByTestId('emergency-purchase-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('emergency-purchase-vendor-picker')).toHaveTextContent('Acme Supply')
+    expect(screen.getByTestId('emergency-purchase-supplier-unit-picker')).toHaveTextContent('Acme Supply')
     expect(screen.getByTestId('emergency-purchase-part-picker')).toHaveTextContent('Oil Filter')
+    expect(screen.getByLabelText('Supplier identity or sub-unit')).toBeInTheDocument()
   })
 
   it('returns null when user has no emergency permissions', () => {
@@ -106,7 +110,7 @@ describe('EmergencyPurchasePanel', () => {
           canCreate={false}
           canOverrideApprove={false}
           parts={[]}
-          vendors={[]}
+          suppliers={[]}
         />
       </QueryClientProvider>,
     )

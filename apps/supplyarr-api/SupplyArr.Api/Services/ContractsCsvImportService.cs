@@ -14,7 +14,7 @@ public sealed class ContractsCsvImportService(
 
     private static readonly string[] Headers =
     [
-        "vendor_party_key",
+        "supplier_key",
         "contract_key",
         "contract_type",
         "title",
@@ -82,7 +82,8 @@ public sealed class ContractsCsvImportService(
                     row.ContractKey,
                     row.ContractType,
                     row.Title,
-                    vendorsByKey[row.VendorPartyKey],
+                    vendorsByKey[row.SupplierKey],
+                    vendorsByKey[row.SupplierKey],
                     row.EffectiveAt,
                     row.ExpiresAt,
                     row.RenewalAt,
@@ -128,7 +129,8 @@ public sealed class ContractsCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        if (headerFields.Count != Headers.Length || !headerFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
+        var normalizedHeaderFields = NormalizeHeaderFields(headerFields);
+        if (normalizedHeaderFields.Count != Headers.Length || !normalizedHeaderFields.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
             issues.Add(new ContractsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}"));
             return [];
@@ -176,13 +178,13 @@ public sealed class ContractsCsvImportService(
         ISet<string> seenKeys,
         List<ContractsCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "vendor_party_key", row.VendorPartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.SupplierKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "contract_key", row.ContractKey, 3, 128, issues);
         ValidateLength(row.LineNumber, "contract_type", row.ContractType, 2, 64, issues);
         ValidateLength(row.LineNumber, "title", row.Title, 2, 256, issues);
-        if (!vendorsByKey.ContainsKey(row.VendorPartyKey))
+        if (!vendorsByKey.ContainsKey(row.SupplierKey))
         {
-            issues.Add(new ContractsCsvImportIssue(row.LineNumber, "vendor.not_found", "Vendor or supplier party key was not found."));
+            issues.Add(new ContractsCsvImportIssue(row.LineNumber, "supplier.not_found", "Supplier key was not found."));
         }
 
         if (row.ExpiresAt.HasValue && row.EffectiveAt.HasValue && row.ExpiresAt.Value <= row.EffectiveAt.Value)
@@ -329,6 +331,14 @@ public sealed class ContractsCsvImportService(
         return fields;
     }
 
+    private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
+        headerFields
+            .Select(field =>
+                string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
+                    ? "supplier_key"
+                    : field)
+            .ToArray();
+
     private static string NormalizeKey(string value) => value.Trim().ToLowerInvariant();
 
     private static string NormalizeContractKey(string value) => value.Trim().ToUpperInvariant();
@@ -340,7 +350,7 @@ public sealed class ContractsCsvImportService(
 
     private sealed record ImportRow(
         int LineNumber,
-        string VendorPartyKey,
+        string SupplierKey,
         string ContractKey,
         string ContractType,
         string Title,

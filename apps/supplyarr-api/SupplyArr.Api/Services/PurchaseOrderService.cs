@@ -3,6 +3,7 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Contracts;
+using System.Text.Json;
 
 namespace SupplyArr.Api.Services;
 
@@ -16,6 +17,8 @@ public sealed class PurchaseOrderService(
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task<IReadOnlyList<PurchaseOrderResponse>> ListAsync(
         Guid tenantId,
         string? status = null,
@@ -24,6 +27,7 @@ public sealed class PurchaseOrderService(
         var query = db.PurchaseOrders
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -62,6 +66,7 @@ public sealed class PurchaseOrderService(
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == purchaseRequestId,
                 cancellationToken)
@@ -84,8 +89,8 @@ public sealed class PurchaseOrderService(
         if (!purchaseRequest.VendorPartyId.HasValue)
         {
             throw new StlApiException(
-                "purchase_orders.purchase_request.vendor_required",
-                "Approved purchase request must have a vendor before creating a purchase order.",
+                "purchase_orders.purchase_request.supplier_required",
+                "Approved purchase request must have a supplier before creating a purchase order.",
                 400);
         }
 
@@ -592,6 +597,7 @@ public sealed class PurchaseOrderService(
         return await db.PurchaseOrders
             .AsNoTracking()
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -611,6 +617,7 @@ public sealed class PurchaseOrderService(
     {
         return await db.PurchaseOrders
             .Include(x => x.VendorParty)
+                .ThenInclude(x => x!.ParentExternalParty)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -635,6 +642,13 @@ public sealed class PurchaseOrderService(
             entity.VendorPartyId,
             entity.VendorParty.PartyKey,
             entity.VendorParty.DisplayName,
+            entity.VendorParty.ParentExternalPartyId,
+            entity.VendorParty.ParentExternalParty?.DisplayName,
+            entity.VendorParty.UnitKind,
+            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
+            entity.VendorPartyId,
+            entity.VendorParty.PartyKey,
+            entity.VendorParty.DisplayName,
             entity.CreatedByUserId,
             entity.ApprovedAt,
             entity.ApprovedByUserId,
@@ -649,6 +663,23 @@ public sealed class PurchaseOrderService(
                 .ToList(),
             entity.CreatedAt,
             entity.UpdatedAt);
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value, JsonOptions) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 
     private static PurchaseOrderLineResponse MapLine(PurchaseOrderLine line)
     {

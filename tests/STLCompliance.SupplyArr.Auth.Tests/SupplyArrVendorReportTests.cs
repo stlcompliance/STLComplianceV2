@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -27,7 +28,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
     private HttpClient _supplyarrClient = null!;
     private string _serviceToken = null!;
     private string _userToken = null!;
-    private Guid _vendorPartyId;
+    private Guid _supplierUnitId;
 
     public async Task InitializeAsync()
     {
@@ -75,7 +76,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
         _userToken = await RedeemHandoffAsync(handoffCode);
-        _vendorPartyId = await SeedVendorWithProcurementActivityAsync();
+        _supplierUnitId = await SeedSupplierWithProcurementActivityAsync();
     }
 
     public async Task DisposeAsync()
@@ -87,34 +88,38 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Vendor_report_summary_returns_aggregates()
+    public async Task Supplier_report_summary_returns_aggregates()
     {
         var response = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/reports/vendors/summary", _userToken));
+            Authorized(HttpMethod.Get, "/api/reports/suppliers/summary", _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var summary = await response.Content.ReadFromJsonAsync<VendorReportSummaryResponse>();
-        Assert.NotNull(summary);
-        Assert.NotEmpty(summary!.Vendors);
+        using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var suppliers = GetPropertyIgnoreCase(payload.RootElement, "suppliers");
+        Assert.True(suppliers.GetArrayLength() > 0);
 
-        var vendor = summary.Vendors.Single(x => x.VendorPartyId == _vendorPartyId);
-        Assert.Equal(1, vendor.PartVendorLinkCount);
-        Assert.Equal(1, vendor.OpenPurchaseRequestCount);
-        Assert.Equal(1, vendor.IssuedPurchaseOrderCount);
-        Assert.Equal(4, vendor.AverageLeadTimeDays);
-        Assert.Equal(100, vendor.OnTimeDeliveryRate);
+        var supplier = suppliers.EnumerateArray()
+            .Single(x => GetPropertyIgnoreCase(x, "supplierId").GetGuid() == _supplierUnitId);
+        Assert.Equal("sub_unit", GetPropertyIgnoreCase(supplier, "supplierUnitKind").GetString());
+        Assert.Equal("Report Supplier", GetPropertyIgnoreCase(supplier, "parentSupplierDisplayName").GetString());
+        Assert.Equal(1, GetPropertyIgnoreCase(supplier, "partVendorLinkCount").GetInt32());
+        Assert.Equal(1, GetPropertyIgnoreCase(supplier, "openPurchaseRequestCount").GetInt32());
+        Assert.Equal(1, GetPropertyIgnoreCase(supplier, "issuedPurchaseOrderCount").GetInt32());
+        Assert.Equal(4, GetPropertyIgnoreCase(supplier, "averageLeadTimeDays").GetInt32());
+        Assert.Equal(100, GetPropertyIgnoreCase(supplier, "onTimeDeliveryRate").GetInt32());
     }
 
     [Fact]
-    public async Task Vendor_report_detail_returns_recent_documents()
+    public async Task Supplier_report_detail_returns_recent_documents()
     {
         var response = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/reports/vendors/{_vendorPartyId}", _userToken));
+            Authorized(HttpMethod.Get, $"/api/reports/suppliers/{_supplierUnitId}", _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var detail = await response.Content.ReadFromJsonAsync<VendorReportDetailResponse>();
+        var detail = await response.Content.ReadFromJsonAsync<SupplierReportDetailResponse>();
         Assert.NotNull(detail);
-        Assert.Equal(_vendorPartyId, detail!.Summary.VendorPartyId);
+        Assert.Equal(_supplierUnitId, detail!.Summary.SupplierId);
+        Assert.Equal("sub_unit", detail.Summary.SupplierUnitKind);
         Assert.Equal(4, detail.Summary.AverageLeadTimeDays);
         Assert.Equal(100, detail.Summary.OnTimeDeliveryRate);
         Assert.NotEmpty(detail.RecentPurchaseOrders);
@@ -122,42 +127,61 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Vendor_report_export_returns_csv()
+    public async Task Supplier_report_export_returns_csv()
     {
         var response = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/reports/vendors/summary/export", _userToken));
+            Authorized(HttpMethod.Get, "/api/reports/suppliers/summary/export", _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         var csv = await response.Content.ReadAsStringAsync();
-        Assert.Contains("partyKey,displayName", csv, StringComparison.Ordinal);
+        Assert.Contains("supplierKey,supplierDisplayName,parentSupplierDisplayName,supplierUnitKind,supplierServiceTypes", csv, StringComparison.Ordinal);
         Assert.Contains("averageLeadTimeDays", csv, StringComparison.Ordinal);
-        Assert.Contains("VENDOR-REPORT", csv, StringComparison.Ordinal);
+        Assert.Contains("SUPPLIER-REPORT-COUNTER", csv, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task Vendor_report_summary_denied_without_auth()
+    public async Task Supplier_report_summary_denied_without_auth()
     {
-        var response = await _supplyarrClient.GetAsync("/api/reports/vendors/summary");
+        var response = await _supplyarrClient.GetAsync("/api/reports/suppliers/summary");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private async Task<Guid> SeedVendorWithProcurementActivityAsync()
+    private async Task<Guid> SeedSupplierWithProcurementActivityAsync()
     {
         await using var scope = _supplyarrFactory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplierIdentity = new ExternalParty
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "VENDOR-REPORT",
-            PartyType = "vendor",
-            DisplayName = "Report Vendor",
-            LegalName = "Report Vendor LLC",
+            PartyKey = "SUPPLIER-REPORT",
+            PartyType = "supplier",
+            UnitKind = "identity",
+            DisplayName = "Report Supplier",
+            LegalName = "Report Supplier LLC",
             ApprovalStatus = "approved",
             Status = "active",
+            ServiceTypesJson = "[\"parts\",\"maintenance\"]",
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        var supplierUnit = new ExternalParty
+        {
+            Id = Guid.NewGuid(),
+            TenantId = tenantId,
+            PartyKey = "SUPPLIER-REPORT-COUNTER",
+            PartyType = "supplier",
+            ParentExternalPartyId = supplierIdentity.Id,
+            UnitKind = "sub_unit",
+            DisplayName = "North Yard Counter",
+            LegalName = "Report Supplier North Yard Counter",
+            ApprovalStatus = "approved",
+            Status = "active",
+            ServiceTypesJson = "[\"parts\",\"maintenance\"]",
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -180,7 +204,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
+            ExternalPartyId = supplierUnit.Id,
             VendorPartNumber = "VN-001",
             IsPreferred = true,
             CreatedAt = now,
@@ -194,7 +218,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             RequestKey = "PR-REPORT",
             Title = "Report PR",
             Status = PurchaseRequestStatuses.Submitted,
-            VendorPartyId = vendor.Id,
+            VendorPartyId = supplierUnit.Id,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -208,7 +232,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             Title = "Report PO",
             Status = PurchaseOrderStatuses.Issued,
             PurchaseRequestId = purchaseRequest.Id,
-            VendorPartyId = vendor.Id,
+            VendorPartyId = supplierUnit.Id,
             CreatedByUserId = PlatformSeeder.DemoAdminUserId,
             IssuedAt = now,
             CreatedAt = now,
@@ -270,7 +294,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        db.ExternalParties.Add(vendor);
+        db.ExternalParties.AddRange(supplierIdentity, supplierUnit);
         db.Parts.Add(part);
         db.PartVendorLinks.Add(link);
         db.PurchaseRequests.Add(purchaseRequest);
@@ -309,7 +333,7 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
         });
         db.ReceivingReceipts.Add(receipt);
         await db.SaveChangesAsync();
-        return vendor.Id;
+        return supplierUnit.Id;
     }
 
     private async Task SeedNexArrAsync()
@@ -336,8 +360,8 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
     {
         var registerRequest = Authorized(HttpMethod.Post, "/api/service-tokens/clients", adminToken);
         registerRequest.Content = JsonContent.Create(new RegisterServiceClientRequest(
-            $"{productKey}-vendor-report-test",
-            $"{productKey} vendor report test",
+            $"{productKey}-supplier-report-test",
+            $"{productKey} supplier report test",
             productKey,
             [productKey]));
         var registerResponse = await _nexarrClient.SendAsync(registerRequest);
@@ -394,6 +418,19 @@ public sealed class SupplyArrVendorReportTests : IAsyncLifetime
         {
             services.Remove(descriptor);
         }
+    }
+
+    private static JsonElement GetPropertyIgnoreCase(JsonElement element, string propertyName)
+    {
+        foreach (var property in element.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                return property.Value;
+            }
+        }
+
+        throw new KeyNotFoundException($"Property '{propertyName}' was not present in the JSON payload.");
     }
 
 }

@@ -2,6 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { ApiErrorCallout, getErrorMessage } from '@stl/shared-ui'
 
 import { getProcurementCoordinationDashboard } from '../api/client'
+import {
+  formatSupplierIdentityLabel,
+  formatSupplierServiceTypes,
+  humanizeSupplierUnitKind,
+  resolveSupplierDisplayName,
+} from '../utils/supplierPresentation'
 
 interface ProcurementCoordinationPanelProps {
   accessToken: string
@@ -77,7 +83,13 @@ export function ProcurementCoordinationPanel({ accessToken, canRead }: Procureme
                         {item.documentKey} · {item.title}
                       </div>
                       <div className="text-xs text-[var(--color-text-muted)]">
-                        {item.vendorDisplayName || 'No supplier'} · {item.documentStatus}
+                        {resolveSupplierDisplayName(item)} · {item.documentStatus}
+                        {item.parentSupplierDisplayName || item.supplierUnitKind ? (
+                          <>
+                            {' '}· {formatSupplierIdentityLabel(item)} · {humanizeSupplierUnitKind(item.supplierUnitKind)}
+                          </>
+                        ) : null}
+                        {item.supplierServiceTypes?.length ? ` · ${formatSupplierServiceTypes(item.supplierServiceTypes)}` : ''}
                       </div>
                     </div>
                     <span className="rounded bg-sky-950 px-2 py-0.5 text-xs uppercase tracking-wide text-sky-300">

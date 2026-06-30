@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using System.Text.Json;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -28,7 +29,7 @@ public static class CoverageAliasEndpoints
             ],
             ["vendor_catalog_csv"] =
             [
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "vendor_part_number",
                 "is_preferred",
@@ -41,7 +42,7 @@ public static class CoverageAliasEndpoints
             ],
             ["vendor_documents_csv"] =
             [
-                "party_key",
+                "supplier_key",
                 "document_key",
                 "document_type_key",
                 "title",
@@ -61,7 +62,7 @@ public static class CoverageAliasEndpoints
             ],
             ["price_list_csv"] =
             [
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "snapshot_key",
                 "unit_price",
@@ -73,7 +74,7 @@ public static class CoverageAliasEndpoints
             ],
             ["lead_time_list_csv"] =
             [
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "snapshot_key",
                 "lead_time_days",
@@ -83,7 +84,7 @@ public static class CoverageAliasEndpoints
             ],
             ["availability_list_csv"] =
             [
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "snapshot_key",
                 "quantity_available",
@@ -94,7 +95,7 @@ public static class CoverageAliasEndpoints
             ],
             ["contracts_csv"] =
             [
-                "vendor_party_key",
+                "supplier_key",
                 "contract_key",
                 "contract_type",
                 "title",
@@ -112,8 +113,9 @@ public static class CoverageAliasEndpoints
             ],
             ["external_parties_csv"] =
             [
-                "party_key",
-                "party_type",
+                "supplier_key",
+                "parent_supplier_key",
+                "unit_kind",
                 "display_name",
                 "legal_name",
                 "tax_identifier",
@@ -123,7 +125,7 @@ public static class CoverageAliasEndpoints
             ],
             ["contacts_csv"] =
             [
-                "party_key",
+                "supplier_key",
                 "contact_name",
                 "email",
                 "phone",
@@ -134,7 +136,7 @@ public static class CoverageAliasEndpoints
             [
                 "order_key",
                 "request_key",
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "quantity_ordered",
                 "title",
@@ -146,7 +148,7 @@ public static class CoverageAliasEndpoints
                 "order_key",
                 "request_key",
                 "receipt_key",
-                "vendor_party_key",
+                "supplier_key",
                 "part_key",
                 "quantity_ordered",
                 "quantity_received",
@@ -162,15 +164,15 @@ public static class CoverageAliasEndpoints
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["part_catalog_csv"] = "Import part catalogs and parts from CSV.",
-            ["vendor_catalog_csv"] = "Import vendor catalog links and catalog facts from CSV.",
-            ["vendor_documents_csv"] = "Import vendor compliance document metadata.",
+            ["vendor_catalog_csv"] = "Import supplier catalog links and catalog facts from CSV.",
+            ["vendor_documents_csv"] = "Import supplier compliance document metadata.",
             ["inventory_counts_csv"] = "Import inventory count quantities by location, bin, and part.",
-            ["price_list_csv"] = "Import vendor price list snapshots by vendor and part.",
-            ["lead_time_list_csv"] = "Import vendor lead-time snapshots by vendor and part.",
-            ["availability_list_csv"] = "Import vendor availability snapshots by vendor and part.",
-            ["contracts_csv"] = "Import vendor and supplier contracts from CSV.",
-            ["external_parties_csv"] = "Import vendors, suppliers, dealers, and customers from CSV.",
-            ["contacts_csv"] = "Import party contacts from CSV.",
+            ["price_list_csv"] = "Import supplier price list snapshots by supplier and part.",
+            ["lead_time_list_csv"] = "Import supplier lead-time snapshots by supplier and part.",
+            ["availability_list_csv"] = "Import supplier availability snapshots by supplier and part.",
+            ["contracts_csv"] = "Import supplier identity and sub-unit contracts from CSV.",
+            ["external_parties_csv"] = "Import supplier identities and supplier sub-units from CSV.",
+            ["contacts_csv"] = "Import supplier contacts from CSV.",
             ["open_purchase_orders_csv"] = "Import open purchase orders from CSV.",
             ["purchase_history_csv"] = "Import fully received historical purchases from CSV."
         };
@@ -839,9 +841,9 @@ public static class CoverageAliasEndpoints
             authorization.RequirePartsRead(context.User);
             var items = new[]
             {
-                new ExportOptionResponse("vendors_summary_csv", "Vendor report summary export", "/api/v1/reports/vendors/summary/export"),
-                new ExportOptionResponse("vendor_list_csv", "Vendor list export", "/api/v1/exports/vendors.csv"),
-                new ExportOptionResponse("approved_vendor_list_csv", "Approved vendor list export", "/api/v1/exports/approved-vendors.csv"),
+                new ExportOptionResponse("supplier_summary_csv", "Supplier report summary export", "/api/v1/reports/suppliers/summary/export"),
+                new ExportOptionResponse("supplier_list_csv", "Supplier list export", "/api/v1/exports/suppliers.csv"),
+                new ExportOptionResponse("approved_supplier_list_csv", "Approved supplier list export", "/api/v1/exports/approved-suppliers.csv"),
                 new ExportOptionResponse("customer_list_csv", "Customer list export", "/api/v1/exports/customers.csv"),
                 new ExportOptionResponse("parts_catalog_csv", "Parts catalog export", "/api/v1/exports/parts-catalog.csv"),
                 new ExportOptionResponse("inventory_valuation_csv", "Inventory valuation export", "/api/v1/exports/inventory-valuation.csv"),
@@ -861,42 +863,63 @@ public static class CoverageAliasEndpoints
         .RequireAuthorization()
         .WithName("ListExportsV1");
 
+        static async Task<IResult> ExportSupplierListAsync(
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken,
+            bool approvedOnly)
+        {
+            authorization.RequirePartiesRead(context.User);
+            var tenantId = context.User.GetTenantId();
+            var suppliers = await db.ExternalParties
+                .AsNoTracking()
+                .Include(x => x.ParentExternalParty)
+                .Where(x => x.TenantId == tenantId
+                    && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                    && (!approvedOnly || x.ApprovalStatus == "approved"))
+                .OrderBy(x => x.PartyKey)
+                .ToListAsync(cancellationToken);
+            var prefix = approvedOnly ? "supplyarr-approved-suppliers" : "supplyarr-suppliers";
+            return Results.File(BuildSupplierListCsv(suppliers), "text/csv", $"{prefix}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
+        }
+
+        app.MapGet("/api/v1/exports/suppliers.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: false))
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportSupplierListV1");
+
         app.MapGet("/api/v1/exports/vendors.csv", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             SupplyArrDbContext db,
             CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePartiesRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            var vendors = await db.ExternalParties
-                .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && (x.PartyType == "vendor" || x.PartyType == "supplier"))
-                .OrderBy(x => x.PartyKey)
-                .ToListAsync(cancellationToken);
-            return Results.File(BuildPartiesCsv(vendors), "text/csv", $"supplyarr-vendors-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
-        })
+            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: false))
         .WithTags("Exports")
         .RequireAuthorization()
         .WithName("ExportVendorListV1");
+
+        app.MapGet("/api/v1/exports/approved-suppliers.csv", async (
+            HttpContext context,
+            SupplyArrAuthorizationService authorization,
+            SupplyArrDbContext db,
+            CancellationToken cancellationToken) =>
+            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: true))
+        .WithTags("Exports")
+        .RequireAuthorization()
+        .WithName("ExportApprovedSupplierListV1");
 
         app.MapGet("/api/v1/exports/approved-vendors.csv", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             SupplyArrDbContext db,
             CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePartiesRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            var vendors = await db.ExternalParties
-                .AsNoTracking()
-                .Where(x => x.TenantId == tenantId
-                    && (x.PartyType == "vendor" || x.PartyType == "supplier")
-                    && x.ApprovalStatus == "approved")
-                .OrderBy(x => x.PartyKey)
-                .ToListAsync(cancellationToken);
-            return Results.File(BuildPartiesCsv(vendors), "text/csv", $"supplyarr-approved-vendors-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
-        })
+            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: true))
         .WithTags("Exports")
         .RequireAuthorization()
         .WithName("ExportApprovedVendorListV1");
@@ -1076,6 +1099,7 @@ public static class CoverageAliasEndpoints
             var documents = await db.PartyComplianceDocuments
                 .AsNoTracking()
                 .Include(x => x.ExternalParty)
+                .ThenInclude(x => x.ParentExternalParty)
                 .Where(x => x.TenantId == tenantId)
                 .OrderBy(x => x.ExternalParty.PartyKey)
                 .ThenBy(x => x.DocumentKey)
@@ -1329,17 +1353,17 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key", "catalog_name", "part_key", "part_name"],
-            "vendor_catalog_csv" => ["vendor_party_key", "part_key", "vendor_part_number"],
-            "vendor_documents_csv" => ["party_key", "document_key", "document_type_key", "title"],
+            "vendor_catalog_csv" => ["supplier_key", "part_key", "vendor_part_number"],
+            "vendor_documents_csv" => ["supplier_key", "document_key", "document_type_key", "title"],
             "inventory_counts_csv" => ["part_key", "location_key", "quantity_on_hand"],
-            "price_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "unit_price", "currency_code"],
-            "lead_time_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "lead_time_days"],
-            "availability_list_csv" => ["vendor_party_key", "part_key", "snapshot_key", "availability_status"],
-            "contracts_csv" => ["vendor_party_key", "contract_key", "contract_type", "title", "effective_from", "status"],
-            "external_parties_csv" => ["party_key", "party_type", "display_name", "status"],
-            "contacts_csv" => ["party_key", "contact_name", "email"],
-            "open_purchase_orders_csv" => ["order_key", "vendor_party_key", "part_key", "quantity_ordered"],
-            "purchase_history_csv" => ["order_key", "receipt_key", "vendor_party_key", "part_key", "quantity_received"],
+            "price_list_csv" => ["supplier_key", "part_key", "snapshot_key", "unit_price", "currency_code"],
+            "lead_time_list_csv" => ["supplier_key", "part_key", "snapshot_key", "lead_time_days"],
+            "availability_list_csv" => ["supplier_key", "part_key", "snapshot_key", "availability_status"],
+            "contracts_csv" => ["supplier_key", "contract_key", "contract_type", "title", "effective_from", "status"],
+            "external_parties_csv" => ["supplier_key", "display_name", "status"],
+            "contacts_csv" => ["supplier_key", "contact_name", "email"],
+            "open_purchase_orders_csv" => ["order_key", "supplier_key", "part_key", "quantity_ordered"],
+            "purchase_history_csv" => ["order_key", "receipt_key", "supplier_key", "part_key", "quantity_received"],
             _ => ImportHeaders[NormalizeImportType(importTypeKey)].Take(4).ToArray()
         };
 
@@ -1347,17 +1371,17 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key"],
-            "vendor_catalog_csv" => ["vendor_party_key", "part_key"],
-            "vendor_documents_csv" => ["party_key"],
+            "vendor_catalog_csv" => ["supplier_key", "part_key"],
+            "vendor_documents_csv" => ["supplier_key"],
             "inventory_counts_csv" => ["part_key", "location_key", "bin_key"],
-            "price_list_csv" => ["vendor_party_key", "part_key"],
-            "lead_time_list_csv" => ["vendor_party_key", "part_key"],
-            "availability_list_csv" => ["vendor_party_key", "part_key"],
-            "contracts_csv" => ["vendor_party_key"],
-            "external_parties_csv" => [],
-            "contacts_csv" => ["party_key"],
-            "open_purchase_orders_csv" => ["request_key", "vendor_party_key", "part_key"],
-            "purchase_history_csv" => ["request_key", "vendor_party_key", "part_key", "inventory_bin_key"],
+            "price_list_csv" => ["supplier_key", "part_key"],
+            "lead_time_list_csv" => ["supplier_key", "part_key"],
+            "availability_list_csv" => ["supplier_key", "part_key"],
+            "contracts_csv" => ["supplier_key"],
+            "external_parties_csv" => ["parent_supplier_key"],
+            "contacts_csv" => ["supplier_key"],
+            "open_purchase_orders_csv" => ["request_key", "supplier_key", "part_key"],
+            "purchase_history_csv" => ["request_key", "supplier_key", "part_key", "inventory_bin_key"],
             _ => []
         };
 
@@ -1374,16 +1398,16 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key + part_key"],
-            "vendor_catalog_csv" => ["vendor_party_key + part_key + vendor_part_number"],
-            "vendor_documents_csv" => ["party_key + document_key"],
+            "vendor_catalog_csv" => ["supplier_key + part_key + vendor_part_number"],
+            "vendor_documents_csv" => ["supplier_key + document_key"],
             "inventory_counts_csv" => ["part_key + location_key + bin_key"],
-            "price_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "lead_time_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "availability_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "contracts_csv" => ["vendor_party_key + contract_key"],
-            "external_parties_csv" => ["party_key"],
-            "contacts_csv" => ["party_key + email"],
-            "open_purchase_orders_csv" => ["order_key + part_key + vendor_party_key"],
+            "price_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "lead_time_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "availability_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "contracts_csv" => ["supplier_key + contract_key"],
+            "external_parties_csv" => ["supplier_key"],
+            "contacts_csv" => ["supplier_key + email"],
+            "open_purchase_orders_csv" => ["order_key + part_key + supplier_key"],
             "purchase_history_csv" => ["order_key + receipt_key + part_key"],
             _ => []
         };
@@ -1392,15 +1416,15 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["part_key", "manufacturer_name + manufacturer_part_number"],
-            "vendor_catalog_csv" => ["vendor_party_key + part_key + vendor_part_number"],
-            "vendor_documents_csv" => ["party_key + document_key"],
+            "vendor_catalog_csv" => ["supplier_key + part_key + vendor_part_number"],
+            "vendor_documents_csv" => ["supplier_key + document_key"],
             "inventory_counts_csv" => ["part_key + location_key + bin_key"],
-            "price_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "lead_time_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "availability_list_csv" => ["vendor_party_key + part_key + snapshot_key"],
-            "contracts_csv" => ["vendor_party_key + contract_key", "title + vendor_party_key"],
-            "external_parties_csv" => ["party_key", "display_name + party_type"],
-            "contacts_csv" => ["party_key + email"],
+            "price_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "lead_time_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "availability_list_csv" => ["supplier_key + part_key + snapshot_key"],
+            "contracts_csv" => ["supplier_key + contract_key", "title + supplier_key"],
+            "external_parties_csv" => ["supplier_key", "display_name + parent_supplier_key"],
+            "contacts_csv" => ["supplier_key + email"],
             "open_purchase_orders_csv" => ["order_key + part_key"],
             "purchase_history_csv" => ["order_key + receipt_key + part_key"],
             _ => []
@@ -1437,7 +1461,7 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "contracts_csv" => ["supplyarr.contract.imported"],
-            "external_parties_csv" => ["supplyarr.vendor.created"],
+            "external_parties_csv" => ["supplyarr.supplier.created"],
             "contacts_csv" => ["supplyarr.vendor_contact.created"],
             "open_purchase_orders_csv" => ["supplyarr.purchase_order.imported"],
             "purchase_history_csv" => ["supplyarr.purchase_order.imported", "supplyarr.receipt.imported"],
@@ -1449,15 +1473,15 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => "Part catalog",
-            "vendor_catalog_csv" => "Vendor catalog",
-            "vendor_documents_csv" => "Vendor documents",
+            "vendor_catalog_csv" => "Supplier catalog",
+            "vendor_documents_csv" => "Supplier documents",
             "inventory_counts_csv" => "Inventory counts",
             "price_list_csv" => "Price list",
             "lead_time_list_csv" => "Lead time list",
             "availability_list_csv" => "Availability list",
             "contracts_csv" => "Contracts",
-            "external_parties_csv" => "External parties",
-            "contacts_csv" => "Contacts",
+            "external_parties_csv" => "Supplier directory",
+            "contacts_csv" => "Supplier contacts",
             "open_purchase_orders_csv" => "Open purchase orders",
             "purchase_history_csv" => "Purchase history",
             _ => importTypeKey.Replace('_', ' ')
@@ -1467,17 +1491,17 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["CAT-100", "Core parts", "Primary stocked parts", "PART-100", "Brake pad", "Fleet brake pad", "brakes", "each", "Acme", "ACM-100"],
-            "vendor_catalog_csv" => ["VEN-100", "PART-100", "VEN-100-PART-100", "true", "29.95", "USD", "10", "7", "120", "in_stock"],
-            "vendor_documents_csv" => ["VEN-100", "DOC-100", "insurance_certificate", "General liability certificate", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z", "insurance.pdf", "application/pdf", "24576", "recordarr://documents/doc-100"],
+            "vendor_catalog_csv" => ["SUP-100", "PART-100", "SUP-100-PART-100", "true", "29.95", "USD", "10", "7", "120", "in_stock"],
+            "vendor_documents_csv" => ["SUP-100", "DOC-100", "insurance_certificate", "General liability certificate", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z", "insurance.pdf", "application/pdf", "24576", "recordarr://documents/doc-100"],
             "inventory_counts_csv" => ["PART-100", "WH1", "BIN-A1", "42"],
-            "price_list_csv" => ["VEN-100", "PART-100", "PRICE-2026-01", "29.95", "USD", "10", "2026-01-01T00:00:00Z", "vendor_portal", "Annual pricing refresh"],
-            "lead_time_list_csv" => ["VEN-100", "PART-100", "LEAD-2026-01", "7", "2026-01-01T00:00:00Z", "vendor_portal", "Standard lead time"],
-            "availability_list_csv" => ["VEN-100", "PART-100", "AVAIL-2026-01", "120", "in_stock", "2026-01-01T00:00:00Z", "vendor_portal", "Warehouse availability"],
-            "contracts_csv" => ["VEN-100", "CON-2026-01", "master_supply_agreement", "Supply agreement 2026", "2026-01-01T00:00:00Z", "2026-12-31T00:00:00Z", "2026-11-01T00:00:00Z", "Net 30", "FOB destination", "12 months", "25000", "95% on-time", "approved", "active", "Priority vendor"],
-            "external_parties_csv" => ["VEN-100", "vendor", "Acme Supply", "Acme Supply LLC", "12-3456789", "approved", "active", "Strategic brake supplier"],
-            "contacts_csv" => ["VEN-100", "Morgan Lee", "morgan.lee@example.com", "555-0100", "Account manager", "true"],
-            "open_purchase_orders_csv" => ["PO-100", "PR-100", "VEN-100", "PART-100", "25", "Brake pads replenishment", "Line note", "Order note"],
-            "purchase_history_csv" => ["PO-100", "PR-100", "RCV-100", "VEN-100", "PART-100", "25", "25", "BIN-A1", "Brake pads replenishment", "Line note", "Order note", "Receipt note"],
+            "price_list_csv" => ["SUP-100", "PART-100", "PRICE-2026-01", "29.95", "USD", "10", "2026-01-01T00:00:00Z", "vendor_portal", "Annual pricing refresh"],
+            "lead_time_list_csv" => ["SUP-100", "PART-100", "LEAD-2026-01", "7", "2026-01-01T00:00:00Z", "vendor_portal", "Standard lead time"],
+            "availability_list_csv" => ["SUP-100", "PART-100", "AVAIL-2026-01", "120", "in_stock", "2026-01-01T00:00:00Z", "vendor_portal", "Warehouse availability"],
+            "contracts_csv" => ["SUP-100", "CON-2026-01", "master_supply_agreement", "Supply agreement 2026", "2026-01-01T00:00:00Z", "2026-12-31T00:00:00Z", "2026-11-01T00:00:00Z", "Net 30", "FOB destination", "12 months", "25000", "95% on-time", "approved", "active", "Priority supplier"],
+            "external_parties_csv" => ["SUP-100-KC", "SUP-100", "sub_unit", "Acme Supply Kansas City", "Acme Supply LLC", "12-3456789", "approved", "active", "Regional brake supplier"],
+            "contacts_csv" => ["SUP-100", "Morgan Lee", "morgan.lee@example.com", "555-0100", "Account manager", "true"],
+            "open_purchase_orders_csv" => ["PO-100", "PR-100", "SUP-100", "PART-100", "25", "Brake pads replenishment", "Line note", "Order note"],
+            "purchase_history_csv" => ["PO-100", "PR-100", "RCV-100", "SUP-100", "PART-100", "25", "25", "BIN-A1", "Brake pads replenishment", "Line note", "Order note", "Receipt note"],
             _ => ImportHeaders[NormalizeImportType(importTypeKey)].Select(_ => string.Empty).ToArray()
         };
 
@@ -1492,6 +1516,53 @@ public static class CoverageAliasEndpoints
         }
 
         return value;
+    }
+
+    private static byte[] BuildSupplierListCsv(IReadOnlyList<ExternalParty> suppliers)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("supplierKey,parentSupplierKey,displayName,legalName,taxIdentifier,approvalStatus,status,unitKind,serviceTypes,addressLine1,addressLine2,locality,regionCode,postalCode,countryCode,createdAt,updatedAt");
+        foreach (var supplier in suppliers)
+        {
+            AppendCsvRow(
+                builder,
+                supplier.PartyKey,
+                supplier.ParentExternalParty?.PartyKey ?? string.Empty,
+                supplier.DisplayName,
+                supplier.LegalName,
+                supplier.TaxIdentifier ?? string.Empty,
+                supplier.ApprovalStatus,
+                supplier.Status,
+                supplier.UnitKind,
+                string.Join('|', ParseServiceTypes(supplier.ServiceTypesJson)),
+                supplier.AddressLine1,
+                supplier.AddressLine2,
+                supplier.Locality,
+                supplier.RegionCode,
+                supplier.PostalCode,
+                supplier.CountryCode,
+                supplier.CreatedAt.ToString("O"),
+                supplier.UpdatedAt.ToString("O"));
+        }
+
+        return Encoding.UTF8.GetBytes(builder.ToString());
+    }
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? serviceTypesJson)
+    {
+        if (string.IsNullOrWhiteSpace(serviceTypesJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(serviceTypesJson) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private static byte[] BuildPartiesCsv(IReadOnlyList<ExternalParty> parties)
@@ -1676,14 +1747,15 @@ public static class CoverageAliasEndpoints
     private static byte[] BuildSupplierDocumentsCsv(IReadOnlyList<PartyComplianceDocument> documents)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("partyKey,partyType,partyDisplayName,documentKey,documentTypeKey,title,version,reviewStatus,effectiveAt,expiresAt,fileName,contentType,sizeBytes,reviewedAt,createdAt,updatedAt");
+        builder.AppendLine("supplierKey,parentSupplierKey,supplierDisplayName,supplierUnitKind,documentKey,documentTypeKey,title,version,reviewStatus,effectiveAt,expiresAt,fileName,contentType,sizeBytes,reviewedAt,createdAt,updatedAt");
         foreach (var document in documents)
         {
             AppendCsvRow(
                 builder,
                 document.ExternalParty.PartyKey,
-                document.ExternalParty.PartyType,
+                document.ExternalParty.ParentExternalParty?.PartyKey ?? string.Empty,
                 document.ExternalParty.DisplayName,
+                document.ExternalParty.UnitKind,
                 document.DocumentKey,
                 document.DocumentTypeKey,
                 document.Title,
