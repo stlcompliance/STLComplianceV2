@@ -27,7 +27,7 @@ public sealed record PartManufacturerAliasResponse(
     string ManufacturerPartNumber,
     DateTimeOffset CreatedAt);
 
-public sealed record PartVendorLinkResponse(
+public sealed record PartSupplierLinkResponse(
     Guid LinkId,
     Guid SupplierId,
     string SupplierKey,
@@ -42,7 +42,7 @@ public sealed record PartVendorLinkResponse(
     string SupplierRegionCode,
     string SupplierPostalCode,
     string SupplierCountryCode,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     bool IsPreferred,
     decimal? CatalogUnitPrice,
     string? CatalogCurrencyCode,
@@ -50,14 +50,7 @@ public sealed record PartVendorLinkResponse(
     int? CatalogLeadTimeDays,
     decimal? CatalogQuantityAvailable,
     string? CatalogAvailabilityStatus,
-    DateTimeOffset CreatedAt)
-{
-    public Guid PartyId => SupplierId;
-
-    public string PartyKey => SupplierKey;
-
-    public string PartyDisplayName => SupplierDisplayName;
-}
+    DateTimeOffset CreatedAt);
 
 public sealed record PartSourceResponse(
     Guid SourceId,
@@ -85,7 +78,7 @@ public sealed record PartResponse(
     decimal? ReorderQuantity,
     IReadOnlyList<PartManufacturerAliasResponse> ManufacturerAliases,
     IReadOnlyList<PartSourceResponse> Sources,
-    IReadOnlyList<PartVendorLinkResponse> VendorLinks,
+    IReadOnlyList<PartSupplierLinkResponse> SupplierLinks,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
@@ -126,18 +119,8 @@ public sealed record CreatePartSourceRequest(
     string Label,
     string Notes);
 
-public sealed record CreatePartVendorLinkRequest(
+public sealed record CreatePartSupplierLinkRequest(
     Guid? SupplierUnitId,
     Guid? SupplierId,
-    Guid? PartyId,
-    string VendorPartNumber,
-    bool IsPreferred)
-{
-    public CreatePartVendorLinkRequest(
-        Guid? partyId,
-        string vendorPartNumber,
-        bool isPreferred)
-        : this(partyId, partyId, partyId, vendorPartNumber, isPreferred)
-    {
-    }
-}
+    string SupplierPartNumber,
+    bool IsPreferred);

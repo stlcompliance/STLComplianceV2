@@ -16,8 +16,8 @@ using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -108,7 +108,7 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            supplier.PartyId,
+            supplier.SupplierId,
             "SI-QUAL-001",
             "Contaminated shipment",
             "Foreign material found in sealed containers.",
@@ -139,19 +139,19 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
             _userToken);
         restrictRequest.Content = JsonContent.Create(new ApplySupplierIncidentProcurementRestrictionRequest(
             "si-hold-001",
-            [VendorRestrictionScopes.AllProcurement],
+            [SupplierRestrictionScopes.AllProcurement],
             "Critical quality incident SI-QUAL-001"));
         var restrictResponse = await _supplyarrClient.SendAsync(restrictRequest);
         restrictResponse.EnsureSuccessStatusCode();
         var restricted = (await restrictResponse.Content.ReadFromJsonAsync<SupplierIncidentResponse>())!;
-        Assert.NotNull(restricted.VendorRestrictionId);
+        Assert.NotNull(restricted.SupplierRestrictionId);
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
         createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
             $"si-pr-{Guid.NewGuid():N}"[..20],
             "Blocked by incident",
             string.Empty,
-            supplier.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var blockedPr = await _supplyarrClient.SendAsync(createPrRequest);
         Assert.Equal(HttpStatusCode.Conflict, blockedPr.StatusCode);
@@ -182,7 +182,7 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            supplier.PartyId,
+            supplier.SupplierId,
             "SI-DEL-002",
             "Late delivery",
             "PO arrived 5 days late.",
@@ -211,9 +211,9 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            supplier.PartyId,
+            supplier.SupplierId,
             "SI-POL-003",
-            "Unauthorized vendor purchase",
+            "Unauthorized supplier purchase",
             "Purchase was made with an unauthorized supplier and requires personnel review.",
             SupplierIncidentTypes.Compliance,
             SupplierIncidentSeverities.High,
@@ -262,7 +262,7 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/supplier-incidents", _userToken);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            supplier.PartyId,
+            supplier.SupplierId,
             "SI-SAFE-004",
             "Forklift handling incident",
             "Receiving operator struck a pallet rack while unloading hazardous material.",
@@ -300,7 +300,7 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
         var incidentPayload = payload.GetProperty("payload");
         Assert.Equal(SupplierIncidentTypes.Safety, incidentPayload.GetProperty("incidentType").GetString());
         Assert.Equal(SupplierIncidentSeverities.High, incidentPayload.GetProperty("severity").GetString());
-        Assert.Equal("Incident Supplier", incidentPayload.GetProperty("partyDisplayName").GetString());
+        Assert.Equal("Incident Supplier", incidentPayload.GetProperty("supplierDisplayName").GetString());
 
         var routed = await db.SupplierIncidents.SingleAsync(x => x.Id == incident.IncidentId);
         Assert.Equal(_trainarrIncidentHandler.ResponseRemediationId, routed.TrainarrIncidentRemediationId);
@@ -308,18 +308,27 @@ public sealed class SupplyArrSupplierIncidentTests : IAsyncLifetime
         Assert.NotNull(routed.TrainarrIncidentRoutedAt);
     }
 
-    private async Task<ExternalPartyResponse> CreateSupplierAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
         var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
-        createSupplier.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        createSupplier.Content = JsonContent.Create(new CreateSupplierRequest(
             $"s-si-{Guid.NewGuid():N}"[..12],
+            null,
+            null,
             "Incident Supplier",
             string.Empty,
             null,
-            string.Empty));
+            string.Empty,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
         var response = await _supplyarrClient.SendAsync(createSupplier);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private async Task<PartResponse> CreatePartAsync()

@@ -69,19 +69,6 @@ public static class SupplierOnboardingEndpoints
             })
             .WithName($"StartSupplierOnboarding{nameSuffix}");
 
-            group.MapGet("/parties/{partyId:guid}", async (
-                Guid partyId,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                SupplierOnboardingService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingRead(context.User);
-                var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.GetByPartyAsync(tenantId, partyId, cancellationToken));
-            })
-            .WithName($"GetSupplierOnboardingByParty{nameSuffix}");
-
             group.MapGet("/suppliers/{supplierId:guid}", async (
                 Guid supplierId,
                 HttpContext context,
@@ -94,26 +81,6 @@ public static class SupplierOnboardingEndpoints
                 return Results.Ok(await service.GetBySupplierAsync(tenantId, supplierId, cancellationToken));
             })
             .WithName($"GetSupplierOnboardingBySupplier{nameSuffix}");
-
-            group.MapPost("/parties/{partyId:guid}/submit", async (
-                Guid partyId,
-                SubmitSupplierOnboardingForReviewRequest request,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                SupplierOnboardingService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingManage(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.SubmitForReviewByPartyAsync(
-                    tenantId,
-                    actorUserId,
-                    partyId,
-                    request,
-                    cancellationToken));
-            })
-            .WithName($"SubmitSupplierOnboardingForReview{nameSuffix}");
 
             group.MapPost("/suppliers/{supplierId:guid}/submit", async (
                 Guid supplierId,
@@ -149,35 +116,6 @@ public static class SupplierOnboardingEndpoints
             })
             .WithName($"ApproveSupplierOnboardingBySupplier{nameSuffix}");
 
-            group.MapPost("/parties/{partyId:guid}/approve", async (
-                Guid partyId,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                SupplierOnboardingService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingReview(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.ApproveByPartyAsync(tenantId, actorUserId, partyId, cancellationToken));
-            })
-            .WithName($"ApproveSupplierOnboarding{nameSuffix}");
-
-            group.MapPost("/parties/{partyId:guid}/reject", async (
-                Guid partyId,
-                RejectSupplierOnboardingRequest request,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                SupplierOnboardingService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingReview(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.RejectByPartyAsync(tenantId, actorUserId, partyId, request, cancellationToken));
-            })
-            .WithName($"RejectSupplierOnboarding{nameSuffix}");
-
             group.MapPost("/suppliers/{supplierId:guid}/reject", async (
                 Guid supplierId,
                 RejectSupplierOnboardingRequest request,
@@ -192,21 +130,6 @@ public static class SupplierOnboardingEndpoints
                 return Results.Ok(await service.RejectSupplierAsync(tenantId, actorUserId, supplierId, request, cancellationToken));
             })
             .WithName($"RejectSupplierOnboardingBySupplier{nameSuffix}");
-
-            group.MapPost("/parties/{partyId:guid}/suspend", async (
-                Guid partyId,
-                SuspendSupplierOnboardingRequest request,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                SupplierOnboardingService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingReview(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.SuspendByPartyAsync(tenantId, actorUserId, partyId, request, cancellationToken));
-            })
-            .WithName($"SuspendSupplierOnboarding{nameSuffix}");
 
             group.MapPost("/suppliers/{supplierId:guid}/suspend", async (
                 Guid supplierId,
@@ -224,86 +147,6 @@ public static class SupplierOnboardingEndpoints
             .WithName($"SuspendSupplierOnboardingBySupplier{nameSuffix}");
         }
 
-        static void MapComplianceDocumentRoutes(RouteGroupBuilder partyDocs, string nameSuffix)
-        {
-            partyDocs = partyDocs.WithTags("PartyComplianceDocuments").RequireAuthorization();
-
-            partyDocs.MapGet("/", async (
-                Guid partyId,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingRead(context.User);
-                var tenantId = context.User.GetTenantId();
-                return Results.Ok(await service.ListForPartyAsync(tenantId, partyId, cancellationToken));
-            })
-            .WithName($"ListPartyComplianceDocuments{nameSuffix}");
-
-            partyDocs.MapPost("/", async (
-                Guid partyId,
-                SupplierComplianceDocumentRegistrationRequest request,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingManage(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                var created = await service.RegisterAsync(tenantId, actorUserId, partyId, request, cancellationToken);
-                return Results.Created($"/api/suppliers/{partyId}/compliance-documents/{created.DocumentId}", created);
-            })
-            .WithName($"RegisterPartyComplianceDocument{nameSuffix}");
-
-            partyDocs.MapPost("/{documentId:guid}/approve", async (
-                Guid partyId,
-                Guid documentId,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingReview(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.ApproveAsync(tenantId, actorUserId, documentId, cancellationToken));
-            })
-            .WithName($"ApprovePartyComplianceDocument{nameSuffix}");
-
-            partyDocs.MapGet("/{documentId:guid}/content", async (
-                Guid partyId,
-                Guid documentId,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingRead(context.User);
-                var tenantId = context.User.GetTenantId();
-                var (metadata, stream) = await service.OpenDocumentContentAsync(tenantId, documentId, cancellationToken);
-                return Results.File(stream, metadata.ContentType, metadata.FileName);
-            })
-            .WithName($"DownloadPartyComplianceDocument{nameSuffix}");
-
-            partyDocs.MapPost("/{documentId:guid}/reject", async (
-                Guid partyId,
-                Guid documentId,
-                RejectSupplierComplianceDocumentRequest request,
-                HttpContext context,
-                SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireSupplierOnboardingReview(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                return Results.Ok(await service.RejectAsync(tenantId, actorUserId, documentId, request, cancellationToken));
-            })
-            .WithName($"RejectPartyComplianceDocument{nameSuffix}");
-        }
-
         static void MapSupplierComplianceDocumentRoutes(RouteGroupBuilder supplierDocs, string nameSuffix)
         {
             supplierDocs = supplierDocs.WithTags("SupplierComplianceDocuments").RequireAuthorization();
@@ -312,7 +155,7 @@ public static class SupplierOnboardingEndpoints
                 Guid supplierId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
+                SupplierComplianceDocumentService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireSupplierOnboardingRead(context.User);
@@ -326,7 +169,7 @@ public static class SupplierOnboardingEndpoints
                 SupplierComplianceDocumentRegistrationRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
+                SupplierComplianceDocumentService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireSupplierOnboardingManage(context.User);
@@ -342,7 +185,7 @@ public static class SupplierOnboardingEndpoints
                 Guid documentId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
+                SupplierComplianceDocumentService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireSupplierOnboardingReview(context.User);
@@ -357,7 +200,7 @@ public static class SupplierOnboardingEndpoints
                 Guid documentId,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
+                SupplierComplianceDocumentService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireSupplierOnboardingRead(context.User);
@@ -373,7 +216,7 @@ public static class SupplierOnboardingEndpoints
                 RejectSupplierComplianceDocumentRequest request,
                 HttpContext context,
                 SupplyArrAuthorizationService authorization,
-                PartyComplianceDocumentService service,
+                SupplierComplianceDocumentService service,
                 CancellationToken cancellationToken) =>
             {
                 authorization.RequireSupplierOnboardingReview(context.User);
@@ -387,8 +230,6 @@ public static class SupplierOnboardingEndpoints
         MapOnboardingRoutes(app.MapGroup("/api/supplier-onboarding"), string.Empty);
         MapOnboardingRoutes(app.MapGroup("/api/v1/supplier-onboarding"), "V1");
 
-        MapComplianceDocumentRoutes(app.MapGroup("/api/parties/{partyId:guid}/compliance-documents"), string.Empty);
-        MapComplianceDocumentRoutes(app.MapGroup("/api/v1/parties/{partyId:guid}/compliance-documents"), "V1");
         MapSupplierComplianceDocumentRoutes(app.MapGroup("/api/suppliers/{supplierId:guid}/compliance-documents"), "Supplier");
         MapSupplierComplianceDocumentRoutes(app.MapGroup("/api/v1/suppliers/{supplierId:guid}/compliance-documents"), "V1Supplier");
     }

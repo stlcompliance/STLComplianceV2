@@ -199,7 +199,7 @@ public sealed class ProcurementExceptionEscalationWorkerService(
             notificationDispatchId = await notificationEnqueue.TryEnqueueRepeatableAsync(
                 exception.TenantId,
                 ProcurementNotificationEventKinds.ProcurementExceptionSlaEscalation,
-                exception.VendorPartyId,
+                exception.SupplierId,
                 "procurement_exception",
                 exception.Id,
                 cancellationToken);

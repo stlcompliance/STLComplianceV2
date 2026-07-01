@@ -91,7 +91,7 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task Process_batch_creates_pricing_snapshot_from_catalog_price()
     {
-        var linkId = await SeedVendorLinkWithCatalogPriceAsync(catalogUnitPrice: 12.5m);
+        var linkId = await SeedSupplierLinkWithCatalogPriceAsync(catalogUnitPrice: 12.5m);
         await UpsertSettingsAsync();
 
         var processRequest = Authorized(
@@ -111,12 +111,12 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
         Assert.Equal(1, body.CapturedCount);
         Assert.Single(body.Captured);
         Assert.Equal(12.5m, body.Captured[0].UnitPrice);
-        Assert.Equal(SnapshotSources.VendorFeed, body.Captured[0].Source);
+        Assert.Equal(SnapshotSources.SupplierFeed, body.Captured[0].Source);
 
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
-        var captureState = await db.PartVendorPriceCaptureStates
-            .SingleAsync(x => x.PartVendorLinkId == linkId);
+        var captureState = await db.PartSupplierPriceCaptureStates
+            .SingleAsync(x => x.PartSupplierLinkId == linkId);
         Assert.Equal(12.5m, captureState.LastCapturedUnitPrice);
         Assert.NotNull(captureState.LastPricingSnapshotId);
     }
@@ -124,7 +124,7 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task List_pending_price_snapshot_returns_catalog_drift_candidates()
     {
-        await SeedVendorLinkWithCatalogPriceAsync(catalogUnitPrice: 9.99m, currentSnapshotPrice: 8.5m);
+        await SeedSupplierLinkWithCatalogPriceAsync(catalogUnitPrice: 9.99m, currentSnapshotPrice: 8.5m);
         await UpsertSettingsAsync();
 
         var pendingRequest = Authorized(
@@ -137,6 +137,8 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
         var pending = (await pendingResponse.Content.ReadFromJsonAsync<PendingPriceSnapshotCapturesResponse>())!;
         Assert.NotEmpty(pending.Items);
         Assert.Equal(9.99m, pending.Items[0].CatalogUnitPrice);
+        Assert.NotEqual(Guid.Empty, pending.Items[0].SupplierId);
+        Assert.False(string.IsNullOrWhiteSpace(pending.Items[0].SupplierKey));
     }
 
     private async Task UpsertSettingsAsync()
@@ -156,7 +158,7 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task<Guid> SeedVendorLinkWithCatalogPriceAsync(
+    private async Task<Guid> SeedSupplierLinkWithCatalogPriceAsync(
         decimal catalogUnitPrice,
         decimal? currentSnapshotPrice = null)
     {
@@ -165,14 +167,13 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
-            PartyType = "vendor",
-            DisplayName = "Price vendor",
-            LegalName = "Price vendor LLC",
+            SupplierKey = $"supplier-{Guid.NewGuid():N}"[..16],
+            DisplayName = "Price supplier",
+            LegalName = "Price supplier LLC",
             TaxIdentifier = string.Empty,
             ApprovalStatus = "approved",
             Status = "active",
@@ -197,13 +198,13 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var link = new PartVendorLink
+        var link = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "VPN-100",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "VPN-100",
             IsPreferred = true,
             CatalogUnitPrice = catalogUnitPrice,
             CatalogCurrencyCode = "USD",
@@ -211,17 +212,17 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        db.ExternalParties.Add(vendor);
+        db.Suppliers.Add(supplier);
         db.Parts.Add(part);
-        db.PartVendorLinks.Add(link);
+        db.PartSupplierLinks.Add(link);
 
         if (currentSnapshotPrice is not null)
         {
-            db.PartVendorPricingSnapshots.Add(new PartVendorPricingSnapshot
+            db.PartSupplierPricingSnapshots.Add(new PartSupplierPricingSnapshot
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                PartVendorLinkId = link.Id,
+                PartSupplierLinkId = link.Id,
                 SnapshotKey = $"manual-{Guid.NewGuid():N}"[..24],
                 UnitPrice = currentSnapshotPrice.Value,
                 CurrencyCode = "USD",
@@ -307,3 +308,5 @@ public sealed class SupplyArrPriceSnapshotWorkerTests : IAsyncLifetime
         return request;
     }
 }
+
+

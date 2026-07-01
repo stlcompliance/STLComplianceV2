@@ -129,23 +129,6 @@ public static class IntegrationEndpoints
         })
         .WithName($"IntegrationGetPartSupplyReadiness{nameSuffix}");
 
-        integrations.MapGet("/vendor-supply-readiness", async (
-            Guid tenantId,
-            Guid externalPartyId,
-            HttpContext context,
-            StlServiceTokenValidator tokenValidator,
-            SupplyReadinessService service,
-            CancellationToken cancellationToken) =>
-        {
-            ValidateReadinessServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetVendorReadinessAsync(
-                tenantId,
-                externalPartyId,
-                cancellationToken,
-                auditSnapshotKind: SupplyReadinessService.VendorSnapshotKind));
-        })
-        .WithName($"IntegrationGetVendorSupplyReadiness{nameSuffix}");
-
         integrations.MapGet("/supplier-supply-readiness", async (
             Guid tenantId,
             Guid supplierId,
@@ -166,7 +149,7 @@ public static class IntegrationEndpoints
         integrations.MapGet("/procurement-path-readiness", async (
             Guid tenantId,
             Guid partId,
-            Guid externalPartyId,
+            Guid supplierId,
             decimal? quantity,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
@@ -177,7 +160,7 @@ public static class IntegrationEndpoints
             return Results.Ok(await service.GetProcurementPathReadinessAsync(
                 tenantId,
                 partId,
-                externalPartyId,
+                supplierId,
                 quantity,
                 cancellationToken,
                 auditSnapshotKind: SupplyReadinessService.ProcurementPathSnapshotKind));
@@ -233,38 +216,38 @@ public static class IntegrationEndpoints
         })
         .WithName($"IntegrationListSupplyArrItemReferences{nameSuffix}");
 
-        integrations.MapGet("/vendor-orders/{vendorOrderId:guid}", async (
+        integrations.MapGet("/supplier-orders/{supplierOrderId:guid}", async (
             Guid tenantId,
-            Guid vendorOrderId,
+            Guid supplierOrderId,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
-            VendorOrderService service,
+            SupplierOrderService service,
             CancellationToken cancellationToken) =>
         {
-            ValidateVendorOrderReadServiceToken(tokenValidator, context, tenantId);
-            return Results.Ok(await service.GetForIntegrationAsync(tenantId, vendorOrderId, cancellationToken));
+            ValidateSupplierOrderReadServiceToken(tokenValidator, context, tenantId);
+            return Results.Ok(await service.GetForIntegrationAsync(tenantId, supplierOrderId, cancellationToken));
         })
-        .WithName($"IntegrationGetVendorOrder{nameSuffix}");
+        .WithName($"IntegrationGetSupplierOrder{nameSuffix}");
 
-        integrations.MapGet("/vendor-orders/search", async (
+        integrations.MapGet("/supplier-orders/search", async (
             Guid tenantId,
             Guid? brokerOrderId,
-            Guid? vendorId,
+            Guid? supplierId,
             string? status,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
-            VendorOrderService service,
+            SupplierOrderService service,
             CancellationToken cancellationToken) =>
         {
-            ValidateVendorOrderReadServiceToken(tokenValidator, context, tenantId);
+            ValidateSupplierOrderReadServiceToken(tokenValidator, context, tenantId);
             return Results.Ok(await service.SearchForIntegrationAsync(
                 tenantId,
                 brokerOrderId,
-                vendorId,
+                supplierId,
                 status,
                 cancellationToken));
         })
-        .WithName($"IntegrationSearchVendorOrders{nameSuffix}");
+        .WithName($"IntegrationSearchSupplierOrders{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty);
@@ -277,7 +260,7 @@ public static class IntegrationEndpoints
 
     public const string SupplyItemReferenceReadActionScope = SupplyArrItemReferenceIntegrationScopes.ItemReferencesRead;
 
-    public const string VendorOrderReadActionScope = "supplyarr.vendor_orders.read";
+    public const string SupplierOrderReadActionScope = "supplyarr.supplier_orders.read";
 
     private static void ValidateReadinessServiceToken(
         StlServiceTokenValidator tokenValidator,
@@ -360,7 +343,7 @@ public static class IntegrationEndpoints
             });
     }
 
-    private static void ValidateVendorOrderReadServiceToken(
+    private static void ValidateSupplierOrderReadServiceToken(
         StlServiceTokenValidator tokenValidator,
         HttpContext context,
         Guid tenantId)
@@ -375,7 +358,7 @@ public static class IntegrationEndpoints
                 ExpectedSourceProduct = "routarr",
                 RequiredTargetProduct = "supplyarr",
                 TenantId = tenantId,
-                RequiredActionScope = VendorOrderReadActionScope,
+                RequiredActionScope = SupplierOrderReadActionScope,
             });
     }
 

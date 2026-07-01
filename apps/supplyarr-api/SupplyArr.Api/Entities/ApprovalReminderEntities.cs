@@ -45,7 +45,7 @@ public sealed class ApprovalReminderState : IHasTenant
 
     public string DocumentStatus { get; set; } = string.Empty;
 
-    public Guid? VendorPartyId { get; set; }
+    public Guid? SupplierId { get; set; }
 
     public DateTimeOffset PendingSince { get; set; }
 

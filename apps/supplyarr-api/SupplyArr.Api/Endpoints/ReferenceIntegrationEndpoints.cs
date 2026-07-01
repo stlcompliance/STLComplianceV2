@@ -24,7 +24,7 @@ public static class ReferenceIntegrationEndpoints
             SupplyArrAuthorizationService authorization) =>
         {
             RequireSupplyArrTenantRole(context.User);
-            authorization.RequirePartiesRead(context.User);
+            authorization.RequireSuppliersRead(context.User);
             return Results.Ok(new ReferenceTypeDescriptor[]
             {
                 SupplierDescriptor(),
@@ -54,7 +54,7 @@ public static class ReferenceIntegrationEndpoints
 
             if (IsSupplierReferenceType(referenceType))
             {
-                authorization.RequirePartiesRead(context.User);
+                authorization.RequireSuppliersRead(context.User);
                 var results = (await parties.ListSuppliersAsync(tenantId, cancellationToken))
                     .Where(supplier => MatchesSupplier(supplier, request.Query))
                     .Take(limit)
@@ -97,7 +97,7 @@ public static class ReferenceIntegrationEndpoints
             var tenantId = context.User.GetTenantId();
             if (IsSupplierReferenceType(normalizedType))
             {
-                authorization.RequirePartiesRead(context.User);
+                authorization.RequireSuppliersRead(context.User);
                 return Results.Ok(ToSupplierSummary(await parties.GetSupplierAsync(tenantId, parsedId, cancellationToken)));
             }
 
@@ -120,14 +120,14 @@ public static class ReferenceIntegrationEndpoints
             var normalizedType = NormalizeReferenceType(referenceType);
             if (IsSupplierReferenceType(normalizedType))
             {
-                authorization.RequirePartiesRead(context.User);
-                var allowed = CanQuickCreateParty(context.User);
+                authorization.RequireSuppliersRead(context.User);
+                var allowed = CanQuickCreateSupplier(context.User);
                 return Results.Ok(new QuickCreateSchemaResponse(
                     ProductKey,
                     SupplierReferenceType,
                     allowed,
                     "SupplyArr",
-                    "supplyarr.parties.quick_create",
+                    "supplyarr.suppliers.quick_create",
                     allowed ? null : "Supplier quick create requires SupplyArr supplier management access.",
                     [
                         new QuickCreateFieldDescriptor("supplierKey", "Supplier key", "text", Placeholder: "acme-midwest"),
@@ -187,8 +187,8 @@ public static class ReferenceIntegrationEndpoints
             var actorUserId = context.User.GetUserId();
             if (IsSupplierReferenceType(normalizedType))
             {
-                authorization.RequirePartiesManage(context.User);
-                var duplicates = (await FindPartyDuplicates(
+                authorization.RequireSuppliersManage(context.User);
+                var duplicates = (await FindSupplierDuplicates(
                     parties,
                     tenantId,
                     request,
@@ -204,7 +204,7 @@ public static class ReferenceIntegrationEndpoints
                     throw new StlApiException("supplyarr.references.display_name_required", "Display name is required.", 400);
                 }
 
-                var supplierKey = FirstValue(request.Values, "supplierKey", "partyKey", "key");
+                var supplierKey = FirstValue(request.Values, "supplierKey", "key");
                 var parentSupplierIdText = FirstValue(request.Values, "parentSupplierId");
                 Guid? parentSupplierId = null;
                 if (!string.IsNullOrWhiteSpace(parentSupplierIdText))
@@ -288,10 +288,10 @@ public static class ReferenceIntegrationEndpoints
             SupplierReferenceType,
             "Supplier",
             CanQuickCreate: true,
-            QuickCreatePermission: "supplyarr.parties.quick_create",
+            QuickCreatePermission: "supplyarr.suppliers.quick_create",
             Description: "SupplyArr-owned supplier identity or supplier sub-unit reference.");
 
-    private static bool CanQuickCreateParty(System.Security.Claims.ClaimsPrincipal principal)
+    private static bool CanQuickCreateSupplier(System.Security.Claims.ClaimsPrincipal principal)
     {
         var role = principal.GetTenantRoleKey();
         return role.Equals("tenant_admin", StringComparison.OrdinalIgnoreCase)
@@ -299,7 +299,7 @@ public static class ReferenceIntegrationEndpoints
             || role.Equals("supplyarr_manager", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool CanQuickCreatePart(System.Security.Claims.ClaimsPrincipal principal) => CanQuickCreateParty(principal);
+    private static bool CanQuickCreatePart(System.Security.Claims.ClaimsPrincipal principal) => CanQuickCreateSupplier(principal);
 
     private static void RequireSupplyArrTenantRole(System.Security.Claims.ClaimsPrincipal principal)
     {
@@ -372,7 +372,7 @@ public static class ReferenceIntegrationEndpoints
                 ["unitOfMeasure"] = part.UnitOfMeasure
             });
 
-    private static async Task<IEnumerable<DuplicateCandidateResponse>> FindPartyDuplicates(
+    private static async Task<IEnumerable<DuplicateCandidateResponse>> FindSupplierDuplicates(
         SupplierDirectoryService parties,
         Guid tenantId,
         QuickCreateRequest request,
@@ -381,7 +381,7 @@ public static class ReferenceIntegrationEndpoints
         var displayName = Normalize(FirstValue(request.Values, "displayName", "legalName", "name"));
         var legalName = Normalize(FirstValue(request.Values, "legalName", "displayName", "name"));
         var taxId = Normalize(GetValue(request.Values, "taxIdentifier", "taxId"));
-        var partyKey = Normalize(GetValue(request.Values, "supplierKey", "partyKey", "key"));
+        var supplierKey = Normalize(GetValue(request.Values, "supplierKey", "key"));
 
         return (await parties.ListSuppliersAsync(tenantId, cancellationToken))
             .Select(supplier =>
@@ -402,7 +402,7 @@ public static class ReferenceIntegrationEndpoints
                     reasons.Add("matching tax identifier");
                 }
 
-                if (!string.IsNullOrWhiteSpace(partyKey) && Normalize(supplier.SupplierKey) == partyKey)
+                if (!string.IsNullOrWhiteSpace(supplierKey) && Normalize(supplier.SupplierKey) == supplierKey)
                 {
                     reasons.Add("matching supplier key");
                 }
@@ -512,7 +512,6 @@ public static class ReferenceIntegrationEndpoints
         return normalized switch
         {
             "item" or "material" => "part",
-            "party" or "vendor" or "dealer" or "carrier" => SupplierReferenceType,
             _ => normalized
         };
     }

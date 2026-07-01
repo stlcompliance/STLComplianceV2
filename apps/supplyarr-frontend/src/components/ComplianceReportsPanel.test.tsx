@@ -18,7 +18,7 @@ vi.mock('../api/client', () => ({
     },
     suppliers: [
       {
-        supplierId: 'party-1',
+        supplierId: 'supplier-1',
         supplierKey: 'ACME',
         displayName: 'North Yard Counter',
         parentSupplierId: 'parent-1',
@@ -36,7 +36,7 @@ vi.mock('../api/client', () => ({
     documents: [
       {
         documentId: 'doc-1',
-        supplierId: 'party-1',
+        supplierId: 'supplier-1',
         supplierKey: 'ACME',
         supplierDisplayName: 'Acme Supply',
         documentKey: 'COI-2024',

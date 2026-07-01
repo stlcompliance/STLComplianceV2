@@ -14,7 +14,6 @@ public static class PurchasingReportEndpoints
             group.MapGet("/summary", async (
                 bool? openDocumentsOnly,
                 Guid? supplierId,
-                Guid? vendorPartyId,
                 SupplyArrAuthorizationService authorization,
                 PurchasingReportService reportService,
                 ISupplyArrAuditService audit,
@@ -27,7 +26,7 @@ public static class PurchasingReportEndpoints
                 var summary = await reportService.GetSummaryAsync(
                     tenantId,
                     openDocumentsOnly,
-                    supplierId ?? vendorPartyId,
+                    supplierId,
                     cancellationToken);
                 await audit.WriteAsync(
                     "supplyarr.reports.purchasing.summary",
@@ -44,7 +43,6 @@ public static class PurchasingReportEndpoints
             group.MapGet("/summary/export", async (
                 bool? openDocumentsOnly,
                 Guid? supplierId,
-                Guid? vendorPartyId,
                 SupplyArrAuthorizationService authorization,
                 PurchasingReportService reportService,
                 ISupplyArrAuditService audit,
@@ -57,7 +55,7 @@ public static class PurchasingReportEndpoints
                 var export = await reportService.ExportSummaryCsvAsync(
                     tenantId,
                     openDocumentsOnly,
-                    supplierId ?? vendorPartyId,
+                    supplierId,
                     cancellationToken);
                 await audit.WriteAsync(
                     "supplyarr.reports.purchasing.export",

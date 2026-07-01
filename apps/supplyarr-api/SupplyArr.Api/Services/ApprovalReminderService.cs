@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
@@ -28,7 +29,7 @@ public sealed class ApprovalReminderService(
                 x.RequestKey,
                 x.Title,
                 x.Status,
-                x.VendorPartyId,
+                x.SupplierId,
                 x.SubmittedAt ?? x.UpdatedAt))
             .ToListAsync(cancellationToken);
 
@@ -40,11 +41,27 @@ public sealed class ApprovalReminderService(
                 x.OrderKey,
                 x.Title,
                 x.Status,
-                x.VendorPartyId,
+                x.SupplierId,
                 x.UpdatedAt))
             .ToListAsync(cancellationToken);
 
-        var subjects = purchaseRequests.Concat(purchaseOrders).ToList();
+        var subjects = purchaseRequests.Concat(purchaseOrders).ToList();
+
+        var supplierSnapshots = await LoadSupplierSnapshotsAsync(
+
+            tenantId,
+
+            subjects
+
+                .Where(x => x.SupplierId.HasValue)
+
+                .Select(x => x.SupplierId!.Value)
+
+                .Distinct()
+
+                .ToList(),
+
+            cancellationToken);
         var stateLookup = await db.ApprovalReminderStates.AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(
@@ -94,7 +111,9 @@ public sealed class ApprovalReminderService(
                 continue;
             }
 
-            var hoursPending = ApprovalReminderRules.ComputeHoursPending(pendingSince, asOf);
+            var hoursPending = ApprovalReminderRules.ComputeHoursPending(pendingSince, asOf);
+
+            supplierSnapshots.TryGetValue(subject.SupplierId ?? Guid.Empty, out var supplier);
             items.Add(new ApprovalReminderSummaryResponse(
                 state?.Id ?? Guid.Empty,
                 subject.SubjectType,
@@ -102,7 +121,19 @@ public sealed class ApprovalReminderService(
                 subject.DocumentKey,
                 subject.Title,
                 subject.DocumentStatus,
-                subject.VendorPartyId,
+                supplier?.SupplierId ?? subject.SupplierId,
+
+                supplier?.SupplierKey,
+
+                supplier?.SupplierDisplayName,
+
+                supplier?.ParentSupplierId,
+
+                supplier?.ParentSupplierDisplayName,
+
+                supplier?.SupplierUnitKind,
+
+                supplier?.SupplierServiceTypes ?? [],
                 pendingSince,
                 lastReminderSentAt,
                 reminderCount,
@@ -122,7 +153,88 @@ public sealed class ApprovalReminderService(
         string DocumentKey,
         string Title,
         string DocumentStatus,
-        Guid? VendorPartyId,
+        Guid? SupplierId,
         DateTimeOffset PendingSince);
-}
-
+    private async Task<Dictionary<Guid, SupplierSnapshot>> LoadSupplierSnapshotsAsync(
+
+        Guid tenantId,
+
+        IReadOnlyCollection<Guid> supplierIds,
+
+        CancellationToken cancellationToken)
+
+    {
+
+        if (supplierIds.Count == 0)
+
+        {
+
+            return [];
+
+        }
+
+
+
+        return await db.Suppliers
+
+            .AsNoTracking()
+
+            .Include(x => x.ParentSupplier)
+
+            .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.Id))
+
+            .ToDictionaryAsync(x => x.Id, ToSupplierSnapshot, cancellationToken);
+
+    }
+
+
+
+    private static SupplierSnapshot ToSupplierSnapshot(Supplier supplier) =>
+
+        new(
+
+            supplier.Id,
+
+            supplier.SupplierKey,
+
+            supplier.DisplayName,
+
+            supplier.ParentSupplierId,
+
+            supplier.ParentSupplier?.DisplayName,
+
+            string.IsNullOrWhiteSpace(supplier.UnitKind) ? "identity" : supplier.UnitKind,
+
+            ParseServiceTypes(supplier.ServiceTypesJson));
+
+
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value) =>
+
+        string.IsNullOrWhiteSpace(value)
+
+            ? []
+
+            : JsonSerializer.Deserialize<List<string>>(value) ?? [];
+
+
+
+    private sealed record SupplierSnapshot(
+
+        Guid SupplierId,
+
+        string SupplierKey,
+
+        string SupplierDisplayName,
+
+        Guid? ParentSupplierId,
+
+        string? ParentSupplierDisplayName,
+
+        string SupplierUnitKind,
+
+        IReadOnlyList<string> SupplierServiceTypes);
+
+}
+
+

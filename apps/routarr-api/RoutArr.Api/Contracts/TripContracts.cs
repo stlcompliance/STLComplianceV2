@@ -34,14 +34,14 @@ public sealed record TripSummaryResponse(
     DateTimeOffset? CompletedAt,
     DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt,
-    Guid? VendorOrderId,
+    Guid? SupplierOrderId,
     Guid? BrokerOrderId,
     string? DispatchBlockReason,
-    string? VendorReadinessStatusSnapshot,
-    decimal? VendorQuantityReadySnapshot,
-    decimal? VendorOrderedQuantitySnapshot,
-    DateTimeOffset? VendorExpectedReadyAtSnapshot,
-    DateTimeOffset? VendorConfirmedReadyAtSnapshot,
+    string? SupplierReadinessStatusSnapshot,
+    decimal? SupplierQuantityReadySnapshot,
+    decimal? SupplierOrderedQuantitySnapshot,
+    DateTimeOffset? SupplierExpectedReadyAtSnapshot,
+    DateTimeOffset? SupplierConfirmedReadyAtSnapshot,
     DateTimeOffset? DispatchOverrideAt,
     string? DispatchOverrideReason,
     IReadOnlyList<DispatchBlockResponse> DispatchBlocks);
@@ -67,14 +67,14 @@ public sealed record TripDetailResponse(
     DateTimeOffset? CompletedAt,
     DateTimeOffset? ClosedAt,
     DateTimeOffset? CancelledAt,
-    Guid? VendorOrderId,
+    Guid? SupplierOrderId,
     Guid? BrokerOrderId,
     string? DispatchBlockReason,
-    string? VendorReadinessStatusSnapshot,
-    decimal? VendorQuantityReadySnapshot,
-    decimal? VendorOrderedQuantitySnapshot,
-    DateTimeOffset? VendorExpectedReadyAtSnapshot,
-    DateTimeOffset? VendorConfirmedReadyAtSnapshot,
+    string? SupplierReadinessStatusSnapshot,
+    decimal? SupplierQuantityReadySnapshot,
+    decimal? SupplierOrderedQuantitySnapshot,
+    DateTimeOffset? SupplierExpectedReadyAtSnapshot,
+    DateTimeOffset? SupplierConfirmedReadyAtSnapshot,
     DateTimeOffset? ReleasedForDispatchAt,
     Guid? ReleasedForDispatchByEventId,
     DateTimeOffset? DispatchOverrideAt,
@@ -108,7 +108,7 @@ public sealed record CreateTripRequest
         string Title,
         string Description,
         string? VehicleRefKey,
-        Guid? VendorOrderId,
+        Guid? SupplierOrderId,
         Guid? BrokerOrderId,
         DateTimeOffset? ScheduledStartAt,
         DateTimeOffset? ScheduledEndAt,
@@ -117,7 +117,7 @@ public sealed record CreateTripRequest
         this.Title = Title;
         this.Description = Description;
         this.VehicleRefKey = VehicleRefKey;
-        this.VendorOrderId = VendorOrderId;
+        this.SupplierOrderId = SupplierOrderId;
         this.BrokerOrderId = BrokerOrderId;
         this.ScheduledStartAt = ScheduledStartAt;
         this.ScheduledEndAt = ScheduledEndAt;
@@ -149,7 +149,7 @@ public sealed record CreateTripRequest
 
     public string? VehicleRefKey { get; init; }
 
-    public Guid? VendorOrderId { get; init; }
+    public Guid? SupplierOrderId { get; init; }
 
     public Guid? BrokerOrderId { get; init; }
 

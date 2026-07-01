@@ -6,9 +6,9 @@ public static class SupplyArrComplianceCoreFactKeys
 
     public const string PurchaseOrderStatus = "supplyarr.purchase_order.status";
 
-    public const string PartSourcedFromApprovedVendor = "supplyarr.part.sourced_from_approved_vendor";
+    public const string PartSourcedFromApprovedSupplier = "supplyarr.part.sourced_from_approved_supplier";
 
-    public const string PurchaseOrderLineVendorApprovalStatus = "supplyarr.purchase_order_line.vendor_approval_status";
+    public const string PurchaseOrderLineSupplierApprovalStatus = "supplyarr.purchase_order_line.supplier_approval_status";
 
     public const string ReceivingReceiptPosted = "supplyarr.receiving.receipt.posted";
 
@@ -16,17 +16,17 @@ public static class SupplyArrComplianceCoreFactKeys
 
     public const string ReceivingDiscrepancyRecorded = "supplyarr.receiving.discrepancy_recorded";
 
-    public const string VendorApprovalStatus = "supplyarr.vendor.approval_status";
+    public const string SupplierApprovalStatus = "supplyarr.supplier.approval_status";
 
-    public const string VendorIsApproved = "supplyarr.vendor.is_approved";
+    public const string SupplierIsApproved = "supplyarr.supplier.is_approved";
 
-    public const string VendorDocumentStatus = "supplyarr.vendor_document.status";
+    public const string SupplierDocumentStatus = "supplyarr.supplier_document.status";
 
-    public const string VendorDocumentAttached = "supplyarr.vendor_document.attached";
+    public const string SupplierDocumentAttached = "supplyarr.supplier_document.attached";
 
-    public const string VendorDocumentExpired = "supplyarr.vendor_document.expired";
+    public const string SupplierDocumentExpired = "supplyarr.supplier_document.expired";
 
-    public const string VendorRestrictionBlocksProcurement = "supplyarr.vendor_restriction.blocks_procurement";
+    public const string SupplierRestrictionBlocksProcurement = "supplyarr.supplier_restriction.blocks_procurement";
 
     public const string ProcurementExceptionStatus = "supplyarr.procurement_exception.status";
 

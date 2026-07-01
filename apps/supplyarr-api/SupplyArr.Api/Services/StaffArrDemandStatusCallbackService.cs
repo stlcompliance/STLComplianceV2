@@ -103,7 +103,7 @@ public sealed class StaffArrDemandStatusCallbackService(
             SupplyArrDemandStatusEventTypes.PoIssued,
             StaffArrDemandRefProcurementStatuses.PoIssued,
             null,
-            "Purchase order issued to vendor.",
+            "Purchase order issued to supplier.",
             occurredAt,
             cancellationToken);
 

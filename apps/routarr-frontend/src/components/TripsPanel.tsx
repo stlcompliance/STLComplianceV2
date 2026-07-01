@@ -25,7 +25,7 @@ interface TripsPanelProps {
   canDispatch: boolean
   canPerform: boolean
   canManage: boolean
-  canOverrideVendorReadiness: boolean
+  canOverrideSupplierReadiness: boolean
   viewAllTrips: boolean
   sessionPersonId: string
   trips: TripSummaryResponse[]
@@ -34,7 +34,7 @@ interface TripsPanelProps {
   tripTitle: string
   tripDescription: string
   vehicleRefKey: string
-  vendorOrderId: string
+  supplierOrderId: string
   brokerOrderId: string
   driverPersonId: string
   loadKey: string
@@ -50,7 +50,7 @@ interface TripsPanelProps {
   onTripTitleChange: (value: string) => void
   onTripDescriptionChange: (value: string) => void
   onVehicleRefKeyChange: (value: string) => void
-  onVendorOrderIdChange: (value: string) => void
+  onSupplierOrderIdChange: (value: string) => void
   onBrokerOrderIdChange: (value: string) => void
   onDriverPersonIdChange: (value: string) => void
   onLoadKeyChange: (value: string) => void
@@ -93,7 +93,7 @@ export function TripsPanel({
   canDispatch,
   canPerform,
   canManage,
-  canOverrideVendorReadiness,
+  canOverrideSupplierReadiness,
   viewAllTrips,
   sessionPersonId,
   trips,
@@ -102,7 +102,7 @@ export function TripsPanel({
   tripTitle,
   tripDescription,
   vehicleRefKey,
-  vendorOrderId,
+  supplierOrderId,
   brokerOrderId,
   driverPersonId,
   loadKey,
@@ -118,7 +118,7 @@ export function TripsPanel({
   onTripTitleChange,
   onTripDescriptionChange,
   onVehicleRefKeyChange,
-  onVendorOrderIdChange,
+  onSupplierOrderIdChange,
   onBrokerOrderIdChange,
   onDriverPersonIdChange,
   onLoadKeyChange,
@@ -286,12 +286,12 @@ export function TripsPanel({
             />
           </div>
           <label className="text-sm text-slate-300">
-            Vendor order reference
+            Supplier order reference
             <input
               className="mt-1 w-full rounded border border-slate-600 bg-slate-950 px-3 py-2"
-              value={vendorOrderId}
-              onChange={(event) => onVendorOrderIdChange(event.target.value)}
-              placeholder="Optional SupplyArr vendorOrderId"
+              value={supplierOrderId}
+              onChange={(event) => onSupplierOrderIdChange(event.target.value)}
+              placeholder="Optional SupplyArr supplierOrderId"
             />
           </label>
           <label className="text-sm text-slate-300">
@@ -304,8 +304,8 @@ export function TripsPanel({
             />
           </label>
           <div className="md:col-span-2 text-xs text-slate-400">
-            Load reference is generated automatically from origin and destination. When you link a SupplyArr vendor order,
-            RoutArr can block dispatch until vendor readiness is released or explicitly overridden.
+            Load reference is generated automatically from origin and destination. When you link a SupplyArr supplier order,
+            RoutArr can block dispatch until supplier readiness is released or explicitly overridden.
           </div>
           <label className="text-sm text-slate-300" htmlFor="trips-load-origin">
           Load origin
@@ -389,9 +389,9 @@ export function TripsPanel({
                       {column === 'title' ? (
                         <div>
                           <div>{trip.title}</div>
-                          {trip.vendorOrderId ? (
+                          {trip.supplierOrderId ? (
                             <div className="mt-1 text-xs text-[var(--color-text-muted)]">
-                              Vendor order {trip.vendorOrderId}
+                              Supplier order {trip.supplierOrderId}
                             </div>
                           ) : null}
                         </div>
@@ -464,11 +464,11 @@ export function TripsPanel({
                   </dd>
                 </div>
                 <div className="col-span-2">
-                  <dt className="text-[var(--color-text-muted)]">Vendor readiness</dt>
+                  <dt className="text-[var(--color-text-muted)]">Supplier readiness</dt>
                   <dd className="font-medium text-slate-200">
-                    {selectedTrip.vendorOrderId
-                      ? `${selectedTrip.vendorOrderId} · ${selectedTrip.vendorReadinessStatusSnapshot ?? 'not ready'}`
-                      : 'No vendor-order link'}
+                    {selectedTrip.supplierOrderId
+                      ? `${selectedTrip.supplierOrderId} · ${selectedTrip.supplierReadinessStatusSnapshot ?? 'not ready'}`
+                      : 'No supplier-order link'}
                   </dd>
                 </div>
               </dl>
@@ -558,12 +558,12 @@ export function TripsPanel({
                 </div>
               ) : null}
 
-              {canOverrideVendorReadiness &&
+              {canOverrideSupplierReadiness &&
               (selectedTrip.dispatchBlocks ?? []).some(
-                (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
+                (block) => block.blockType === 'supplier_readiness' && block.status === 'active',
               ) ? (
                 <div className="rounded border border-red-700/40 bg-red-950/20 p-3 text-sm text-red-100">
-                  <p className="font-medium">Vendor-readiness override is available in the trip workspace.</p>
+                  <p className="font-medium">Supplier-readiness override is available in the trip workspace.</p>
                   <p className="mt-1 text-xs">
                     Open the execution workspace to resolve the block with a required reason and audit trail.
                   </p>

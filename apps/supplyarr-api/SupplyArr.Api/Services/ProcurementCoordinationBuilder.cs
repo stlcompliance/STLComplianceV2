@@ -14,8 +14,8 @@ public static class ProcurementCoordinationBuilder
         DateTimeOffset asOfUtc)
     {
         var lineCount = purchaseRequest.Lines.Count;
-        var supplierDisplayName = purchaseRequest.VendorParty?.DisplayName ?? string.Empty;
-        var supplierKey = purchaseRequest.VendorParty?.PartyKey;
+        var supplierDisplayName = purchaseRequest.Supplier?.DisplayName ?? string.Empty;
+        var supplierKey = purchaseRequest.Supplier?.SupplierKey;
         var sourceUpdatedAt = purchaseRequest.UpdatedAt;
 
         var (stage, nextAction, isTerminal) = ResolvePurchaseRequestStage(
@@ -32,15 +32,13 @@ public static class ProcurementCoordinationBuilder
             nextAction,
             purchaseRequest.Id,
             null,
-            purchaseRequest.VendorPartyId,
+            purchaseRequest.SupplierId,
             supplierKey,
             supplierDisplayName,
-            purchaseRequest.VendorParty?.ParentExternalPartyId,
-            purchaseRequest.VendorParty?.ParentExternalParty?.DisplayName,
-            purchaseRequest.VendorParty?.UnitKind,
-            ParseServiceTypes(purchaseRequest.VendorParty?.ServiceTypesJson),
-            purchaseRequest.VendorPartyId,
-            supplierDisplayName,
+            purchaseRequest.Supplier?.ParentSupplierId,
+            purchaseRequest.Supplier?.ParentSupplier?.DisplayName,
+            purchaseRequest.Supplier?.UnitKind,
+            ParseServiceTypes(purchaseRequest.Supplier?.ServiceTypesJson),
             purchaseRequest.Status,
             lineCount,
             0m,
@@ -65,8 +63,8 @@ public static class ProcurementCoordinationBuilder
         var receiptProgressPercent = ProcurementCoordinationRules.ComputeReceiptProgressPercent(
             quantityOrdered,
             quantityReceived);
-        var supplierDisplayName = purchaseOrder.VendorParty?.DisplayName ?? string.Empty;
-        var supplierKey = purchaseOrder.VendorParty?.PartyKey;
+        var supplierDisplayName = purchaseOrder.Supplier?.DisplayName ?? string.Empty;
+        var supplierKey = purchaseOrder.Supplier?.SupplierKey;
         var sourceUpdatedAt = MaxUpdatedAt(
             purchaseOrder.UpdatedAt,
             purchaseOrder.Lines.Count > 0 ? purchaseOrder.Lines.Max(x => x.UpdatedAt) : purchaseOrder.UpdatedAt);
@@ -86,15 +84,13 @@ public static class ProcurementCoordinationBuilder
             nextAction,
             purchaseOrder.PurchaseRequestId,
             purchaseOrder.Id,
-            purchaseOrder.VendorPartyId,
+            purchaseOrder.SupplierId,
             supplierKey,
             supplierDisplayName,
-            purchaseOrder.VendorParty?.ParentExternalPartyId,
-            purchaseOrder.VendorParty?.ParentExternalParty?.DisplayName,
-            purchaseOrder.VendorParty?.UnitKind,
-            ParseServiceTypes(purchaseOrder.VendorParty?.ServiceTypesJson),
-            purchaseOrder.VendorPartyId,
-            supplierDisplayName,
+            purchaseOrder.Supplier?.ParentSupplierId,
+            purchaseOrder.Supplier?.ParentSupplier?.DisplayName,
+            purchaseOrder.Supplier?.UnitKind,
+            ParseServiceTypes(purchaseOrder.Supplier?.ServiceTypesJson),
             purchaseOrder.Status,
             lineCount,
             quantityOrdered,
@@ -163,7 +159,7 @@ public static class ProcurementCoordinationBuilder
         {
             return (
                 ProcurementCoordinationStages.PoAwaitingIssue,
-                "Issue purchase order to vendor",
+                "Issue purchase order to supplier",
                 false);
         }
 
@@ -350,3 +346,4 @@ public static class ProcurementCoordinationBuilder
 public sealed record ProcurementCoordinationComputation(
     ProcurementCoordinationSummaryResponse Summary,
     IReadOnlyList<ProcurementCoordinationEventResponse> Events);
+

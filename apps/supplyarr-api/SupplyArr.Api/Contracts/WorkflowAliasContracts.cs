@@ -5,7 +5,7 @@ public sealed record ApprovalQueueItemResponse(
     Guid SubjectId,
     string SubjectKey,
     string Status,
-    Guid? VendorPartyId,
+    Guid? SupplierId,
     DateTimeOffset UpdatedAt);
 
 public sealed record StockTransactionItemResponse(

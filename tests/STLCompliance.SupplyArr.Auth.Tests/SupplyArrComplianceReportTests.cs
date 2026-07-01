@@ -27,8 +27,8 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
     private HttpClient _supplyarrClient = null!;
     private string _serviceToken = null!;
     private string _userToken = null!;
-    private Guid _vendorPartyId;
-    private Guid _missingDocsVendorPartyId;
+    private Guid _supplierId;
+    private Guid _missingDocsSupplierId;
     private Guid _expiredDocumentId;
     private Guid _pendingDocumentId;
 
@@ -78,7 +78,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
         _userToken = await RedeemHandoffAsync(handoffCode);
-        (_vendorPartyId, _missingDocsVendorPartyId, _expiredDocumentId, _pendingDocumentId) = await SeedComplianceDocumentsAsync();
+        (_supplierId, _missingDocsSupplierId, _expiredDocumentId, _pendingDocumentId) = await SeedComplianceDocumentsAsync();
     }
 
     public async Task DisposeAsync()
@@ -96,7 +96,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/reports/compliance/summary", _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var summary = await response.Content.ReadFromJsonAsync<ComplianceReportSummaryResponse>();
+        var summary = await response.Content.ReadFromJsonAsync<SupplierComplianceReportSummaryResponse>();
         Assert.NotNull(summary);
         Assert.Equal(4, summary!.Totals.DocumentCount);
         Assert.Equal(1, summary.Totals.ExpiredCount);
@@ -117,25 +117,25 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
                 _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var summary = await response.Content.ReadFromJsonAsync<ComplianceReportSummaryResponse>();
+        var summary = await response.Content.ReadFromJsonAsync<SupplierComplianceReportSummaryResponse>();
         Assert.NotNull(summary);
         Assert.Equal(3, summary!.Totals.DocumentCount);
         Assert.DoesNotContain(summary.Documents, x => x.DocumentKey == "W9-CURRENT");
     }
 
     [Fact]
-    public async Task Compliance_party_detail_returns_documents()
+    public async Task Compliance_supplier_detail_returns_documents()
     {
         var response = await _supplyarrClient.SendAsync(
             Authorized(
                 HttpMethod.Get,
-                $"/api/reports/compliance/parties/{_vendorPartyId}",
+                $"/api/reports/compliance/suppliers/{_supplierId}",
                 _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var detail = await response.Content.ReadFromJsonAsync<CompliancePartyDetailResponse>();
+        var detail = await response.Content.ReadFromJsonAsync<SupplierComplianceDetailResponse>();
         Assert.NotNull(detail);
-        Assert.Equal(_vendorPartyId, detail!.Summary.ExternalPartyId);
+        Assert.Equal(_supplierId, detail!.Summary.SupplierId);
         Assert.Equal(4, detail.Documents.Count);
     }
 
@@ -147,7 +147,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         var csv = await response.Content.ReadAsStringAsync();
-        Assert.Contains("partyKey,partyDisplayName", csv, StringComparison.Ordinal);
+        Assert.Contains("supplierKey,supplierDisplayName", csv, StringComparison.Ordinal);
         Assert.Contains("COI-EXPIRED", csv, StringComparison.Ordinal);
     }
 
@@ -169,105 +169,105 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
         Assert.NotNull(alerts);
         Assert.Contains(alerts!, x =>
             x.AlertType == "missing_required_documents"
-            && x.ExternalPartyId == _missingDocsVendorPartyId);
+            && x.SupplierId == _missingDocsSupplierId);
         Assert.Contains(alerts!, x => x.AlertType == "expiring_compliance_document");
         Assert.Contains(alerts!, x => x.AlertType == "purchase_approval_missing_evidence");
         Assert.Contains(alerts!, x => x.AlertType == "emergency_purchase_exception");
     }
 
-    private async Task<(Guid VendorPartyId, Guid MissingDocsVendorPartyId, Guid ExpiredDocumentId, Guid PendingDocumentId)> SeedComplianceDocumentsAsync()
+    private async Task<(Guid SupplierId, Guid MissingDocsSupplierId, Guid ExpiredDocumentId, Guid PendingDocumentId)> SeedComplianceDocumentsAsync()
     {
         await using var scope = _supplyarrFactory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "V-COMPL",
-            PartyType = "vendor",
-            DisplayName = "Compliance Vendor",
-            LegalName = "Compliance Vendor LLC",
+            SupplierKey = "SUP-COMPL",
+            
+            DisplayName = "Compliance Supplier",
+            LegalName = "Compliance Supplier LLC",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var missingDocsVendor = new ExternalParty
+        var missingDocsSupplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "V-MISSING",
-            PartyType = "vendor",
-            DisplayName = "Missing Docs Vendor",
-            LegalName = "Missing Docs Vendor LLC",
+            SupplierKey = "SUP-MISSING",
+            
+            DisplayName = "Missing Docs Supplier",
+            LegalName = "Missing Docs Supplier LLC",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var expiredDocument = new PartyComplianceDocument
+        var expiredDocument = new SupplierComplianceDocument
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             DocumentKey = "COI-EXPIRED",
             DocumentTypeKey = "certificate_of_insurance",
             Title = "Expired COI",
             Version = 1,
-            ReviewStatus = PartyComplianceDocumentReviewStatuses.Approved,
+            ReviewStatus = SupplierComplianceDocumentReviewStatuses.Approved,
             ExpiresAt = now.AddDays(-30),
             FileName = "coi.pdf",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var pendingDocument = new PartyComplianceDocument
+        var pendingDocument = new SupplierComplianceDocument
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             DocumentKey = "W9-PENDING",
             DocumentTypeKey = "w9",
             Title = "Pending W9",
             Version = 1,
-            ReviewStatus = PartyComplianceDocumentReviewStatuses.Pending,
+            ReviewStatus = SupplierComplianceDocumentReviewStatuses.Pending,
             ExpiresAt = now.AddDays(90),
             FileName = "w9.pdf",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var currentDocument = new PartyComplianceDocument
+        var currentDocument = new SupplierComplianceDocument
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             DocumentKey = "W9-CURRENT",
             DocumentTypeKey = "w9",
             Title = "Current W9",
             Version = 2,
-            ReviewStatus = PartyComplianceDocumentReviewStatuses.Approved,
+            ReviewStatus = SupplierComplianceDocumentReviewStatuses.Approved,
             ExpiresAt = now.AddDays(365),
             FileName = "w9-v2.pdf",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var expiringDocument = new PartyComplianceDocument
+        var expiringDocument = new SupplierComplianceDocument
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             DocumentKey = "INS-EXPIRING",
             DocumentTypeKey = "insurance_certificate",
             Title = "Expiring insurance",
             Version = 1,
-            ReviewStatus = PartyComplianceDocumentReviewStatuses.Approved,
+            ReviewStatus = SupplierComplianceDocumentReviewStatuses.Approved,
             ExpiresAt = now.AddDays(10),
             FileName = "insurance.pdf",
             CreatedAt = now,
@@ -282,7 +282,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
             Title = "Approved missing evidence",
             Notes = string.Empty,
             Status = PurchaseRequestStatuses.Approved,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             RequestedByUserId = Guid.NewGuid(),
             ApprovedAt = now,
             ApprovedByUserId = null,
@@ -299,7 +299,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
             Title = "Emergency exception PR",
             Notes = string.Empty,
             Status = PurchaseRequestStatuses.Approved,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             RequestedByUserId = Guid.NewGuid(),
             ApprovedAt = now,
             ApprovedByUserId = Guid.NewGuid(),
@@ -319,7 +319,7 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
             SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
             SubjectId = emergencyApproved.Id,
             SubjectKey = emergencyApproved.RequestKey,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             ExceptionCategory = ProcurementExceptionCategories.PolicyViolation,
             Title = "Emergency purchasing exception",
             Description = "Emergency approval exception pending remediation.",
@@ -330,12 +330,12 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        db.ExternalParties.AddRange(vendor, missingDocsVendor);
-        db.PartyComplianceDocuments.AddRange(expiredDocument, pendingDocument, currentDocument, expiringDocument);
+        db.Suppliers.AddRange(supplier, missingDocsSupplier);
+        db.SupplierComplianceDocuments.AddRange(expiredDocument, pendingDocument, currentDocument, expiringDocument);
         db.PurchaseRequests.AddRange(approvedMissingEvidence, emergencyApproved);
         db.ProcurementExceptions.Add(procurementException);
         await db.SaveChangesAsync();
-        return (vendor.Id, missingDocsVendor.Id, expiredDocument.Id, pendingDocument.Id);
+        return (supplier.Id, missingDocsSupplier.Id, expiredDocument.Id, pendingDocument.Id);
     }
 
     private async Task SeedNexArrAsync()
@@ -422,3 +422,6 @@ public sealed class SupplyArrComplianceReportTests : IAsyncLifetime
         }
     }
 }
+
+
+

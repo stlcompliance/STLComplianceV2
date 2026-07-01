@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
@@ -75,7 +76,7 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
 
         var linkCounts = partIds.Count == 0
             ? []
-            : await db.PartVendorLinks
+            : await db.PartSupplierLinks
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId && partIds.Contains(x.PartId))
                 .GroupBy(x => x.PartId)
@@ -176,22 +177,26 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
             .Take(DetailListLimit)
             .ToListAsync(cancellationToken);
 
-        var vendorLinks = await (
-            from link in db.PartVendorLinks.AsNoTracking()
-            join party in db.ExternalParties.AsNoTracking() on link.ExternalPartyId equals party.Id
+        var supplierLinks = await (
+            from link in db.PartSupplierLinks.AsNoTracking()
+            join supplier in db.Suppliers.AsNoTracking() on link.SupplierId equals supplier.Id
             where link.TenantId == tenantId && link.PartId == partId
-            orderby link.IsPreferred descending, party.DisplayName
-            select new PartsInventoryPartVendorLinkRowResponse(
+            orderby link.IsPreferred descending, supplier.DisplayName
+            select new PartsInventoryPartSupplierLinkRowResponse(
                 link.Id,
-                party.Id,
-                party.PartyKey,
-                party.DisplayName,
-                link.VendorPartNumber,
+                supplier.Id,
+                supplier.SupplierKey,
+                supplier.DisplayName,
+                supplier.ParentSupplierId,
+                supplier.ParentSupplier != null ? supplier.ParentSupplier.DisplayName : null,
+                string.IsNullOrWhiteSpace(supplier.UnitKind) ? "identity" : supplier.UnitKind,
+                DeserializeServiceTypes(supplier.ServiceTypesJson),
+                link.SupplierPartNumber,
                 link.IsPreferred))
             .Take(DetailListLimit)
             .ToListAsync(cancellationToken);
 
-        return new PartsInventoryPartDetailResponse(summary, stockByBin, vendorLinks);
+        return new PartsInventoryPartDetailResponse(summary, stockByBin, supplierLinks);
     }
 
     public async Task<PartsInventoryLocationDetailResponse> GetLocationDetailAsync(
@@ -298,7 +303,7 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
 
         var builder = new StringBuilder();
         builder.AppendLine(
-            "partKey,displayName,status,categoryKey,reorderPoint,reorderQuantity,quantityOnHand,quantityReserved,quantityAvailable,belowReorderPoint,vendorLinkCount");
+            "partKey,displayName,status,categoryKey,reorderPoint,reorderQuantity,quantityOnHand,quantityReserved,quantityAvailable,belowReorderPoint,supplierLinkCount");
 
         foreach (var part in summary.Parts)
         {
@@ -321,7 +326,7 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
             builder.Append(part.QuantityAvailable);
             builder.Append(',');
             builder.Append(part.BelowReorderPoint ? "true" : "false");
-            builder.AppendLine(part.VendorLinkCount.ToString());
+            builder.AppendLine(part.SupplierLinkCount.ToString());
         }
 
         var fileName = $"supplyarr-parts-inventory-report-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv";
@@ -381,7 +386,7 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
         Part part,
         decimal onHand,
         decimal reserved,
-        int vendorLinkCount)
+        int supplierLinkCount)
     {
         var available = onHand - reserved;
         var belowReorder = part.ReorderPoint is not null && available < part.ReorderPoint.Value;
@@ -397,7 +402,24 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
             reserved,
             available,
             belowReorder,
-            vendorLinkCount);
+            supplierLinkCount);
+    }
+
+    private static IReadOnlyList<string> DeserializeServiceTypes(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(value) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private static string CsvEscape(string value)
@@ -414,3 +436,4 @@ public sealed class PartsInventoryReportService(SupplyArrDbContext db)
 
     private sealed record PartStockTotals(decimal OnHand, decimal Reserved);
 }
+

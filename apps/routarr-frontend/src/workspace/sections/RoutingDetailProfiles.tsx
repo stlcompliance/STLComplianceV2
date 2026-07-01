@@ -176,48 +176,48 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
   const loadCount = detail?.loads.length ?? summary?.loadCount ?? 0
   const dispatchability = s.tripAssetDispatchabilityQuery?.data ?? null
   const unassigned = !trip.assignedDriverPersonId || !trip.vehicleRefKey
-  const activeVendorBlock =
+  const activeSupplierBlock =
     trip.dispatchBlocks?.find(
-      (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
+      (block) => block.blockType === 'supplier_readiness' && block.status === 'active',
     ) ?? null
   const blocked =
     ['cancelled'].includes(trip.dispatchStatus) ||
     unassigned ||
     Boolean(dispatchability?.isBlocking) ||
-    Boolean(activeVendorBlock)
+    Boolean(activeSupplierBlock)
   const rails: DetailRailSectionConfig[] = [
     {
-      title: 'Vendor readiness',
+      title: 'Supplier readiness',
       icon: <Package className="h-5 w-5" />,
-      content: trip.vendorOrderId || trip.vendorReadinessStatusSnapshot || activeVendorBlock ? (
+      content: trip.supplierOrderId || trip.supplierReadinessStatusSnapshot || activeSupplierBlock ? (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
-            {trip.vendorOrderId ? (
-              <DetailBadge label={`Vendor order ${trip.vendorOrderId}`} tone="info" />
+            {trip.supplierOrderId ? (
+              <DetailBadge label={`Supplier order ${trip.supplierOrderId}`} tone="info" />
             ) : null}
             {trip.brokerOrderId ? (
               <DetailBadge label={`Broker order ${trip.brokerOrderId}`} tone="neutral" />
             ) : null}
             <DetailBadge
-              label={activeVendorBlock ? 'Dispatch blocked' : trip.releasedForDispatchAt ? 'Released' : humanize(trip.vendorReadinessStatusSnapshot)}
-              tone={activeVendorBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : 'warn'}
+              label={activeSupplierBlock ? 'Dispatch blocked' : trip.releasedForDispatchAt ? 'Released' : humanize(trip.supplierReadinessStatusSnapshot)}
+              tone={activeSupplierBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : 'warn'}
             />
           </div>
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300">
             <p className="font-semibold text-white">SupplyArr readiness snapshot</p>
             <p className="mt-2">
-              {trip.vendorReadinessStatusSnapshot
-                ? humanize(trip.vendorReadinessStatusSnapshot)
-                : 'No vendor-readiness snapshot recorded yet.'}
+              {trip.supplierReadinessStatusSnapshot
+                ? humanize(trip.supplierReadinessStatusSnapshot)
+                : 'No supplier-readiness snapshot recorded yet.'}
             </p>
             <p className="mt-2 text-xs text-[var(--color-text-muted)]">
-              {trip.vendorQuantityReadySnapshot != null || trip.vendorOrderedQuantitySnapshot != null
-                ? `${trip.vendorQuantityReadySnapshot ?? 0} of ${trip.vendorOrderedQuantitySnapshot ?? 0} ready`
+              {trip.supplierQuantityReadySnapshot != null || trip.supplierOrderedQuantitySnapshot != null
+                ? `${trip.supplierQuantityReadySnapshot ?? 0} of ${trip.supplierOrderedQuantitySnapshot ?? 0} ready`
                 : 'Quantity snapshot unavailable'}
             </p>
-            {activeVendorBlock ? (
+            {activeSupplierBlock ? (
               <p className="mt-2 text-xs text-amber-200">
-                Active block reason: {humanize(activeVendorBlock.blockReason)}
+                Active block reason: {humanize(activeSupplierBlock.blockReason)}
               </p>
             ) : null}
             {trip.dispatchOverrideReason ? (
@@ -228,7 +228,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
           </div>
         </div>
       ) : (
-        <DetailEmptyState text="No linked vendor order or vendor-readiness snapshot." />
+        <DetailEmptyState text="No linked supplier order or supplier-readiness snapshot." />
       ),
     },
     {
@@ -260,7 +260,7 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
       badges={[
         { label: trip.tripNumber, tone: 'info' },
         { label: humanize(trip.dispatchStatus), tone: statusTone(trip.dispatchStatus) },
-        activeVendorBlock ? { label: 'Vendor blocked', tone: 'bad' } : null,
+        activeSupplierBlock ? { label: 'Supplier blocked', tone: 'bad' } : null,
         { label: `${loadCount} loads`, tone: 'neutral' },
       ].filter(Boolean) as Array<{ label: string; tone: DetailTone }>}
       actions={<>{actionLink(`/trips/${trip.tripId}`, 'Open trip workspace', <Play className="h-4 w-4" />, true)}</>}
@@ -269,13 +269,13 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
         { label: 'Driver', value: trip.assignedDriverPersonId ? 'Assigned' : 'Open', hint: trip.assignedDriverPersonId ?? 'No driver assignment', icon: <UserCheck className="h-5 w-5" />, tone: trip.assignedDriverPersonId ? 'good' : 'warn' },
         { label: 'Vehicle', value: trip.vehicleRefKey ?? 'Open', hint: 'Equipment reference', icon: <Truck className="h-5 w-5" />, tone: trip.vehicleRefKey ? 'good' : 'warn' },
         {
-          label: 'Vendor readiness',
-          value: activeVendorBlock ? 'Blocked' : trip.releasedForDispatchAt ? 'Released' : trip.vendorOrderId ? humanize(trip.vendorReadinessStatusSnapshot) : 'No link',
-          hint: trip.vendorOrderId
-            ? `${trip.vendorQuantityReadySnapshot ?? 0} of ${trip.vendorOrderedQuantitySnapshot ?? 0} ready`
-            : 'No linked SupplyArr vendor order',
+          label: 'Supplier readiness',
+          value: activeSupplierBlock ? 'Blocked' : trip.releasedForDispatchAt ? 'Released' : trip.supplierOrderId ? humanize(trip.supplierReadinessStatusSnapshot) : 'No link',
+          hint: trip.supplierOrderId
+            ? `${trip.supplierQuantityReadySnapshot ?? 0} of ${trip.supplierOrderedQuantitySnapshot ?? 0} ready`
+            : 'No linked SupplyArr supplier order',
           icon: <Package className="h-5 w-5" />,
-          tone: activeVendorBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : trip.vendorOrderId ? 'warn' : 'neutral',
+          tone: activeSupplierBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : trip.supplierOrderId ? 'warn' : 'neutral',
         },
         { label: 'Loads', value: loadCount, hint: 'Trip load plan', icon: <ClipboardList className="h-5 w-5" />, tone: 'info' },
       ]}
@@ -288,11 +288,11 @@ export function TripProfile({ state: s }: { state: RoutArrWorkspaceState }) {
         { label: 'Description', value: detail?.description ?? 'Not recorded', source: 'Trip plan' },
         { label: 'Driver', value: trip.assignedDriverPersonId ?? 'Unassigned', source: 'StaffArr personId' },
         { label: 'Vehicle', value: trip.vehicleRefKey ?? 'Unassigned', source: 'MaintainArr asset ref' },
-        { label: 'Vendor order', value: trip.vendorOrderId ?? 'Not linked', source: 'SupplyArr reference' },
+        { label: 'Supplier order', value: trip.supplierOrderId ?? 'Not linked', source: 'SupplyArr reference' },
         { label: 'Broker order', value: trip.brokerOrderId ?? 'Not linked', source: 'OrdArr reference snapshot' },
-        { label: 'Vendor readiness', value: humanize(trip.vendorReadinessStatusSnapshot), source: 'SupplyArr readiness snapshot' },
-        { label: 'Vendor quantity ready', value: trip.vendorQuantityReadySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
-        { label: 'Vendor ordered quantity', value: trip.vendorOrderedQuantitySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
+        { label: 'Supplier readiness', value: humanize(trip.supplierReadinessStatusSnapshot), source: 'SupplyArr readiness snapshot' },
+        { label: 'Supplier quantity ready', value: trip.supplierQuantityReadySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
+        { label: 'Supplier ordered quantity', value: trip.supplierOrderedQuantitySnapshot ?? 'Not recorded', source: 'SupplyArr quantity snapshot' },
         { label: 'Released for dispatch', value: formatDateTime(trip.releasedForDispatchAt), source: 'RoutArr release audit' },
         { label: 'Override reason', value: trip.dispatchOverrideReason ?? 'Not recorded', source: 'RoutArr override audit' },
         { label: 'Scheduled start', value: formatDate(trip.scheduledStartAt), source: 'Dispatch plan' },

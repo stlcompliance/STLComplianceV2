@@ -1660,7 +1660,7 @@ export async function getProductPermissionCatalog(
   productKey?: string,
 ): Promise<ProductPermissionCatalogItemResponse[]> {
   const query = productKey?.trim() ? `?productKey=${encodeURIComponent(productKey.trim())}` : ''
-  const response = await fetch(`${apiBase}/api/permissions/product-catalog${query}`, {
+  const response = await fetch(`${apiBase}/api/v1/permissions/catalog${query}`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<ProductPermissionCatalogItemResponse[]>(
@@ -1673,7 +1673,7 @@ export async function getEffectivePermissions(
   accessToken: string,
   personId: string,
 ): Promise<EffectivePermissionProjectionResponse> {
-  const response = await fetch(`${apiBase}/api/people/${personId}/permissions/effective`, {
+  const response = await fetch(`${apiBase}/api/v1/integrations/persons/${personId}/permissions`, {
     headers: authHeaders(accessToken),
   })
   return parseJsonResponse<EffectivePermissionProjectionResponse>(response, 'Failed to load effective permissions')

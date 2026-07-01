@@ -114,11 +114,6 @@ export function canManageSupplierOrderSettings(
   return canManageNotificationSettings(tenantRoleKey, isPlatformAdmin)
 }
 
-export const canReadVendorOrders = canReadSupplierOrders
-export const canCreateVendorOrders = canCreateSupplierOrders
-export const canUpdateVendorOrders = canUpdateSupplierOrders
-export const canManageVendorOrderSettings = canManageSupplierOrderSettings
-
 export function canPerformReceiving(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true
   return ['tenant_admin', 'supplyarr_admin', 'supplyarr_manager', 'supplyarr_clerk'].includes(
@@ -200,10 +195,6 @@ export function canExportSupplierReports(tenantRoleKey: string, isPlatformAdmin:
   if (isPlatformAdmin) return true
   return supplyarrProcurementReadRoles.includes(tenantRoleKey.toLowerCase())
 }
-
-export const canReadVendorReports = canReadSupplierReports
-
-export const canExportVendorReports = canExportSupplierReports
 
 export function canReadPurchasingReports(tenantRoleKey: string, isPlatformAdmin: boolean): boolean {
   if (isPlatformAdmin) return true

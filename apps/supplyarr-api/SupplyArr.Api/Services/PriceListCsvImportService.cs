@@ -38,16 +38,16 @@ public sealed class PriceListCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var links = await db.PartVendorLinks
+        var links = await db.PartSupplierLinks
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(
-                x => $"{x.ExternalParty!.PartyKey}|{x.Part!.PartKey}",
+                x => $"{x.Supplier!.SupplierKey}|{x.Part!.PartKey}",
                 x => x.Id,
                 StringComparer.OrdinalIgnoreCase,
                 cancellationToken);
-        var existingSnapshotKeys = await db.PartVendorPricingSnapshots
+        var existingSnapshotKeys = await db.PartSupplierPricingSnapshots
             .Where(x => x.TenantId == tenantId)
             .Select(x => x.SnapshotKey)
             .ToListAsync(cancellationToken);
@@ -162,7 +162,7 @@ public sealed class PriceListCsvImportService(
         ISet<string> seenKeys,
         List<PriceListCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "supplier_key", row.VendorPartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.SupplierKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "snapshot_key", row.SnapshotKey, 1, 128, issues);
         if (!links.ContainsKey(LinkLookupKey(row)))
@@ -308,22 +308,17 @@ public sealed class PriceListCsvImportService(
         return fields;
     }
 
-    private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
-        headerFields
-            .Select(field => string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
-                ? "supplier_key"
-                : field)
-            .ToList();
+    private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) => headerFields;
 
     private static string NormalizeKey(string value) => value.Trim().ToLowerInvariant();
 
     private static string NormalizeOptional(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
-    private static string LinkLookupKey(ImportRow row) => $"{row.VendorPartyKey}|{row.PartKey}";
+    private static string LinkLookupKey(ImportRow row) => $"{row.SupplierKey}|{row.PartKey}";
 
     private sealed record ImportRow(
         int LineNumber,
-        string VendorPartyKey,
+        string SupplierKey,
         string PartKey,
         string SnapshotKey,
         decimal UnitPrice,
@@ -333,3 +328,4 @@ public sealed class PriceListCsvImportService(
         string Source,
         string Notes);
 }
+

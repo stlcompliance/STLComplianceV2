@@ -12,17 +12,19 @@ public static class SupplyReadinessReasonCodes
 
     public const string OpenBackorder = "open_backorder";
 
-    public const string NoVendorPartLink = "no_vendor_part_link";
+    public const string NoSupplierPartLink = "no_supplier_part_link";
 
-    public const string VendorInactive = "vendor_inactive";
+    public const string SupplierInactive = "supplier_inactive";
 
-    public const string VendorApprovalRestricted = "vendor_approval_restricted";
+    public const string SupplierApprovalRestricted = "supplier_approval_restricted";
 
-    public const string VendorApprovalBlocked = "vendor_approval_blocked";
+    public const string SupplierApprovalBlocked = "supplier_approval_blocked";
 
-    public const string VendorApprovalPending = "vendor_approval_pending";
+    public const string SupplierApprovalPending = "supplier_approval_pending";
 
-    public const string VendorProcurementRestriction = "vendor_procurement_restriction";
+    public const string SupplierProcurementRestriction = "supplier_procurement_restriction";
+
+    public const string SupplierMissingPartsCoverage = "supplier_missing_parts_coverage";
 
     public const string ComplianceDocumentExpired = "compliance_document_expired";
 

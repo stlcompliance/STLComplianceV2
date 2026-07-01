@@ -19,13 +19,13 @@ public sealed class TenantLeadTimeSnapshotSettings : IHasTenant
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-public sealed class PartVendorLeadTimeCaptureState : IHasTenant
+public sealed class PartSupplierLeadTimeCaptureState : IHasTenant
 {
     public Guid Id { get; set; }
 
     public Guid TenantId { get; set; }
 
-    public Guid PartVendorLinkId { get; set; }
+    public Guid PartSupplierLinkId { get; set; }
 
     public int? LastCapturedLeadTimeDays { get; set; }
 
@@ -37,7 +37,7 @@ public sealed class PartVendorLeadTimeCaptureState : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public PartVendorLink PartVendorLink { get; set; } = null!;
+    public PartSupplierLink PartSupplierLink { get; set; } = null!;
 }
 
 public sealed class LeadTimeSnapshotRun : IHasTenant

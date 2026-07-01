@@ -26,7 +26,7 @@ public static class SupplyReadinessRules
     public static bool IsActivePartStatus(string status) =>
         string.Equals(status, "active", StringComparison.OrdinalIgnoreCase);
 
-    public static bool IsActivePartyStatus(string status) =>
+    public static bool IsActiveSupplierStatus(string status) =>
         string.Equals(status, "active", StringComparison.OrdinalIgnoreCase);
 
     public static bool IsBlockedApprovalStatus(string approvalStatus) =>
@@ -39,18 +39,18 @@ public static class SupplyReadinessRules
     {
         if (string.Equals(approvalStatus, "blocked", StringComparison.OrdinalIgnoreCase))
         {
-            return SupplyReadinessReasonCodes.VendorApprovalBlocked;
+            return SupplyReadinessReasonCodes.SupplierApprovalBlocked;
         }
 
         if (string.Equals(approvalStatus, "restricted", StringComparison.OrdinalIgnoreCase)
             || string.Equals(approvalStatus, "inactive", StringComparison.OrdinalIgnoreCase))
         {
-            return SupplyReadinessReasonCodes.VendorApprovalRestricted;
+            return SupplyReadinessReasonCodes.SupplierApprovalRestricted;
         }
 
         if (IsPendingApprovalStatus(approvalStatus))
         {
-            return SupplyReadinessReasonCodes.VendorApprovalPending;
+            return SupplyReadinessReasonCodes.SupplierApprovalPending;
         }
 
         return null;

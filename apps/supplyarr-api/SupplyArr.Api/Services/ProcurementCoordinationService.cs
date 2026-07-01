@@ -103,8 +103,8 @@ public sealed class ProcurementCoordinationService(SupplyArrDbContext db)
             var purchaseRequest = await db.PurchaseRequests
                 .AsNoTracking()
                 .Include(x => x.Lines)
-                .Include(x => x.VendorParty)
-                    .ThenInclude(x => x!.ParentExternalParty)
+                .Include(x => x.Supplier)
+                    .ThenInclude(x => x!.ParentSupplier)
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new STLCompliance.Shared.Contracts.StlApiException(
                     "procurement_coordination.purchase_request.not_found",
@@ -133,8 +133,8 @@ public sealed class ProcurementCoordinationService(SupplyArrDbContext db)
             var purchaseOrder = await db.PurchaseOrders
                 .AsNoTracking()
                 .Include(x => x.Lines)
-                .Include(x => x.VendorParty)
-                    .ThenInclude(x => x!.ParentExternalParty)
+                .Include(x => x.Supplier)
+                    .ThenInclude(x => x!.ParentSupplier)
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new STLCompliance.Shared.Contracts.StlApiException(
                     "procurement_coordination.purchase_order.not_found",
@@ -153,3 +153,4 @@ public sealed class ProcurementCoordinationService(SupplyArrDbContext db)
             400);
     }
 }
+

@@ -85,7 +85,7 @@ describe('PartCatalogPanel', () => {
                 createdAt: '2026-05-27T00:00:00Z',
               },
             ],
-            vendorLinks: [
+            supplierLinks: [
               {
                 linkId: '44444444-4444-4444-4444-444444444444',
                 supplierId: '11111111-1111-1111-1111-111111111111',
@@ -100,7 +100,7 @@ describe('PartCatalogPanel', () => {
                 supplierLocality: 'Tulsa',
                 supplierRegionCode: 'OK',
                 supplierPostalCode: '74101',
-                vendorPartNumber: 'V-FLT-001',
+                supplierPartNumber: 'V-FLT-001',
                 isPreferred: true,
                 catalogUnitPrice: null,
                 catalogCurrencyCode: null,
@@ -246,7 +246,7 @@ describe('PartCatalogPanel', () => {
     )
     expect(screen.getByTestId('part-catalog-picker')).toBeInTheDocument()
     expect(screen.getByTestId('part-source-part-picker')).toBeInTheDocument()
-    expect(screen.getByTestId('vendor-link-part-picker')).toBeInTheDocument()
-    expect(screen.getByTestId('vendor-link-supplier-unit-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-link-part-picker')).toBeInTheDocument()
+    expect(screen.getByTestId('supplier-link-supplier-unit-picker')).toBeInTheDocument()
   })
 })

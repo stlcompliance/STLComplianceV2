@@ -237,18 +237,18 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var now = DateTimeOffset.UtcNow;
-        var vendorId = Guid.NewGuid();
+        var supplierId = Guid.NewGuid();
         var prId = Guid.NewGuid();
         var exceptionId = Guid.NewGuid();
 
-        db.ExternalParties.Add(new ExternalParty
+        db.Suppliers.Add(new Supplier
         {
-            Id = vendorId,
+            Id = supplierId,
             TenantId = PlatformSeeder.DemoTenantId,
-            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
-            PartyType = "vendor",
-            DisplayName = "Escalation Vendor",
-            LegalName = "Escalation Vendor LLC",
+            SupplierKey = $"supplier-{Guid.NewGuid():N}"[..16],
+            
+            DisplayName = "Escalation Supplier",
+            LegalName = "Escalation Supplier LLC",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
@@ -263,7 +263,7 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
             Title = "Escalation PR",
             Notes = string.Empty,
             Status = PurchaseRequestStatuses.Draft,
-            VendorPartyId = vendorId,
+            SupplierId = supplierId,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -277,7 +277,7 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
             SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
             SubjectId = prId,
             SubjectKey = "pr-escalation",
-            VendorPartyId = vendorId,
+            SupplierId = supplierId,
             ExceptionCategory = ProcurementExceptionCategories.ApprovalDelay,
             Title = "Overdue approval exception",
             Description = "SLA breached for escalation worker test.",
@@ -297,18 +297,18 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var now = DateTimeOffset.UtcNow;
-        var vendorId = Guid.NewGuid();
+        var supplierId = Guid.NewGuid();
         var prId = Guid.NewGuid();
         var exceptionId = Guid.NewGuid();
 
-        db.ExternalParties.Add(new ExternalParty
+        db.Suppliers.Add(new Supplier
         {
-            Id = vendorId,
+            Id = supplierId,
             TenantId = PlatformSeeder.DemoTenantId,
-            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
-            PartyType = "vendor",
-            DisplayName = "Completed Vendor",
-            LegalName = "Completed Vendor LLC",
+            SupplierKey = $"supplier-{Guid.NewGuid():N}"[..16],
+            
+            DisplayName = "Completed Supplier",
+            LegalName = "Completed Supplier LLC",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
@@ -323,7 +323,7 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
             Title = "Completed PR",
             Notes = string.Empty,
             Status = PurchaseRequestStatuses.Draft,
-            VendorPartyId = vendorId,
+            SupplierId = supplierId,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -337,7 +337,7 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
             SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
             SubjectId = prId,
             SubjectKey = "pr-completed",
-            VendorPartyId = vendorId,
+            SupplierId = supplierId,
             ExceptionCategory = ProcurementExceptionCategories.PolicyViolation,
             Title = "Completed exception",
             Description = "Completed exception for auto-close worker test.",
@@ -485,3 +485,5 @@ public sealed class SupplyArrProcurementExceptionEscalationWorkerTests : IAsyncL
         return request;
     }
 }
+
+

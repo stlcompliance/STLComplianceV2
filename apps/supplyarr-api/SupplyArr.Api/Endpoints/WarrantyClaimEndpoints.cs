@@ -15,7 +15,6 @@ public static class WarrantyClaimEndpoints
         group.MapGet("/", async (
             string? status,
             Guid? supplierId,
-            Guid? vendorPartyId,
             Guid? partId,
             Guid? purchaseOrderId,
             HttpContext context,
@@ -28,7 +27,7 @@ public static class WarrantyClaimEndpoints
             return Results.Ok(await service.ListAsync(
                 tenantId,
                 status,
-                supplierId ?? vendorPartyId,
+                supplierId,
                 partId,
                 purchaseOrderId,
                 cancellationToken));
@@ -102,9 +101,9 @@ public static class WarrantyClaimEndpoints
         })
         .WithName($"SubmitWarrantyClaim{nameSuffix}");
 
-        group.MapPost("/{warrantyClaimId:guid}/record-vendor-response", async (
+        group.MapPost("/{warrantyClaimId:guid}/record-supplier-response", async (
             Guid warrantyClaimId,
-            RecordWarrantyClaimVendorResponseRequest request,
+            RecordWarrantyClaimSupplierResponseRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             WarrantyClaimService service,
@@ -113,14 +112,14 @@ public static class WarrantyClaimEndpoints
             authorization.RequireReturnManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.RecordVendorResponseAsync(
+            return Results.Ok(await service.RecordSupplierResponseAsync(
                 tenantId,
                 actorUserId,
                 warrantyClaimId,
                 request,
                 cancellationToken));
         })
-        .WithName($"RecordWarrantyClaimVendorResponse{nameSuffix}");
+        .WithName($"RecordWarrantyClaimSupplierResponse{nameSuffix}");
 
         group.MapPost("/{warrantyClaimId:guid}/close", async (
             Guid warrantyClaimId,

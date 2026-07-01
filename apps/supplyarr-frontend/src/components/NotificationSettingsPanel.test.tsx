@@ -45,7 +45,7 @@ describe('NotificationSettingsPanel', () => {
           notificationId: 'n1',
           eventKind: 'procurement_exception_sla_escalation',
           dispatchStatus: 'pending',
-          vendorPartyId: null,
+          supplierId: null,
           relatedEntityType: 'procurement_exception',
           relatedEntityId: 'exc-1',
           webhookHost: 'hooks.example.com',

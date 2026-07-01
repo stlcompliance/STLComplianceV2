@@ -26,9 +26,6 @@ public sealed record ReorderSuggestionResponse(
     Guid? PreferredSupplierId,
     string? PreferredSupplierKey,
     string? PreferredSupplierDisplayName,
-    Guid? PreferredVendorPartyId,
-    string? PreferredVendorPartyKey,
-    string? PreferredVendorDisplayName,
     bool HasOpenPurchaseRequest,
     string? SkipReason);
 

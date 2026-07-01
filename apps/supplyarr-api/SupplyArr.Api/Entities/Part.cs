@@ -46,5 +46,5 @@ public sealed class Part : IHasTenant
 
     public ICollection<PartSource> Sources { get; set; } = new List<PartSource>();
 
-    public ICollection<PartVendorLink> VendorLinks { get; set; } = new List<PartVendorLink>();
+    public ICollection<PartSupplierLink> SupplierLinks { get; set; } = new List<PartSupplierLink>();
 }

@@ -12,7 +12,8 @@ public sealed class PlatformIdentityIntegrationService(
     IPasswordHasher passwordHasher,
     PlatformSessionSettingsService sessionSettingsService,
     IPlatformAuditService audit,
-    PlatformOutboxEnqueueService outboxEnqueue)
+    PlatformOutboxEnqueueService outboxEnqueue,
+    IStaffArrPersonProvisioningClient staffArrProvisioning)
 {
     public const string ReadIdentityActionScope = "nexarr.identities.read";
     public const string CreateIdentityActionScope = "nexarr.identities.create";
@@ -157,6 +158,13 @@ public sealed class PlatformIdentityIntegrationService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await staffArrProvisioning.EnsurePersonAsync(
+            request.TenantId,
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            actorUserId,
+            cancellationToken);
 
         await audit.WriteAsync(
             wasCreated ? "identity.create" : "identity.sync",
@@ -259,6 +267,13 @@ public sealed class PlatformIdentityIntegrationService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await staffArrProvisioning.EnsurePersonAsync(
+            request.TenantId,
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            actorUserId,
+            cancellationToken);
 
         await audit.WriteAsync(
             "identity.sync",

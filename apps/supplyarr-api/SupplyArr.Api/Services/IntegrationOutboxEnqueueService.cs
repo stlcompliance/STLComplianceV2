@@ -8,7 +8,7 @@ namespace SupplyArr.Api.Services;
 public sealed record IntegrationOutboxPayload(
     Guid TenantId,
     string Summary,
-    Guid? VendorPartyId = null);
+    Guid? SupplierId = null);
 
 public sealed class IntegrationOutboxEnqueueService(
     SupplyArrDbContext db,

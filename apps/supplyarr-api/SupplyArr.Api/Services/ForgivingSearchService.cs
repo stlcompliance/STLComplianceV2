@@ -31,9 +31,9 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
         var normalizedQuery = ForgivingSearchNormalizer.Normalize(trimmed);
         var results = new List<ForgivingSearchResultItemResponse>();
 
-        results.AddRange(await SearchPartiesAsync(tenantId, trimmed, cancellationToken));
+        results.AddRange(await SearchSuppliersAsync(tenantId, trimmed, cancellationToken));
         results.AddRange(await SearchPartsAsync(tenantId, trimmed, cancellationToken));
-        results.AddRange(await SearchVendorSkusAsync(tenantId, trimmed, cancellationToken));
+        results.AddRange(await SearchSupplierSkusAsync(tenantId, trimmed, cancellationToken));
         results.AddRange(await SearchPurchaseRequestsAsync(tenantId, trimmed, cancellationToken));
         results.AddRange(await SearchPurchaseOrdersAsync(tenantId, trimmed, cancellationToken));
         results.AddRange(await SearchComplianceDocumentsAsync(tenantId, trimmed, cancellationToken));
@@ -48,27 +48,27 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
         return new ForgivingSearchResponse(trimmed, normalizedQuery, ranked.Count, ranked);
     }
 
-    private async Task<IReadOnlyList<ForgivingSearchResultItemResponse>> SearchPartiesAsync(
+    private async Task<IReadOnlyList<ForgivingSearchResultItemResponse>> SearchSuppliersAsync(
         Guid tenantId,
         string query,
         CancellationToken cancellationToken)
     {
-        var parties = await db.ExternalParties
+        var suppliers = await db.Suppliers
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .OrderBy(x => x.DisplayName)
             .Take(CandidateCap)
             .ToListAsync(cancellationToken);
 
-        return parties
-            .Select(party =>
+        return suppliers
+            .Select(supplier =>
             {
                 var haystack = ForgivingSearchNormalizer.BuildHaystack(
-                    party.PartyKey,
-                    party.DisplayName,
-                    party.LegalName,
-                    party.PartyType,
-                    party.TaxIdentifier);
+                    supplier.SupplierKey,
+                    supplier.DisplayName,
+                    supplier.LegalName,
+                    supplier.UnitKind,
+                    supplier.TaxIdentifier);
                 var score = ForgivingSearchNormalizer.ScoreMatch(haystack, query);
                 if (score == 0)
                 {
@@ -77,10 +77,10 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
 
                 return new ForgivingSearchResultItemResponse(
                     "supplier",
-                    party.Id,
-                    party.PartyKey,
-                    party.DisplayName,
-                    $"{(party.UnitKind == "sub_unit" ? "supplier sub-unit" : "supplier identity")} · {party.ApprovalStatus}",
+                    supplier.Id,
+                    supplier.SupplierKey,
+                    supplier.DisplayName,
+                    $"{(supplier.UnitKind == "sub_unit" ? "supplier sub-unit" : "supplier identity")} · {supplier.ApprovalStatus}",
                     "/suppliers",
                     score);
             })
@@ -137,17 +137,17 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
             .ToList();
     }
 
-    private async Task<IReadOnlyList<ForgivingSearchResultItemResponse>> SearchVendorSkusAsync(
+    private async Task<IReadOnlyList<ForgivingSearchResultItemResponse>> SearchSupplierSkusAsync(
         Guid tenantId,
         string query,
         CancellationToken cancellationToken)
     {
-        var links = await db.PartVendorLinks
+        var links = await db.PartSupplierLinks
             .AsNoTracking()
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
-            .OrderBy(x => x.VendorPartNumber)
+            .OrderBy(x => x.SupplierPartNumber)
             .Take(CandidateCap)
             .ToListAsync(cancellationToken);
 
@@ -155,12 +155,12 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
             .Select(link =>
             {
                 var haystack = ForgivingSearchNormalizer.BuildHaystack(
-                    link.VendorPartNumber,
+                    link.SupplierPartNumber,
                     link.Part.PartKey,
                     link.Part.DisplayName,
                     link.Part.ManufacturerPartNumber,
-                    link.ExternalParty.PartyKey,
-                    link.ExternalParty.DisplayName);
+                    link.Supplier.SupplierKey,
+                    link.Supplier.DisplayName);
                 var score = ForgivingSearchNormalizer.ScoreMatch(haystack, query);
                 if (score == 0)
                 {
@@ -168,11 +168,11 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                 }
 
                 return new ForgivingSearchResultItemResponse(
-                    "vendor_sku",
+                    "supplier_sku",
                     link.Id,
-                    link.VendorPartNumber,
-                    $"{link.Part.PartKey} @ {link.ExternalParty.DisplayName}",
-                    $"Supplier SKU · {link.ExternalParty.PartyKey}",
+                    link.SupplierPartNumber,
+                    $"{link.Part.PartKey} @ {link.Supplier.DisplayName}",
+                    $"Supplier SKU · {link.Supplier.SupplierKey}",
                     "/catalog",
                     score);
             })
@@ -188,7 +188,7 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
     {
         var requests = await db.PurchaseRequests
             .AsNoTracking()
-            .Include(x => x.VendorParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
             .OrderByDescending(x => x.UpdatedAt)
             .Take(CandidateCap)
@@ -201,8 +201,8 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     request.RequestKey,
                     request.Title,
                     request.Status,
-                    request.VendorParty?.DisplayName,
-                    request.VendorParty?.PartyKey);
+                    request.Supplier?.DisplayName,
+                    request.Supplier?.SupplierKey);
                 var score = ForgivingSearchNormalizer.ScoreMatch(haystack, query);
                 if (score == 0)
                 {
@@ -230,7 +230,7 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
     {
         var orders = await db.PurchaseOrders
             .AsNoTracking()
-            .Include(x => x.VendorParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
             .OrderByDescending(x => x.UpdatedAt)
             .Take(CandidateCap)
@@ -243,8 +243,8 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     order.OrderKey,
                     order.Title,
                     order.Status,
-                    order.VendorParty.DisplayName,
-                    order.VendorParty.PartyKey);
+                    order.Supplier.DisplayName,
+                    order.Supplier.SupplierKey);
                 var score = ForgivingSearchNormalizer.ScoreMatch(haystack, query);
                 if (score == 0)
                 {
@@ -270,9 +270,9 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
         string query,
         CancellationToken cancellationToken)
     {
-        var documents = await db.PartyComplianceDocuments
+        var documents = await db.SupplierComplianceDocuments
             .AsNoTracking()
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
             .OrderByDescending(x => x.UpdatedAt)
             .Take(CandidateCap)
@@ -286,8 +286,8 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     document.DocumentTypeKey,
                     document.Title,
                     document.ReviewStatus,
-                    document.ExternalParty.PartyKey,
-                    document.ExternalParty.DisplayName);
+                    document.Supplier.SupplierKey,
+                    document.Supplier.DisplayName);
                 var score = ForgivingSearchNormalizer.ScoreMatch(haystack, query);
                 if (score == 0)
                 {
@@ -299,7 +299,7 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
                     document.Id,
                     document.DocumentKey,
                     document.Title,
-                    $"{document.ExternalParty.DisplayName} · {document.DocumentTypeKey}",
+                    $"{document.Supplier.DisplayName} · {document.DocumentTypeKey}",
                     "/suppliers",
                     score);
             })
@@ -308,3 +308,4 @@ public sealed class ForgivingSearchService(SupplyArrDbContext db)
             .ToList();
     }
 }
+

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -94,15 +95,24 @@ public sealed class SupplyArrNotificationTests : IAsyncLifetime
 
         var token = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"notify-vendor-{Guid.NewGuid():N}"[..20],
-            "Notify Vendor",
-            "Notify Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"notify-supplier-{Guid.NewGuid():N}"[..20],
             null,
-            string.Empty));
-        var vendor = (await (await _supplyarrClient.SendAsync(createVendorRequest)).Content
-            .ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Notify Supplier",
+            "Notify Supplier LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var supplier = (await (await _supplyarrClient.SendAsync(createSupplierRequest)).Content
+            .ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -122,7 +132,7 @@ public sealed class SupplyArrNotificationTests : IAsyncLifetime
             $"notify-pr-{Guid.NewGuid():N}"[..20],
             "Notify PR",
             "Webhook test",
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 2m, "line")]));
         var purchaseRequest = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content
             .ReadFromJsonAsync<PurchaseRequestResponse>())!;
@@ -155,6 +165,10 @@ public sealed class SupplyArrNotificationTests : IAsyncLifetime
 
         Assert.Single(_webhookRequests);
         Assert.Equal(webhookUrl, _webhookRequests[0].RequestUri?.ToString());
+        var payload = JsonDocument.Parse(await _webhookRequests[0].Content!.ReadAsStringAsync());
+        Assert.Equal("supplyarr.purchase_request.submitted", payload.RootElement.GetProperty("event").GetString());
+        Assert.Equal(supplier.SupplierId, payload.RootElement.GetProperty("supplierId").GetGuid());
+        Assert.False(payload.RootElement.TryGetProperty("vendorPartyId", out _));
 
         using var verifyScope = _supplyarrFactory.Services.CreateScope();
         var verifyDb = verifyScope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();

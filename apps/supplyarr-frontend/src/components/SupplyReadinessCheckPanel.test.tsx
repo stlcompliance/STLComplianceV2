@@ -121,7 +121,7 @@ describe('SupplyReadinessCheckPanel', () => {
           parts={[]}
           suppliers={[
             {
-              supplierId: 'vendor-1',
+              supplierId: 'supplier-unit-1',
               supplierKey: 'ACME',
               displayName: 'North Yard Counter',
               parentSupplierDisplayName: 'Acme Supply',

@@ -15,8 +15,8 @@ using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using CreatePartCatalogRequest = SupplyArr.Api.Contracts.CreatePartCatalogRequest;
 using PartCatalogResponse = SupplyArr.Api.Contracts.PartCatalogResponse;
 using CreatePartRequest = SupplyArr.Api.Contracts.CreatePartRequest;
@@ -94,7 +94,7 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
     [Fact]
     public async Task Rfq_end_to_end_compare_award_and_create_pr()
     {
-        var (vendorA, vendorB, part) = await SeedVendorAndPartAsync();
+        var (supplierUnitA, supplierUnitB, part) = await SeedSupplierUnitsAndPartAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/rfqs", _userToken);
         createRequest.Content = JsonContent.Create(new CreateRfqRequest(
@@ -111,13 +111,13 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
             Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/submit", _userToken));
         submitResponse.EnsureSuccessStatusCode();
 
-        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-vendors", _userToken);
-        inviteRequest.Content = JsonContent.Create(new InviteRfqVendorsRequest([vendorA.PartyId, vendorB.PartyId]));
+        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-suppliers", _userToken);
+        inviteRequest.Content = JsonContent.Create(new InviteRfqSuppliersRequest([supplierUnitA.SupplierId, supplierUnitB.SupplierId]));
         var inviteResponse = await _supplyarrClient.SendAsync(inviteRequest);
         inviteResponse.EnsureSuccessStatusCode();
 
-        var quoteA = await CreateAndSubmitQuoteAsync(rfq.RfqId, vendorA.PartyId, "QUOTE-A", rfq.Lines[0].LineId, 12.5m, 5);
-        var quoteB = await CreateAndSubmitQuoteAsync(rfq.RfqId, vendorB.PartyId, "QUOTE-B", rfq.Lines[0].LineId, 11.0m, 10);
+        var quoteA = await CreateAndSubmitQuoteAsync(rfq.RfqId, supplierUnitA.SupplierId, "QUOTE-A", rfq.Lines[0].LineId, 12.5m, 5);
+        var quoteB = await CreateAndSubmitQuoteAsync(rfq.RfqId, supplierUnitB.SupplierId, "QUOTE-B", rfq.Lines[0].LineId, 11.0m, 10);
 
         var compareResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/rfqs/{rfq.RfqId}/quote-comparison", _userToken));
@@ -125,23 +125,23 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
         var comparison = (await compareResponse.Content.ReadFromJsonAsync<RfqQuoteComparisonResponse>())!;
         Assert.Equal(2, comparison.QuoteSummaries.Count);
         var lineMetric = comparison.Lines.Single().Quotes;
-        Assert.Contains(lineMetric, x => x.VendorQuoteId == quoteB.VendorQuoteId && x.IsLowestPrice);
-        Assert.Contains(lineMetric, x => x.VendorQuoteId == quoteA.VendorQuoteId && x.IsFastestLeadTime);
+        Assert.Contains(lineMetric, x => x.SupplierQuoteId == quoteB.SupplierQuoteId && x.IsLowestPrice);
+        Assert.Contains(lineMetric, x => x.SupplierQuoteId == quoteA.SupplierQuoteId && x.IsFastestLeadTime);
 
         var selectRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/select-quote", _userToken);
-        selectRequest.Content = JsonContent.Create(new SelectVendorQuoteRequest(quoteB.VendorQuoteId));
+        selectRequest.Content = JsonContent.Create(new SelectSupplierQuoteRequest(quoteB.SupplierQuoteId));
         var selectResponse = await _supplyarrClient.SendAsync(selectRequest);
         selectResponse.EnsureSuccessStatusCode();
         var awarded = (await selectResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
         Assert.Equal(RfqStatuses.Awarded, awarded.Status);
-        Assert.Equal(quoteB.VendorQuoteId, awarded.SelectedVendorQuoteId);
+        Assert.Equal(quoteB.SupplierQuoteId, awarded.SelectedSupplierQuoteId);
 
         var prRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/create-purchase-request", _userToken);
         prRequest.Content = JsonContent.Create(new CreatePurchaseRequestFromRfqRequest($"PR-{Guid.NewGuid():N}"[..12], null, null));
         var prResponse = await _supplyarrClient.SendAsync(prRequest);
         prResponse.EnsureSuccessStatusCode();
         var prBody = (await prResponse.Content.ReadFromJsonAsync<CreatePurchaseRequestFromRfqResponse>())!;
-        Assert.Equal(vendorB.PartyId, prBody.PurchaseRequest.VendorPartyId);
+        Assert.Equal(supplierUnitB.SupplierId, prBody.PurchaseRequest.SupplierId);
         Assert.Single(prBody.PurchaseRequest.Lines);
 
         using var scope = _supplyarrFactory.Services.CreateScope();
@@ -152,15 +152,15 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Rfq_vendor_portal_can_create_update_and_submit_quote()
+    public async Task Rfq_supplier_portal_can_create_update_and_submit_quote()
     {
-        var (vendorA, _, part) = await SeedVendorAndPartAsync();
+        var (supplierUnitA, _, part) = await SeedSupplierUnitsAndPartAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/rfqs", _userToken);
         createRequest.Content = JsonContent.Create(new CreateRfqRequest(
             $"RFQ-{Guid.NewGuid():N}"[..12].ToUpperInvariant(),
             "Portal RFQ",
-            "Vendor portal flow",
+            "Supplier portal flow",
             [new CreateRfqLineRequest(part.PartId, 5m, "line")]));
 
         var createResponse = await _supplyarrClient.SendAsync(createRequest);
@@ -170,45 +170,45 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
         (await _supplyarrClient.SendAsync(Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/submit", _userToken)))
             .EnsureSuccessStatusCode();
 
-        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-vendors", _userToken);
-        inviteRequest.Content = JsonContent.Create(new InviteRfqVendorsRequest([vendorA.PartyId]));
+        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-suppliers", _userToken);
+        inviteRequest.Content = JsonContent.Create(new InviteRfqSuppliersRequest([supplierUnitA.SupplierId]));
         var inviteResponse = await _supplyarrClient.SendAsync(inviteRequest);
         inviteResponse.EnsureSuccessStatusCode();
         var invited = (await inviteResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
         var invitation = invited.Invitations.Single();
         Assert.False(string.IsNullOrWhiteSpace(invitation.PortalAccessCode));
-        Assert.Contains("/vendor-portal", invitation.PortalUrl);
+        Assert.Contains("/supplier-quote-portal", invitation.PortalUrl);
 
         var portalResponse = await _supplyarrClient.GetAsync(
-            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}");
+            $"/api/v1/supplier-portal/rfqs/{rfq.RfqId}?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}");
         portalResponse.EnsureSuccessStatusCode();
-        var portal = (await portalResponse.Content.ReadFromJsonAsync<VendorPortalRfqResponse>())!;
-        Assert.Equal(vendorA.PartyId, portal.VendorPartyId);
-        Assert.Null(portal.VendorQuoteId);
+        var portal = (await portalResponse.Content.ReadFromJsonAsync<SupplierPortalRfqResponse>())!;
+        Assert.Equal(supplierUnitA.SupplierId, portal.SupplierId);
+        Assert.Null(portal.SupplierQuoteId);
         Assert.Single(portal.Lines);
 
         var createPortalQuote = await _supplyarrClient.PostAsJsonAsync(
-            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
-            new VendorPortalCreateQuoteRequest("PORTAL-QUOTE-1", "USD", "Portal response"));
+            $"/api/v1/supplier-portal/rfqs/{rfq.RfqId}/quotes?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            new SupplierPortalCreateQuoteRequest("PORTAL-QUOTE-1", "USD", "Portal response"));
         createPortalQuote.EnsureSuccessStatusCode();
-        var createdQuote = (await createPortalQuote.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        var createdQuote = (await createPortalQuote.Content.ReadFromJsonAsync<SupplierQuoteResponse>())!;
         Assert.Equal("draft", createdQuote.Status);
 
         var upsertLine = await _supplyarrClient.PutAsJsonAsync(
-            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.VendorQuoteId}/lines?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
-            new UpsertVendorQuoteLineRequest(
+            $"/api/v1/supplier-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.SupplierQuoteId}/lines?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            new UpsertSupplierQuoteLineRequest(
                 portal.Lines[0].RfqLineId,
                 7.5m,
                 5m,
                 4,
-                "Vendor portal line note"));
+                "Supplier portal line note"));
         upsertLine.EnsureSuccessStatusCode();
 
         var submitQuote = await _supplyarrClient.PostAsync(
-            $"/api/v1/vendor-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.VendorQuoteId}/submit?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
+            $"/api/v1/supplier-portal/rfqs/{rfq.RfqId}/quotes/{createdQuote.SupplierQuoteId}/submit?accessCode={Uri.EscapeDataString(invitation.PortalAccessCode)}",
             null);
         submitQuote.EnsureSuccessStatusCode();
-        var submitted = (await submitQuote.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        var submitted = (await submitQuote.Content.ReadFromJsonAsync<SupplierQuoteResponse>())!;
         Assert.Equal("submitted", submitted.Status);
         Assert.Equal(37.5m, submitted.TotalAmount);
         Assert.Equal(4, submitted.LeadTimeDays);
@@ -217,7 +217,7 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
     [Fact]
     public async Task Rfq_create_rejects_duplicate_key()
     {
-        var (_, _, part) = await SeedVendorAndPartAsync();
+        var (_, _, part) = await SeedSupplierUnitsAndPartAsync();
         var key = $"RFQ-DUP-{Guid.NewGuid():N}"[..14];
 
         var first = Authorized(HttpMethod.Post, "/api/rfqs", _userToken);
@@ -237,26 +237,54 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
-    private async Task<VendorQuoteResponse> CreateAndSubmitQuoteAsync(
+    [Fact]
+    public async Task Rfq_invite_rejects_supplier_sub_unit_without_parts_coverage()
+    {
+        var (partsSupplier, maintenanceOnlySubUnit, part) = await SeedSupplierHierarchyAndPartAsync(["maintenance"]);
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/rfqs", _userToken);
+        createRequest.Content = JsonContent.Create(new CreateRfqRequest(
+            $"RFQ-{Guid.NewGuid():N}"[..12].ToUpperInvariant(),
+            "Coverage-gated RFQ",
+            "Sub-unit service coverage",
+            [new CreateRfqLineRequest(part.PartId, 2m, "line")]));
+
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var rfq = (await createResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
+
+        (await _supplyarrClient.SendAsync(Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/submit", _userToken)))
+            .EnsureSuccessStatusCode();
+
+        var inviteRequest = Authorized(HttpMethod.Post, $"/api/rfqs/{rfq.RfqId}/invite-suppliers", _userToken);
+        inviteRequest.Content = JsonContent.Create(new InviteRfqSuppliersRequest([partsSupplier.SupplierId, maintenanceOnlySubUnit.SupplierId]));
+        var inviteResponse = await _supplyarrClient.SendAsync(inviteRequest);
+
+        Assert.Equal(HttpStatusCode.Conflict, inviteResponse.StatusCode);
+        var payload = await inviteResponse.Content.ReadAsStringAsync();
+        Assert.Contains("include products or parts", payload, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<SupplierQuoteResponse> CreateAndSubmitQuoteAsync(
         Guid rfqId,
-        Guid vendorPartyId,
+        Guid supplierId,
         string quoteKey,
         Guid rfqLineId,
         decimal unitPrice,
         int leadDays)
     {
         var createQuote = Authorized(HttpMethod.Post, $"/api/rfqs/{rfqId}/quotes", _userToken);
-        createQuote.Content = JsonContent.Create(new CreateVendorQuoteRequest(
-            vendorPartyId,
+        createQuote.Content = JsonContent.Create(new CreateSupplierQuoteRequest(
+            supplierId,
             quoteKey,
             "USD",
             string.Empty));
         var createQuoteResponse = await _supplyarrClient.SendAsync(createQuote);
         createQuoteResponse.EnsureSuccessStatusCode();
-        var quote = (await createQuoteResponse.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        var quote = (await createQuoteResponse.Content.ReadFromJsonAsync<SupplierQuoteResponse>())!;
 
-        var lineRequest = Authorized(HttpMethod.Put, $"/api/rfqs/{rfqId}/quotes/{quote.VendorQuoteId}/lines", _userToken);
-        lineRequest.Content = JsonContent.Create(new UpsertVendorQuoteLineRequest(
+        var lineRequest = Authorized(HttpMethod.Put, $"/api/rfqs/{rfqId}/quotes/{quote.SupplierQuoteId}/lines", _userToken);
+        lineRequest.Content = JsonContent.Create(new UpsertSupplierQuoteLineRequest(
             rfqLineId,
             unitPrice,
             10m,
@@ -265,34 +293,60 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
         (await _supplyarrClient.SendAsync(lineRequest)).EnsureSuccessStatusCode();
 
         var submitQuote = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/rfqs/{rfqId}/quotes/{quote.VendorQuoteId}/submit", _userToken));
+            Authorized(HttpMethod.Post, $"/api/rfqs/{rfqId}/quotes/{quote.SupplierQuoteId}/submit", _userToken));
         submitQuote.EnsureSuccessStatusCode();
-        return (await submitQuote.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        return (await submitQuote.Content.ReadFromJsonAsync<SupplierQuoteResponse>())!;
     }
 
-    private async Task<(ExternalPartyResponse VendorA, ExternalPartyResponse VendorB, PartResponse Part)> SeedVendorAndPartAsync()
+    private async Task<(SupplierResponse SupplierUnitA, SupplierResponse SupplierUnitB, PartResponse Part)> SeedSupplierUnitsAndPartAsync()
     {
-        var createVendorA = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendorA.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"v-a-{Guid.NewGuid():N}"[..10],
-            "Vendor Alpha",
-            string.Empty,
-            null,
-            string.Empty));
-        var vendorAResponse = await _supplyarrClient.SendAsync(createVendorA);
-        vendorAResponse.EnsureSuccessStatusCode();
-        var vendorA = (await vendorAResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        var (_, supplierUnitA, part) = await SeedSupplierHierarchyAndPartAsync(["parts", "products"]);
+        var (_, supplierUnitB, _) = await SeedSupplierHierarchyAndPartAsync(["parts"]);
 
-        var createVendorB = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendorB.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"v-b-{Guid.NewGuid():N}"[..10],
-            "Vendor Beta",
+        return (supplierUnitA, supplierUnitB, part);
+    }
+
+    private async Task<(SupplierResponse ParentSupplier, SupplierResponse SupplierSubUnit, PartResponse Part)> SeedSupplierHierarchyAndPartAsync(IReadOnlyList<string> subUnitServiceTypes)
+    {
+        var createParent = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createParent.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"rfq-parent-{Guid.NewGuid():N}"[..16],
+            null,
+            "identity",
+            "RFQ Supplier Parent",
             string.Empty,
             null,
-            string.Empty));
-        var vendorBResponse = await _supplyarrClient.SendAsync(createVendorB);
-        vendorBResponse.EnsureSuccessStatusCode();
-        var vendorB = (await vendorBResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            string.Empty,
+            ["parts", "products"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var parentResponse = await _supplyarrClient.SendAsync(createParent);
+        parentResponse.EnsureSuccessStatusCode();
+        var parentSupplier = (await parentResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+
+        var createSubUnit = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSubUnit.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"rfq-sub-{Guid.NewGuid():N}"[..16],
+            parentSupplier.SupplierId,
+            "sub_unit",
+            "RFQ Supplier Branch",
+            string.Empty,
+            null,
+            string.Empty,
+            subUnitServiceTypes,
+            "500 Branch Rd",
+            null,
+            "Omaha",
+            "NE",
+            "68102",
+            "US"));
+        var subUnitResponse = await _supplyarrClient.SendAsync(createSubUnit);
+        subUnitResponse.EnsureSuccessStatusCode();
+        var supplierSubUnit = (await subUnitResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createCatalog = Authorized(HttpMethod.Post, "/api/catalogs", _userToken);
         createCatalog.Content = JsonContent.Create(new CreatePartCatalogRequest(
@@ -317,7 +371,7 @@ public sealed class SupplyArrRfqTests : IAsyncLifetime
         partResponse.EnsureSuccessStatusCode();
         var part = (await partResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        return (vendorA, vendorB, part);
+        return (parentSupplier, supplierSubUnit, part);
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

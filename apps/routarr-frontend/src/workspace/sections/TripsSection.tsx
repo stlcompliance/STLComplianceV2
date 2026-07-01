@@ -4,7 +4,7 @@ import {
   canAssignDrivers,
   canCreateTrips,
   canManageTrips,
-  canOverrideVendorReadiness,
+  canOverrideSupplierReadiness,
   canPerformTrips,
   canViewAllTrips,
 } from '../../auth/sessionStorage'
@@ -32,7 +32,7 @@ export function TripsSection({ state }: Props) {
     tripTitle,
     tripDescription,
     vehicleRefKey,
-    vendorOrderId,
+    supplierOrderId,
     brokerOrderId,
     driverPersonId,
     loadKey,
@@ -46,7 +46,7 @@ export function TripsSection({ state }: Props) {
     setTripTitle,
     setTripDescription,
     setVehicleRefKey,
-    setVendorOrderId,
+    setSupplierOrderId,
     setBrokerOrderId,
     setDriverPersonId,
     setLoadKey,
@@ -69,7 +69,7 @@ export function TripsSection({ state }: Props) {
         canDispatch={canAssignDrivers(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}
         canManage={canManageTrips(roleKey, isPlatformAdmin)}
-        canOverrideVendorReadiness={canOverrideVendorReadiness(roleKey, isPlatformAdmin)}
+        canOverrideSupplierReadiness={canOverrideSupplierReadiness(roleKey, isPlatformAdmin)}
         viewAllTrips={canViewAllTrips(roleKey, isPlatformAdmin)}
         sessionPersonId={session.personId}
         trips={tripsQuery.data ?? []}
@@ -78,7 +78,7 @@ export function TripsSection({ state }: Props) {
         tripTitle={tripTitle}
         tripDescription={tripDescription}
         vehicleRefKey={vehicleRefKey}
-        vendorOrderId={vendorOrderId}
+        supplierOrderId={supplierOrderId}
         brokerOrderId={brokerOrderId}
         driverPersonId={driverPersonId}
         loadKey={loadKey}
@@ -94,7 +94,7 @@ export function TripsSection({ state }: Props) {
         onTripTitleChange={setTripTitle}
         onTripDescriptionChange={setTripDescription}
         onVehicleRefKeyChange={setVehicleRefKey}
-        onVendorOrderIdChange={setVendorOrderId}
+        onSupplierOrderIdChange={setSupplierOrderId}
         onBrokerOrderIdChange={setBrokerOrderId}
         onDriverPersonIdChange={setDriverPersonId}
         onLoadKeyChange={setLoadKey}

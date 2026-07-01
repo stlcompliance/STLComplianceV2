@@ -25,12 +25,12 @@ public sealed class ComplianceCoreFactPublisherService(
         IntegrationOutboxEventKinds.SupplierOnboardingApproved,
         IntegrationOutboxEventKinds.SupplierOnboardingRejected,
         IntegrationOutboxEventKinds.SupplierOnboardingSuspended,
-        IntegrationOutboxEventKinds.PartyComplianceDocumentRegistered,
-        IntegrationOutboxEventKinds.PartyComplianceDocumentApproved,
-        IntegrationOutboxEventKinds.PartyComplianceDocumentRejected,
-        IntegrationOutboxEventKinds.VendorRestrictionCreated,
-        IntegrationOutboxEventKinds.VendorRestrictionUpdated,
-        IntegrationOutboxEventKinds.VendorRestrictionLifted,
+        IntegrationOutboxEventKinds.SupplierComplianceDocumentRegistered,
+        IntegrationOutboxEventKinds.SupplierComplianceDocumentApproved,
+        IntegrationOutboxEventKinds.SupplierComplianceDocumentRejected,
+        IntegrationOutboxEventKinds.SupplierRestrictionCreated,
+        IntegrationOutboxEventKinds.SupplierRestrictionUpdated,
+        IntegrationOutboxEventKinds.SupplierRestrictionLifted,
         IntegrationOutboxEventKinds.ProcurementExceptionCreated,
         IntegrationOutboxEventKinds.ProcurementExceptionUpdated,
         IntegrationOutboxEventKinds.ProcurementExceptionInvestigating,
@@ -56,7 +56,7 @@ public sealed class ComplianceCoreFactPublisherService(
         IntegrationOutboxEventKinds.WarrantyClaimCreated,
         IntegrationOutboxEventKinds.WarrantyClaimUpdated,
         IntegrationOutboxEventKinds.WarrantyClaimSubmitted,
-        IntegrationOutboxEventKinds.WarrantyClaimVendorResponded,
+        IntegrationOutboxEventKinds.WarrantyClaimSupplierResponded,
         IntegrationOutboxEventKinds.WarrantyClaimClosed,
         IntegrationOutboxEventKinds.WarrantyClaimDenied,
         IntegrationOutboxEventKinds.WarrantyClaimCancelled,
@@ -119,14 +119,14 @@ public sealed class ComplianceCoreFactPublisherService(
             or IntegrationOutboxEventKinds.SupplierOnboardingRejected
             or IntegrationOutboxEventKinds.SupplierOnboardingSuspended
                 => await BuildSupplierOnboardingFactsAsync(outboxEvent, cancellationToken),
-            IntegrationOutboxEventKinds.PartyComplianceDocumentRegistered
-            or IntegrationOutboxEventKinds.PartyComplianceDocumentApproved
-            or IntegrationOutboxEventKinds.PartyComplianceDocumentRejected
-                => await BuildPartyComplianceDocumentFactsAsync(outboxEvent, cancellationToken),
-            IntegrationOutboxEventKinds.VendorRestrictionCreated
-            or IntegrationOutboxEventKinds.VendorRestrictionUpdated
-            or IntegrationOutboxEventKinds.VendorRestrictionLifted
-                => await BuildVendorRestrictionFactsAsync(outboxEvent, cancellationToken),
+            IntegrationOutboxEventKinds.SupplierComplianceDocumentRegistered
+            or IntegrationOutboxEventKinds.SupplierComplianceDocumentApproved
+            or IntegrationOutboxEventKinds.SupplierComplianceDocumentRejected
+                => await BuildSupplierComplianceDocumentFactsAsync(outboxEvent, cancellationToken),
+            IntegrationOutboxEventKinds.SupplierRestrictionCreated
+            or IntegrationOutboxEventKinds.SupplierRestrictionUpdated
+            or IntegrationOutboxEventKinds.SupplierRestrictionLifted
+                => await BuildSupplierRestrictionFactsAsync(outboxEvent, cancellationToken),
             _ when outboxEvent.EventKind.StartsWith("procurement_exception.", StringComparison.OrdinalIgnoreCase)
                 => await BuildProcurementExceptionFactsAsync(outboxEvent, cancellationToken),
             _ when outboxEvent.EventKind.StartsWith("emergency_purchase.", StringComparison.OrdinalIgnoreCase)
@@ -172,7 +172,7 @@ public sealed class ComplianceCoreFactPublisherService(
         CancellationToken cancellationToken)
     {
         var entity = await db.PurchaseOrders.AsNoTracking()
-            .Include(x => x.VendorParty)
+            .Include(x => x.Supplier)
             .Include(x => x.Lines)
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
@@ -194,23 +194,23 @@ public sealed class ComplianceCoreFactPublisherService(
                 entity.Id)
         };
 
-        var vendorApprovalStatus = entity.VendorParty.ApprovalStatus;
-        var approvedVendor = string.Equals(vendorApprovalStatus, "approved", StringComparison.OrdinalIgnoreCase);
+        var supplierApprovalStatus = entity.Supplier.ApprovalStatus;
+        var approvedSupplier = string.Equals(supplierApprovalStatus, "approved", StringComparison.OrdinalIgnoreCase);
         foreach (var line in entity.Lines.OrderBy(x => x.LineNumber))
         {
             var lineScopeKey = ScopeForPurchaseOrderLine(line.Id);
             facts.Add(StringFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.PurchaseOrderLineVendorApprovalStatus,
+                SupplyArrComplianceCoreFactKeys.PurchaseOrderLineSupplierApprovalStatus,
                 lineScopeKey,
-                vendorApprovalStatus,
+                supplierApprovalStatus,
                 "purchase_order_line",
                 line.Id));
             facts.Add(BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.PartSourcedFromApprovedVendor,
+                SupplyArrComplianceCoreFactKeys.PartSourcedFromApprovedSupplier,
                 lineScopeKey,
-                approvedVendor,
+                approvedSupplier,
                 "purchase_order_line",
                 line.Id));
         }
@@ -282,8 +282,8 @@ public sealed class ComplianceCoreFactPublisherService(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
     {
-        var entity = await db.PartySupplierOnboardings.AsNoTracking()
-            .Include(x => x.ExternalParty)
+        var entity = await db.SupplierOnboardings.AsNoTracking()
+            .Include(x => x.Supplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken);
@@ -292,35 +292,35 @@ public sealed class ComplianceCoreFactPublisherService(
             return Array.Empty<ComplianceCoreFactPublicationItem>();
         }
 
-        var scopeKey = ScopeForVendor(entity.ExternalPartyId);
+        var scopeKey = ScopeForSupplier(entity.SupplierId);
         var isApproved = string.Equals(
-            entity.ExternalParty.ApprovalStatus,
+            entity.Supplier.ApprovalStatus,
             "approved",
             StringComparison.OrdinalIgnoreCase);
         return
         [
             StringFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorApprovalStatus,
+                SupplyArrComplianceCoreFactKeys.SupplierApprovalStatus,
                 scopeKey,
-                entity.ExternalParty.ApprovalStatus,
-                "external_party",
-                entity.ExternalPartyId),
+                entity.Supplier.ApprovalStatus,
+                "supplier",
+                entity.SupplierId),
             BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorIsApproved,
+                SupplyArrComplianceCoreFactKeys.SupplierIsApproved,
                 scopeKey,
                 isApproved,
-                "external_party",
-                entity.ExternalPartyId),
+                "supplier",
+                entity.SupplierId),
         ];
     }
 
-    private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildPartyComplianceDocumentFactsAsync(
+    private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildSupplierComplianceDocumentFactsAsync(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
     {
-        var entity = await db.PartyComplianceDocuments.AsNoTracking()
+        var entity = await db.SupplierComplianceDocuments.AsNoTracking()
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken);
@@ -329,43 +329,43 @@ public sealed class ComplianceCoreFactPublisherService(
             return Array.Empty<ComplianceCoreFactPublicationItem>();
         }
 
-        var scopeKey = ScopeForPartyComplianceDocument(entity.Id);
+        var scopeKey = ScopeForSupplierComplianceDocument(entity.Id);
         var expired = entity.ExpiresAt is DateTimeOffset expiresAt && expiresAt <= DateTimeOffset.UtcNow;
         var effectiveStatus = expired
-            && string.Equals(entity.ReviewStatus, PartyComplianceDocumentReviewStatuses.Approved, StringComparison.OrdinalIgnoreCase)
-                ? PartyComplianceDocumentReviewStatuses.Expired
+            && string.Equals(entity.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Approved, StringComparison.OrdinalIgnoreCase)
+                ? SupplierComplianceDocumentReviewStatuses.Expired
                 : entity.ReviewStatus;
         return
         [
             StringFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorDocumentStatus,
+                SupplyArrComplianceCoreFactKeys.SupplierDocumentStatus,
                 scopeKey,
                 effectiveStatus,
-                "party_compliance_document",
+                "supplier_compliance_document",
                 entity.Id),
             BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorDocumentAttached,
+                SupplyArrComplianceCoreFactKeys.SupplierDocumentAttached,
                 scopeKey,
                 true,
-                "party_compliance_document",
+                "supplier_compliance_document",
                 entity.Id),
             BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorDocumentExpired,
+                SupplyArrComplianceCoreFactKeys.SupplierDocumentExpired,
                 scopeKey,
                 expired,
-                "party_compliance_document",
+                "supplier_compliance_document",
                 entity.Id),
         ];
     }
 
-    private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildVendorRestrictionFactsAsync(
+    private async Task<IReadOnlyList<ComplianceCoreFactPublicationItem>> BuildSupplierRestrictionFactsAsync(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
     {
-        var entity = await db.VendorRestrictions.AsNoTracking()
+        var entity = await db.SupplierRestrictions.AsNoTracking()
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken);
@@ -374,16 +374,16 @@ public sealed class ComplianceCoreFactPublisherService(
             return Array.Empty<ComplianceCoreFactPublicationItem>();
         }
 
-        var scopeKey = ScopeForVendor(entity.ExternalPartyId);
-        var blocks = string.Equals(entity.Status, VendorRestrictionStatuses.Active, StringComparison.OrdinalIgnoreCase);
+        var scopeKey = ScopeForSupplier(entity.SupplierId);
+        var blocks = string.Equals(entity.Status, SupplierRestrictionStatuses.Active, StringComparison.OrdinalIgnoreCase);
         return
         [
             BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorRestrictionBlocksProcurement,
+                SupplyArrComplianceCoreFactKeys.SupplierRestrictionBlocksProcurement,
                 scopeKey,
                 blocks,
-                "vendor_restriction",
+                "supplier_restriction",
                 entity.Id)
         ];
     }
@@ -539,19 +539,19 @@ public sealed class ComplianceCoreFactPublisherService(
             return Array.Empty<ComplianceCoreFactPublicationItem>();
         }
 
-        var activeRestriction = await db.VendorRestrictions.AsNoTracking()
+        var activeRestriction = await db.SupplierRestrictions.AsNoTracking()
             .AnyAsync(
                 x => x.TenantId == outboxEvent.TenantId
-                    && x.ExternalPartyId == entity.ExternalPartyId
-                    && x.Status == VendorRestrictionStatuses.Active,
+                    && x.SupplierId == entity.SupplierId
+                    && x.Status == SupplierRestrictionStatuses.Active,
                 cancellationToken);
 
-        var scopeKey = ScopeForVendor(entity.ExternalPartyId);
+        var scopeKey = ScopeForSupplier(entity.SupplierId);
         return
         [
             BooleanFact(
                 outboxEvent,
-                SupplyArrComplianceCoreFactKeys.VendorRestrictionBlocksProcurement,
+                SupplyArrComplianceCoreFactKeys.SupplierRestrictionBlocksProcurement,
                 scopeKey,
                 activeRestriction,
                 "supplier_incident",
@@ -574,7 +574,7 @@ public sealed class ComplianceCoreFactPublisherService(
 
         var scopeKey = ScopeForWarrantyClaim(entity.Id);
         var filed = string.Equals(entity.Status, WarrantyClaimStatuses.Submitted, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(entity.Status, WarrantyClaimStatuses.VendorResponded, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(entity.Status, WarrantyClaimStatuses.SupplierResponded, StringComparison.OrdinalIgnoreCase)
             || string.Equals(entity.Status, WarrantyClaimStatuses.Closed, StringComparison.OrdinalIgnoreCase)
             || string.Equals(entity.Status, WarrantyClaimStatuses.Denied, StringComparison.OrdinalIgnoreCase);
         return
@@ -649,10 +649,10 @@ public sealed class ComplianceCoreFactPublisherService(
 
     private static string ScopeForReceivingException(Guid id) => $"receiving_exception:{id:D}".ToLowerInvariant();
 
-    private static string ScopeForVendor(Guid partyId) => $"vendor:{partyId:D}".ToLowerInvariant();
+    private static string ScopeForSupplier(Guid supplierId) => $"supplier:{supplierId:D}".ToLowerInvariant();
 
-    private static string ScopeForPartyComplianceDocument(Guid id) =>
-        $"vendor_document:{id:D}".ToLowerInvariant();
+    private static string ScopeForSupplierComplianceDocument(Guid id) =>
+        $"supplier_document:{id:D}".ToLowerInvariant();
 
     private static string ScopeForProcurementException(Guid id) => $"procurement_exception:{id:D}".ToLowerInvariant();
 
@@ -660,3 +660,4 @@ public sealed class ComplianceCoreFactPublisherService(
 
     private static string ScopeForWarrantyClaim(Guid id) => $"warranty_claim:{id:D}".ToLowerInvariant();
 }
+

@@ -22,7 +22,7 @@ public sealed class SupplyArrAuthorizationService
     public void RequireSupplyArrLaunchContext(ClaimsPrincipal principal) =>
         RequireSupplyArrAccess(principal);
 
-    public void RequirePartiesRead(ClaimsPrincipal principal)
+    public void RequireSuppliersRead(ClaimsPrincipal principal)
     {
         RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
@@ -43,11 +43,11 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Party read access requires SupplyArr read permission.",
+            "Supplier read access requires SupplyArr read permission.",
             403);
     }
 
-    public void RequirePartiesManage(ClaimsPrincipal principal)
+    public void RequireSuppliersManage(ClaimsPrincipal principal)
     {
         RequireSupplyArrLaunchContext(principal);
         if (principal.IsPlatformAdmin())
@@ -66,7 +66,7 @@ public sealed class SupplyArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Party management requires supplyarr.parties.manage scope.",
+            "Supplier management requires supplyarr.suppliers.manage scope.",
             403);
     }
 
@@ -364,32 +364,32 @@ public sealed class SupplyArrAuthorizationService
     public void RequireRfqAward(ClaimsPrincipal principal) =>
         RequirePurchaseRequestApprove(principal);
 
-    public void RequireVendorOrderRead(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderRead(ClaimsPrincipal principal) =>
         RequirePurchaseRequestRead(principal);
 
-    public void RequireVendorOrderCreate(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderCreate(ClaimsPrincipal principal) =>
         RequirePurchaseRequestCreate(principal);
 
-    public void RequireVendorOrderUpdate(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderUpdate(ClaimsPrincipal principal) =>
         RequirePurchaseRequestCreate(principal);
 
-    public void RequireVendorOrderSend(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderSend(ClaimsPrincipal principal) =>
         RequirePurchaseRequestCreate(principal);
 
-    public void RequireVendorOrderStatusUpdate(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderStatusUpdate(ClaimsPrincipal principal) =>
         RequirePurchaseRequestCreate(principal);
 
-    public void RequireVendorOrderDocumentUpload(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderDocumentUpload(ClaimsPrincipal principal) =>
         RequirePurchaseRequestCreate(principal);
 
-    public void RequireVendorOrderSettingsManage(ClaimsPrincipal principal) =>
+    public void RequireSupplierOrderSettingsManage(ClaimsPrincipal principal) =>
         RequireNotificationSettingsManage(principal);
 
     public void RequireSupplierOnboardingRead(ClaimsPrincipal principal) =>
-        RequirePartiesRead(principal);
+        RequireSuppliersRead(principal);
 
     public void RequireSupplierOnboardingManage(ClaimsPrincipal principal) =>
-        RequirePartiesManage(principal);
+        RequireSuppliersManage(principal);
 
     public void RequireSupplierOnboardingReview(ClaimsPrincipal principal) =>
         RequirePurchaseRequestApprove(principal);
@@ -448,10 +448,10 @@ public sealed class SupplyArrAuthorizationService
     public void RequireEmergencyPurchaseIssueOrder(ClaimsPrincipal principal) =>
         RequireEmergencyPurchaseCreate(principal);
 
-    public void RequireVendorReportRead(ClaimsPrincipal principal) =>
-        RequirePartiesRead(principal);
+    public void RequireSupplierReportRead(ClaimsPrincipal principal) =>
+        RequireSuppliersRead(principal);
 
-    public void RequireVendorReportExport(ClaimsPrincipal principal) =>
+    public void RequireSupplierReportExport(ClaimsPrincipal principal) =>
         RequirePurchaseRequestRead(principal);
 
     public void RequirePartsInventoryReportRead(ClaimsPrincipal principal) =>
@@ -467,13 +467,13 @@ public sealed class SupplyArrAuthorizationService
         RequirePurchaseRequestRead(principal);
 
     public void RequireComplianceReportRead(ClaimsPrincipal principal) =>
-        RequirePartiesRead(principal);
+        RequireSuppliersRead(principal);
 
     public void RequireComplianceReportExport(ClaimsPrincipal principal) =>
-        RequirePartiesRead(principal);
+        RequireSuppliersRead(principal);
 
     public void RequireForgivingSearch(ClaimsPrincipal principal) =>
-        RequirePartiesRead(principal);
+        RequireSuppliersRead(principal);
 
     public void RequireAuditHistoryRead(ClaimsPrincipal principal)
     {

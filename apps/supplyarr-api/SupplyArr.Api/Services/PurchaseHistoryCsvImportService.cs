@@ -43,10 +43,10 @@ public sealed class PurchaseHistoryCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, 0, 0, issues);
         }
 
-        var suppliersByKey = await db.ExternalParties
+        var suppliersByKey = await db.Suppliers
             .Where(x => x.TenantId == tenantId
-                && (x.PartyType == "vendor" || x.PartyType == "supplier"))
-            .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
+                && true)
+            .ToDictionaryAsync(x => x.SupplierKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
         var partsByKey = await db.Parts
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(x => x.PartKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
@@ -221,12 +221,10 @@ public sealed class PurchaseHistoryCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        var normalizedHeaders = headerFields
-            .Select(header => string.Equals(header, "vendor_party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
-            .ToArray();
+        var normalizedHeaders = headerFields.ToArray();
         if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new PurchaseHistoryCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy vendor_party_key remains accepted."));
+            issues.Add(new PurchaseHistoryCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}."));
             return [];
         }
 
@@ -475,3 +473,5 @@ public sealed class PurchaseHistoryCsvImportService(
         string OrderNotes,
         string ReceiptNotes);
 }
+
+

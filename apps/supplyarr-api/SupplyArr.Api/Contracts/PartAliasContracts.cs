@@ -8,16 +8,16 @@ public sealed record ManufacturerSummaryResponse(
     string ManufacturerName,
     int ItemCount);
 
-public sealed record VendorItemResponse(
+public sealed record SupplierItemResponse(
     Guid LinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
     string CategoryKey,
-    Guid PartyId,
-    string PartyKey,
-    string PartyDisplayName,
-    string VendorPartNumber,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    string SupplierPartNumber,
     bool IsPreferred,
     decimal? CatalogUnitPrice,
     string? CatalogCurrencyCode,
@@ -27,9 +27,8 @@ public sealed record VendorItemResponse(
     string? CatalogAvailabilityStatus,
     DateTimeOffset CreatedAt);
 
-public sealed record CreateVendorItemRequest(
+public sealed record CreateSupplierItemRequest(
     Guid PartId,
-    Guid PartyId,
-    string VendorPartNumber,
+    Guid SupplierId,
+    string SupplierPartNumber,
     bool IsPreferred);
-

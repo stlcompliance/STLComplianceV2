@@ -206,7 +206,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, s
       if (!quote || !line) {
         throw new Error('Select an RFQ with a draft quote and line')
       }
-      return upsertSupplierQuoteLine(accessToken, selectedRfqId, quote.vendorQuoteId, {
+      return upsertSupplierQuoteLine(accessToken, selectedRfqId, quote.supplierQuoteId, {
         rfqLineId: line.lineId,
         unitPrice: Number(quoteUnitPrice),
         quantityQuoted: line.quantityRequested,
@@ -218,7 +218,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, s
   })
 
   const submitQuoteMutation = useMutation({
-    mutationFn: () => submitSupplierQuote(accessToken, selectedRfqId, draftQuotes[0]!.vendorQuoteId),
+    mutationFn: () => submitSupplierQuote(accessToken, selectedRfqId, draftQuotes[0]!.supplierQuoteId),
     onSuccess: invalidate,
   })
 
@@ -503,7 +503,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, s
                 </thead>
                 <tbody>
                   {comparisonQuery.data.quoteSummaries.map((s) => (
-                    <tr key={s.vendorQuoteId} className="border-t border-slate-800 text-slate-200">
+                    <tr key={s.supplierQuoteId} className="border-t border-slate-800 text-slate-200">
                       <td className="py-1">
                         <div>{formatSupplierIdentityLabel(s)}</div>
                         <div className="text-[11px] text-slate-500">
@@ -527,7 +527,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, s
                   </div>
                   <ul className="mt-1 text-slate-400">
                     {row.quotes.map((q) => (
-                      <li key={`${row.rfqLineId}-${q.vendorQuoteId}`}>
+                      <li key={`${row.rfqLineId}-${q.supplierQuoteId}`}>
                         {formatSupplierIdentityLabel(q)}: {q.unitPrice?.toFixed(2) ?? '—'}
                         {q.isLowestPrice ? ' · lowest' : ''}
                         {q.isFastestLeadTime ? ' · fastest' : ''}
@@ -657,7 +657,7 @@ export function RfqPanel({ accessToken, canManage, canAward, parts, suppliers, s
                   {selectedRfq.quotes
                     .filter((q) => q.status === 'submitted')
                     .map((q) => (
-                      <option key={q.vendorQuoteId} value={q.vendorQuoteId}>
+                      <option key={q.supplierQuoteId} value={q.supplierQuoteId}>
                         {formatSupplierIdentityLabel(q)} · {q.totalAmount?.toFixed(2)}
                       </option>
                     ))}

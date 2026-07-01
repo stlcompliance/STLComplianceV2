@@ -5,7 +5,7 @@ import { loadSession } from '../auth/sessionStorage'
 import {
   canAssignDrivers,
   canManageTrips,
-  canOverrideVendorReadiness,
+  canOverrideSupplierReadiness,
   canPerformTrips,
 } from '../auth/sessionStorage'
 import { TripExecutionWorkspacePanel } from '../components/TripExecutionWorkspacePanel'
@@ -44,7 +44,7 @@ export function TripWorkspacePage() {
         canDispatch={canAssignDrivers(roleKey, isPlatformAdmin)}
         canPerform={canPerformTrips(roleKey, isPlatformAdmin)}
         canManage={canManageTrips(roleKey, isPlatformAdmin)}
-        canOverrideVendorReadiness={canOverrideVendorReadiness(roleKey, isPlatformAdmin)}
+        canOverrideSupplierReadiness={canOverrideSupplierReadiness(roleKey, isPlatformAdmin)}
       />
     </div>
   )

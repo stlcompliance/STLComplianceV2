@@ -8,6 +8,11 @@ public sealed record LoginRequest(
     string? MfaCode = null,
     string? RecoveryCode = null);
 
+public sealed record LocalDevBypassLoginRequest(
+    string Email,
+    Guid? TenantId,
+    bool RememberDevice = false);
+
 public sealed record RenewSessionRequest(string RefreshToken);
 
 public sealed record LogoutRequest(string RefreshToken);

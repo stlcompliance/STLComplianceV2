@@ -221,16 +221,14 @@ export function PurchasingReportsPanel({
               <MetricCard
                 label="Supplier docs expiring"
                 value={String(
-                  summaryQuery.data.analytics.supplierDocumentExpiringSoonCount ??
-                    summaryQuery.data.analytics.vendorDocumentExpiringSoonCount,
+                  summaryQuery.data.analytics.supplierDocumentExpiringSoonCount,
                 )}
                 detail="Approved supplier compliance documents expiring in the next 30 days."
               />
               <MetricCard
                 label="Blocked suppliers"
                 value={String(
-                  summaryQuery.data.analytics.blockedSupplierCount ??
-                    summaryQuery.data.analytics.blockedVendorCount,
+                  summaryQuery.data.analytics.blockedSupplierCount,
                 )}
                 detail="Active supplier identities or sub-units blocked by approval status."
               />

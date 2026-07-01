@@ -19,8 +19,8 @@ using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -143,7 +143,7 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
     [Fact]
     public async Task Purchase_request_submit_and_approve_enforce_staffarr_authority()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -151,7 +151,7 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
             $"pa-pr-{Guid.NewGuid():N}"[..20],
             "Authority test PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var prResponse = await _supplyarrClient.SendAsync(createPrRequest);
         prResponse.EnsureSuccessStatusCode();
@@ -225,14 +225,14 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
             await staffDb.SaveChangesAsync();
         }
 
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
         createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
             $"pa-deny-{Guid.NewGuid():N}"[..20],
             "Denied submit PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
 
@@ -327,18 +327,27 @@ public sealed class SupplyArrStaffarrProcurementApprovalAuthorityTests : IAsyncL
         return personId;
     }
 
-    private async Task<ExternalPartyResponse> CreateVendorAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
-        var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendor.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSupplier.Content = JsonContent.Create(new CreateSupplierRequest(
             $"v-pa-{Guid.NewGuid():N}"[..12],
-            "Authority Vendor",
+            null,
+            null,
+            "Authority Supplier",
             string.Empty,
             null,
-            string.Empty));
-        var response = await _supplyarrClient.SendAsync(createVendor);
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var response = await _supplyarrClient.SendAsync(createSupplier);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private async Task<PartResponse> CreatePartAsync()

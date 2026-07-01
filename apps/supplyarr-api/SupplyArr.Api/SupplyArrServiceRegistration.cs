@@ -23,20 +23,19 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<MeService>();
         builder.Services.AddScoped<SupplyArrAuthorizationService>();
         builder.Services.AddScoped<SupplierDirectoryService>();
-        builder.Services.AddScoped<ExternalPartyService>();
         builder.Services.AddScoped<PartCatalogService>();
         builder.Services.AddScoped<PartRegistryService>();
         builder.Services.AddScoped<PartCatalogCsvImportService>();
-        builder.Services.AddScoped<VendorCatalogCsvImportService>();
-        builder.Services.AddScoped<VendorCatalogApiService>();
-        builder.Services.AddScoped<VendorEmailInboxService>();
-        builder.Services.AddScoped<VendorDocumentsCsvImportService>();
+        builder.Services.AddScoped<SupplierCatalogCsvImportService>();
+        builder.Services.AddScoped<SupplierCatalogApiService>();
+        builder.Services.AddScoped<SupplierEmailInboxService>();
+        builder.Services.AddScoped<SupplierDocumentsCsvImportService>();
         builder.Services.AddScoped<InventoryCountsCsvImportService>();
         builder.Services.AddScoped<PriceListCsvImportService>();
         builder.Services.AddScoped<LeadTimeListCsvImportService>();
         builder.Services.AddScoped<AvailabilityListCsvImportService>();
         builder.Services.AddScoped<ContractsCsvImportService>();
-        builder.Services.AddScoped<ExternalPartiesCsvImportService>();
+        builder.Services.AddScoped<SuppliersCsvImportService>();
         builder.Services.AddScoped<ContactsCsvImportService>();
         builder.Services.AddScoped<OpenPurchaseOrdersCsvImportService>();
         builder.Services.AddScoped<PurchaseHistoryCsvImportService>();
@@ -52,7 +51,7 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<ReceivingExceptionService>();
         builder.Services.AddScoped<BackorderService>();
         builder.Services.AddScoped<SupplierReturnService>();
-        builder.Services.AddScoped<VendorReturnService>();
+        builder.Services.AddScoped<SupplierReturnService>();
         builder.Services.AddScoped<PricingSnapshotService>();
         builder.Services.AddScoped<LeadTimeSnapshotService>();
         builder.Services.AddScoped<AvailabilitySnapshotService>();
@@ -81,13 +80,12 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<IntegrationInboxEnqueueService>();
         builder.Services.AddScoped<RfqService>();
         builder.Services.AddScoped<SupplierOrderService>();
-        builder.Services.AddScoped<VendorOrderService>();
-        builder.Services.AddScoped<VendorOrderSettingsService>();
+        builder.Services.AddScoped<SupplierOrderSettingsService>();
         builder.Services.AddSingleton<SupplyArrDocumentStorageService>();
-        builder.Services.AddScoped<PartyComplianceDocumentService>();
+        builder.Services.AddScoped<SupplierComplianceDocumentService>();
         builder.Services.AddScoped<SupplierOnboardingService>();
-        builder.Services.AddScoped<VendorProcurementGuardService>();
-        builder.Services.AddScoped<VendorRestrictionService>();
+        builder.Services.AddScoped<SupplierProcurementGuardService>();
+        builder.Services.AddScoped<SupplierRestrictionService>();
         builder.Services.AddScoped<SupplierIncidentService>();
         builder.Services.AddScoped<WarrantyClaimService>();
         builder.Services.AddScoped<SupplyContractService>();
@@ -117,7 +115,6 @@ public static class SupplyArrServiceRegistration
         builder.Services.AddScoped<TrainArrSupplierIncidentPublisherService>();
         builder.Services.AddScoped<EmergencyPurchaseService>();
         builder.Services.AddScoped<SupplierReportService>();
-        builder.Services.AddScoped<VendorReportService>();
         builder.Services.AddScoped<PartsInventoryReportService>();
         builder.Services.AddScoped<PurchasingReportService>();
         builder.Services.AddScoped<ComplianceReportService>();
@@ -150,7 +147,7 @@ public static class SupplyArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
-        builder.Services.AddHttpClient<ComplianceCoreVendorUseGateClient>((sp, client) =>
+        builder.Services.AddHttpClient<ComplianceCoreSupplierUseGateClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ComplianceCoreClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
@@ -171,12 +168,12 @@ public static class SupplyArrServiceRegistration
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
-        builder.Services.AddHttpClient<RoutArrVendorOrderClient>((sp, client) =>
+        builder.Services.AddHttpClient<RoutArrSupplierOrderClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RoutArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
         });
-        builder.Services.AddHttpClient<RecordArrVendorOrderClient>((sp, client) =>
+        builder.Services.AddHttpClient<RecordArrSupplierOrderClient>((sp, client) =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RecordArrClientOptions>>().Value;
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");

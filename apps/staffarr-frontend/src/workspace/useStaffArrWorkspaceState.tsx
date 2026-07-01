@@ -101,7 +101,6 @@ function normalizePeopleDetailTab(value: string | null): PeopleDetailTab {
 }
 
 export function useStaffArrWorkspaceState() {
-
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
@@ -116,6 +115,24 @@ export function useStaffArrWorkspaceState() {
   const accessToken = session?.accessToken ?? ''
   const [apiError] = useState<string | null>(null)
   const queryClient = useQueryClient()
+  const isPeopleDetailsRoute = location.pathname.startsWith('/people/details')
+  const isRolesRoute =
+    location.pathname.startsWith('/roles')
+    || location.pathname.startsWith('/staffarr/roles')
+    || location.pathname.startsWith('/permissions')
+  const isOrgStructureRoute =
+    location.pathname.startsWith('/organization-structure')
+    || location.pathname.startsWith('/org')
+    || location.pathname.startsWith('/locations')
+    || location.pathname.startsWith('/setup/organization')
+  const isReadinessRoute = location.pathname.startsWith('/readiness')
+  const isRestrictionsRoute = location.pathname.startsWith('/restrictions')
+  const isIncidentsRoute = location.pathname.startsWith('/incidents')
+  const isCertificationsRoute = location.pathname.startsWith('/certifications')
+  const shouldLoadPeopleDetailQueries = isPeopleDetailsRoute
+  const shouldLoadPermissionQueries = isRolesRoute || isOrgStructureRoute || (isPeopleDetailsRoute && peopleDetailTab === 'permissions')
+  const shouldLoadReadinessQueries = isReadinessRoute || isRestrictionsRoute || isCertificationsRoute || isIncidentsRoute || isPeopleDetailsRoute
+  const shouldLoadOrgHierarchyAdminQueries = isOrgStructureRoute
 
   const meQuery = useQuery({
     queryKey: ['staffarr-me', session?.accessToken],
@@ -135,7 +152,11 @@ export function useStaffArrWorkspaceState() {
   const orgUnitsAdminQuery = useQuery({
     queryKey: ['staffarr-org-units', session?.accessToken, 'admin', 'includeArchived'],
     queryFn: () => getOrgUnits(session!.accessToken, { includeArchived: true }),
-    enabled: Boolean(session?.accessToken && canManageOrgHierarchy(meQuery.data?.tenantRoleKey ?? '', meQuery.data?.isPlatformAdmin ?? false)),
+    enabled: Boolean(
+      session?.accessToken
+      && shouldLoadOrgHierarchyAdminQueries
+      && canManageOrgHierarchy(meQuery.data?.tenantRoleKey ?? '', meQuery.data?.isPlatformAdmin ?? false),
+    ),
   })
   const [selectedPersonIdState, setSelectedPersonIdState] = useState<string | null>(requestedPersonId)
   const [activeDirectoryPersonId, setActiveDirectoryPersonId] = useState<string | null>(null)
@@ -234,17 +255,17 @@ export function useStaffArrWorkspaceState() {
   const personProfileQuery = useQuery({
     queryKey: ['staffarr-person', session?.accessToken, effectivePersonId],
     queryFn: () => getPerson(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const personSummaryQuery = useQuery({
     queryKey: ['staffarr-person-summary', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonSummary(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const assignmentQuery = useQuery({
     queryKey: ['staffarr-org-assignments', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonOrgAssignments(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const [selectedSubordinateId, setSelectedSubordinateId] = useState<string | null>(null)
   useEffect(() => {
@@ -253,17 +274,17 @@ export function useStaffArrWorkspaceState() {
   const managerChainQuery = useQuery({
     queryKey: ['staffarr-manager-chain', session?.accessToken, effectivePersonId],
     queryFn: () => getManagerChain(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const subordinatesQuery = useQuery({
     queryKey: ['staffarr-subordinates', session?.accessToken, effectivePersonId],
     queryFn: () => getSubordinates(session!.accessToken, effectivePersonId!, true, 200),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const subordinateDetailQuery = useQuery({
     queryKey: ['staffarr-subordinate-detail', session?.accessToken, effectivePersonId, selectedSubordinateId],
     queryFn: () => getSubordinateDetail(session!.accessToken, effectivePersonId!, selectedSubordinateId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId && selectedSubordinateId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedSubordinateId && shouldLoadPeopleDetailQueries),
   })
   const [productPermissionCatalogProductKey, setProductPermissionCatalogProductKey] = useState('')
   const productPermissionCatalogQuery = useQuery({
@@ -277,12 +298,12 @@ export function useStaffArrWorkspaceState() {
         session!.accessToken,
         productPermissionCatalogProductKey.trim() || undefined,
       ),
-    enabled: Boolean(session?.accessToken),
+    enabled: Boolean(session?.accessToken && shouldLoadPermissionQueries),
   })
   const effectivePermissionsQuery = useQuery({
     queryKey: ['staffarr-effective-permissions', session?.accessToken, effectivePersonId],
     queryFn: () => getEffectivePermissions(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPermissionQueries),
   })
   const [permissionCheckInput, setPermissionCheckInput] = useState('staffarr.people.read')
   const permissionCheckMutation = useMutation({
@@ -310,47 +331,47 @@ export function useStaffArrWorkspaceState() {
         personTimelinePageSize,
         personTimelineCategoryFilter || undefined,
       ),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const personHistorySummaryQuery = useQuery({
     queryKey: ['staffarr-person-history-summary', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonHistorySummary(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const trainarrTrainingHistoryQuery = useQuery({
     queryKey: ['staffarr-trainarr-training-history', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonTrainarrTrainingHistory(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const workforceOnboardingJourneyQuery = useQuery({
     queryKey: ['staffarr-workforce-onboarding-journey', session?.accessToken, effectivePersonId],
     queryFn: () => getWorkforceOnboardingJourney(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const personOffboardingQuery = useQuery({
     queryKey: ['staffarr-person-offboarding', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonOffboarding(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const certificationDefinitionsQuery = useQuery({
     queryKey: ['staffarr-certification-definitions', session?.accessToken],
     queryFn: () => getCertificationDefinitions(session!.accessToken),
-    enabled: Boolean(session?.accessToken),
+    enabled: Boolean(session?.accessToken && shouldLoadReadinessQueries),
   })
   const personCertificationsQuery = useQuery({
     queryKey: ['staffarr-person-certifications', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonCertifications(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadReadinessQueries),
   })
   const personReadinessQuery = useQuery({
     queryKey: ['staffarr-person-readiness', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonReadiness(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadReadinessQueries),
   })
   const personLookupQuery = useQuery({
     queryKey: ['staffarr-person-lookup', session?.accessToken, effectivePersonId],
     queryFn: () => getPersonLookup(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && (shouldLoadPeopleDetailQueries || isOrgStructureRoute)),
   })
   const canViewReadinessRollupSummaries =
     meQuery.data != null &&
@@ -367,12 +388,12 @@ export function useStaffArrWorkspaceState() {
     queryKey: ['staffarr-team-readiness-rollups', session?.accessToken, readinessRollupSiteFilterId],
     queryFn: () =>
       getTeamReadinessRollups(session!.accessToken, readinessRollupSiteFilterId ?? undefined),
-    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && isReadinessRoute),
   })
   const siteReadinessRollupsQuery = useQuery({
     queryKey: ['staffarr-site-readiness-rollups', session?.accessToken],
     queryFn: () => getSiteReadinessRollups(session!.accessToken),
-    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && isReadinessRoute),
   })
   const readinessRollupMembersQuery = useQuery({
     queryKey: [
@@ -389,7 +410,7 @@ export function useStaffArrWorkspaceState() {
           selectedReadinessRollup!.orgUnitId,
           readinessRollupMemberFilter === 'all' ? undefined : readinessRollupMemberFilter,
         ),
-    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && selectedReadinessRollup),
+    enabled: Boolean(session?.accessToken && canViewReadinessRollupSummaries && selectedReadinessRollup && isReadinessRoute),
   })
   const [selectedIncidentId, setSelectedIncidentId] = useState<string | null>(null)
   useEffect(() => {
@@ -398,12 +419,12 @@ export function useStaffArrWorkspaceState() {
   const personIncidentsQuery = useQuery({
     queryKey: ['staffarr-person-incidents', session?.accessToken, effectivePersonId],
     queryFn: () => listPersonnelIncidents(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && (isIncidentsRoute || shouldLoadPeopleDetailQueries)),
   })
   const incidentDetailQuery = useQuery({
     queryKey: ['staffarr-incident-detail', session?.accessToken, selectedIncidentId],
     queryFn: () => getPersonnelIncident(session!.accessToken, selectedIncidentId!),
-    enabled: Boolean(session?.accessToken && selectedIncidentId),
+    enabled: Boolean(session?.accessToken && selectedIncidentId && (isIncidentsRoute || shouldLoadPeopleDetailQueries)),
   })
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null)
   useEffect(() => {
@@ -412,12 +433,12 @@ export function useStaffArrWorkspaceState() {
   const personNotesQuery = useQuery({
     queryKey: ['staffarr-person-notes', session?.accessToken, effectivePersonId],
     queryFn: () => listPersonnelNotes(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const noteDetailQuery = useQuery({
     queryKey: ['staffarr-note-detail', session?.accessToken, effectivePersonId, selectedNoteId],
     queryFn: () => getPersonnelNote(session!.accessToken, effectivePersonId!, selectedNoteId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId && selectedNoteId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedNoteId && shouldLoadPeopleDetailQueries),
   })
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null)
   useEffect(() => {
@@ -426,12 +447,12 @@ export function useStaffArrWorkspaceState() {
   const personDocumentsQuery = useQuery({
     queryKey: ['staffarr-person-documents', session?.accessToken, effectivePersonId],
     queryFn: () => listPersonnelDocuments(session!.accessToken, effectivePersonId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const documentDetailQuery = useQuery({
     queryKey: ['staffarr-document-detail', session?.accessToken, effectivePersonId, selectedDocumentId],
     queryFn: () => getPersonnelDocument(session!.accessToken, effectivePersonId!, selectedDocumentId!),
-    enabled: Boolean(session?.accessToken && effectivePersonId && selectedDocumentId),
+    enabled: Boolean(session?.accessToken && effectivePersonId && selectedDocumentId && shouldLoadPeopleDetailQueries),
   })
 
   const invalidatePlacementSurfaces = async (personId?: string | null) => {

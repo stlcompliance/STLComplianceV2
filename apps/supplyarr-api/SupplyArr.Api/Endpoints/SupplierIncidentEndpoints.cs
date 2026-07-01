@@ -21,7 +21,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesRead(context.User);
+            authorization.RequireSuppliersRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(
                 tenantId,
@@ -39,7 +39,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesRead(context.User);
+            authorization.RequireSuppliersRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.GetAsync(tenantId, incidentId, cancellationToken));
         })
@@ -52,7 +52,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CreateAsync(tenantId, actorUserId, request, cancellationToken));
@@ -67,7 +67,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.UpdateAsync(
@@ -86,7 +86,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.StartInvestigationAsync(
@@ -105,7 +105,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ResolveAsync(
@@ -125,7 +125,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CloseAsync(
@@ -145,7 +145,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.CancelAsync(
@@ -165,7 +165,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ReopenAsync(
@@ -185,7 +185,7 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             return Results.Ok(await service.ApplyProcurementRestrictionAsync(
@@ -211,15 +211,13 @@ public static class SupplierIncidentEndpoints
             SupplierIncidentService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesRead(context.User);
+            authorization.RequireSuppliersRead(context.User);
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListBySupplierAsync(tenantId, supplierId, cancellationToken));
         })
         .WithName($"ListSupplierIncidentsBySupplier{nameSuffix}");
         }
 
-        MapSupplierRoutes(app.MapGroup("/api/parties/{supplierId:guid}/supplier-incidents"), string.Empty);
-        MapSupplierRoutes(app.MapGroup("/api/v1/parties/{supplierId:guid}/supplier-incidents"), "V1");
         MapSupplierRoutes(app.MapGroup("/api/suppliers/{supplierId:guid}/supplier-incidents"), "Supplier");
         MapSupplierRoutes(app.MapGroup("/api/v1/suppliers/{supplierId:guid}/supplier-incidents"), "V1Supplier");
     }

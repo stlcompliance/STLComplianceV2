@@ -49,7 +49,7 @@ export function SupplierPortalSection({ state: s }: Props) {
           title="Supplier portal"
           description="Supplier-side onboarding, quote submission, and message exchange live in the supplier portal experience."
           actionLabel="Open portal"
-          to="/vendor-portal"
+          to="/supplier-quote-portal"
         />
         <PortalCard
           title="Supplier order portal"

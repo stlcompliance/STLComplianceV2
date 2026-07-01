@@ -19,13 +19,13 @@ public sealed class TenantPriceSnapshotSettings : IHasTenant
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-public sealed class PartVendorPriceCaptureState : IHasTenant
+public sealed class PartSupplierPriceCaptureState : IHasTenant
 {
     public Guid Id { get; set; }
 
     public Guid TenantId { get; set; }
 
-    public Guid PartVendorLinkId { get; set; }
+    public Guid PartSupplierLinkId { get; set; }
 
     public decimal? LastCapturedUnitPrice { get; set; }
 
@@ -41,7 +41,7 @@ public sealed class PartVendorPriceCaptureState : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public PartVendorLink PartVendorLink { get; set; } = null!;
+    public PartSupplierLink PartSupplierLink { get; set; } = null!;
 }
 
 public sealed class PriceSnapshotRun : IHasTenant

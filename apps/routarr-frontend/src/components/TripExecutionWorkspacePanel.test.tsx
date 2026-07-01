@@ -12,7 +12,7 @@ vi.mock('../api/client', () => ({
   getTripCaptureReadiness: vi.fn(),
   getTripExecutionSummary: vi.fn(),
   listDispatchExceptions: vi.fn(),
-  overrideTripVendorReadiness: vi.fn(),
+  overrideTripSupplierReadiness: vi.fn(),
   getTripAuditTrail: vi.fn(),
   updateTripStatus: vi.fn(),
   submitTripDvir: vi.fn(),
@@ -31,7 +31,7 @@ function renderPanel() {
           canDispatch={true}
           canPerform={true}
           canManage={true}
-          canOverrideVendorReadiness={true}
+          canOverrideSupplierReadiness={true}
         />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -299,7 +299,7 @@ describe('TripExecutionWorkspacePanel', () => {
     expect(screen.getByRole('button', { name: 'Retry trip workspace' })).toBeInTheDocument()
   })
 
-  it('allows authorized users to override an active vendor-readiness block', async () => {
+  it('allows authorized users to override an active supplier-readiness block', async () => {
     vi.mocked(client.getTrip).mockResolvedValue({
       tripId: 'trip-1',
       tripNumber: 'TR-001',
@@ -320,14 +320,14 @@ describe('TripExecutionWorkspacePanel', () => {
       completedAt: null,
       cancelledAt: null,
       closedAt: null,
-      vendorOrderId: 'vendor-order-1',
+      supplierOrderId: 'supplier-order-1',
       brokerOrderId: null,
-      dispatchBlockReason: 'vendor_order_not_complete',
-      vendorReadinessStatusSnapshot: 'partially_ready',
-      vendorQuantityReadySnapshot: 200,
-      vendorOrderedQuantitySnapshot: 520,
-      vendorExpectedReadyAtSnapshot: null,
-      vendorConfirmedReadyAtSnapshot: null,
+      dispatchBlockReason: 'supplier_order_not_complete',
+      supplierReadinessStatusSnapshot: 'partially_ready',
+      supplierQuantityReadySnapshot: 200,
+      supplierOrderedQuantitySnapshot: 520,
+      supplierExpectedReadyAtSnapshot: null,
+      supplierConfirmedReadyAtSnapshot: null,
       releasedForDispatchAt: null,
       releasedForDispatchByEventId: null,
       dispatchOverrideAt: null,
@@ -336,10 +336,10 @@ describe('TripExecutionWorkspacePanel', () => {
       dispatchBlocks: [
         {
           dispatchBlockId: 'block-1',
-          blockType: 'vendor_readiness',
-          blockReason: 'vendor_order_partially_ready',
-          blockingEntityType: 'vendor_order',
-          blockingEntityId: 'vendor-order-1',
+          blockType: 'supplier_readiness',
+          blockReason: 'supplier_order_partially_ready',
+          blockingEntityType: 'supplier_order',
+          blockingEntityId: 'supplier-order-1',
           status: 'active',
           createdAt: new Date().toISOString(),
           resolvedAt: null,
@@ -379,7 +379,7 @@ describe('TripExecutionWorkspacePanel', () => {
       tripId: 'trip-1',
       entries: [],
     })
-    vi.mocked(client.overrideTripVendorReadiness).mockResolvedValue({
+    vi.mocked(client.overrideTripSupplierReadiness).mockResolvedValue({
       tripId: 'trip-1',
       tripNumber: 'TR-001',
       title: 'Morning run',
@@ -399,14 +399,14 @@ describe('TripExecutionWorkspacePanel', () => {
       completedAt: null,
       cancelledAt: null,
       closedAt: null,
-      vendorOrderId: 'vendor-order-1',
+      supplierOrderId: 'supplier-order-1',
       brokerOrderId: null,
       dispatchBlockReason: null,
-      vendorReadinessStatusSnapshot: 'partially_ready',
-      vendorQuantityReadySnapshot: 200,
-      vendorOrderedQuantitySnapshot: 520,
-      vendorExpectedReadyAtSnapshot: null,
-      vendorConfirmedReadyAtSnapshot: null,
+      supplierReadinessStatusSnapshot: 'partially_ready',
+      supplierQuantityReadySnapshot: 200,
+      supplierOrderedQuantitySnapshot: 520,
+      supplierExpectedReadyAtSnapshot: null,
+      supplierConfirmedReadyAtSnapshot: null,
       releasedForDispatchAt: null,
       releasedForDispatchByEventId: null,
       dispatchOverrideAt: new Date().toISOString(),
@@ -418,15 +418,15 @@ describe('TripExecutionWorkspacePanel', () => {
 
     renderPanel()
 
-    expect(await screen.findByText('Vendor-readiness block is active.')).toBeInTheDocument()
+    expect(await screen.findByText('Supplier-readiness block is active.')).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Override reason'), {
       target: { value: 'Approved after phone confirmation' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Override vendor-readiness block' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Override supplier-readiness block' }))
 
     await waitFor(() => {
-      expect(client.overrideTripVendorReadiness).toHaveBeenCalledWith('token', 'trip-1', {
+      expect(client.overrideTripSupplierReadiness).toHaveBeenCalledWith('token', 'trip-1', {
         reason: 'Approved after phone confirmation',
       })
     })

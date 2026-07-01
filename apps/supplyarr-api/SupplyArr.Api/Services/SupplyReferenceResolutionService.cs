@@ -19,10 +19,7 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
         return normalizedType switch
         {
             SupplyReferenceTypes.Supplier => BuildSupplierResponse(
-                await db.ExternalParties.AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == referenceId, cancellationToken)),
-            SupplyReferenceTypes.ExternalParty => BuildSupplierResponse(
-                await db.ExternalParties.AsNoTracking()
+                await db.Suppliers.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == referenceId, cancellationToken)),
             SupplyReferenceTypes.Part => BuildPartResponse(
                 await db.Parts.AsNoTracking()
@@ -39,8 +36,8 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             SupplyReferenceTypes.WarrantyClaim => BuildWarrantyClaimResponse(
                 await db.WarrantyClaims.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == referenceId, cancellationToken)),
-            SupplyReferenceTypes.VendorReturn => BuildVendorReturnResponse(
-                await db.VendorReturns.AsNoTracking()
+            SupplyReferenceTypes.SupplierReturn => BuildSupplierReturnResponse(
+                await db.SupplierReturns.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == referenceId, cancellationToken)),
             _ => throw UnsupportedReferenceType(normalizedType),
         };
@@ -58,11 +55,8 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
         return normalizedType switch
         {
             SupplyReferenceTypes.Supplier => BuildSupplierResponse(
-                await db.ExternalParties.AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.PartyKey.ToLower() == normalizedKey, cancellationToken)),
-            SupplyReferenceTypes.ExternalParty => BuildSupplierResponse(
-                await db.ExternalParties.AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.PartyKey.ToLower() == normalizedKey, cancellationToken)),
+                await db.Suppliers.AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.SupplierKey.ToLower() == normalizedKey, cancellationToken)),
             SupplyReferenceTypes.Part => BuildPartResponse(
                 await db.Parts.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.PartKey.ToLower() == normalizedKey, cancellationToken)),
@@ -78,8 +72,8 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             SupplyReferenceTypes.WarrantyClaim => BuildWarrantyClaimResponse(
                 await db.WarrantyClaims.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ClaimKey.ToLower() == normalizedKey, cancellationToken)),
-            SupplyReferenceTypes.VendorReturn => BuildVendorReturnResponse(
-                await db.VendorReturns.AsNoTracking()
+            SupplyReferenceTypes.SupplierReturn => BuildSupplierReturnResponse(
+                await db.SupplierReturns.AsNoTracking()
                     .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ReturnKey.ToLower() == normalizedKey, cancellationToken)),
             _ => throw UnsupportedReferenceType(normalizedType),
         };
@@ -90,14 +84,13 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
         var normalized = referenceType.Trim().Replace('-', '_').ToLowerInvariant();
         return normalized switch
         {
-            "party" or "vendor" or "dealer" or "carrier" or "supplier" => SupplyReferenceTypes.Supplier,
-            "external_party" or "customer" => SupplyReferenceTypes.ExternalParty,
+            "supplier" => SupplyReferenceTypes.Supplier,
             "item" or "material" => SupplyReferenceTypes.Part,
             "pr" => SupplyReferenceTypes.PurchaseRequest,
             "po" => SupplyReferenceTypes.PurchaseOrder,
             "receipt" or "receiving" => SupplyReferenceTypes.ReceivingReceipt,
             "warranty" => SupplyReferenceTypes.WarrantyClaim,
-            "return" => SupplyReferenceTypes.VendorReturn,
+            "return" => SupplyReferenceTypes.SupplierReturn,
             _ => normalized,
         };
     }
@@ -128,7 +121,7 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             $"SupplyArr {referenceType} reference was not found.",
             404);
 
-    private static SupplyReferenceResolutionResponse BuildSupplierResponse(ExternalParty? entity)
+    private static SupplyReferenceResolutionResponse BuildSupplierResponse(Supplier? entity)
     {
         if (entity is null)
         {
@@ -139,18 +132,16 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
         var appPath = $"/suppliers/{entity.Id}";
         var metadata = new Dictionary<string, string>
         {
-            ["supplierType"] = entity.PartyType,
             ["approvalStatus"] = entity.ApprovalStatus,
             ["unitKind"] = entity.UnitKind,
-            ["parentSupplierId"] = entity.ParentExternalPartyId?.ToString("D") ?? string.Empty,
-            ["partyType"] = entity.PartyType,
+            ["parentSupplierId"] = entity.ParentSupplierId?.ToString("D") ?? string.Empty,
         };
 
         return BuildResponse(
             entity.TenantId,
             SupplyReferenceTypes.Supplier,
             entity.Id,
-            entity.PartyKey,
+            entity.SupplierKey,
             entity.DisplayName,
             entity.Status,
             apiPath,
@@ -205,8 +196,7 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             new Dictionary<string, string>
             {
                 ["isEmergency"] = entity.IsEmergency.ToString(),
-                ["supplierId"] = entity.VendorPartyId?.ToString() ?? string.Empty,
-                ["vendorPartyId"] = entity.VendorPartyId?.ToString() ?? string.Empty,
+                ["supplierId"] = entity.SupplierId?.ToString() ?? string.Empty,
             });
     }
 
@@ -230,8 +220,7 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             new Dictionary<string, string>
             {
                 ["purchaseRequestId"] = entity.PurchaseRequestId.ToString(),
-                ["supplierId"] = entity.VendorPartyId.ToString(),
-                ["vendorPartyId"] = entity.VendorPartyId.ToString(),
+                ["supplierId"] = entity.SupplierId.ToString(),
             });
     }
 
@@ -279,34 +268,32 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             new Dictionary<string, string>
             {
                 ["claimType"] = entity.ClaimType,
-                ["supplierId"] = entity.VendorPartyId.ToString(),
-                ["vendorPartyId"] = entity.VendorPartyId.ToString(),
+                ["supplierId"] = entity.SupplierId.ToString(),
                 ["partId"] = entity.PartId.ToString(),
             });
     }
 
-    private static SupplyReferenceResolutionResponse BuildVendorReturnResponse(VendorReturn? entity)
+    private static SupplyReferenceResolutionResponse BuildSupplierReturnResponse(SupplierReturn? entity)
     {
         if (entity is null)
         {
-            throw NotFound(SupplyReferenceTypes.VendorReturn);
+            throw NotFound(SupplyReferenceTypes.SupplierReturn);
         }
 
         return BuildResponse(
             entity.TenantId,
-            SupplyReferenceTypes.VendorReturn,
+            SupplyReferenceTypes.SupplierReturn,
             entity.Id,
             entity.ReturnKey,
             entity.ReturnKey,
             entity.Status,
-            $"/api/returns/{entity.Id}",
+            $"/api/v1/returns/{entity.Id}",
             $"/returns/{entity.Id}",
             entity.UpdatedAt,
             new Dictionary<string, string>
             {
                 ["sourceType"] = entity.SourceType,
-                ["supplierId"] = entity.VendorPartyId.ToString(),
-                ["vendorPartyId"] = entity.VendorPartyId.ToString(),
+                ["supplierId"] = entity.SupplierId.ToString(),
                 ["purchaseOrderId"] = entity.PurchaseOrderId?.ToString() ?? string.Empty,
             });
     }
@@ -335,3 +322,4 @@ public sealed class SupplyReferenceResolutionService(SupplyArrDbContext db)
             updatedAt,
             metadata);
 }
+

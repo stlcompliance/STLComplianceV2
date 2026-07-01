@@ -184,7 +184,7 @@ public sealed class ProcurementCoordinationWorkerService(
         {
             var purchaseRequest = await db.PurchaseRequests
                 .Include(x => x.Lines)
-                .Include(x => x.VendorParty)
+                .Include(x => x.Supplier)
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new InvalidOperationException($"Purchase request {subjectId} was not found.");
 
@@ -216,7 +216,7 @@ public sealed class ProcurementCoordinationWorkerService(
         {
             var purchaseOrder = await db.PurchaseOrders
                 .Include(x => x.Lines)
-                .Include(x => x.VendorParty)
+                .Include(x => x.Supplier)
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new InvalidOperationException($"Purchase order {subjectId} was not found.");
 
@@ -271,8 +271,6 @@ public sealed class ProcurementCoordinationWorkerService(
         existing.ParentSupplierDisplayName = summary.ParentSupplierDisplayName;
         existing.SupplierUnitKind = summary.SupplierUnitKind;
         existing.SupplierServiceTypesJson = SerializeServiceTypes(summary.SupplierServiceTypes);
-        existing.VendorPartyId = summary.VendorPartyId;
-        existing.VendorDisplayName = summary.VendorDisplayName ?? summary.SupplierDisplayName ?? string.Empty;
         existing.DocumentStatus = summary.DocumentStatus;
         existing.LineCount = summary.LineCount;
         existing.QuantityOrdered = summary.QuantityOrdered;
@@ -326,8 +324,6 @@ public sealed class ProcurementCoordinationWorkerService(
             record.ParentSupplierDisplayName,
             record.SupplierUnitKind,
             ParseServiceTypes(record.SupplierServiceTypesJson),
-            record.VendorPartyId,
-            record.VendorDisplayName,
             record.DocumentStatus,
             record.LineCount,
             record.QuantityOrdered,

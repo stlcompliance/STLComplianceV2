@@ -1,5 +1,5 @@
 import { AuditHistoryPanel } from '../../components/AuditHistoryPanel'
-import { VendorEmailInboxPanel } from '../../components/VendorEmailInboxPanel'
+import { SupplierEmailInboxPanel } from '../../components/SupplierEmailInboxPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }
@@ -7,7 +7,7 @@ type Props = { state: SupplyArrWorkspaceState }
 export function DocumentsSection({ state: s }: Props) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <VendorEmailInboxPanel
+      <SupplierEmailInboxPanel
         accessToken={s.accessToken}
         canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo}
       />

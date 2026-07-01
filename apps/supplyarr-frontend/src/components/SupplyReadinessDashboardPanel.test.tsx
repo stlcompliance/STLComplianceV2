@@ -20,7 +20,7 @@ vi.mock('../api/client', () => ({
       issuedPurchaseOrderCount: 4,
       openDemandRefCount: 5,
       complianceAttentionCount: 1,
-      activeVendorRestrictionCount: 0,
+      activeSupplierRestrictionCount: 0,
       activeProcurementExceptionCount: 1,
     },
     demandRefsBySource: [{ source: 'maintainarr', openCount: 2 }],

@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { resolveNexArrLaunchFailureMessage, resolveProductLaunchCallbackPath, saveThemePreferenceFromSession } from '@stl/shared-ui'
 import { redeemHandoff } from '../api/client'
+import type { HandoffSessionResponse } from '../api/types'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 
 export function LaunchPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
+  const redeemRequestRef = useRef<{ handoff: string; promise: Promise<HandoffSessionResponse> } | null>(null)
 
   useEffect(() => {
     const handoff = searchParams.get('handoff')
@@ -15,12 +17,19 @@ export function LaunchPage() {
       setError('Missing handoff code. Launch Compliance Core from the suite.')
       return
     }
+    const redeemPromise =
+      redeemRequestRef.current?.handoff === handoff
+        ? redeemRequestRef.current.promise
+        : redeemHandoff(handoff)
+    if (redeemRequestRef.current?.handoff !== handoff) {
+      redeemRequestRef.current = { handoff, promise: redeemPromise }
+    }
 
     let cancelled = false
 
     ;(async () => {
       try {
-        const session = await redeemHandoff(handoff)
+        const session = await redeemPromise
         if (cancelled) {
           return
         }

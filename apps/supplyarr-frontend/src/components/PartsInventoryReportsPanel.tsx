@@ -8,6 +8,10 @@ import {
   getPartsInventoryPartDetail,
   getPartsInventoryReportSummary,
 } from '../api/client'
+import {
+  formatSupplierIdentitySummary,
+  formatSupplierServiceTypes,
+} from '../utils/supplierPresentation'
 
 interface PartsInventoryReportsPanelProps {
   accessToken: string
@@ -222,7 +226,7 @@ export function PartsInventoryReportsPanel({
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
                       On hand {part.quantityOnHand} · Reserved {part.quantityReserved} · Available{' '}
-                      {part.quantityAvailable} · {part.vendorLinkCount} supplier links
+                      {part.quantityAvailable} · {part.supplierLinkCount} supplier links
                     </p>
                   </button>
                 </li>
@@ -270,6 +274,29 @@ export function PartsInventoryReportsPanel({
                 </li>
               ))}
             </ul>
+          )}
+          {partDetailQuery.data.supplierLinks.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                Supplier links
+              </h4>
+              <ul className="mt-2 space-y-2 text-sm text-slate-300">
+                {partDetailQuery.data.supplierLinks.map((link) => (
+                  <li key={link.partSupplierLinkId} className="rounded-md border border-slate-800 px-3 py-2">
+                    <div className="font-medium text-slate-100">
+                      {formatSupplierIdentitySummary(link)}
+                      {link.isPreferred ? ' (preferred)' : ''}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {link.supplierPartNumber}
+                      {link.supplierServiceTypes?.length
+                        ? ` · ${formatSupplierServiceTypes(link.supplierServiceTypes)}`
+                        : ''}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}

@@ -89,7 +89,7 @@ export function ContractsImportPanel({ accessToken, canManage, onComplete }: Con
           <p className="mt-2 text-xs text-[var(--color-text-muted)]">
             Required headers: supplier_key, contract_key, contract_type, title, effective_at, expires_at, renewal_at,
             payment_terms, freight_terms, warranty_terms, minimum_spend, service_level_agreement, approval_status,
-            status, notes. Older header names remain accepted for compatibility.
+            status, notes.
           </p>
         </div>
 

@@ -44,10 +44,10 @@ public sealed class ContractsCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var vendorsByKey = await db.ExternalParties
+        var suppliersByKey = await db.Suppliers
             .Where(x => x.TenantId == tenantId
-                && (x.PartyType == "vendor" || x.PartyType == "supplier"))
-            .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
+               )
+            .ToDictionaryAsync(x => x.SupplierKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
         var existingContractKeys = await db.SupplyContracts
             .Where(x => x.TenantId == tenantId)
             .Select(x => x.ContractKey)
@@ -58,7 +58,7 @@ public sealed class ContractsCsvImportService(
 
         foreach (var row in rows)
         {
-            ValidateRow(row, vendorsByKey, existingKeys, seenKeys, issues);
+            ValidateRow(row, suppliersByKey, existingKeys, seenKeys, issues);
             if (issues.Any(x => x.LineNumber == row.LineNumber))
             {
                 continue;
@@ -82,8 +82,7 @@ public sealed class ContractsCsvImportService(
                     row.ContractKey,
                     row.ContractType,
                     row.Title,
-                    vendorsByKey[row.SupplierKey],
-                    vendorsByKey[row.SupplierKey],
+                    suppliersByKey[row.SupplierKey],
                     row.EffectiveAt,
                     row.ExpiresAt,
                     row.RenewalAt,
@@ -173,7 +172,7 @@ public sealed class ContractsCsvImportService(
 
     private static void ValidateRow(
         ImportRow row,
-        IReadOnlyDictionary<string, Guid> vendorsByKey,
+        IReadOnlyDictionary<string, Guid> suppliersByKey,
         ISet<string> existingContractKeys,
         ISet<string> seenKeys,
         List<ContractsCsvImportIssue> issues)
@@ -182,7 +181,7 @@ public sealed class ContractsCsvImportService(
         ValidateLength(row.LineNumber, "contract_key", row.ContractKey, 3, 128, issues);
         ValidateLength(row.LineNumber, "contract_type", row.ContractType, 2, 64, issues);
         ValidateLength(row.LineNumber, "title", row.Title, 2, 256, issues);
-        if (!vendorsByKey.ContainsKey(row.SupplierKey))
+        if (!suppliersByKey.ContainsKey(row.SupplierKey))
         {
             issues.Add(new ContractsCsvImportIssue(row.LineNumber, "supplier.not_found", "Supplier key was not found."));
         }
@@ -332,12 +331,7 @@ public sealed class ContractsCsvImportService(
     }
 
     private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
-        headerFields
-            .Select(field =>
-                string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
-                    ? "supplier_key"
-                    : field)
-            .ToArray();
+        headerFields.ToArray();
 
     private static string NormalizeKey(string value) => value.Trim().ToLowerInvariant();
 
@@ -366,3 +360,5 @@ public sealed class ContractsCsvImportService(
         string Status,
         string Notes);
 }
+
+

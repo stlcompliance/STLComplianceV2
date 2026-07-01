@@ -1,0 +1,586 @@
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+  SupplyArr.Api -> F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.dll
+
+Build succeeded.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:03.06
+info: StlIntegrationTokenProvisioning[0]
+      Resolving integration tokens for consumer supplyarr-api (render=(null)).
+info: StlIntegrationTokenProvisioning[0]
+      Provisioned 6 integration token(s) for supplyarr-api from NexArr.
+[22:29:52 INF] Applying EF migrations for SupplyArrDbContext (attempt 1/8)
+[22:30:04 INF] Executed DbCommand (35ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:30:05 INF] Executed DbCommand (55ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT 1
+[22:30:05 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+    "MigrationId" character varying(150) NOT NULL,
+    "ProductVersion" character varying(32) NOT NULL,
+    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+);
+[22:30:05 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[22:30:05 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:30:05 INF] No migrations were applied. The database is already up to date.
+[22:30:05 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone NULL,
+    "RecordArrDocumentId" character varying(128) NULL,
+    "FileName" character varying(256) NULL,
+    "ContentHash" character varying(128) NULL,
+    "ReprintReason" character varying(1024) NULL,
+    "FailureReason" character varying(1024) NULL,
+    "MetadataJson" jsonb NULL,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_TenantId"
+    ON print_export_logs ("TenantId");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[22:30:06 INF] Starting SupplyArr API (supplyarr) on http://localhost:5106
+[22:30:06 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[22:30:10 ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5106: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+[22:30:10 FTL] SupplyArr API terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5106: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.So[22:30:10 INF] Request starting HTTP/1.1 GET http://localhost:5106/health - null null
+[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
+[22:30:11 INF] Setting HTTP status code 200.
+[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
+[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
+[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5106/health - 200 null application/json; charset=utf-8 30.6633ms
+  ❔ Do you want to restart your app? Yes (y) / No (n) / Always (a) / Never (v)
+  ❔   Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+  SupplyArr.Api -> F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.dll
+
+Build succeeded.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.81
+info: StlIntegrationTokenProvisioning[0]
+      Resolving integration tokens for consumer supplyarr-api (render=(null)).
+info: StlIntegrationTokenProvisioning[0]
+      Provisioned 6 integration token(s) for supplyarr-api from NexArr.
+[22:39:51 INF] Applying EF migrations for SupplyArrDbContext (attempt 1/8)
+[22:39:53 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:39:53 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT 1
+[22:39:53 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+    "MigrationId" character varying(150) NOT NULL,
+    "ProductVersion" character varying(32) NOT NULL,
+    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+);
+[22:39:53 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[22:39:53 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:39:53 INF] No migrations were applied. The database is already up to date.
+[22:39:53 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone NULL,
+    "RecordArrDocumentId" character varying(128) NULL,
+    "FileName" character varying(256) NULL,
+    "ContentHash" character varying(128) NULL,
+    "ReprintReason" character varying(1024) NULL,
+    "FailureReason" character varying(1024) NULL,
+    "MetadataJson" jsonb NULL,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_TenantId"
+    ON print_export_logs ("TenantId");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[22:39:53 INF] Starting SupplyArr API (supplyarr) on http://localhost:5106
+[22:39:53 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[22:39:55 INF] Now listening on: http://localhost:5106
+[22:39:55 INF] Application started. Press Ctrl+C to shut down.
+[22:39:55 INF] Hosting environment: Development
+[22:39:55 INF] Content root path: F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+CSC : error CS2012: Cannot open 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' for writing -- The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' because it is being used by another process.; file may be locked by 'VBCSCompiler' (16348) [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+
+Build FAILED.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+CSC : error CS2012: Cannot open 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' for writing -- The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' because it is being used by another process.; file may be locked by 'VBCSCompiler' (16348) [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+    2 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:07.08
+TLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Services\ComplianceReportService.cs(589,93): error CS0246: The type or namespace name 'ComplianceDocumentSummaryItemResponse' could not be found (are you missing a using directive or an assembly reference?) [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+    2 Warning(s)
+    7 Error(s)
+
+Time Elapsed 00:00:07.70
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 1 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 2 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 3 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 4 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 5 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 6 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 7 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 8 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 9 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 10 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3027: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Exceeded retry count of 10. Failed. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3021: Unable to copy file "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+
+Build FAILED.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 1 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 2 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 3 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 4 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 5 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 6 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 7 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 8 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 9 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 10 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3027: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Exceeded retry count of 10. Failed. The file is locked by: "SupplyArr.Api (26200)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3021: Unable to copy file "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+    12 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:23.68
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+CSC : error CS2012: Cannot open 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' for writing -- The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' because it is being used by another process.; file may be locked by 'VBCSCompiler' (16348) [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+
+Build FAILED.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+CSC : error CS2012: Cannot open 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' for writing -- The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\SupplyArr.Api.dll' because it is being used by another process.; file may be locked by 'VBCSCompiler' (16348) [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+    2 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:06.50
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 1 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 2 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 3 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 4 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 5 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 6 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 7 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 8 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 9 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 10 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3027: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Exceeded retry count of 10. Failed. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3021: Unable to copy file "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+
+Build FAILED.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 1 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 2 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 3 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 4 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 5 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 6 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 7 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 8 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 9 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): warning MSB3026: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Beginning retry 10 in 1000ms. The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3027: Could not copy "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". Exceeded retry count of 10. Failed. The file is locked by: "SupplyArr.Api (57092)" [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+C:\Program Files\dotnet\sdk\10.0.300\Microsoft.Common.CurrentVersion.targets(5397,5): error MSB3021: Unable to copy file "F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\obj\Debug\net10.0\apphost.exe" to "bin\Debug\net10.0\SupplyArr.Api.exe". The process cannot access the file 'F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.exe' because it is being used by another process. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+    12 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:16.94
+  Determining projects to restore...
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\SupplyArr.Api.csproj]
+  All projects are up-to-date for restore.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+  STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+  SupplyArr.Api -> F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\bin\Debug\net10.0\SupplyArr.Api.dll
+
+Build succeeded.
+
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.18
+info: StlIntegrationTokenProvisioning[0]
+      Resolving integration tokens for consumer supplyarr-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for supplyarr-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 2/40 failed for supplyarr-api; retrying in 5s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 3/40 failed for supplyarr-api; retrying in 6s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 4/40 failed for supplyarr-api; retrying in 7s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 5/40 failed for supplyarr-api; retrying in 8s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 6/40 failed for supplyarr-api; retrying in 9s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 7/40 failed for supplyarr-api; retrying in 10s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 8/40 failed for supplyarr-api; retrying in 11s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+info: StlIntegrationTokenProvisioning[0]
+      Provisioned 6 integration token(s) for supplyarr-api from NexArr.
+[22:47:51 INF] Applying EF migrations for SupplyArrDbContext (attempt 1/8)
+[22:47:52 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:47:53 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT 1
+[22:47:53 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
+    "MigrationId" character varying(150) NOT NULL,
+    "ProductVersion" character varying(32) NOT NULL,
+    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+);
+[22:47:53 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[22:47:53 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+[22:47:53 INF] No migrations were applied. The database is already up to date.
+[22:47:53 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE IF NOT EXISTS print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone NULL,
+    "RecordArrDocumentId" character varying(128) NULL,
+    "FileName" character varying(256) NULL,
+    "ContentHash" character varying(128) NULL,
+    "ReprintReason" character varying(1024) NULL,
+    "FailureReason" character varying(1024) NULL,
+    "MetadataJson" jsonb NULL,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_TenantId"
+    ON print_export_logs ("TenantId");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+
+CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
+    ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[22:47:53 INF] Starting SupplyArr API (supplyarr) on http://localhost:5106
+[22:47:53 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[22:47:55 INF] Now listening on: http://localhost:5106
+[22:47:55 INF] Application started. Press Ctrl+C to shut down.
+[22:47:55 INF] Hosting environment: Development
+[22:47:55 INF] Content root path: F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api

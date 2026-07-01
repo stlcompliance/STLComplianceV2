@@ -3,7 +3,7 @@ namespace SupplyArr.Api.Contracts;
 public sealed record AvailabilitySnapshotResponse(
     Guid AvailabilitySnapshotId,
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
@@ -14,7 +14,7 @@ public sealed record AvailabilitySnapshotResponse(
     string? ParentSupplierDisplayName,
     string SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     decimal? QuantityAvailable,
     string AvailabilityStatus,
     DateTimeOffset EffectiveFrom,
@@ -28,7 +28,7 @@ public sealed record AvailabilitySnapshotResponse(
 
 public sealed record CreateAvailabilitySnapshotRequest(
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     decimal? QuantityAvailable,
     string AvailabilityStatus,
     DateTimeOffset? EffectiveFrom,

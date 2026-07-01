@@ -6,33 +6,38 @@ namespace StaffArr.Api.Services;
 
 public sealed class PersonProvisioningService(StaffArrDbContext db)
 {
-    public async Task<StaffPerson> EnsurePersonAsync(
+    public async Task<PersonProvisioningResult> EnsureProvisionedAsync(
         Guid tenantId,
         Guid externalUserId,
         string email,
         string displayName,
         CancellationToken cancellationToken = default)
     {
+        var normalizedEmail = email.Trim();
+        var normalizedDisplayName = displayName.Trim();
+
         var existing = await db.People.FirstOrDefaultAsync(
             p => p.TenantId == tenantId && p.ExternalUserId == externalUserId,
             cancellationToken);
         if (existing is not null)
         {
-            if (!string.Equals(existing.PrimaryEmail, email, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(existing.DisplayName, displayName, StringComparison.Ordinal))
+            var wasUpdated = false;
+            if (!string.Equals(existing.PrimaryEmail, normalizedEmail, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(existing.DisplayName, normalizedDisplayName, StringComparison.Ordinal))
             {
-                existing.PrimaryEmail = email.Trim();
-                existing.DisplayName = displayName.Trim();
+                existing.PrimaryEmail = normalizedEmail;
+                existing.DisplayName = normalizedDisplayName;
                 existing.CanLoginSnapshot = true;
                 existing.HasUserAccountSnapshot = true;
                 existing.UpdatedAt = DateTimeOffset.UtcNow;
                 await db.SaveChangesAsync(cancellationToken);
+                wasUpdated = true;
             }
 
-            return existing;
+            return new PersonProvisioningResult(existing, false, wasUpdated);
         }
 
-        var (givenName, familyName) = SplitName(displayName);
+        var (givenName, familyName) = SplitName(normalizedDisplayName);
         var person = new StaffPerson
         {
             Id = Guid.NewGuid(),
@@ -42,8 +47,8 @@ public sealed class PersonProvisioningService(StaffArrDbContext db)
             FamilyName = familyName,
             LegalFirstName = givenName,
             LegalLastName = familyName,
-            DisplayName = displayName.Trim(),
-            PrimaryEmail = email.Trim(),
+            DisplayName = normalizedDisplayName,
+            PrimaryEmail = normalizedEmail,
             EmploymentStatus = "active",
             CanLoginSnapshot = true,
             HasUserAccountSnapshot = true,
@@ -53,7 +58,23 @@ public sealed class PersonProvisioningService(StaffArrDbContext db)
 
         db.People.Add(person);
         await db.SaveChangesAsync(cancellationToken);
-        return person;
+        return new PersonProvisioningResult(person, true, false);
+    }
+
+    public async Task<StaffPerson> EnsurePersonAsync(
+        Guid tenantId,
+        Guid externalUserId,
+        string email,
+        string displayName,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await EnsureProvisionedAsync(
+            tenantId,
+            externalUserId,
+            email,
+            displayName,
+            cancellationToken);
+        return result.Person;
     }
 
     private static (string GivenName, string FamilyName) SplitName(string displayName)
@@ -72,3 +93,8 @@ public sealed class PersonProvisioningService(StaffArrDbContext db)
         return (parts[0], string.Join(' ', parts.Skip(1)));
     }
 }
+
+public sealed record PersonProvisioningResult(
+    StaffPerson Person,
+    bool WasCreated,
+    bool WasUpdated);

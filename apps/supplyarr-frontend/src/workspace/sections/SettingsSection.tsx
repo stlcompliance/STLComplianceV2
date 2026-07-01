@@ -7,7 +7,7 @@ import { ApprovalReminderSettingsPanel } from '../../components/ApprovalReminder
 import { ProcurementExceptionEscalationSettingsPanel } from '../../components/ProcurementExceptionEscalationSettingsPanel'
 import { DemandProcessingSettingsPanel } from '../../components/DemandProcessingSettingsPanel'
 import { IntegrationEventSettingsPanel } from '../../components/IntegrationEventSettingsPanel'
-import { SupplierOrderSettingsPanel } from '../../components/VendorOrderSettingsPanel'
+import { SupplierOrderSettingsPanel } from '../../components/SupplierOrderSettingsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }

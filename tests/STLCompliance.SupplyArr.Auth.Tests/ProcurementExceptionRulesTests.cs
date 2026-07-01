@@ -20,10 +20,10 @@ public sealed class ProcurementExceptionRulesTests
     public void BuildResolutionNotes_includes_template_label()
     {
         var notes = ProcurementExceptionRules.BuildResolutionNotes(
-            ProcurementExceptionResolutionTemplates.VendorRequote,
-            "Vendor sent revised quote.");
-        Assert.Contains("Vendor re-quote", notes);
-        Assert.Contains("Vendor sent revised quote.", notes);
+            ProcurementExceptionResolutionTemplates.SupplierRequote,
+            "Supplier sent revised quote.");
+        Assert.Contains("Supplier re-quote", notes);
+        Assert.Contains("Supplier sent revised quote.", notes);
     }
 
     [Fact]

@@ -46,16 +46,16 @@ public sealed class AvailabilityListCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var links = await db.PartVendorLinks
+        var links = await db.PartSupplierLinks
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId)
             .ToDictionaryAsync(
-                x => $"{x.ExternalParty!.PartyKey}|{x.Part!.PartKey}",
+                x => $"{x.Supplier!.SupplierKey}|{x.Part!.PartKey}",
                 x => x.Id,
                 StringComparer.OrdinalIgnoreCase,
                 cancellationToken);
-        var existingSnapshotKeys = await db.PartVendorAvailabilitySnapshots
+        var existingSnapshotKeys = await db.PartSupplierAvailabilitySnapshots
             .Where(x => x.TenantId == tenantId)
             .Select(x => x.SnapshotKey)
             .ToListAsync(cancellationToken);
@@ -168,7 +168,7 @@ public sealed class AvailabilityListCsvImportService(
         ISet<string> seenKeys,
         List<AvailabilityListCsvImportIssue> issues)
     {
-        ValidateLength(row.LineNumber, "supplier_key", row.VendorPartyKey, 2, 128, issues);
+        ValidateLength(row.LineNumber, "supplier_key", row.SupplierKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "part_key", row.PartKey, 2, 128, issues);
         ValidateLength(row.LineNumber, "snapshot_key", row.SnapshotKey, 1, 128, issues);
         ValidateLength(row.LineNumber, "availability_status", row.AvailabilityStatus, 1, 32, issues);
@@ -307,21 +307,17 @@ public sealed class AvailabilityListCsvImportService(
     }
 
     private static IReadOnlyList<string> NormalizeHeaderFields(IReadOnlyList<string> headerFields) =>
-        headerFields
-            .Select(field => string.Equals(field, "vendor_party_key", StringComparison.OrdinalIgnoreCase)
-                ? "supplier_key"
-                : field)
-            .ToList();
+        headerFields.ToList();
 
     private static string NormalizeKey(string value) => value.Trim().ToLowerInvariant();
 
     private static string NormalizeOptional(string value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
-    private static string LinkLookupKey(ImportRow row) => $"{row.VendorPartyKey}|{row.PartKey}";
+    private static string LinkLookupKey(ImportRow row) => $"{row.SupplierKey}|{row.PartKey}";
 
     private sealed record ImportRow(
         int LineNumber,
-        string VendorPartyKey,
+        string SupplierKey,
         string PartKey,
         string SnapshotKey,
         decimal? QuantityAvailable,
@@ -330,3 +326,4 @@ public sealed class AvailabilityListCsvImportService(
         string Source,
         string Notes);
 }
+

@@ -141,7 +141,7 @@ public sealed class RoutArrAuthorizationService
             "routarr_dispatcher");
     }
 
-    public void RequireVendorReadinessOverride(ClaimsPrincipal principal)
+    public void RequireSupplierReadinessOverride(ClaimsPrincipal principal)
     {
         RequireRoutArrLaunchContext(principal);
         if (MatchesRole(
@@ -155,7 +155,7 @@ public sealed class RoutArrAuthorizationService
 
         throw new StlApiException(
             "auth.forbidden",
-            "Vendor-readiness overrides require tenant admin, RoutArr admin, or RoutArr manager access.",
+            "Supplier-readiness overrides require tenant admin, RoutArr admin, or RoutArr manager access.",
             403);
     }
 

@@ -88,7 +88,7 @@ export function SupplyReadinessDashboardPanel({
             />
             <MetricCard
               label="Restrictions / exceptions"
-              value={`${totals.activeVendorRestrictionCount} / ${totals.activeProcurementExceptionCount}`}
+              value={`${totals.activeSupplierRestrictionCount} / ${totals.activeProcurementExceptionCount}`}
             />
           </div>
 

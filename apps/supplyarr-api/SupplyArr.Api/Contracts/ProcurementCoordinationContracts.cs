@@ -17,8 +17,6 @@ public sealed record ProcurementCoordinationSummaryResponse(
     string? ParentSupplierDisplayName,
     string? SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    Guid? VendorPartyId,
-    string? VendorDisplayName,
     string DocumentStatus,
     int LineCount,
     decimal QuantityOrdered,

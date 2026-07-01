@@ -55,10 +55,6 @@ public sealed class ProcurementCoordinationRecord : IHasTenant
 
     public string SupplierServiceTypesJson { get; set; } = "[]";
 
-    public Guid? VendorPartyId { get; set; }
-
-    public string VendorDisplayName { get; set; } = string.Empty;
-
     public string DocumentStatus { get; set; } = string.Empty;
 
     public int LineCount { get; set; }

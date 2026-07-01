@@ -2,13 +2,13 @@ using STLCompliance.Shared.Data;
 
 namespace SupplyArr.Api.Entities;
 
-public sealed class PartySupplierOnboarding : IHasTenant
+public sealed class SupplierOnboarding : IHasTenant
 {
     public Guid Id { get; set; }
 
     public Guid TenantId { get; set; }
 
-    public Guid ExternalPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public string OnboardingStatus { get; set; } = SupplierOnboardingStatuses.Draft;
 
@@ -28,7 +28,7 @@ public sealed class PartySupplierOnboarding : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty ExternalParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 }
 
 public sealed class TenantSupplierOnboardingSettings : IHasTenant
@@ -70,11 +70,4 @@ public static class SupplierOnboardingStatuses
     };
 }
 
-public static class SupplierIdentityRecordTypes
-{
-    public static readonly HashSet<string> Allowed = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "vendor",
-        "supplier",
-    };
-}
+

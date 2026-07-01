@@ -3,7 +3,7 @@ namespace SupplyArr.Api.Contracts;
 public sealed record LeadTimeSnapshotResponse(
     Guid LeadTimeSnapshotId,
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
@@ -14,7 +14,7 @@ public sealed record LeadTimeSnapshotResponse(
     string? ParentSupplierDisplayName,
     string SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     int LeadTimeDays,
     DateTimeOffset EffectiveFrom,
     DateTimeOffset? EffectiveTo,
@@ -27,7 +27,7 @@ public sealed record LeadTimeSnapshotResponse(
 
 public sealed record CreateLeadTimeSnapshotRequest(
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     int LeadTimeDays,
     DateTimeOffset? EffectiveFrom,
     string? Source,

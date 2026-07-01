@@ -103,7 +103,7 @@ public sealed class RoutArrDemandStatusCallbackService(
             SupplyArrDemandStatusEventTypes.PoIssued,
             RoutArrDemandRefProcurementStatuses.PoIssued,
             null,
-            "Purchase order issued to vendor.",
+            "Purchase order issued to supplier.",
             occurredAt,
             cancellationToken);
 

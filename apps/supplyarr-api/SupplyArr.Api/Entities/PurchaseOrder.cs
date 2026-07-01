@@ -18,7 +18,7 @@ public sealed class PurchaseOrder : IHasTenant
 
     public Guid PurchaseRequestId { get; set; }
 
-    public Guid VendorPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public Guid CreatedByUserId { get; set; }
 
@@ -42,7 +42,8 @@ public sealed class PurchaseOrder : IHasTenant
 
     public PurchaseRequest PurchaseRequest { get; set; } = null!;
 
-    public ExternalParty VendorParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 
     public ICollection<PurchaseOrderLine> Lines { get; set; } = new List<PurchaseOrderLine>();
 }
+

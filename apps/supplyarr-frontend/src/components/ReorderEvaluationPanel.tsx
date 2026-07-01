@@ -192,7 +192,7 @@ export function ReorderEvaluationPanel({
                   <td className="py-2 pr-3">{suggestion.reorderPoint}</td>
                   <td className="py-2 pr-3">{suggestion.suggestedOrderQuantity}</td>
                   <td className="py-2 pr-3">
-                    {suggestion.preferredSupplierDisplayName ?? suggestion.preferredVendorDisplayName ?? '—'}
+                    {suggestion.preferredSupplierDisplayName ?? '—'}
                   </td>
                   <td className="py-2">
                     {suggestion.hasOpenPurchaseRequest ? (

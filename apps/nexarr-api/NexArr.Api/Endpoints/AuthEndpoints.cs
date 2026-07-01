@@ -48,6 +48,39 @@ public static class AuthEndpoints
         .AllowAnonymous()
         .WithName("AuthLoginV1");
 
+        static async Task<IResult> LocalDevBypassEndpoint(
+            LocalDevBypassLoginRequest request,
+            HttpContext httpContext,
+            AuthService auth,
+            CancellationToken cancellationToken)
+        {
+            var response = await auth.LocalDevBypassLoginAsync(
+                request,
+                httpContext.Request,
+                httpContext.Request.Headers.UserAgent.ToString(),
+                httpContext.Connection.RemoteIpAddress?.ToString(),
+                cancellationToken);
+
+            if (BrowserSessionCookieService.WantsCookieSession(httpContext.Request))
+            {
+                BrowserSessionCookieService.SetRefreshTokenCookie(
+                    httpContext,
+                    response.RefreshToken,
+                    response.RefreshTokenExpiresAt);
+                return Results.Ok(response with { RefreshToken = string.Empty });
+            }
+
+            return Results.Ok(response);
+        }
+
+        group.MapPost("/local-dev-bypass", LocalDevBypassEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthLocalDevBypass");
+
+        v1.MapPost("/local-dev-bypass", LocalDevBypassEndpoint)
+        .AllowAnonymous()
+        .WithName("AuthLocalDevBypassV1");
+
         static async Task<IResult> RenewEndpoint(
             RenewSessionRequest request,
             HttpContext httpContext,
@@ -61,6 +94,23 @@ public static class AuthEndpoints
 
             if (string.IsNullOrWhiteSpace(refreshToken))
             {
+                if (cookieSession)
+                {
+                    var bypass = await auth.TryAutoLocalDevBypassSessionAsync(
+                        httpContext.Request,
+                        httpContext.Request.Headers.UserAgent.ToString(),
+                        httpContext.Connection.RemoteIpAddress?.ToString(),
+                        cancellationToken);
+                    if (bypass is not null)
+                    {
+                        BrowserSessionCookieService.SetRefreshTokenCookie(
+                            httpContext,
+                            bypass.RefreshToken,
+                            bypass.RefreshTokenExpiresAt);
+                        return Results.Ok(bypass with { RefreshToken = string.Empty });
+                    }
+                }
+
                 throw new StlApiException("auth.refresh_token_missing", "Refresh token is required.", 401);
             }
 

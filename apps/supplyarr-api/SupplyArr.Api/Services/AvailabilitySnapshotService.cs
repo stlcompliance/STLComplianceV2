@@ -15,7 +15,7 @@ public sealed class AvailabilitySnapshotService(
 
     public async Task<IReadOnlyList<AvailabilitySnapshotResponse>> ListAsync(
         Guid tenantId,
-        Guid? partVendorLinkId = null,
+        Guid? partSupplierLinkId = null,
         Guid? partId = null,
         Guid? supplierId = null,
         DateTimeOffset? asOf = null,
@@ -23,19 +23,19 @@ public sealed class AvailabilitySnapshotService(
     {
         var query = BaseQuery(tenantId);
 
-        if (partVendorLinkId is not null)
+        if (partSupplierLinkId is not null)
         {
-            query = query.Where(x => x.PartVendorLinkId == partVendorLinkId);
+            query = query.Where(x => x.PartSupplierLinkId == partSupplierLinkId);
         }
 
         if (partId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.PartId == partId);
+            query = query.Where(x => x.PartSupplierLink.PartId == partId);
         }
 
         if (supplierId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.ExternalPartyId == supplierId);
+            query = query.Where(x => x.PartSupplierLink.SupplierId == supplierId);
         }
 
         if (asOf is not null)
@@ -69,7 +69,7 @@ public sealed class AvailabilitySnapshotService(
         CreateAvailabilitySnapshotRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, request.PartVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, request.PartSupplierLinkId, cancellationToken);
         var snapshotKey = NormalizeSnapshotKey(request.SnapshotKey);
         await EnsureUniqueKeyAsync(tenantId, snapshotKey, cancellationToken);
 
@@ -86,11 +86,11 @@ public sealed class AvailabilitySnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorAvailabilitySnapshot
+        var entity = new PartSupplierAvailabilitySnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             QuantityAvailable = quantityAvailable,
             AvailabilityStatus = availabilityStatus,
@@ -103,7 +103,7 @@ public sealed class AvailabilitySnapshotService(
             UpdatedAt = now,
         };
 
-        db.PartVendorAvailabilitySnapshots.Add(entity);
+        db.PartSupplierAvailabilitySnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "availability_snapshot.create",
@@ -120,17 +120,17 @@ public sealed class AvailabilitySnapshotService(
     public async Task<AvailabilitySnapshotResponse> CreateWorkerCaptureAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         decimal? quantityAvailable,
         string availabilityStatus,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, partSupplierLinkId, cancellationToken);
         var normalizedQuantity = AvailabilitySnapshotCaptureRules.NormalizeOptionalQuantity(quantityAvailable);
         var normalizedStatus = AvailabilitySnapshotCaptureRules.NormalizeOptionalStatus(availabilityStatus)
             ?? AvailabilityStatuses.InStock;
-        var snapshotKey = AvailabilitySnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+        var snapshotKey = AvailabilitySnapshotCaptureRules.BuildWorkerSnapshotKey(partSupplierLinkId, effectiveFrom);
 
         await CloseOpenSnapshotsAsync(
             tenantId,
@@ -139,24 +139,24 @@ public sealed class AvailabilitySnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorAvailabilitySnapshot
+        var entity = new PartSupplierAvailabilitySnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             QuantityAvailable = normalizedQuantity,
             AvailabilityStatus = normalizedStatus,
             EffectiveFrom = effectiveFrom,
             EffectiveTo = null,
-            Source = SnapshotSources.VendorFeed,
-            Notes = "Automated vendor catalog availability capture.",
+            Source = SnapshotSources.SupplierFeed,
+            Notes = "Automated supplier catalog availability capture.",
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        db.PartVendorAvailabilitySnapshots.Add(entity);
+        db.PartSupplierAvailabilitySnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "availability_snapshot.worker_capture",
@@ -170,17 +170,17 @@ public sealed class AvailabilitySnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
-    private IQueryable<PartVendorAvailabilitySnapshot> BaseQuery(Guid tenantId) =>
-        db.PartVendorAvailabilitySnapshots
+    private IQueryable<PartSupplierAvailabilitySnapshot> BaseQuery(Guid tenantId) =>
+        db.PartSupplierAvailabilitySnapshots
             .AsNoTracking()
-            .Include(x => x.PartVendorLink)
+            .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-            .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
-                    .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
+                    .ThenInclude(x => x.ParentSupplier)
             .Where(x => x.TenantId == tenantId);
 
-    private async Task<PartVendorAvailabilitySnapshot> LoadAsync(
+    private async Task<PartSupplierAvailabilitySnapshot> LoadAsync(
         Guid tenantId,
         Guid availabilitySnapshotId,
         CancellationToken cancellationToken)
@@ -195,36 +195,36 @@ public sealed class AvailabilitySnapshotService(
                 404);
     }
 
-    private async Task<PartVendorLink> LoadVendorLinkAsync(
+    private async Task<PartSupplierLink> LoadSupplierLinkAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         CancellationToken cancellationToken)
     {
-        var link = await db.PartVendorLinks
+        var link = await db.PartSupplierLinks
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
-                .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == partVendorLinkId,
+                x => x.TenantId == tenantId && x.Id == partSupplierLinkId,
                 cancellationToken);
 
         return link
             ?? throw new StlApiException(
-                "availability_snapshot.vendor_link.not_found",
-                "Part vendor link was not found.",
+                "availability_snapshot.supplier_link.not_found",
+                "Part supplier link was not found.",
                 404);
     }
 
     private async Task CloseOpenSnapshotsAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken)
     {
-        var openSnapshots = await db.PartVendorAvailabilitySnapshots
+        var openSnapshots = await db.PartSupplierAvailabilitySnapshots
             .Where(x =>
                 x.TenantId == tenantId
-                && x.PartVendorLinkId == partVendorLinkId
+                && x.PartSupplierLinkId == partSupplierLinkId
                 && x.EffectiveTo == null
                 && x.EffectiveFrom < effectiveFrom)
             .ToListAsync(cancellationToken);
@@ -249,7 +249,7 @@ public sealed class AvailabilitySnapshotService(
         string snapshotKey,
         CancellationToken cancellationToken)
     {
-        var exists = await db.PartVendorAvailabilitySnapshots.AnyAsync(
+        var exists = await db.PartSupplierAvailabilitySnapshots.AnyAsync(
             x => x.TenantId == tenantId && x.SnapshotKey == snapshotKey,
             cancellationToken);
 
@@ -262,29 +262,29 @@ public sealed class AvailabilitySnapshotService(
         }
     }
 
-    private static AvailabilitySnapshotResponse Map(PartVendorAvailabilitySnapshot entity)
+    private static AvailabilitySnapshotResponse Map(PartSupplierAvailabilitySnapshot entity)
     {
-        var link = entity.PartVendorLink;
+        var link = entity.PartSupplierLink;
         var part = link.Part;
-        var supplier = link.ExternalParty;
+        var supplier = link.Supplier;
         var now = DateTimeOffset.UtcNow;
         var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
         return new AvailabilitySnapshotResponse(
             entity.Id,
             entity.SnapshotKey,
-            entity.PartVendorLinkId,
+            entity.PartSupplierLinkId,
             part.Id,
             part.PartKey,
             part.DisplayName,
             supplier.Id,
-            supplier.PartyKey,
+            supplier.SupplierKey,
             supplier.DisplayName,
-            supplier.ParentExternalPartyId,
-            supplier.ParentExternalParty?.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
             supplier.UnitKind,
             serviceTypes,
-            link.VendorPartNumber,
+            link.SupplierPartNumber,
             entity.QuantityAvailable,
             entity.AvailabilityStatus,
             entity.EffectiveFrom,
@@ -383,10 +383,10 @@ public sealed class AvailabilitySnapshotService(
             SnapshotSources.Manual => SnapshotSources.Manual,
             SnapshotSources.Quote => SnapshotSources.Quote,
             SnapshotSources.Contract => SnapshotSources.Contract,
-            SnapshotSources.VendorFeed => SnapshotSources.VendorFeed,
+            SnapshotSources.SupplierFeed => SnapshotSources.SupplierFeed,
             _ => throw new StlApiException(
                 "availability_snapshot.source.invalid",
-                "Source must be manual, quote, contract, or vendor_feed.",
+                "Source must be manual, quote, contract, or supplier_feed.",
                 400),
         };
     }
@@ -394,3 +394,4 @@ public sealed class AvailabilitySnapshotService(
     private static string NormalizeNotes(string notes) =>
         notes.Length <= 1024 ? notes : notes[..1024];
 }
+

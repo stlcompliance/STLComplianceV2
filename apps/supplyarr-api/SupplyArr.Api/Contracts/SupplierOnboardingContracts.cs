@@ -15,12 +15,7 @@ public sealed record SupplierOnboardingResponse(
     string RejectionReason,
     IReadOnlyList<OnboardingDocumentRequirementStatus> DocumentRequirements,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
-{
-    public Guid ExternalPartyId => SupplierId;
-
-    public string PartyKey => SupplierKey;
-}
+    DateTimeOffset UpdatedAt);
 
 public sealed record OnboardingDocumentRequirementStatus(
     string DocumentTypeKey,
@@ -32,8 +27,7 @@ public sealed record OnboardingDocumentRequirementStatus(
 
 public sealed record StartSupplierOnboardingRequest(
     Guid SupplierId,
-    string? Notes,
-    Guid? ExternalPartyId = null);
+    string? Notes);
 
 public sealed record UpdateSupplierOnboardingNotesRequest(string Notes);
 
@@ -66,29 +60,6 @@ public record SupplierComplianceDocumentRegistrationRequest(
     string Notes,
     string? ContentBase64 = null);
 
-public sealed record RegisterPartyComplianceDocumentRequest(
-    string DocumentKey,
-    string DocumentTypeKey,
-    string Title,
-    DateTimeOffset? ExpiresAt,
-    DateTimeOffset? EffectiveAt,
-    string FileName,
-    string ContentType,
-    long SizeBytes,
-    string Notes,
-    string? ContentBase64 = null)
-    : SupplierComplianceDocumentRegistrationRequest(
-        DocumentKey,
-        DocumentTypeKey,
-        Title,
-        ExpiresAt,
-        EffectiveAt,
-        FileName,
-        ContentType,
-        SizeBytes,
-        Notes,
-        ContentBase64);
-
 public record SupplierComplianceDocumentResponse(
     Guid DocumentId,
     Guid SupplierId,
@@ -106,49 +77,6 @@ public record SupplierComplianceDocumentResponse(
     long SizeBytes,
     string Notes,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
-{
-    public Guid ExternalPartyId => SupplierId;
-}
-
-public sealed record PartyComplianceDocumentResponse(
-    Guid DocumentId,
-    Guid SupplierId,
-    string SupplierKey,
-    string SupplierDisplayName,
-    string DocumentKey,
-    string DocumentTypeKey,
-    string Title,
-    int Version,
-    string ReviewStatus,
-    DateTimeOffset? ExpiresAt,
-    DateTimeOffset? EffectiveAt,
-    string FileName,
-    string ContentType,
-    long SizeBytes,
-    string Notes,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
-    : SupplierComplianceDocumentResponse(
-        DocumentId,
-        SupplierId,
-        SupplierKey,
-        SupplierDisplayName,
-        DocumentKey,
-        DocumentTypeKey,
-        Title,
-        Version,
-        ReviewStatus,
-        ExpiresAt,
-        EffectiveAt,
-        FileName,
-        ContentType,
-        SizeBytes,
-        Notes,
-        CreatedAt,
-        UpdatedAt);
+    DateTimeOffset UpdatedAt);
 
 public record RejectSupplierComplianceDocumentRequest(string Reason);
-
-public sealed record RejectPartyComplianceDocumentRequest(string Reason)
-    : RejectSupplierComplianceDocumentRequest(Reason);

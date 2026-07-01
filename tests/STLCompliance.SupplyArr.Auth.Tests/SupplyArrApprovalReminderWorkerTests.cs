@@ -132,7 +132,10 @@ public sealed class SupplyArrApprovalReminderWorkerTests : IAsyncLifetime
         dashboardResponse.EnsureSuccessStatusCode();
         var dashboard = (await dashboardResponse.Content.ReadFromJsonAsync<ApprovalRemindersDashboardResponse>())!;
         Assert.True(dashboard.OverdueCount >= 1);
-        Assert.Contains(dashboard.Items, x => x.SubjectId == purchaseRequestId);
+        var reminder = Assert.Single(dashboard.Items, x => x.SubjectId == purchaseRequestId);
+        Assert.NotNull(reminder.SupplierId);
+        Assert.Equal("identity", reminder.SupplierUnitKind);
+        Assert.NotEmpty(reminder.SupplierServiceTypes);
     }
 
     [Fact]
@@ -165,7 +168,7 @@ public sealed class SupplyArrApprovalReminderWorkerTests : IAsyncLifetime
     private async Task<Guid> SeedSubmittedPurchaseRequestAsync()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
-        var vendorId = await SeedVendorAsync(token);
+        var supplierId = await SeedSupplierAsync(token);
         var partId = await SeedPartAsync(token);
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", token);
@@ -173,7 +176,7 @@ public sealed class SupplyArrApprovalReminderWorkerTests : IAsyncLifetime
             $"pr-{Guid.NewGuid():N}"[..16],
             "Approval reminder test PR",
             "Submitted for approval reminder worker",
-            vendorId,
+            supplierId,
             [new CreatePurchaseRequestLineRequest(partId, 4m, "Test line")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -200,19 +203,28 @@ public sealed class SupplyArrApprovalReminderWorkerTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task<Guid> SeedVendorAsync(string token)
+    private async Task<Guid> SeedSupplierAsync(string token)
     {
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"vendor-{Guid.NewGuid():N}"[..16],
-            "Reminder Vendor",
-            "Reminder Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"supplier-{Guid.NewGuid():N}"[..16],
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        return vendor.PartyId;
+            null,
+            "Reminder Supplier",
+            "Reminder Supplier LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        return supplier.SupplierId;
     }
 
     private async Task<Guid> SeedPartAsync(string token)

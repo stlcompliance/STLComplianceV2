@@ -85,14 +85,14 @@ export interface TripSummaryResponse {
   completedAt: string | null
   closedAt: string | null
   cancelledAt: string | null
-  vendorOrderId?: string | null
+  supplierOrderId?: string | null
   brokerOrderId?: string | null
   dispatchBlockReason?: string | null
-  vendorReadinessStatusSnapshot?: string | null
-  vendorQuantityReadySnapshot?: number | null
-  vendorOrderedQuantitySnapshot?: number | null
-  vendorExpectedReadyAtSnapshot?: string | null
-  vendorConfirmedReadyAtSnapshot?: string | null
+  supplierReadinessStatusSnapshot?: string | null
+  supplierQuantityReadySnapshot?: number | null
+  supplierOrderedQuantitySnapshot?: number | null
+  supplierExpectedReadyAtSnapshot?: string | null
+  supplierConfirmedReadyAtSnapshot?: string | null
   releasedForDispatchAt?: string | null
   releasedForDispatchByEventId?: string | null
   dispatchOverrideAt?: string | null
@@ -120,14 +120,14 @@ export interface TripDetailResponse {
   completedAt: string | null
   closedAt: string | null
   cancelledAt: string | null
-  vendorOrderId?: string | null
+  supplierOrderId?: string | null
   brokerOrderId?: string | null
   dispatchBlockReason?: string | null
-  vendorReadinessStatusSnapshot?: string | null
-  vendorQuantityReadySnapshot?: number | null
-  vendorOrderedQuantitySnapshot?: number | null
-  vendorExpectedReadyAtSnapshot?: string | null
-  vendorConfirmedReadyAtSnapshot?: string | null
+  supplierReadinessStatusSnapshot?: string | null
+  supplierQuantityReadySnapshot?: number | null
+  supplierOrderedQuantitySnapshot?: number | null
+  supplierExpectedReadyAtSnapshot?: string | null
+  supplierConfirmedReadyAtSnapshot?: string | null
   releasedForDispatchAt?: string | null
   releasedForDispatchByEventId?: string | null
   dispatchOverrideAt?: string | null
@@ -150,14 +150,14 @@ export interface CreateTripRequest {
   title: string
   description: string
   vehicleRefKey?: string | null
-  vendorOrderId?: string | null
+  supplierOrderId?: string | null
   brokerOrderId?: string | null
   scheduledStartAt?: string | null
   scheduledEndAt?: string | null
   loads?: CreateTripLoadRequest[] | null
 }
 
-export interface TripVendorReadinessOverrideRequest {
+export interface TripSupplierReadinessOverrideRequest {
   reason: string
 }
 
@@ -2248,7 +2248,7 @@ export interface CreateTransportationDemandRequest {
   handlingRequirements?: string[] | null
   customerRefs?: string[] | null
   orderRefs?: string[] | null
-  vendorRefs?: string[] | null
+  supplierRefs?: string[] | null
   requirementRefs?: string[] | null
   lines?: TransportationDemandLineRequest[] | null
   requirements?: TransportationDemandRequirementRequest[] | null
@@ -2332,7 +2332,7 @@ export interface TransportationDemandResponse {
   handlingRequirements: string[]
   customerRefs: string[]
   orderRefs: string[]
-  vendorRefs: string[]
+  supplierRefs: string[]
   requirementRefs: string[]
   planningStatus: string
   tenderStatus: string

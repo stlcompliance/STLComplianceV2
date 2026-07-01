@@ -2,7 +2,7 @@ import type {
   CreatePartCatalogRequest,
   CreatePartRequest,
   CreatePartSourceRequest,
-  CreatePartVendorLinkRequest,
+  CreatePartSupplierLinkRequest,
   CreateSupplierContactRequest,
   CreateSupplierRequest,
   SupplierResponse,
@@ -17,9 +17,9 @@ import type {
   SubstitutionItemResponse,
   OutboundShipmentResponse,
   CreateOutboundShipmentRequest,
-  PartVendorLinkResponse,
-  VendorCatalogApiSyncRequest,
-  VendorCatalogApiSyncResponse,
+  PartSupplierLinkResponse,
+  SupplierCatalogApiSyncRequest,
+  SupplierCatalogApiSyncResponse,
   ContractsCsvImportRequest,
   ContractsCsvImportResponse,
   SupplyContractResponse,
@@ -36,11 +36,10 @@ import type {
   CreateSupplierReturnFromStockRequest,
   CreateSupplierWarrantyClaimRequest,
   SupplierReturnResponse,
-  VendorReturnResponse,
   WarrantyClaimResponse,
   UpdateWarrantyClaimRequest,
   SubmitWarrantyClaimRequest,
-  RecordWarrantyClaimVendorResponseRequest,
+  RecordWarrantyClaimSupplierResponseRequest,
   CloseWarrantyClaimRequest,
   DenyWarrantyClaimRequest,
   CancelWarrantyClaimRequest,
@@ -107,15 +106,14 @@ import type {
   UpsertIntegrationEventSettingsRequest,
   IntegrationEventsListResponse,
   RfqResponse,
-  RfqVendorInvitationResponse,
+  RfqSupplierInvitationResponse,
   RfqQuoteComparisonResponse,
-  VendorPortalCreateQuoteRequest,
-  VendorPortalRfqResponse,
+  SupplierPortalCreateQuoteRequest,
+  SupplierPortalRfqResponse,
   SupplierQuoteResponse,
-  VendorQuoteResponse,
-  VendorEmailInboxListResponse,
-  IngestVendorEmailInboxRequest,
-  IngestVendorEmailInboxResponse,
+  SupplierEmailInboxListResponse,
+  IngestSupplierEmailInboxRequest,
+  IngestSupplierEmailInboxResponse,
   CreatePurchaseRequestFromRfqResponse,
   SupplierOnboardingResponse,
   SupplierOnboardingDocumentRequirementsResponse,
@@ -123,8 +121,6 @@ import type {
   CreateSupplierRestrictionRequest,
   LiftSupplierRestrictionRequest,
   SupplierRestrictionEnforcementResponse,
-  VendorRestrictionResponse,
-  LiftVendorRestrictionRequest,
   SupplierIncidentResponse,
   CreateSupplierIncidentRequest,
   ResolveSupplierIncidentRequest,
@@ -152,13 +148,10 @@ import type {
   SupplierReportSummaryItem,
   SupplierReportSummaryResponse,
   SupplierReportDetailResponse,
-  VendorReportSummaryItem,
-  VendorReportSummaryResponse,
-  VendorReportDetailResponse,
-  ComplianceReportSummaryResponse,
   SupplierComplianceReportSummaryResponse,
   SupplierComplianceDetailResponse,
   PartsInventoryReportSummaryResponse,
+  PartsInventoryPartSummaryItem,
   PartsInventoryPartDetailResponse,
   PartsInventoryLocationDetailResponse,
   PurchasingReportSummaryResponse,
@@ -170,70 +163,17 @@ import type { ProductImportHistoryEntry, ProductImportManifest } from '@stl/shar
 
 const apiBase = import.meta.env.VITE_SUPPLYARR_API_BASE ?? ''
 
-type RawSupplierResponse = SupplierResponse & {
-  partyId?: string
-  partyKey?: string
-  partyType?: string
-  parentPartyId?: string | null
-  parentPartyDisplayName?: string | null
-}
-type RawVendorSupplyReadinessResponse = SupplierSupplyReadinessResponse & {
-  externalPartyId?: string
-  partyKey?: string
-  partyType?: string
-}
-type RawProcurementPathReadinessResponse = ProcurementPathReadinessResponse & {
-  externalPartyId?: string
-  partyKey?: string
-}
-type RawSupplierRestrictionResponse = SupplierRestrictionResponse & {
-  supplierRestrictionId?: string
-  externalPartyId?: string
-  partyKey?: string
-  partyDisplayName?: string
-  partyType?: string
-  supplierType?: string
-}
-type RawSupplierRestrictionEnforcementResponse = SupplierRestrictionEnforcementResponse & {
-  externalPartyId?: string
-}
-type RawPricingSnapshotResponse = PricingSnapshotResponse & {
-  vendorPartyId?: string
-  vendorPartyKey?: string
-  vendorDisplayName?: string
-}
-type RawLeadTimeSnapshotResponse = LeadTimeSnapshotResponse & {
-  vendorPartyId?: string
-  vendorPartyKey?: string
-  vendorDisplayName?: string
-}
-type RawAvailabilitySnapshotResponse = AvailabilitySnapshotResponse & {
-  vendorPartyId?: string
-  vendorPartyKey?: string
-  vendorDisplayName?: string
-}
-type RawSupplierOnboardingResponse = SupplierOnboardingResponse & {
-  externalPartyId?: string
-  partyKey?: string
-  supplierType?: string | null
-  partyType?: string | null
-  supplierUnitKind?: string
-  parentSupplierId?: string | null
-  parentSupplierDisplayName?: string | null
-}
-
-type RawPartyComplianceDocumentResponse = SupplierComplianceDocumentResponse & {
-  externalPartyId?: string
-  partyKey?: string
-  partyDisplayName?: string
-}
-
-type RawSupplierIncidentResponse = SupplierIncidentResponse & {
-  externalPartyId?: string
-  partyKey?: string
-  partyDisplayName?: string
-  vendorRestrictionId?: string | null
-}
+type RawSupplierResponse = SupplierResponse
+type RawSupplierSupplyReadinessResponse = SupplierSupplyReadinessResponse
+type RawProcurementPathReadinessResponse = ProcurementPathReadinessResponse
+type RawSupplierRestrictionResponse = SupplierRestrictionResponse
+type RawSupplierRestrictionEnforcementResponse = SupplierRestrictionEnforcementResponse
+type RawPricingSnapshotResponse = PricingSnapshotResponse
+type RawLeadTimeSnapshotResponse = LeadTimeSnapshotResponse
+type RawAvailabilitySnapshotResponse = AvailabilitySnapshotResponse
+type RawSupplierOnboardingResponse = SupplierOnboardingResponse
+type RawSupplierComplianceDocumentResponse = SupplierComplianceDocumentResponse
+type RawSupplierIncidentResponse = SupplierIncidentResponse
 
 export class SupplyArrApiError extends Error {
   constructor(
@@ -254,38 +194,29 @@ type ProblemDetailsLike = {
 
 type SupplierIdentityLike = {
   supplierId?: string | null
-  externalPartyId?: string | null
-  vendorPartyId?: string | null
-  partyId?: string | null
   supplierKey?: string | null
-  vendorPartyKey?: string | null
-  partyKey?: string | null
   supplierDisplayName?: string | null
-  vendorDisplayName?: string | null
-  partyDisplayName?: string | null
 }
 
 function resolveSupplierId(raw: SupplierIdentityLike): string | null {
-  return raw.supplierId ?? raw.externalPartyId ?? raw.vendorPartyId ?? raw.partyId ?? null
+  return raw.supplierId ?? null
 }
 
 function resolveSupplierKey(raw: SupplierIdentityLike): string | null {
-  return raw.supplierKey ?? raw.vendorPartyKey ?? raw.partyKey ?? null
+  return raw.supplierKey ?? null
 }
 
 function resolveSupplierDisplayName(raw: SupplierIdentityLike): string | null {
-  return raw.supplierDisplayName ?? raw.vendorDisplayName ?? raw.partyDisplayName ?? null
+  return raw.supplierDisplayName ?? null
 }
 
 function serializeSupplierReference<T extends {
   supplierId?: string | null
   supplierUnitId?: string | null
-  vendorPartyId?: string | null
-  partyId?: string | null
 }>(request: T): T & { supplierId?: string | null } {
   return {
     ...request,
-    supplierId: request.supplierUnitId ?? request.supplierId ?? request.vendorPartyId ?? request.partyId ?? null,
+    supplierId: request.supplierUnitId ?? request.supplierId ?? null,
   }
 }
 
@@ -351,11 +282,28 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 
 function normalizeSupplierResponse(raw: RawSupplierResponse): SupplierResponse {
   return {
-    ...raw,
-    supplierId: resolveSupplierId(raw)!,
-    supplierKey: resolveSupplierKey(raw)!,
-    parentSupplierId: raw.parentSupplierId ?? raw.parentPartyId ?? null,
-    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? raw.parentPartyDisplayName ?? null,
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    unitKind: raw.unitKind,
+    displayName: raw.displayName,
+    legalName: raw.legalName,
+    taxIdentifier: raw.taxIdentifier,
+    approvalStatus: raw.approvalStatus,
+    status: raw.status,
+    notes: raw.notes,
+    serviceTypes: raw.serviceTypes ?? [],
+    addressLine1: raw.addressLine1,
+    addressLine2: raw.addressLine2,
+    locality: raw.locality,
+    regionCode: raw.regionCode,
+    postalCode: raw.postalCode,
+    countryCode: raw.countryCode,
+    childUnitCount: raw.childUnitCount ?? 0,
+    contacts: raw.contacts ?? [],
+    createdAt: raw.createdAt,
+    updatedAt: raw.updatedAt,
   }
 }
 
@@ -366,8 +314,8 @@ function normalizeSupplierResponses(raw: RawSupplierResponse[]): SupplierRespons
 function normalizeSupplierOnboarding(raw: RawSupplierOnboardingResponse): SupplierOnboardingResponse {
   return {
     ...raw,
-    supplierId: resolveSupplierId(raw)!,
-    supplierKey: resolveSupplierKey(raw)!,
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     parentSupplierId: raw.parentSupplierId ?? null,
     parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
@@ -378,16 +326,16 @@ function normalizeSupplierOnboardings(raw: RawSupplierOnboardingResponse[]): Sup
   return raw.map(normalizeSupplierOnboarding)
 }
 
-function normalizeSupplierComplianceDocument(raw: RawPartyComplianceDocumentResponse): SupplierComplianceDocumentResponse {
+function normalizeSupplierComplianceDocument(raw: RawSupplierComplianceDocumentResponse): SupplierComplianceDocumentResponse {
   return {
     ...raw,
-    supplierId: resolveSupplierId(raw)!,
-    supplierKey: raw.supplierKey ?? resolveSupplierKey(raw)!,
-    supplierDisplayName: raw.supplierDisplayName ?? raw.partyDisplayName ?? '',
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
+    supplierDisplayName: raw.supplierDisplayName,
   }
 }
 
-function normalizeSupplierComplianceDocuments(raw: RawPartyComplianceDocumentResponse[]): SupplierComplianceDocumentResponse[] {
+function normalizeSupplierComplianceDocuments(raw: RawSupplierComplianceDocumentResponse[]): SupplierComplianceDocumentResponse[] {
   return raw.map(normalizeSupplierComplianceDocument)
 }
 
@@ -411,7 +359,7 @@ function serializeSupplierRequest(request: CreateSupplierRequest | UpdateSupplie
   }
 }
 
-function normalizeSupplierReadiness(raw: RawVendorSupplyReadinessResponse): SupplierSupplyReadinessResponse {
+function normalizeSupplierReadiness(raw: RawSupplierSupplyReadinessResponse): SupplierSupplyReadinessResponse {
   return {
     ...raw,
     supplierId: resolveSupplierId(raw)!,
@@ -434,7 +382,6 @@ function normalizeProcurementPathReadiness(raw: RawProcurementPathReadinessRespo
 function normalizeSupplierRestriction(raw: RawSupplierRestrictionResponse): SupplierRestrictionResponse {
   return {
     ...raw,
-    supplierRestrictionId: raw.supplierRestrictionId ?? raw.restrictionId,
     supplierId: resolveSupplierId(raw)!,
     supplierKey: resolveSupplierKey(raw)!,
     supplierDisplayName: resolveSupplierDisplayName(raw)!,
@@ -464,7 +411,6 @@ function normalizeSupplierIncident(raw: RawSupplierIncidentResponse): SupplierIn
     supplierDisplayName: resolveSupplierDisplayName(raw)!,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
-    supplierRestrictionId: raw.supplierRestrictionId ?? raw.vendorRestrictionId,
   }
 }
 
@@ -472,7 +418,7 @@ function normalizeSupplierIncidents(raw: RawSupplierIncidentResponse[]): Supplie
   return raw.map(normalizeSupplierIncident)
 }
 
-function normalizePartVendorLink(raw: PartVendorLinkResponse): PartVendorLinkResponse {
+function normalizePartSupplierLink(raw: PartSupplierLinkResponse): PartSupplierLinkResponse {
   return {
     ...raw,
     supplierId: resolveSupplierId(raw)!,
@@ -480,16 +426,13 @@ function normalizePartVendorLink(raw: PartVendorLinkResponse): PartVendorLinkRes
     supplierDisplayName: resolveSupplierDisplayName(raw)!,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
-    partyId: raw.partyId ?? resolveSupplierId(raw) ?? undefined,
-    partyKey: raw.partyKey ?? resolveSupplierKey(raw) ?? undefined,
-    partyDisplayName: raw.partyDisplayName ?? resolveSupplierDisplayName(raw) ?? undefined,
   }
 }
 
 function normalizePartResponse(raw: PartResponse): PartResponse {
   return {
     ...raw,
-    vendorLinks: raw.vendorLinks.map(normalizePartVendorLink),
+    supplierLinks: raw.supplierLinks.map(normalizePartSupplierLink),
   }
 }
 
@@ -528,15 +471,23 @@ function normalizeEmergencyPurchaseResponses(raw: EmergencyPurchaseResponse[]): 
 function normalizeProcurementCoordinationSummary(
   raw: ProcurementCoordinationSummaryResponse,
 ): ProcurementCoordinationSummaryResponse {
-  const supplierId = resolveSupplierId(raw)
   return {
     ...raw,
-    supplierId,
-    supplierKey: resolveSupplierKey(raw),
-    supplierDisplayName: resolveSupplierDisplayName(raw),
     parentSupplierId: raw.parentSupplierId ?? null,
     parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
-    supplierUnitKind: raw.supplierUnitKind ?? (supplierId ? 'identity' : null),
+    supplierUnitKind: raw.supplierUnitKind ?? (raw.supplierId ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeProcurementExceptionResponse(
+  raw: ProcurementExceptionResponse,
+): ProcurementExceptionResponse {
+  return {
+    ...raw,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? (raw.supplierId ? 'identity' : null),
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
 }
@@ -582,9 +533,6 @@ function normalizePurchasingDocumentSummaryItem(raw: PurchasingDocumentSummaryIt
     supplierDisplayName: resolveSupplierDisplayName(raw) ?? '',
     supplierUnitKind: raw.supplierUnitKind ?? (hasSupplierIdentity ? 'identity' : null),
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
-    vendorPartyId: raw.vendorPartyId ?? supplierId,
-    vendorPartyKey: raw.vendorPartyKey ?? raw.supplierKey ?? null,
-    vendorDisplayName: raw.vendorDisplayName ?? raw.supplierDisplayName ?? null,
   }
 }
 
@@ -596,8 +544,8 @@ function normalizePurchasingReportSummary(
     analytics: {
       ...raw.analytics,
       supplierDocumentExpiringSoonCount:
-        raw.analytics.supplierDocumentExpiringSoonCount ?? raw.analytics.vendorDocumentExpiringSoonCount,
-      blockedSupplierCount: raw.analytics.blockedSupplierCount ?? raw.analytics.blockedVendorCount,
+        raw.analytics.supplierDocumentExpiringSoonCount ?? 0,
+      blockedSupplierCount: raw.analytics.blockedSupplierCount ?? 0,
     },
     documents: raw.documents.map(normalizePurchasingDocumentSummaryItem),
   }
@@ -621,23 +569,9 @@ function normalizePurchasingPurchaseOrderDetail(
   }
 }
 
-function normalizeRfqInvitation(raw: RfqVendorInvitationResponse): RfqVendorInvitationResponse {
+function normalizeRfqInvitation(raw: RfqSupplierInvitationResponse): RfqSupplierInvitationResponse {
   return {
     ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId,
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
-    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
-    supplierServiceTypes: raw.supplierServiceTypes ?? [],
-  }
-}
-
-function normalizeVendorQuote(raw: VendorQuoteResponse): VendorQuoteResponse {
-  return {
-    ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId,
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
@@ -645,18 +579,15 @@ function normalizeVendorQuote(raw: VendorQuoteResponse): VendorQuoteResponse {
 
 function normalizeSupplierQuote(raw: SupplierQuoteResponse): SupplierQuoteResponse {
   return {
-    ...normalizeVendorQuote(raw),
-    supplierQuoteId: raw.supplierQuoteId ?? raw.vendorQuoteId,
+    ...raw,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
 }
 
 function normalizeRfq(raw: RfqResponse): RfqResponse {
   return {
     ...raw,
-    selectedSupplierQuoteId: raw.selectedSupplierQuoteId ?? raw.selectedVendorQuoteId ?? null,
-    awardedSupplierId: raw.awardedSupplierId ?? raw.awardedVendorPartyId ?? null,
-    awardedSupplierKey: raw.awardedSupplierKey ?? raw.awardedVendorPartyKey ?? null,
-    awardedSupplierDisplayName: raw.awardedSupplierDisplayName ?? raw.awardedVendorDisplayName ?? null,
     awardedSupplierUnitKind: raw.awardedSupplierUnitKind ?? null,
     awardedSupplierServiceTypes: raw.awardedSupplierServiceTypes ?? [],
     invitations: raw.invitations.map(normalizeRfqInvitation),
@@ -664,12 +595,9 @@ function normalizeRfq(raw: RfqResponse): RfqResponse {
   }
 }
 
-function normalizeVendorPortalRfq(raw: VendorPortalRfqResponse): VendorPortalRfqResponse {
+function normalizeSupplierPortalRfq(raw: SupplierPortalRfqResponse): SupplierPortalRfqResponse {
   return {
     ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId,
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey,
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
@@ -682,33 +610,21 @@ function normalizeRfqQuoteComparison(raw: RfqQuoteComparisonResponse): RfqQuoteC
       ...line,
       quotes: line.quotes.map((quote) => ({
         ...quote,
-        supplierId: quote.supplierId ?? quote.vendorPartyId,
-        supplierKey: quote.supplierKey ?? quote.vendorPartyKey,
-        supplierDisplayName: quote.supplierDisplayName ?? quote.vendorDisplayName,
         supplierUnitKind: quote.supplierUnitKind ?? 'identity',
         supplierServiceTypes: quote.supplierServiceTypes ?? [],
       })),
     })),
     quoteSummaries: raw.quoteSummaries.map((quote) => ({
       ...quote,
-      supplierId: quote.supplierId ?? quote.vendorPartyId,
-      supplierKey: quote.supplierKey ?? quote.vendorPartyKey,
-      supplierDisplayName: quote.supplierDisplayName ?? quote.vendorDisplayName,
       supplierUnitKind: quote.supplierUnitKind ?? 'identity',
       supplierServiceTypes: quote.supplierServiceTypes ?? [],
     })),
   }
 }
 
-function normalizeVendorReturn(raw: VendorReturnResponse): VendorReturnResponse {
-  const supplierId = (raw.supplierId ?? raw.vendorPartyId ?? undefined) as string | undefined
-  const supplierKey = (raw.supplierKey ?? raw.vendorPartyKey ?? undefined) as string | undefined
-  const supplierDisplayName = (raw.supplierDisplayName ?? raw.vendorDisplayName ?? undefined) as string | undefined
+function normalizeSupplierReturn(raw: SupplierReturnResponse): SupplierReturnResponse {
   return {
     ...raw,
-    supplierId,
-    supplierKey,
-    supplierDisplayName,
     parentSupplierId: raw.parentSupplierId ?? null,
     parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
@@ -716,19 +632,9 @@ function normalizeVendorReturn(raw: VendorReturnResponse): VendorReturnResponse 
   }
 }
 
-function normalizeSupplierReturn(raw: SupplierReturnResponse): SupplierReturnResponse {
-  return normalizeVendorReturn(raw)
-}
-
 function normalizeWarrantyClaim(raw: WarrantyClaimResponse): WarrantyClaimResponse {
-  const supplierId = (raw.supplierId ?? raw.vendorPartyId ?? undefined) as string | undefined
-  const supplierKey = (raw.supplierKey ?? raw.vendorPartyKey ?? undefined) as string | undefined
-  const supplierDisplayName = (raw.supplierDisplayName ?? raw.vendorDisplayName ?? undefined) as string | undefined
   return {
     ...raw,
-    supplierId,
-    supplierKey,
-    supplierDisplayName,
     parentSupplierId: raw.parentSupplierId ?? null,
     parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
@@ -739,9 +645,9 @@ function normalizeWarrantyClaim(raw: WarrantyClaimResponse): WarrantyClaimRespon
 function normalizePricingSnapshot(raw: RawPricingSnapshotResponse): PricingSnapshotResponse {
   return {
     ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
+    supplierDisplayName: raw.supplierDisplayName,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
@@ -750,9 +656,9 @@ function normalizePricingSnapshot(raw: RawPricingSnapshotResponse): PricingSnaps
 function normalizeLeadTimeSnapshot(raw: RawLeadTimeSnapshotResponse): LeadTimeSnapshotResponse {
   return {
     ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
+    supplierDisplayName: raw.supplierDisplayName,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
   }
@@ -761,20 +667,102 @@ function normalizeLeadTimeSnapshot(raw: RawLeadTimeSnapshotResponse): LeadTimeSn
 function normalizeAvailabilitySnapshot(raw: RawAvailabilitySnapshotResponse): AvailabilitySnapshotResponse {
   return {
     ...raw,
-    supplierId: raw.supplierId ?? raw.vendorPartyId ?? '',
-    supplierKey: raw.supplierKey ?? raw.vendorPartyKey ?? '',
-    supplierDisplayName: raw.supplierDisplayName ?? raw.vendorDisplayName ?? '',
+    supplierId: raw.supplierId,
+    supplierKey: raw.supplierKey,
+    supplierDisplayName: raw.supplierDisplayName,
     supplierUnitKind: raw.supplierUnitKind ?? 'identity',
     supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizePendingSnapshotCaptureItem<
+  T extends {
+    partSupplierLinkId: string
+    partId: string
+    partKey: string
+    partDisplayName: string
+    supplierPartNumber: string
+    lastCapturedAt: string | null
+  } & SupplierIdentityLike
+>(
+  raw: T,
+): T & { supplierId: string; supplierKey: string; supplierDisplayName: string } {
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw) ?? '',
+    supplierKey: resolveSupplierKey(raw) ?? '',
+    supplierDisplayName: resolveSupplierDisplayName(raw) ?? '',
+  }
+}
+
+function normalizeApprovalReminderSummary(
+  raw: ApprovalReminderSummaryResponse & SupplierIdentityLike,
+): ApprovalReminderSummaryResponse {
+  const hasSupplierIdentity = Boolean(
+    resolveSupplierId(raw) ?? resolveSupplierDisplayName(raw) ?? resolveSupplierKey(raw),
+  )
+
+  return {
+    ...raw,
+    supplierId: resolveSupplierId(raw),
+    supplierKey: resolveSupplierKey(raw),
+    supplierDisplayName: resolveSupplierDisplayName(raw),
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? (hasSupplierIdentity ? 'identity' : null),
+    supplierServiceTypes: raw.supplierServiceTypes ?? [],
+  }
+}
+
+function normalizeApprovalRemindersDashboard(
+  raw: ApprovalRemindersDashboardResponse,
+): ApprovalRemindersDashboardResponse {
+  return {
+    ...raw,
+    items: raw.items.map((item) => normalizeApprovalReminderSummary(item as ApprovalReminderSummaryResponse & SupplierIdentityLike)),
   }
 }
 
 function normalizeReorderSuggestion(raw: ReorderSuggestionResponse): ReorderSuggestionResponse {
   return {
     ...raw,
-    preferredSupplierId: raw.preferredSupplierId ?? raw.preferredVendorPartyId,
-    preferredSupplierKey: raw.preferredSupplierKey ?? raw.preferredVendorPartyKey,
-    preferredSupplierDisplayName: raw.preferredSupplierDisplayName ?? raw.preferredVendorDisplayName,
+    preferredSupplierId: raw.preferredSupplierId ?? null,
+    preferredSupplierKey: raw.preferredSupplierKey ?? null,
+    preferredSupplierDisplayName: raw.preferredSupplierDisplayName ?? null,
+  }
+}
+
+function normalizePartsInventoryPartSummary(
+  raw: PartsInventoryPartSummaryItem,
+): PartsInventoryPartSummaryItem {
+  return {
+    ...raw,
+    supplierLinkCount: raw.supplierLinkCount ?? 0,
+  }
+}
+
+function normalizePartsInventoryPartDetail(
+  raw: PartsInventoryPartDetailResponse,
+): PartsInventoryPartDetailResponse {
+  return {
+    ...raw,
+    summary: normalizePartsInventoryPartSummary(raw.summary),
+    supplierLinks: raw.supplierLinks.map((link) => ({
+      ...link,
+      supplierUnitKind: link.supplierUnitKind ?? 'identity',
+      supplierServiceTypes: link.supplierServiceTypes ?? [],
+      parentSupplierId: link.parentSupplierId ?? null,
+      parentSupplierDisplayName: link.parentSupplierDisplayName ?? null,
+    })),
+  }
+}
+
+function normalizePartsInventoryReportSummary(
+  raw: PartsInventoryReportSummaryResponse,
+): PartsInventoryReportSummaryResponse {
+  return {
+    ...raw,
+    parts: raw.parts.map(normalizePartsInventoryPartSummary),
   }
 }
 
@@ -785,96 +773,29 @@ function normalizeReorderEvaluation(raw: ReorderEvaluationResponse): ReorderEval
   }
 }
 
-function normalizeSupplierReportSummaryItem(
-  raw: SupplierReportSummaryItem | VendorReportSummaryItem,
-): SupplierReportSummaryItem {
-  const supplierId =
-    ('supplierId' in raw ? raw.supplierId : undefined) ??
-    ('vendorPartyId' in raw ? raw.vendorPartyId : undefined) ??
-    ''
-  const supplierKey =
-    ('supplierKey' in raw ? raw.supplierKey : undefined) ??
-    ('partyKey' in raw ? raw.partyKey : undefined) ??
-    ''
-  const supplierDisplayName =
-    ('supplierDisplayName' in raw ? raw.supplierDisplayName : undefined) ?? raw.displayName ?? ''
-
+function normalizeSupplierReportSummaryItem(raw: SupplierReportSummaryItem): SupplierReportSummaryItem {
   return {
-    supplierId,
-    supplierKey,
-    supplierDisplayName,
-    parentSupplierId: 'parentSupplierId' in raw ? raw.parentSupplierId ?? null : null,
-    parentSupplierDisplayName:
-      'parentSupplierDisplayName' in raw ? raw.parentSupplierDisplayName ?? null : null,
-    supplierUnitKind:
-      'supplierUnitKind' in raw && raw.supplierUnitKind ? raw.supplierUnitKind : 'identity',
-    supplierServiceTypes:
-      'supplierServiceTypes' in raw && Array.isArray(raw.supplierServiceTypes)
-        ? raw.supplierServiceTypes
-        : [],
-    approvalStatus: raw.approvalStatus,
-    status: raw.status,
-    partVendorLinkCount: raw.partVendorLinkCount,
-    preferredPartLinkCount: raw.preferredPartLinkCount,
-    openPurchaseRequestCount: raw.openPurchaseRequestCount,
-    openPurchaseOrderCount: raw.openPurchaseOrderCount,
-    issuedPurchaseOrderCount: raw.issuedPurchaseOrderCount,
-    postedReceivingReceiptCount: raw.postedReceivingReceiptCount,
-    openBackorderCount: raw.openBackorderCount,
-    openPurchaseOrderLineQuantity: raw.openPurchaseOrderLineQuantity,
-    averageLeadTimeDays: raw.averageLeadTimeDays,
-    leadTimeSampleCount: raw.leadTimeSampleCount,
-    onTimeDeliveryRate: raw.onTimeDeliveryRate,
-    onTimeDeliverySampleCount: raw.onTimeDeliverySampleCount,
-    lastPurchaseOrderAt: raw.lastPurchaseOrderAt,
-    lastReceivingPostedAt: raw.lastReceivingPostedAt,
-    vendorPartyId: ('vendorPartyId' in raw ? raw.vendorPartyId : undefined) ?? supplierId,
-    partyKey: 'partyKey' in raw ? raw.partyKey : supplierKey,
-    displayName: raw.displayName ?? supplierDisplayName,
+    ...raw,
+    parentSupplierId: raw.parentSupplierId ?? null,
+    parentSupplierDisplayName: raw.parentSupplierDisplayName ?? null,
+    supplierUnitKind: raw.supplierUnitKind ?? 'identity',
+    supplierServiceTypes: Array.isArray(raw.supplierServiceTypes) ? raw.supplierServiceTypes : [],
   }
 }
 
-function normalizeSupplierReportSummary(
-  raw: SupplierReportSummaryResponse | VendorReportSummaryResponse,
-): SupplierReportSummaryResponse {
-  if ('suppliers' in raw) {
-    return {
-      ...raw,
-      suppliers: raw.suppliers.map(normalizeSupplierReportSummaryItem),
-    }
-  }
-
+function normalizeSupplierReportSummary(raw: SupplierReportSummaryResponse): SupplierReportSummaryResponse {
   return {
-    generatedAt: raw.generatedAt,
-    approvalStatusCounts: raw.approvalStatusCounts,
-    suppliers: raw.vendors.map(normalizeSupplierReportSummaryItem),
+    ...raw,
+    suppliers: raw.suppliers.map(normalizeSupplierReportSummaryItem),
   }
 }
 
-function normalizeSupplierReportDetail(
-  raw: SupplierReportDetailResponse | VendorReportDetailResponse,
-): SupplierReportDetailResponse {
+function normalizeSupplierReportDetail(raw: SupplierReportDetailResponse): SupplierReportDetailResponse {
   const normalizedSummary = normalizeSupplierReportSummaryItem(raw.summary)
 
-  if ('supplierId' in raw.summary && raw.summary.supplierId) {
-    return {
-      ...raw,
-      summary: normalizedSummary,
-      partLinks: raw.partLinks.map((partLink) => ({
-        ...partLink,
-        supplierId: ('supplierId' in partLink ? partLink.supplierId : undefined) ?? normalizedSummary.supplierId,
-        supplierKey: ('supplierKey' in partLink ? partLink.supplierKey : undefined) ?? normalizedSummary.supplierKey,
-        supplierDisplayName:
-          ('supplierDisplayName' in partLink ? partLink.supplierDisplayName : undefined) ??
-          normalizedSummary.supplierDisplayName,
-      })),
-    }
-  }
-
   return {
+    ...raw,
     summary: normalizedSummary,
-    recentPurchaseRequests: raw.recentPurchaseRequests,
-    recentPurchaseOrders: raw.recentPurchaseOrders,
     partLinks: raw.partLinks.map((partLink) => ({
       ...partLink,
       supplierId: normalizedSummary.supplierId,
@@ -1040,20 +961,19 @@ export async function getParts(accessToken: string): Promise<PartResponse[]> {
   return raw.map(normalizePartResponse)
 }
 
-export async function syncVendorCatalogApi(
+export async function syncSupplierCatalogApi(
   accessToken: string,
-  request: VendorCatalogApiSyncRequest,
-): Promise<VendorCatalogApiSyncResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-catalogs/sync`, {
+  request: SupplierCatalogApiSyncRequest,
+): Promise<SupplierCatalogApiSyncResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-catalogs/sync`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify({
       ...request,
       supplierKey: resolveSupplierKey(request),
-      vendorPartyKey: resolveSupplierKey(request),
     }),
   })
-  return parseJsonResponse<VendorCatalogApiSyncResponse>(response, 'Failed to sync vendor catalog API feed')
+  return parseJsonResponse<SupplierCatalogApiSyncResponse>(response, 'Failed to sync supplier catalog API feed')
 }
 
 export async function getSubstitutions(
@@ -1104,19 +1024,19 @@ export async function createPartSource(
   return parseJsonResponse<PartSourceResponse>(response, 'Failed to add part source')
 }
 
-export async function createPartVendorLink(
+export async function createPartSupplierLink(
   accessToken: string,
   partId: string,
-  request: CreatePartVendorLinkRequest,
-): Promise<PartVendorLinkResponse> {
+  request: CreatePartSupplierLinkRequest,
+): Promise<PartSupplierLinkResponse> {
   const payload = serializeSupplierReference(request)
   const response = await fetch(`${apiBase}/api/parts/${partId}/supplier-links`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return normalizePartVendorLink(
-    await parseJsonResponse<PartVendorLinkResponse>(response, 'Failed to link vendor to part'),
+  return normalizePartSupplierLink(
+    await parseJsonResponse<PartSupplierLinkResponse>(response, 'Failed to link supplier to part'),
   )
 }
 
@@ -1187,33 +1107,33 @@ const supplierPortalApiPath = `${apiBase}/api/v1/supplier-portal`
 export async function getSupplierPortalRfq(
   rfqId: string,
   accessCode: string,
-): Promise<VendorPortalRfqResponse> {
+): Promise<SupplierPortalRfqResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(`${supplierPortalApiPath}/rfqs/${rfqId}${query}`)
-  return normalizeVendorPortalRfq(
-    await parseJsonResponse<VendorPortalRfqResponse>(response, 'Failed to load supplier portal RFQ'),
+  return normalizeSupplierPortalRfq(
+    await parseJsonResponse<SupplierPortalRfqResponse>(response, 'Failed to load supplier portal RFQ'),
   )
 }
 
 export async function createSupplierPortalQuote(
   rfqId: string,
   accessCode: string,
-  payload: VendorPortalCreateQuoteRequest,
-): Promise<VendorQuoteResponse> {
+  payload: SupplierPortalCreateQuoteRequest,
+): Promise<SupplierQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(`${supplierPortalApiPath}/rfqs/${rfqId}/quotes${query}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  return normalizeVendorQuote(
-    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to create supplier portal quote'),
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to create supplier portal quote'),
   )
 }
 
 export async function upsertSupplierPortalQuoteLine(
   rfqId: string,
-  vendorQuoteId: string,
+  supplierQuoteId: string,
   accessCode: string,
   payload: {
     rfqLineId: string
@@ -1222,91 +1142,62 @@ export async function upsertSupplierPortalQuoteLine(
     leadTimeDays?: number | null
     notes: string
   },
-): Promise<VendorQuoteResponse> {
+): Promise<SupplierQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(
-    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${vendorQuoteId}/lines${query}`,
+    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${supplierQuoteId}/lines${query}`,
     {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     },
   )
-  return normalizeVendorQuote(
-    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to save supplier portal quote line'),
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to save supplier portal quote line'),
   )
 }
 
 export async function submitSupplierPortalQuote(
   rfqId: string,
-  vendorQuoteId: string,
+  supplierQuoteId: string,
   accessCode: string,
-): Promise<VendorQuoteResponse> {
+): Promise<SupplierQuoteResponse> {
   const query = `?accessCode=${encodeURIComponent(accessCode)}`
   const response = await fetch(
-    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${vendorQuoteId}/submit${query}`,
+    `${supplierPortalApiPath}/rfqs/${rfqId}/quotes/${supplierQuoteId}/submit${query}`,
     { method: 'POST' },
   )
-  return normalizeVendorQuote(
-    await parseJsonResponse<VendorQuoteResponse>(response, 'Failed to submit supplier portal quote'),
+  return normalizeSupplierQuote(
+    await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to submit supplier portal quote'),
   )
 }
 
-export const getVendorPortalRfq = getSupplierPortalRfq
-export const createVendorPortalQuote = createSupplierPortalQuote
-export const upsertVendorPortalQuoteLine = upsertSupplierPortalQuoteLine
-export const submitVendorPortalQuote = submitSupplierPortalQuote
-
-export async function getVendorEmailInbox(
+export async function getSupplierEmailInbox(
   accessToken: string,
   limit = 25,
-): Promise<VendorEmailInboxListResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-email-inbox?limit=${encodeURIComponent(limit)}`, {
+): Promise<SupplierEmailInboxListResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-email-inbox?limit=${encodeURIComponent(limit)}`, {
     headers: authHeaders(accessToken),
   })
-  const raw = await parseJsonResponse<VendorEmailInboxListResponse>(
+  return parseJsonResponse<SupplierEmailInboxListResponse>(
     response,
-    'Failed to load vendor email inbox',
+    'Failed to load supplier email inbox',
   )
-  return {
-    ...raw,
-    items: raw.items.map((item) => ({
-      ...item,
-      supplierId: item.supplierId ?? item.vendorPartyId ?? null,
-      supplierKey: item.supplierKey ?? item.vendorPartyKey ?? null,
-      supplierDisplayName: item.supplierDisplayName ?? item.vendorDisplayName ?? null,
-      vendorPartyId: item.vendorPartyId ?? item.supplierId ?? null,
-      vendorPartyKey: item.vendorPartyKey ?? item.supplierKey ?? null,
-      vendorDisplayName: item.vendorDisplayName ?? item.supplierDisplayName ?? null,
-    })),
-  }
 }
 
-export async function ingestVendorEmailInbox(
+export async function ingestSupplierEmailInbox(
   accessToken: string,
-  payload: IngestVendorEmailInboxRequest,
-): Promise<IngestVendorEmailInboxResponse> {
-  const response = await fetch(`${apiBase}/api/v1/vendor-email-inbox`, {
+  payload: IngestSupplierEmailInboxRequest,
+): Promise<IngestSupplierEmailInboxResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-email-inbox`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  const raw = await parseJsonResponse<IngestVendorEmailInboxResponse>(
+  return parseJsonResponse<IngestSupplierEmailInboxResponse>(
     response,
-    'Failed to ingest vendor email',
+    'Failed to ingest supplier email',
   )
-  return {
-    ...raw,
-    message: {
-      ...raw.message,
-      supplierId: raw.message.supplierId ?? raw.message.vendorPartyId ?? null,
-      supplierKey: raw.message.supplierKey ?? raw.message.vendorPartyKey ?? null,
-      supplierDisplayName: raw.message.supplierDisplayName ?? raw.message.vendorDisplayName ?? null,
-      vendorPartyId: raw.message.vendorPartyId ?? raw.message.supplierId ?? null,
-      vendorPartyKey: raw.message.vendorPartyKey ?? raw.message.supplierKey ?? null,
-      vendorDisplayName: raw.message.vendorDisplayName ?? raw.message.supplierDisplayName ?? null,
-    },
-  }
 }
 
 export async function createRfq(
@@ -1347,8 +1238,6 @@ export async function inviteRfqSuppliers(
   return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to invite suppliers'))
 }
 
-export const inviteRfqVendors = inviteRfqSuppliers
-
 export async function createSupplierQuote(
   accessToken: string,
   rfqId: string,
@@ -1363,8 +1252,6 @@ export async function createSupplierQuote(
     await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to create supplier quote'),
   )
 }
-
-export const createVendorQuote = createSupplierQuote
 
 export async function upsertSupplierQuoteLine(
   accessToken: string,
@@ -1388,8 +1275,6 @@ export async function upsertSupplierQuoteLine(
   )
 }
 
-export const upsertVendorQuoteLine = upsertSupplierQuoteLine
-
 export async function submitSupplierQuote(
   accessToken: string,
   rfqId: string,
@@ -1403,8 +1288,6 @@ export async function submitSupplierQuote(
     await parseJsonResponse<SupplierQuoteResponse>(response, 'Failed to submit supplier quote'),
   )
 }
-
-export const submitVendorQuote = submitSupplierQuote
 
 export async function getRfqQuoteComparison(
   accessToken: string,
@@ -1430,8 +1313,6 @@ export async function selectRfqSupplierQuote(
   })
   return normalizeRfq(await parseJsonResponse<RfqResponse>(response, 'Failed to select supplier quote'))
 }
-
-export const selectRfqVendorQuote = selectRfqSupplierQuote
 
 export async function createPurchaseRequestFromRfq(
   accessToken: string,
@@ -1508,13 +1389,11 @@ export async function getPurchaseOrders(
 
 export async function getContractRecords(
   accessToken: string,
-  options?: { supplierId?: string; vendorPartyId?: string; status?: string; limit?: number },
+  options?: { supplierId?: string; status?: string; limit?: number },
 ): Promise<SupplyContractResponse[]> {
   const params = new URLSearchParams()
   if (options?.supplierId) {
     params.set('supplierId', options.supplierId)
-  } else if (options?.vendorPartyId) {
-    params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.status) {
     params.set('status', options.status)
@@ -1836,7 +1715,6 @@ export async function getSupplierReturns(
   options?: {
     status?: string
     supplierId?: string
-    vendorPartyId?: string
     purchaseOrderId?: string
     partId?: string
   },
@@ -1847,9 +1725,6 @@ export async function getSupplierReturns(
   }
   if (options?.supplierId) {
     params.set('supplierId', options.supplierId)
-  }
-  if (options?.vendorPartyId) {
-    params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.purchaseOrderId) {
     params.set('purchaseOrderId', options.purchaseOrderId)
@@ -1865,8 +1740,6 @@ export async function getSupplierReturns(
   return returns.map(normalizeSupplierReturn)
 }
 
-export const getVendorReturns = getSupplierReturns
-
 export async function createSupplierReturnFromStock(
   accessToken: string,
   request: CreateSupplierReturnFromStockRequest,
@@ -1880,8 +1753,6 @@ export async function createSupplierReturnFromStock(
     await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to create supplier return'),
   )
 }
-
-export const createVendorReturnFromStock = createSupplierReturnFromStock
 
 export async function createSupplierReturnFromPurchaseOrderLine(
   accessToken: string,
@@ -1901,8 +1772,6 @@ export async function createSupplierReturnFromPurchaseOrderLine(
   )
 }
 
-export const createVendorReturnFromPurchaseOrderLine = createSupplierReturnFromPurchaseOrderLine
-
 export async function postSupplierReturn(
   accessToken: string,
   returnId: string,
@@ -1915,8 +1784,6 @@ export async function postSupplierReturn(
     await parseJsonResponse<SupplierReturnResponse>(response, 'Failed to post supplier return'),
   )
 }
-
-export const postVendorReturn = postSupplierReturn
 
 export async function cancelSupplierReturn(
   accessToken: string,
@@ -1933,14 +1800,11 @@ export async function cancelSupplierReturn(
   )
 }
 
-export const cancelVendorReturn = cancelSupplierReturn
-
 export async function listSupplierWarrantyClaims(
   accessToken: string,
   options?: {
     status?: string
     supplierId?: string
-    vendorPartyId?: string
     partId?: string
     purchaseOrderId?: string
   },
@@ -1948,7 +1812,6 @@ export async function listSupplierWarrantyClaims(
   const params = new URLSearchParams()
   if (options?.status) params.set('status', options.status)
   if (options?.supplierId) params.set('supplierId', options.supplierId)
-  if (options?.vendorPartyId) params.set('vendorPartyId', options.vendorPartyId)
   if (options?.partId) params.set('partId', options.partId)
   if (options?.purchaseOrderId) params.set('purchaseOrderId', options.purchaseOrderId)
   const query = params.toString() ? `?${params.toString()}` : ''
@@ -1958,8 +1821,6 @@ export async function listSupplierWarrantyClaims(
   const claims = await parseJsonResponse<WarrantyClaimResponse[]>(response, 'Failed to load warranty claims')
   return claims.map(normalizeWarrantyClaim)
 }
-
-export const listWarrantyClaims = listSupplierWarrantyClaims
 
 export async function createSupplierWarrantyClaim(
   accessToken: string,
@@ -1974,8 +1835,6 @@ export async function createSupplierWarrantyClaim(
     await parseJsonResponse<WarrantyClaimResponse>(response, 'Failed to create warranty claim'),
   )
 }
-
-export const createWarrantyClaim = createSupplierWarrantyClaim
 
 export async function updateWarrantyClaim(
   accessToken: string,
@@ -2007,13 +1866,13 @@ export async function submitWarrantyClaim(
   )
 }
 
-export async function recordWarrantyClaimVendorResponse(
+export async function recordWarrantyClaimSupplierResponse(
   accessToken: string,
   warrantyClaimId: string,
-  request: RecordWarrantyClaimVendorResponseRequest,
+  request: RecordWarrantyClaimSupplierResponseRequest,
 ): Promise<WarrantyClaimResponse> {
   const response = await fetch(
-    `${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/record-vendor-response`,
+    `${apiBase}/api/v1/warranty-claims/${warrantyClaimId}/record-supplier-response`,
     {
       method: 'POST',
       headers: authHeaders(accessToken),
@@ -2023,7 +1882,7 @@ export async function recordWarrantyClaimVendorResponse(
   return normalizeWarrantyClaim(
     await parseJsonResponse<WarrantyClaimResponse>(
       response,
-      'Failed to record warranty claim vendor response',
+      'Failed to record warranty claim supplier response',
     ),
   )
 }
@@ -2076,25 +1935,21 @@ export async function cancelWarrantyClaim(
 export async function getPricingSnapshots(
   accessToken: string,
   options?: {
-    partVendorLinkId?: string
+    partSupplierLinkId?: string
     partId?: string
     supplierId?: string
-    vendorPartyId?: string
     asOf?: string
   },
 ): Promise<PricingSnapshotResponse[]> {
   const params = new URLSearchParams()
-  if (options?.partVendorLinkId) {
-    params.set('partVendorLinkId', options.partVendorLinkId)
+  if (options?.partSupplierLinkId) {
+    params.set('partSupplierLinkId', options.partSupplierLinkId)
   }
   if (options?.partId) {
     params.set('partId', options.partId)
   }
   if (options?.supplierId) {
     params.set('supplierId', options.supplierId)
-  }
-  if (options?.vendorPartyId) {
-    params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.asOf) {
     params.set('asOf', options.asOf)
@@ -2124,25 +1979,21 @@ export async function createPricingSnapshot(
 export async function getLeadTimeSnapshots(
   accessToken: string,
   options?: {
-    partVendorLinkId?: string
+    partSupplierLinkId?: string
     partId?: string
     supplierId?: string
-    vendorPartyId?: string
     asOf?: string
   },
 ): Promise<LeadTimeSnapshotResponse[]> {
   const params = new URLSearchParams()
-  if (options?.partVendorLinkId) {
-    params.set('partVendorLinkId', options.partVendorLinkId)
+  if (options?.partSupplierLinkId) {
+    params.set('partSupplierLinkId', options.partSupplierLinkId)
   }
   if (options?.partId) {
     params.set('partId', options.partId)
   }
   if (options?.supplierId) {
     params.set('supplierId', options.supplierId)
-  }
-  if (options?.vendorPartyId) {
-    params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.asOf) {
     params.set('asOf', options.asOf)
@@ -2172,25 +2023,21 @@ export async function createLeadTimeSnapshot(
 export async function getAvailabilitySnapshots(
   accessToken: string,
   options?: {
-    partVendorLinkId?: string
+    partSupplierLinkId?: string
     partId?: string
     supplierId?: string
-    vendorPartyId?: string
     asOf?: string
   },
 ): Promise<AvailabilitySnapshotResponse[]> {
   const params = new URLSearchParams()
-  if (options?.partVendorLinkId) {
-    params.set('partVendorLinkId', options.partVendorLinkId)
+  if (options?.partSupplierLinkId) {
+    params.set('partSupplierLinkId', options.partSupplierLinkId)
   }
   if (options?.partId) {
     params.set('partId', options.partId)
   }
   if (options?.supplierId) {
     params.set('supplierId', options.supplierId)
-  }
-  if (options?.vendorPartyId) {
-    params.set('vendorPartyId', options.vendorPartyId)
   }
   if (options?.asOf) {
     params.set('asOf', options.asOf)
@@ -2336,10 +2183,11 @@ export async function getProcurementNotificationDispatches(
   const response = await fetch(`${apiBase}/api/v1/notification-settings/dispatches?${search}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ProcurementNotificationDispatchesResponse>(
+  const raw = await parseJsonResponse<ProcurementNotificationDispatchesResponse>(
     response,
     'Failed to load notification dispatches',
   )
+  return { ...raw, items: raw.items }
 }
 
 export async function getPriceSnapshotSettings(
@@ -2375,10 +2223,14 @@ export async function getPendingPriceSnapshotCaptures(
   const response = await fetch(`${apiBase}/api/v1/price-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PendingPriceSnapshotCapturesResponse>(
+  const raw = await parseJsonResponse<PendingPriceSnapshotCapturesResponse>(
     response,
     'Failed to load pending price snapshot captures',
   )
+  return {
+    ...raw,
+    items: raw.items.map((item) => normalizePendingSnapshotCaptureItem(item)),
+  }
 }
 
 export async function getPriceSnapshotRuns(
@@ -2428,10 +2280,14 @@ export async function getPendingLeadTimeSnapshotCaptures(
   const response = await fetch(`${apiBase}/api/v1/lead-time-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PendingLeadTimeSnapshotCapturesResponse>(
+  const raw = await parseJsonResponse<PendingLeadTimeSnapshotCapturesResponse>(
     response,
     'Failed to load pending lead-time snapshot captures',
   )
+  return {
+    ...raw,
+    items: raw.items.map((item) => normalizePendingSnapshotCaptureItem(item)),
+  }
 }
 
 export async function getLeadTimeSnapshotRuns(
@@ -2481,10 +2337,14 @@ export async function getPendingAvailabilitySnapshotCaptures(
   const response = await fetch(`${apiBase}/api/v1/availability-snapshot-settings/pending`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PendingAvailabilitySnapshotCapturesResponse>(
+  const raw = await parseJsonResponse<PendingAvailabilitySnapshotCapturesResponse>(
     response,
     'Failed to load pending availability snapshot captures',
   )
+  return {
+    ...raw,
+    items: raw.items.map((item) => normalizePendingSnapshotCaptureItem(item)),
+  }
 }
 
 export async function getAvailabilitySnapshotRuns(
@@ -2580,10 +2440,11 @@ export async function getApprovalRemindersDashboard(
   const response = await fetch(`${apiBase}/api/v1/approval-reminders?${search}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ApprovalRemindersDashboardResponse>(
+  const raw = await parseJsonResponse<ApprovalRemindersDashboardResponse>(
     response,
     'Failed to load approval reminders dashboard',
   )
+  return normalizeApprovalRemindersDashboard(raw)
 }
 
 export async function getApprovalReminderSettings(
@@ -2816,7 +2677,7 @@ export async function getSupplierReadiness(
   const response = await fetch(`${apiBase}/api/v1/supply-readiness/suppliers/${supplierId}`, {
     headers: authHeaders(accessToken),
   })
-  const raw = await parseJsonResponse<RawVendorSupplyReadinessResponse>(response, 'Failed to load supplier readiness')
+  const raw = await parseJsonResponse<RawSupplierSupplyReadinessResponse>(response, 'Failed to load supplier readiness')
   return normalizeSupplierReadiness(raw)
 }
 
@@ -3043,10 +2904,7 @@ export async function createEmergencyPurchase(
   const response = await fetch(`${apiBase}/api/v1/emergency-purchases`, {
     method: 'POST',
     headers: authHeaders(accessToken),
-    body: JSON.stringify({
-      ...payload,
-      supplierId: payload.supplierId ?? payload.vendorPartyId,
-    }),
+    body: JSON.stringify(payload),
   })
   return normalizeEmergencyPurchaseResponse(
     await parseJsonResponse<EmergencyPurchaseResponse>(response, 'Failed to create emergency purchase'),
@@ -3343,26 +3201,11 @@ export async function liftSupplierRestriction(
   return normalizeSupplierRestriction(raw)
 }
 
-export async function listVendorRestrictions(
-  accessToken: string,
-  options?: { status?: string } | string,
-): Promise<VendorRestrictionResponse[]> {
-  return await listSupplierRestrictions(accessToken, options)
-}
-
 export async function listRestrictionsForSupplier(
   accessToken: string,
   supplierId: string,
 ): Promise<SupplierRestrictionResponse[]> {
   return await listSupplierRestrictionsBySupplier(accessToken, supplierId)
-}
-
-export async function liftVendorRestriction(
-  accessToken: string,
-  restrictionId: string,
-  payload: LiftVendorRestrictionRequest,
-): Promise<VendorRestrictionResponse> {
-  return await liftSupplierRestriction(accessToken, restrictionId, payload)
 }
 
 export async function listSupplierIncidents(
@@ -3527,10 +3370,10 @@ export async function listProcurementExceptions(
   const response = await fetch(`${apiBase}/api/v1/procurement-exceptions${query ? `?${query}` : ''}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<ProcurementExceptionResponse[]>(
+  return (await parseJsonResponse<ProcurementExceptionResponse[]>(
     response,
     'Failed to load procurement exceptions',
-  )
+  )).map(normalizeProcurementExceptionResponse)
 }
 
 export async function listSubjectProcurementExceptions(
@@ -3545,10 +3388,10 @@ export async function listSubjectProcurementExceptions(
         ? `/api/v1/purchase-orders/${subjectId}/procurement-exceptions`
         : `/api/v1/rfqs/${subjectId}/procurement-exceptions`
   const response = await fetch(`${apiBase}${route}`, { headers: authHeaders(accessToken) })
-  return parseJsonResponse<ProcurementExceptionResponse[]>(
+  return (await parseJsonResponse<ProcurementExceptionResponse[]>(
     response,
     'Failed to load subject procurement exceptions',
-  )
+  )).map(normalizeProcurementExceptionResponse)
 }
 
 export async function createSubjectProcurementException(
@@ -3568,10 +3411,10 @@ export async function createSubjectProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to create procurement exception',
-  )
+  ))
 }
 
 export async function assignProcurementException(
@@ -3584,10 +3427,10 @@ export async function assignProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to assign procurement exception',
-  )
+  ))
 }
 
 export async function linkProcurementExceptionActions(
@@ -3600,10 +3443,10 @@ export async function linkProcurementExceptionActions(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to link procurement exception actions',
-  )
+  ))
 }
 
 export async function startProcurementExceptionInvestigation(
@@ -3614,10 +3457,10 @@ export async function startProcurementExceptionInvestigation(
     `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/start-investigation`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to start procurement exception investigation',
-  )
+  ))
 }
 
 export async function resolveProcurementException(
@@ -3630,10 +3473,10 @@ export async function resolveProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to resolve procurement exception',
-  )
+  ))
 }
 
 export async function requestProcurementExceptionWaive(
@@ -3645,10 +3488,10 @@ export async function requestProcurementExceptionWaive(
     `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/request-waive`,
     { method: 'POST', headers: authHeaders(accessToken), body: JSON.stringify(payload) },
   )
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to request procurement exception waive',
-  )
+  ))
 }
 
 export async function approveProcurementExceptionWaive(
@@ -3659,10 +3502,10 @@ export async function approveProcurementExceptionWaive(
     `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/approve-waive`,
     { method: 'POST', headers: authHeaders(accessToken) },
   )
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to approve procurement exception waive',
-  )
+  ))
 }
 
 export async function rejectProcurementExceptionWaive(
@@ -3674,10 +3517,10 @@ export async function rejectProcurementExceptionWaive(
     `${apiBase}/api/v1/procurement-exceptions/${exceptionId}/reject-waive`,
     { method: 'POST', headers: authHeaders(accessToken), body: JSON.stringify(payload) },
   )
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to reject procurement exception waive',
-  )
+  ))
 }
 
 export async function closeProcurementException(
@@ -3690,10 +3533,10 @@ export async function closeProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload ?? { resolutionNotes: null }),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to close procurement exception',
-  )
+  ))
 }
 
 export async function cancelProcurementException(
@@ -3706,10 +3549,10 @@ export async function cancelProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to cancel procurement exception',
-  )
+  ))
 }
 
 export async function reopenProcurementException(
@@ -3722,10 +3565,10 @@ export async function reopenProcurementException(
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<ProcurementExceptionResponse>(
+  return normalizeProcurementExceptionResponse(await parseJsonResponse<ProcurementExceptionResponse>(
     response,
     'Failed to reopen procurement exception',
-  )
+  ))
 }
 
 export async function getProcurementApprovalAuthority(
@@ -3752,7 +3595,7 @@ export async function getSupplierReportSummary(
     headers: authHeaders(accessToken),
   })
   return normalizeSupplierReportSummary(
-    await parseJsonResponse<SupplierReportSummaryResponse | VendorReportSummaryResponse>(
+    await parseJsonResponse<SupplierReportSummaryResponse>(
       response,
       'Failed to load supplier report summary',
     ),
@@ -3767,7 +3610,7 @@ export async function getSupplierReportDetail(
     headers: authHeaders(accessToken),
   })
   return normalizeSupplierReportDetail(
-    await parseJsonResponse<SupplierReportDetailResponse | VendorReportDetailResponse>(
+    await parseJsonResponse<SupplierReportDetailResponse>(
       response,
       'Failed to load supplier report detail',
     ),
@@ -3789,10 +3632,6 @@ export function exportSupplierReportSummaryCsv(
   )
 }
 
-export const getVendorReportSummary = getSupplierReportSummary
-export const getVendorReportDetail = getSupplierReportDetail
-export const exportVendorReportSummaryCsv = exportSupplierReportSummaryCsv
-
 export async function getComplianceReportSummary(
   accessToken: string,
   options?: {
@@ -3809,31 +3648,14 @@ export async function getComplianceReportSummary(
   const response = await fetch(`${apiBase}/api/reports/compliance/summary${query}`, {
     headers: authHeaders(accessToken),
   })
-  const raw = await parseJsonResponse<SupplierComplianceReportSummaryResponse | ComplianceReportSummaryResponse>(
+  const raw = await parseJsonResponse<SupplierComplianceReportSummaryResponse>(
     response,
     'Failed to load compliance report summary',
   )
-  if ('suppliers' in raw) {
-    return {
-      ...raw,
-      totals: {
-        ...raw.totals,
-        supplierCount: raw.totals.supplierCount,
-      },
-      suppliers: raw.suppliers.map((supplier) => ({
-        ...supplier,
-        parentSupplierId: supplier.parentSupplierId ?? null,
-        parentSupplierDisplayName: supplier.parentSupplierDisplayName ?? null,
-        supplierUnitKind: supplier.supplierUnitKind ?? 'identity',
-        supplierServiceTypes: supplier.supplierServiceTypes ?? [],
-      })),
-    }
-  }
-
   return {
     generatedAt: raw.generatedAt,
     totals: {
-      supplierCount: raw.totals.partyCount,
+      supplierCount: raw.totals.supplierCount,
       documentCount: raw.totals.documentCount,
       expiredCount: raw.totals.expiredCount,
       expiringSoonCount: raw.totals.expiringSoonCount,
@@ -3841,36 +3663,15 @@ export async function getComplianceReportSummary(
       approvedCount: raw.totals.approvedCount,
       rejectedCount: raw.totals.rejectedCount,
     },
-    suppliers: raw.parties.map((party) => ({
-      supplierId: party.externalPartyId,
-      supplierKey: party.partyKey,
-      displayName: party.displayName,
-      parentSupplierId: null,
-      parentSupplierDisplayName: null,
-      supplierUnitKind: 'identity',
-      supplierServiceTypes: [],
-      approvalStatus: party.approvalStatus,
-      compliancePosture: party.compliancePosture,
-      documentCount: party.documentCount,
-      expiredCount: party.expiredCount,
-      expiringSoonCount: party.expiringSoonCount,
-      reviewPendingCount: party.reviewPendingCount,
+    suppliers: raw.suppliers.map((supplier) => ({
+      ...supplier,
+      parentSupplierId: supplier.parentSupplierId ?? null,
+      parentSupplierDisplayName: supplier.parentSupplierDisplayName ?? null,
+      supplierUnitKind: supplier.supplierUnitKind ?? 'identity',
+      supplierServiceTypes: supplier.supplierServiceTypes ?? [],
     })),
     documents: raw.documents.map((document) => ({
-      documentId: document.documentId,
-      supplierId: document.externalPartyId,
-      supplierKey: document.partyKey,
-      supplierDisplayName: document.partyDisplayName,
-      documentKey: document.documentKey,
-      documentTypeKey: document.documentTypeKey,
-      title: document.title,
-      version: document.version,
-      reviewStatus: document.reviewStatus,
-      effectiveStatus: document.effectiveStatus,
-      isExpired: document.isExpired,
-      isExpiringSoon: document.isExpiringSoon,
-      expiresAt: document.expiresAt,
-      updatedAt: document.updatedAt,
+      ...document,
     })),
   }
 }
@@ -3928,9 +3729,11 @@ export async function getPartsInventoryReportSummary(
   const response = await fetch(`${apiBase}/api/reports/parts-inventory/summary${query}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PartsInventoryReportSummaryResponse>(
-    response,
-    'Failed to load parts inventory report summary',
+  return normalizePartsInventoryReportSummary(
+    await parseJsonResponse<PartsInventoryReportSummaryResponse>(
+      response,
+      'Failed to load parts inventory report summary',
+    ),
   )
 }
 
@@ -3941,9 +3744,11 @@ export async function getPartsInventoryPartDetail(
   const response = await fetch(`${apiBase}/api/reports/parts-inventory/parts/${partId}`, {
     headers: authHeaders(accessToken),
   })
-  return parseJsonResponse<PartsInventoryPartDetailResponse>(
-    response,
-    'Failed to load parts inventory part detail',
+  return normalizePartsInventoryPartDetail(
+    await parseJsonResponse<PartsInventoryPartDetailResponse>(
+      response,
+      'Failed to load parts inventory part detail',
+    ),
   )
 }
 

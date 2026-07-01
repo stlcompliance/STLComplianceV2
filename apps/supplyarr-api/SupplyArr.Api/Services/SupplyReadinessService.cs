@@ -9,7 +9,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class SupplyReadinessService(
     SupplyArrDbContext db,
-    VendorProcurementGuardService vendorProcurementGuard,
+    SupplierProcurementGuardService supplierProcurementGuard,
     ISupplyArrAuditService audit)
 {
     private const int AttentionItemLimit = 25;
@@ -21,14 +21,12 @@ public sealed class SupplyReadinessService(
     public const string PartReadinessAction = "supplyarr.supply_readiness.part";
 
     public const string SupplierReadinessAction = "supplyarr.supply_readiness.supplier";
-    public const string VendorReadinessAction = SupplierReadinessAction;
 
     public const string ProcurementPathReadinessAction = "supplyarr.supply_readiness.procurement_path";
 
     public const string PartSnapshotKind = "part_supply_readiness";
 
     public const string SupplierSnapshotKind = "supplier_supply_readiness";
-    public const string VendorSnapshotKind = SupplierSnapshotKind;
 
     public const string ProcurementPathSnapshotKind = "procurement_path_supply_readiness";
 
@@ -170,12 +168,12 @@ public sealed class SupplyReadinessService(
             .ToListAsync(cancellationToken);
         var openBackordersByPartMap = openBackordersByPart.ToDictionary(x => x.PartId, x => x.Quantity);
 
-        var complianceDocuments = await db.PartyComplianceDocuments
+        var complianceDocuments = await db.SupplierComplianceDocuments
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .Select(x => new ComplianceDocRow(
                 x.Id,
-                x.ExternalPartyId,
+                x.SupplierId,
                 x.DocumentKey,
                 x.ReviewStatus,
                 x.ExpiresAt,
@@ -185,8 +183,8 @@ public sealed class SupplyReadinessService(
         var complianceAttentionCount = complianceDocuments.Count(doc =>
             IsComplianceAttention(doc.ReviewStatus, doc.ExpiresAt, now));
 
-        var activeVendorRestrictionCount = await db.VendorRestrictions.CountAsync(
-            x => x.TenantId == tenantId && x.Status == VendorRestrictionStatuses.Active,
+        var activeSupplierRestrictionCount = await db.SupplierRestrictions.CountAsync(
+            x => x.TenantId == tenantId && x.Status == SupplierRestrictionStatuses.Active,
             cancellationToken);
 
         var procurementExceptions = await db.ProcurementExceptions
@@ -229,7 +227,7 @@ public sealed class SupplyReadinessService(
             backorders,
             procurementExceptions,
             openBackorderCount,
-            activeVendorRestrictionCount,
+            activeSupplierRestrictionCount,
             activeProcurementExceptionCount);
 
         var predictiveStockoutItems = BuildPredictiveStockoutItems(
@@ -254,7 +252,7 @@ public sealed class SupplyReadinessService(
                 issuedPurchaseOrderCount,
                 openDemandRefCount,
                 complianceAttentionCount,
-                activeVendorRestrictionCount,
+                activeSupplierRestrictionCount,
                 activeProcurementExceptionCount),
             [
                 new(DemandRefSources.MaintainArr, maintainarrOpen),
@@ -322,38 +320,6 @@ public sealed class SupplyReadinessService(
             auditSnapshot);
     }
 
-    public async Task<VendorSupplyReadinessResponse> GetVendorReadinessAsync(
-        Guid tenantId,
-        Guid externalPartyId,
-        CancellationToken cancellationToken = default,
-        Guid? actorUserId = null,
-        string? auditSnapshotKind = null)
-    {
-        var supplier = await GetSupplierReadinessAsync(
-            tenantId,
-            externalPartyId,
-            cancellationToken,
-            actorUserId,
-            auditSnapshotKind);
-
-        return new VendorSupplyReadinessResponse(
-            supplier.SupplierId,
-            supplier.SupplierKey,
-            supplier.DisplayName,
-            supplier.ParentSupplierId,
-            supplier.ParentSupplierDisplayName,
-            supplier.SupplierUnitKind,
-            supplier.SupplierServiceTypes,
-            supplier.ApprovalStatus,
-            supplier.Status,
-            supplier.ReadinessStatus,
-            supplier.ReadinessBasis,
-            supplier.CalculatedAt,
-            supplier.Blockers,
-            supplier.SourceSnapshot,
-            supplier.AuditSnapshot);
-    }
-
     public async Task<SupplierSupplyReadinessResponse> GetSupplierReadinessAsync(
         Guid tenantId,
         Guid supplierId,
@@ -361,26 +327,18 @@ public sealed class SupplyReadinessService(
         Guid? actorUserId = null,
         string? auditSnapshotKind = null)
     {
-        var party = await db.ExternalParties
+        var supplier = await db.Suppliers
             .AsNoTracking()
-            .Include(x => x.ParentExternalParty)
+            .Include(x => x.ParentSupplier)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == supplierId, cancellationToken)
             ?? throw new StlApiException("supply_readiness.supplier_not_found", "Supplier was not found.", 404);
 
-        if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
-        {
-            throw new StlApiException(
-                "supply_readiness.supplier_type_not_allowed",
-                "Supply readiness checks apply only to supplier records.",
-                400);
-        }
-
         var asOf = DateTimeOffset.UtcNow;
-        var blockers = await BuildSupplierBlockersAsync(tenantId, party, asOf, cancellationToken);
+        var blockers = await BuildSupplierBlockersAsync(tenantId, supplier, asOf, cancellationToken);
         var isReady = SupplyReadinessRules.IsReady(blockers.Count);
         var readinessStatus = SupplyReadinessRules.ResolveReadinessStatus(isReady);
         var readinessBasis = SupplyReadinessRules.ResolveReadinessBasis(isReady);
-        var sourceSnapshot = BuildSourceSnapshot(party.UpdatedAt, asOf);
+        var sourceSnapshot = BuildSourceSnapshot(supplier.UpdatedAt, asOf);
         var auditSnapshot = await WriteDecisionSnapshotAsync(
             auditSnapshotKind,
             SupplierReadinessAction,
@@ -392,18 +350,18 @@ public sealed class SupplyReadinessService(
             readinessBasis,
             cancellationToken);
 
-        var serviceTypes = ParseServiceTypes(party.ServiceTypesJson);
+        var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
         return new SupplierSupplyReadinessResponse(
-            party.Id,
-            party.PartyKey,
-            party.DisplayName,
-            party.ParentExternalPartyId,
-            party.ParentExternalParty?.DisplayName,
-            party.UnitKind,
+            supplier.Id,
+            supplier.SupplierKey,
+            supplier.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
+            supplier.UnitKind,
             serviceTypes,
-            party.ApprovalStatus,
-            party.Status,
+            supplier.ApprovalStatus,
+            supplier.Status,
             readinessStatus,
             readinessBasis,
             asOf,
@@ -428,17 +386,17 @@ public sealed class SupplyReadinessService(
         blockers.AddRange(partReadiness.Blockers);
         blockers.AddRange(supplierReadiness.Blockers);
 
-        var supplierLink = await db.PartVendorLinks
+        var supplierLink = await db.PartSupplierLinks
             .AsNoTracking()
             .FirstOrDefaultAsync(
-            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == supplierId,
+            x => x.TenantId == tenantId && x.PartId == partId && x.SupplierId == supplierId,
             cancellationToken);
         if (supplierLink is null)
         {
             blockers.Add(new SupplyReadinessBlockerResponse(
-                SupplyReadinessReasonCodes.NoVendorPartLink,
+                SupplyReadinessReasonCodes.NoSupplierPartLink,
                 "No supplier part link exists for this part and supplier location.",
-                "part_vendor_link",
+                "part_supplier_link",
                 $"{partId}:{supplierId}",
                 partId.ToString()));
         }
@@ -552,13 +510,13 @@ public sealed class SupplyReadinessService(
 
     private async Task<SupplyReadinessPricingLeadTimeSnapshotResponse> LoadPricingLeadTimeSnapshotAsync(
         Guid tenantId,
-        PartVendorLink vendorLink,
+        PartSupplierLink supplierLink,
         CancellationToken cancellationToken)
     {
-        var pricing = await db.PartVendorPricingSnapshots
+        var pricing = await db.PartSupplierPricingSnapshots
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && x.PartVendorLinkId == vendorLink.Id
+                && x.PartSupplierLinkId == supplierLink.Id
                 && x.EffectiveFrom <= DateTimeOffset.UtcNow
                 && (x.EffectiveTo == null || x.EffectiveTo > DateTimeOffset.UtcNow))
             .OrderByDescending(x => x.EffectiveFrom)
@@ -572,10 +530,10 @@ public sealed class SupplyReadinessService(
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        var leadTime = await db.PartVendorLeadTimeSnapshots
+        var leadTime = await db.PartSupplierLeadTimeSnapshots
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && x.PartVendorLinkId == vendorLink.Id
+                && x.PartSupplierLinkId == supplierLink.Id
                 && x.EffectiveFrom <= DateTimeOffset.UtcNow
                 && (x.EffectiveTo == null || x.EffectiveTo > DateTimeOffset.UtcNow))
             .OrderByDescending(x => x.EffectiveFrom)
@@ -584,13 +542,13 @@ public sealed class SupplyReadinessService(
             .FirstOrDefaultAsync(cancellationToken);
 
         return new SupplyReadinessPricingLeadTimeSnapshotResponse(
-            vendorLink.Id,
-            pricing?.UnitPrice ?? vendorLink.CatalogUnitPrice,
-            pricing?.CurrencyCode ?? vendorLink.CatalogCurrencyCode,
-            pricing?.MinimumOrderQuantity ?? vendorLink.CatalogMinimumOrderQuantity,
-            leadTime?.LeadTimeDays ?? vendorLink.CatalogLeadTimeDays,
-            pricing?.UpdatedAt ?? (vendorLink.CatalogUnitPrice is null ? null : vendorLink.UpdatedAt),
-            leadTime?.UpdatedAt ?? (vendorLink.CatalogLeadTimeDays is null ? null : vendorLink.UpdatedAt),
+            supplierLink.Id,
+            pricing?.UnitPrice ?? supplierLink.CatalogUnitPrice,
+            pricing?.CurrencyCode ?? supplierLink.CatalogCurrencyCode,
+            pricing?.MinimumOrderQuantity ?? supplierLink.CatalogMinimumOrderQuantity,
+            leadTime?.LeadTimeDays ?? supplierLink.CatalogLeadTimeDays,
+            pricing?.UpdatedAt ?? (supplierLink.CatalogUnitPrice is null ? null : supplierLink.UpdatedAt),
+            leadTime?.UpdatedAt ?? (supplierLink.CatalogLeadTimeDays is null ? null : supplierLink.UpdatedAt),
             pricing is null || leadTime is null);
     }
 
@@ -881,77 +839,88 @@ public sealed class SupplyReadinessService(
 
     private async Task<List<SupplyReadinessBlockerResponse>> BuildSupplierBlockersAsync(
         Guid tenantId,
-        ExternalParty party,
+        Supplier supplier,
         DateTimeOffset asOf,
         CancellationToken cancellationToken)
     {
         var blockers = new List<SupplyReadinessBlockerResponse>();
+        var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
-        if (!SupplyReadinessRules.IsActivePartyStatus(party.Status))
+        if (!SupplyReadinessRules.IsActiveSupplierStatus(supplier.Status))
         {
             blockers.Add(new SupplyReadinessBlockerResponse(
-                SupplyReadinessReasonCodes.VendorInactive,
-                $"Supplier status is {party.Status}.",
+                SupplyReadinessReasonCodes.SupplierInactive,
+                $"Supplier status is {supplier.Status}.",
                 "supplier",
-                party.Id.ToString(),
+                supplier.Id.ToString(),
                 null));
         }
 
-        var approvalReasonCode = SupplyReadinessRules.ResolveApprovalBlockerReasonCode(party.ApprovalStatus);
+        var approvalReasonCode = SupplyReadinessRules.ResolveApprovalBlockerReasonCode(supplier.ApprovalStatus);
         if (approvalReasonCode is not null)
         {
             blockers.Add(new SupplyReadinessBlockerResponse(
                 approvalReasonCode,
-                $"Supplier approval status is {party.ApprovalStatus}.",
+                $"Supplier approval status is {supplier.ApprovalStatus}.",
                 "supplier",
-                party.Id.ToString(),
+                supplier.Id.ToString(),
                 null));
         }
 
-        var enforcement = await vendorProcurementGuard.GetEnforcementAsync(tenantId, party.Id, cancellationToken);
+        if (SupplierProcurementGuardService.BlocksPartsProcurement(serviceTypes))
+        {
+            blockers.Add(new SupplyReadinessBlockerResponse(
+                SupplyReadinessReasonCodes.SupplierMissingPartsCoverage,
+                "Supplier service coverage does not include products or parts required for sourcing and purchasing workflows.",
+                "supplier",
+                supplier.Id.ToString(),
+                null));
+        }
+
+        var enforcement = await supplierProcurementGuard.GetEnforcementAsync(tenantId, supplier.Id, cancellationToken);
         if (enforcement.IsBlocked)
         {
             blockers.Add(new SupplyReadinessBlockerResponse(
-                SupplyReadinessReasonCodes.VendorProcurementRestriction,
+                SupplyReadinessReasonCodes.SupplierProcurementRestriction,
                 enforcement.BlockReason ?? "Active procurement restriction blocks this supplier location.",
-                "vendor_restriction",
-                party.Id.ToString(),
+                "supplier_restriction",
+                supplier.Id.ToString(),
                 null));
         }
 
-        var complianceDocs = await db.PartyComplianceDocuments
+        var complianceDocs = await db.SupplierComplianceDocuments
             .AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == party.Id)
+            .Where(x => x.TenantId == tenantId && x.SupplierId == supplier.Id)
             .Select(x => new { x.Id, x.DocumentKey, x.ReviewStatus, x.ExpiresAt })
             .ToListAsync(cancellationToken);
 
         foreach (var doc in complianceDocs)
         {
-            if (string.Equals(doc.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(doc.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
             {
                 blockers.Add(new SupplyReadinessBlockerResponse(
                     SupplyReadinessReasonCodes.ComplianceDocumentPending,
                     $"Compliance document {doc.DocumentKey} is pending review.",
-                    "party_compliance_document",
+                    "supplier_compliance_document",
                     doc.Id.ToString(),
-                    party.Id.ToString()));
+                    supplier.Id.ToString()));
             }
-            else if (string.Equals(doc.ReviewStatus, PartyComplianceDocumentReviewStatuses.Expired, StringComparison.OrdinalIgnoreCase)
+            else if (string.Equals(doc.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Expired, StringComparison.OrdinalIgnoreCase)
                 || (doc.ExpiresAt is not null && doc.ExpiresAt <= asOf))
             {
                 blockers.Add(new SupplyReadinessBlockerResponse(
                     SupplyReadinessReasonCodes.ComplianceDocumentExpired,
                     $"Compliance document {doc.DocumentKey} is expired.",
-                    "party_compliance_document",
+                    "supplier_compliance_document",
                     doc.Id.ToString(),
-                    party.Id.ToString()));
+                    supplier.Id.ToString()));
             }
         }
 
         var openIncidents = await db.SupplierIncidents
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && x.ExternalPartyId == party.Id
+                && x.SupplierId == supplier.Id
                 && SupplierIncidentStatuses.Active.Contains(x.Status)
                 && (x.Severity == SupplierIncidentSeverities.High || x.Severity == SupplierIncidentSeverities.Critical))
             .Select(x => new { x.Id, x.IncidentKey, x.Title, x.Severity })
@@ -964,7 +933,7 @@ public sealed class SupplyReadinessService(
                 $"{incident.Severity} supplier incident {incident.IncidentKey}: {incident.Title}",
                 "supplier_incident",
                 incident.Id.ToString(),
-                party.Id.ToString()));
+                supplier.Id.ToString()));
         }
 
         return blockers;
@@ -972,7 +941,7 @@ public sealed class SupplyReadinessService(
 
     private static bool IsComplianceAttention(string reviewStatus, DateTimeOffset? expiresAt, DateTimeOffset now)
     {
-        if (string.Equals(reviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(reviewStatus, SupplierComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
@@ -1000,7 +969,7 @@ public sealed class SupplyReadinessService(
         IReadOnlyList<DocumentRow> backorders,
         IReadOnlyList<DocumentRow> procurementExceptions,
         int openBackorderCount,
-        int activeVendorRestrictionCount,
+        int activeSupplierRestrictionCount,
         int activeProcurementExceptionCount)
     {
         var items = new List<SupplyReadinessAttentionItemResponse>();
@@ -1093,7 +1062,7 @@ public sealed class SupplyReadinessService(
                 $"Review status {doc.ReviewStatus}",
                 doc.ReviewStatus,
                 doc.UpdatedAt,
-                "party_compliance_document",
+                "supplier_compliance_document",
                 doc.Id));
         }
 
@@ -1109,12 +1078,12 @@ public sealed class SupplyReadinessService(
                 row.Id));
         }
 
-        if (activeVendorRestrictionCount > 0)
+        if (activeSupplierRestrictionCount > 0)
         {
             items.Add(new SupplyReadinessAttentionItemResponse(
                 "restriction",
-                $"{activeVendorRestrictionCount} active vendor restrictions",
-                "Procurement may be blocked for affected vendors.",
+                $"{activeSupplierRestrictionCount} active supplier restrictions",
+                "Procurement may be blocked for affected supplier identities or sub-units.",
                 "summary",
                 now,
                 null,
@@ -1149,10 +1118,12 @@ public sealed class SupplyReadinessService(
 
     private sealed record ComplianceDocRow(
         Guid Id,
-        Guid ExternalPartyId,
+        Guid SupplierId,
         string DocumentKey,
         string ReviewStatus,
         DateTimeOffset? ExpiresAt,
         DateTimeOffset UpdatedAt);
 
 }
+
+

@@ -13,10 +13,9 @@ public static class LeadTimeSnapshotEndpoints
         group = group.WithTags("LeadTimeSnapshots").RequireAuthorization();
 
         group.MapGet("/", async (
-            Guid? partVendorLinkId,
+            Guid? partSupplierLinkId,
             Guid? partId,
             Guid? supplierId,
-            Guid? vendorPartyId,
             DateTimeOffset? asOf,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -27,9 +26,9 @@ public static class LeadTimeSnapshotEndpoints
             var tenantId = context.User.GetTenantId();
             return Results.Ok(await service.ListAsync(
                 tenantId,
-                partVendorLinkId,
+                partSupplierLinkId,
                 partId,
-                supplierId ?? vendorPartyId,
+                supplierId,
                 asOf,
                 cancellationToken));
         })

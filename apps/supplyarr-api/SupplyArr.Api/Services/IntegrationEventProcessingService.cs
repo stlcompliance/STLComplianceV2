@@ -18,7 +18,7 @@ public sealed class IntegrationEventProcessingService(
     ComplianceCoreFactPublisherService complianceCoreFactPublisher,
     StaffArrProductIncidentPublisherService staffarrIncidentPublisher,
     TrainArrSupplierIncidentPublisherService trainarrIncidentPublisher,
-    RoutArrVendorOrderClient routarrVendorOrderClient,
+    RoutArrSupplierOrderClient routarrSupplierOrderClient,
     ISupplyArrAuditService audit)
 {
     public const string ProcessEventsActionScope = "supplyarr.integration.events.process";
@@ -308,7 +308,7 @@ public sealed class IntegrationEventProcessingService(
                 await notificationEnqueue.TryEnqueueAsync(
                     outboxEvent.TenantId,
                     notificationKind,
-                    payload.VendorPartyId,
+                    payload.SupplierId,
                     outboxEvent.RelatedEntityType,
                     outboxEvent.RelatedEntityId,
                     cancellationToken);
@@ -317,7 +317,7 @@ public sealed class IntegrationEventProcessingService(
             await complianceCoreFactPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
             await staffarrIncidentPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
             await trainarrIncidentPublisher.TryPublishFromOutboxAsync(outboxEvent, cancellationToken);
-            await TryPublishVendorOrderEventAsync(outboxEvent, cancellationToken);
+            await TryPublishSupplierOrderEventAsync(outboxEvent, cancellationToken);
 
             outboxEvent.ProcessingStatus = IntegrationEventStatuses.Processed;
             outboxEvent.ProcessedAt = now;
@@ -426,43 +426,43 @@ public sealed class IntegrationEventProcessingService(
             _ => null,
         };
 
-    private async Task TryPublishVendorOrderEventAsync(
+    private async Task TryPublishSupplierOrderEventAsync(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
     {
-        if (!string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderStatusChanged, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderCompletedForDispatch, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderPartialDispatchAuthorized, StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderSplitCreated, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderStatusChanged, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderCompletedForDispatch, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderPartialDispatchAuthorized, StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderSplitCreated, StringComparison.OrdinalIgnoreCase))
         {
             return;
         }
 
-        var payload = await BuildVendorOrderEventAsync(outboxEvent, cancellationToken);
-        await routarrVendorOrderClient.PublishVendorOrderEventAsync(payload, cancellationToken);
+        var payload = await BuildSupplierOrderEventAsync(outboxEvent, cancellationToken);
+        await routarrSupplierOrderClient.PublishSupplierOrderEventAsync(payload, cancellationToken);
     }
 
-    private async Task<SupplyArrVendorOrderEventEnvelope> BuildVendorOrderEventAsync(
+    private async Task<SupplyArrSupplierOrderEventEnvelope> BuildSupplierOrderEventAsync(
         IntegrationOutboxEvent outboxEvent,
         CancellationToken cancellationToken)
     {
-        if (string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderPartialDispatchAuthorized, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderPartialDispatchAuthorized, StringComparison.OrdinalIgnoreCase))
         {
-            var decision = await db.VendorOrderBrokerDecisions
+            var decision = await db.SupplierOrderBrokerDecisions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                     cancellationToken)
-                ?? throw new InvalidOperationException("Vendor-order broker decision was not found for outbox publication.");
+                ?? throw new InvalidOperationException("Supplier-order broker decision was not found for outbox publication.");
 
-            var order = await db.VendorOrders
+            var order = await db.SupplierOrders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                    x => x.TenantId == outboxEvent.TenantId && x.Id == decision.VendorOrderId,
+                    x => x.TenantId == outboxEvent.TenantId && x.Id == decision.SupplierOrderId,
                     cancellationToken)
-                ?? throw new InvalidOperationException("Vendor order was not found for outbox publication.");
+                ?? throw new InvalidOperationException("Supplier order was not found for outbox publication.");
 
-            return new SupplyArrVendorOrderEventEnvelope(
+            return new SupplyArrSupplierOrderEventEnvelope(
                 outboxEvent.Id,
                 outboxEvent.EventKind,
                 outboxEvent.CreatedAt,
@@ -472,8 +472,8 @@ public sealed class IntegrationEventProcessingService(
                 order.BrokerOrderNumberSnapshot,
                 null,
                 order.Status,
-                order.VendorId,
-                order.VendorNameSnapshot,
+                order.SupplierId,
+                order.SupplierNameSnapshot,
                 order.PickupLocationNameSnapshot,
                 order.PickupAddressSnapshot,
                 order.DeliveryLocationNameSnapshot,
@@ -487,38 +487,38 @@ public sealed class IntegrationEventProcessingService(
                 order.PickupWindowStart,
                 order.PickupWindowEnd,
                 order.PickupInstructions,
-                VendorOrderStatusUpdateSources.BrokerUser,
+                SupplierOrderStatusUpdateSources.BrokerUser,
                 decision.SelectedTripId,
                 decision.AuthorizedQuantity,
                 null,
                 null);
         }
 
-        if (string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.VendorOrderSplitCreated, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(outboxEvent.EventKind, IntegrationOutboxEventKinds.SupplierOrderSplitCreated, StringComparison.OrdinalIgnoreCase))
         {
-            var decision = await db.VendorOrderBrokerDecisions
+            var decision = await db.SupplierOrderBrokerDecisions
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
                     x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                     cancellationToken)
-                ?? throw new InvalidOperationException("Vendor-order split decision was not found for outbox publication.");
+                ?? throw new InvalidOperationException("Supplier-order split decision was not found for outbox publication.");
 
-            var parent = await db.VendorOrders
+            var parent = await db.SupplierOrders
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                    x => x.TenantId == outboxEvent.TenantId && x.Id == decision.VendorOrderId,
+                    x => x.TenantId == outboxEvent.TenantId && x.Id == decision.SupplierOrderId,
                     cancellationToken)
-                ?? throw new InvalidOperationException("Vendor order split parent was not found for outbox publication.");
+                ?? throw new InvalidOperationException("Supplier order split parent was not found for outbox publication.");
 
-            var children = await db.VendorOrders
+            var children = await db.SupplierOrders
                 .AsNoTracking()
-                .Where(x => x.TenantId == outboxEvent.TenantId && x.ParentVendorOrderId == parent.Id)
+                .Where(x => x.TenantId == outboxEvent.TenantId && x.ParentSupplierOrderId == parent.Id)
                 .OrderBy(x => x.CreatedAt)
                 .ToListAsync(cancellationToken);
-            var readyChild = children.FirstOrDefault(x => string.Equals(x.Status, VendorOrderStatuses.CompletedReadyForDispatch, StringComparison.OrdinalIgnoreCase));
+            var readyChild = children.FirstOrDefault(x => string.Equals(x.Status, SupplierOrderStatuses.CompletedReadyForDispatch, StringComparison.OrdinalIgnoreCase));
             var remainingChild = children.FirstOrDefault(x => x.Id != readyChild?.Id);
 
-            return new SupplyArrVendorOrderEventEnvelope(
+            return new SupplyArrSupplierOrderEventEnvelope(
                 outboxEvent.Id,
                 outboxEvent.EventKind,
                 outboxEvent.CreatedAt,
@@ -528,8 +528,8 @@ public sealed class IntegrationEventProcessingService(
                 parent.BrokerOrderNumberSnapshot,
                 null,
                 parent.Status,
-                parent.VendorId,
-                parent.VendorNameSnapshot,
+                parent.SupplierId,
+                parent.SupplierNameSnapshot,
                 parent.PickupLocationNameSnapshot,
                 parent.PickupAddressSnapshot,
                 parent.DeliveryLocationNameSnapshot,
@@ -543,28 +543,28 @@ public sealed class IntegrationEventProcessingService(
                 parent.PickupWindowStart,
                 parent.PickupWindowEnd,
                 parent.PickupInstructions,
-                VendorOrderStatusUpdateSources.BrokerUser,
+                SupplierOrderStatusUpdateSources.BrokerUser,
                 decision.SelectedTripId,
                 decision.AuthorizedQuantity,
                 readyChild?.Id,
                 remainingChild?.Id);
         }
 
-        var statusUpdate = await db.VendorOrderStatusUpdates
+        var statusUpdate = await db.SupplierOrderStatusUpdates
             .AsNoTracking()
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken)
-            ?? throw new InvalidOperationException("Vendor-order status update was not found for outbox publication.");
+            ?? throw new InvalidOperationException("Supplier-order status update was not found for outbox publication.");
 
-        var orderEntity = await db.VendorOrders
+        var orderEntity = await db.SupplierOrders
             .AsNoTracking()
             .FirstOrDefaultAsync(
-                x => x.TenantId == outboxEvent.TenantId && x.Id == statusUpdate.VendorOrderId,
+                x => x.TenantId == outboxEvent.TenantId && x.Id == statusUpdate.SupplierOrderId,
                 cancellationToken)
-            ?? throw new InvalidOperationException("Vendor order was not found for outbox publication.");
+            ?? throw new InvalidOperationException("Supplier order was not found for outbox publication.");
 
-        return new SupplyArrVendorOrderEventEnvelope(
+        return new SupplyArrSupplierOrderEventEnvelope(
             outboxEvent.Id,
             outboxEvent.EventKind,
             outboxEvent.CreatedAt,
@@ -574,8 +574,8 @@ public sealed class IntegrationEventProcessingService(
             orderEntity.BrokerOrderNumberSnapshot,
             statusUpdate.PreviousStatus,
             statusUpdate.NewStatus,
-            orderEntity.VendorId,
-            orderEntity.VendorNameSnapshot,
+            orderEntity.SupplierId,
+            orderEntity.SupplierNameSnapshot,
             orderEntity.PickupLocationNameSnapshot,
             orderEntity.PickupAddressSnapshot,
             orderEntity.DeliveryLocationNameSnapshot,

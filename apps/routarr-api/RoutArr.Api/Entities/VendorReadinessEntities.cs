@@ -10,11 +10,11 @@ public sealed class DispatchBlock : IHasTenant
 
     public Guid TripId { get; set; }
 
-    public string BlockType { get; set; } = DispatchBlockTypes.VendorReadiness;
+    public string BlockType { get; set; } = DispatchBlockTypes.SupplierReadiness;
 
-    public string BlockReason { get; set; } = DispatchBlockReasons.VendorOrderNotComplete;
+    public string BlockReason { get; set; } = DispatchBlockReasons.SupplierOrderNotComplete;
 
-    public string BlockingEntityType { get; set; } = "vendor_order";
+    public string BlockingEntityType { get; set; } = "supplier_order";
 
     public string BlockingEntityId { get; set; } = string.Empty;
 
@@ -33,7 +33,7 @@ public sealed class DispatchBlock : IHasTenant
     public Trip? Trip { get; set; }
 }
 
-public sealed class SupplyArrVendorOrderEventReceipt : IHasTenant
+public sealed class SupplyArrSupplierOrderEventReceipt : IHasTenant
 {
     public Guid Id { get; set; }
 
@@ -43,14 +43,14 @@ public sealed class SupplyArrVendorOrderEventReceipt : IHasTenant
 
     public string EventType { get; set; } = string.Empty;
 
-    public Guid VendorOrderId { get; set; }
+    public Guid SupplierOrderId { get; set; }
 
     public DateTimeOffset ProcessedAt { get; set; }
 }
 
 public static class DispatchBlockTypes
 {
-    public const string VendorReadiness = "vendor_readiness";
+    public const string SupplierReadiness = "supplier_readiness";
 
     public const string MissingPickupWindow = "missing_pickup_window";
 
@@ -63,11 +63,11 @@ public static class DispatchBlockTypes
 
 public static class DispatchBlockReasons
 {
-    public const string VendorOrderNotComplete = "vendor_order_not_complete";
+    public const string SupplierOrderNotComplete = "supplier_order_not_complete";
 
-    public const string VendorOrderPartiallyReady = "vendor_order_partially_ready";
+    public const string SupplierOrderPartiallyReady = "supplier_order_partially_ready";
 
-    public const string VendorUnableToFulfill = "vendor_unable_to_fulfill";
+    public const string SupplierUnableToFulfill = "supplier_unable_to_fulfill";
 
     public const string MissingRequiredFields = "missing_required_fields";
 

@@ -50,8 +50,8 @@ public static class PriceSnapshotCaptureRules
             || RoundQuantity(catalogMinimumOrderQuantity) != RoundQuantity(currentMinimumOrderQuantity);
     }
 
-    public static string BuildWorkerSnapshotKey(Guid partVendorLinkId, DateTimeOffset effectiveFrom) =>
-        $"worker-{partVendorLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
+    public static string BuildWorkerSnapshotKey(Guid partSupplierLinkId, DateTimeOffset effectiveFrom) =>
+        $"worker-{partSupplierLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
 
     public static decimal RoundPrice(decimal value) =>
         decimal.Round(value, 4, MidpointRounding.AwayFromZero);

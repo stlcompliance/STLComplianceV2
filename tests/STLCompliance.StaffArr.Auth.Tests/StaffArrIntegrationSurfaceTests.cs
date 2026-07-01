@@ -93,6 +93,49 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Internal_person_provisioning_endpoint_creates_and_updates_people_for_nexarr()
+    {
+        var provisionToken = CreateServiceToken("nexarr", InternalPersonProvisioningEndpoints.ProvisionActionScope);
+        var externalUserId = Guid.NewGuid();
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/internal/people/provision", provisionToken);
+        createRequest.Content = JsonContent.Create(new ProvisionStaffArrPersonRequest(
+            PlatformSeeder.DemoTenantId,
+            externalUserId,
+            "new.person@example.com",
+            "New Person"));
+        var createResponse = await _client.SendAsync(createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var created = await createResponse.Content.ReadFromJsonAsync<ProvisionStaffArrPersonResponse>();
+        Assert.NotNull(created);
+        Assert.True(created!.WasCreated);
+        Assert.False(created.WasUpdated);
+
+        var updateRequest = Authorized(HttpMethod.Post, "/api/internal/people/provision", provisionToken);
+        updateRequest.Content = JsonContent.Create(new ProvisionStaffArrPersonRequest(
+            PlatformSeeder.DemoTenantId,
+            externalUserId,
+            "new.person@example.com",
+            "Updated Person"));
+        var updateResponse = await _client.SendAsync(updateRequest);
+        updateResponse.EnsureSuccessStatusCode();
+
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ProvisionStaffArrPersonResponse>();
+        Assert.NotNull(updated);
+        Assert.False(updated!.WasCreated);
+        Assert.True(updated.WasUpdated);
+        Assert.Equal(created.PersonId, updated.PersonId);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StaffArrDbContext>();
+        var person = await db.People.FirstOrDefaultAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId && x.ExternalUserId == externalUserId);
+        Assert.NotNull(person);
+        Assert.Equal("Updated Person", person!.DisplayName);
+    }
+
+    [Fact]
     public async Task Integration_restrictions_lift_round_trips()
     {
         var token = CreateStaffArrToken();

@@ -77,15 +77,14 @@ describe('EmergencyPurchasePanel', () => {
               reorderPoint: null,
               reorderQuantity: null,
               manufacturerAliases: [],
-              vendorLinks: [],
+              supplierLinks: [],
               createdAt: '',
               updatedAt: '',
             },
           ]}
           suppliers={[
             {
-              supplierId: 'vendor-1',
-              partyId: 'vendor-1',
+              supplierId: 'supplier-unit-1',
               displayName: 'North Yard Counter',
               supplierKey: 'acme-north-yard',
               parentSupplierDisplayName: 'Acme Supply',

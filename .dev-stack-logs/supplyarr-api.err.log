@@ -1,0 +1,56 @@
+dotnet watch 🔥 Hot reload enabled. For a list of supported edits, see https://aka.ms/dotnet/hot-reload.
+dotnet watch 💡 Press Ctrl+R to restart.
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 1.4s.
+dotnet watch ⌚ Waiting for changes
+dotnet watch ⌚ File updated: .\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs
+dotnet watch 🔥 Restart is needed to apply the changes.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs(1,1): error ENC0033: Deleting record 'ComplianceReportTotalsResponse' requires restarting the application.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs(1,1): error ENC0033: Deleting record 'CompliancePartySummaryItemResponse' requires restarting the application.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs(1,1): error ENC0033: Deleting record 'ComplianceDocumentSummaryItemResponse' requires restarting the application.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs(1,1): error ENC0033: Deleting record 'ComplianceReportSummaryResponse' requires restarting the application.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Contracts\ComplianceReportContracts.cs(1,1): error ENC0033: Deleting record 'CompliancePartyDetailResponse' requires restarting the application.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] Exited with error code -1
+dotnet watch ⏳ Waiting for a file to change before restarting ...
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.2s.
+dotnet watch ⌚ Waiting for changes
+dotnet watch ⌚ File updated: .\apps\supplyarr-api\SupplyArr.Api\Services\SupplierOnboardingService.cs
+dotnet watch 🔥 C# and Razor changes applied in 1778ms.
+dotnet watch ⌚ File updated: .\apps\supplyarr-api\SupplyArr.Api\Endpoints\SupplierIncidentEndpoints.cs
+dotnet watch 🔥 C# and Razor changes applied in 1458ms.
+dotnet watch ❌ [SupplyArr.Api (net10.0)] Exited with error code -1
+dotnet watch ⏳ Waiting for a file to change before restarting ...
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.1s.
+dotnet watch ⌚ Fix the error to continue or press Ctrl+C to exit.
+y.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 270
+   at Program.<Main>$(String[] args) in F:\STLComplianceV2\apps\supplyarr-api\SupplyArr.Api\Program.cs:line 7
+   at Program.<Main>(String[] args)
+dotnet watch ❌ [SupplyArr.Api (net10.0)] Exited with error code -532462766
+dotnet watch ⏳ Waiting for a file to change before restarting ...
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.2s.
+dotnet watch ⌚ Fix the error to continue or press Ctrl+C to exit.
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.2s.
+dotnet watch ⌚ Fix the error to continue or press Ctrl+C to exit.
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.1s.
+dotnet watch ⌚ Fix the error to continue or press Ctrl+C to exit.
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.1s.
+dotnet watch ⌚ Fix the error to continue or press Ctrl+C to exit.
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.1s.
+dotnet watch ⌚ Waiting for changes

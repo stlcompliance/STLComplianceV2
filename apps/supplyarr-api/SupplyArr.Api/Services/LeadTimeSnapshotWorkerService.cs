@@ -33,17 +33,14 @@ public sealed class LeadTimeSnapshotWorkerService(
 
         var items = candidates
             .Select(x => new PendingLeadTimeSnapshotCaptureItem(
-                x.PartVendorLinkId,
+                x.PartSupplierLinkId,
                 x.PartId,
                 x.PartKey,
                 x.PartDisplayName,
                 x.SupplierId,
                 x.SupplierKey,
                 x.SupplierDisplayName,
-                x.VendorPartyId,
-                x.VendorPartyKey,
-                x.VendorDisplayName,
-                x.VendorPartNumber,
+                x.SupplierPartNumber,
                 x.CatalogLeadTimeDays,
                 x.CurrentLeadTimeDays,
                 x.LastCapturedAt))
@@ -90,14 +87,14 @@ public sealed class LeadTimeSnapshotWorkerService(
                 var snapshot = await leadTimeSnapshots.CreateWorkerCaptureAsync(
                     candidate.TenantId,
                     WorkerActorUserId,
-                    candidate.PartVendorLinkId,
+                    candidate.PartSupplierLinkId,
                     candidate.CatalogLeadTimeDays,
                     asOf,
                     cancellationToken);
 
                 await UpsertCaptureStateAsync(
                     candidate.TenantId,
-                    candidate.PartVendorLinkId,
+                    candidate.PartSupplierLinkId,
                     candidate.CatalogLeadTimeDays,
                     snapshot.LeadTimeSnapshotId,
                     asOf,
@@ -111,7 +108,7 @@ public sealed class LeadTimeSnapshotWorkerService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                skipped.Add(new LeadTimeSnapshotCaptureSkip(candidate.PartVendorLinkId, ex.Message));
+                skipped.Add(new LeadTimeSnapshotCaptureSkip(candidate.PartSupplierLinkId, ex.Message));
                 stats = runStats[candidate.TenantId];
                 stats.Skipped++;
                 runStats[candidate.TenantId] = stats;
@@ -185,28 +182,28 @@ public sealed class LeadTimeSnapshotWorkerService(
 
     private async Task UpsertCaptureStateAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         int catalogLeadTimeDays,
         Guid leadTimeSnapshotId,
         DateTimeOffset capturedAt,
         CancellationToken cancellationToken)
     {
-        var state = await db.PartVendorLeadTimeCaptureStates
+        var state = await db.PartSupplierLeadTimeCaptureStates
             .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.PartVendorLinkId == partVendorLinkId,
+                x => x.TenantId == tenantId && x.PartSupplierLinkId == partSupplierLinkId,
                 cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         if (state is null)
         {
-            state = new PartVendorLeadTimeCaptureState
+            state = new PartSupplierLeadTimeCaptureState
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                PartVendorLinkId = partVendorLinkId,
+                PartSupplierLinkId = partSupplierLinkId,
                 CreatedAt = now,
             };
-            db.PartVendorLeadTimeCaptureStates.Add(state);
+            db.PartSupplierLeadTimeCaptureStates.Add(state);
         }
 
         state.LastCapturedLeadTimeDays = catalogLeadTimeDays;
@@ -235,10 +232,10 @@ public sealed class LeadTimeSnapshotWorkerService(
             return [];
         }
 
-        var links = await db.PartVendorLinks
+        var links = await db.PartSupplierLinks
             .AsNoTracking()
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x =>
                 enabledTenantIds.Contains(x.TenantId)
                 && x.CatalogLeadTimeDays != null
@@ -248,10 +245,10 @@ public sealed class LeadTimeSnapshotWorkerService(
             .ToListAsync(cancellationToken);
 
         var linkIds = links.Select(x => x.Id).ToList();
-        var captureStates = await db.PartVendorLeadTimeCaptureStates
+        var captureStates = await db.PartSupplierLeadTimeCaptureStates
             .AsNoTracking()
-            .Where(x => enabledTenantIds.Contains(x.TenantId) && linkIds.Contains(x.PartVendorLinkId))
-            .ToDictionaryAsync(x => (x.TenantId, x.PartVendorLinkId), cancellationToken);
+            .Where(x => enabledTenantIds.Contains(x.TenantId) && linkIds.Contains(x.PartSupplierLinkId))
+            .ToDictionaryAsync(x => (x.TenantId, x.PartSupplierLinkId), cancellationToken);
 
         var currentSnapshots = await LoadCurrentSnapshotsAsync(enabledTenantIds, linkIds, asOfUtc, cancellationToken);
 
@@ -276,13 +273,10 @@ public sealed class LeadTimeSnapshotWorkerService(
                 link.PartId,
                 link.Part.PartKey,
                 link.Part.DisplayName,
-                link.ExternalPartyId,
-                link.ExternalParty.PartyKey,
-                link.ExternalParty.DisplayName,
-                link.ExternalPartyId,
-                link.ExternalParty.PartyKey,
-                link.ExternalParty.DisplayName,
-                link.VendorPartNumber,
+                link.SupplierId,
+                link.Supplier.SupplierKey,
+                link.Supplier.DisplayName,
+                link.SupplierPartNumber,
                 link.CatalogLeadTimeDays!.Value,
                 currentSnapshot?.LeadTimeDays,
                 captureState?.LastCapturedAt));
@@ -300,7 +294,7 @@ public sealed class LeadTimeSnapshotWorkerService(
             .ToList();
     }
 
-    private async Task<Dictionary<(Guid TenantId, Guid PartVendorLinkId), CurrentSnapshotValues>> LoadCurrentSnapshotsAsync(
+    private async Task<Dictionary<(Guid TenantId, Guid PartSupplierLinkId), CurrentSnapshotValues>> LoadCurrentSnapshotsAsync(
         IReadOnlyList<Guid> tenantIds,
         IReadOnlyList<Guid> linkIds,
         DateTimeOffset asOfUtc,
@@ -311,21 +305,21 @@ public sealed class LeadTimeSnapshotWorkerService(
             return [];
         }
 
-        var snapshots = await db.PartVendorLeadTimeSnapshots
+        var snapshots = await db.PartSupplierLeadTimeSnapshots
             .AsNoTracking()
             .Where(x =>
                 tenantIds.Contains(x.TenantId)
-                && linkIds.Contains(x.PartVendorLinkId)
+                && linkIds.Contains(x.PartSupplierLinkId)
                 && x.EffectiveFrom <= asOfUtc
                 && (x.EffectiveTo == null || x.EffectiveTo > asOfUtc))
             .OrderByDescending(x => x.EffectiveFrom)
             .ThenByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var lookup = new Dictionary<(Guid TenantId, Guid PartVendorLinkId), CurrentSnapshotValues>();
+        var lookup = new Dictionary<(Guid TenantId, Guid PartSupplierLinkId), CurrentSnapshotValues>();
         foreach (var snapshot in snapshots)
         {
-            var key = (snapshot.TenantId, snapshot.PartVendorLinkId);
+            var key = (snapshot.TenantId, snapshot.PartSupplierLinkId);
             if (!lookup.ContainsKey(key))
             {
                 lookup[key] = new CurrentSnapshotValues(snapshot.LeadTimeDays);
@@ -338,7 +332,7 @@ public sealed class LeadTimeSnapshotWorkerService(
     private sealed record CurrentSnapshotValues(int LeadTimeDays);
 
     private sealed record PendingLinkCandidate(
-        Guid PartVendorLinkId,
+        Guid PartSupplierLinkId,
         Guid TenantId,
         Guid PartId,
         string PartKey,
@@ -346,11 +340,9 @@ public sealed class LeadTimeSnapshotWorkerService(
         Guid SupplierId,
         string SupplierKey,
         string SupplierDisplayName,
-        Guid VendorPartyId,
-        string VendorPartyKey,
-        string VendorDisplayName,
-        string VendorPartNumber,
+        string SupplierPartNumber,
         int CatalogLeadTimeDays,
         int? CurrentLeadTimeDays,
         DateTimeOffset? LastCapturedAt);
 }
+

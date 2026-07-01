@@ -69,8 +69,8 @@ public static class AvailabilitySnapshotCaptureRules
         catalogQuantityAvailable is not null
         || !string.IsNullOrWhiteSpace(catalogAvailabilityStatus);
 
-    public static string BuildWorkerSnapshotKey(Guid partVendorLinkId, DateTimeOffset effectiveFrom) =>
-        $"worker-av-{partVendorLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
+    public static string BuildWorkerSnapshotKey(Guid partSupplierLinkId, DateTimeOffset effectiveFrom) =>
+        $"worker-av-{partSupplierLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
 
     public static decimal? NormalizeOptionalQuantity(decimal? quantityAvailable)
     {
@@ -113,4 +113,4 @@ public static class AvailabilitySnapshotCaptureRules
         ?? NormalizeOptionalStatus(currentAvailabilityStatus)
         ?? AvailabilityStatuses.InStock;
 }
-
+

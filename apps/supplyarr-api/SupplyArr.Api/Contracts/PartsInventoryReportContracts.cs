@@ -34,7 +34,7 @@ public sealed record PartsInventoryPartSummaryItemResponse(
     decimal QuantityReserved,
     decimal QuantityAvailable,
     bool BelowReorderPoint,
-    int VendorLinkCount);
+    int SupplierLinkCount);
 
 public sealed record PartsInventoryReportSummaryResponse(
     DateTimeOffset GeneratedAt,
@@ -54,18 +54,22 @@ public sealed record PartsInventoryStockBinRowResponse(
     decimal QuantityReserved,
     decimal QuantityAvailable);
 
-public sealed record PartsInventoryPartVendorLinkRowResponse(
-    Guid PartVendorLinkId,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
-    string VendorPartNumber,
+public sealed record PartsInventoryPartSupplierLinkRowResponse(
+    Guid PartSupplierLinkId,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    Guid? ParentSupplierId,
+    string? ParentSupplierDisplayName,
+    string? SupplierUnitKind,
+    IReadOnlyList<string> SupplierServiceTypes,
+    string SupplierPartNumber,
     bool IsPreferred);
 
 public sealed record PartsInventoryPartDetailResponse(
     PartsInventoryPartSummaryItemResponse Summary,
     IReadOnlyList<PartsInventoryStockBinRowResponse> StockByBin,
-    IReadOnlyList<PartsInventoryPartVendorLinkRowResponse> VendorLinks);
+    IReadOnlyList<PartsInventoryPartSupplierLinkRowResponse> SupplierLinks);
 
 public sealed record PartsInventoryLocationBinRowResponse(
     Guid InventoryBinId,

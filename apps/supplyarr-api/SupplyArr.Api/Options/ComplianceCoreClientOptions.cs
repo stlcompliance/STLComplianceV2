@@ -8,11 +8,11 @@ public sealed class ComplianceCoreClientOptions
 
     public string ServiceToken { get; set; } = string.Empty;
 
-    public string VendorUseActionKey { get; set; } = "can-use-vendor";
+    public string SupplierUseActionKey { get; set; } = "can-use-supplier";
 
-    public string? VendorUseWorkflowKey { get; set; }
+    public string? SupplierUseWorkflowKey { get; set; }
 
-    public string VendorUseActivityContextKey { get; set; } = "purchase_order_issue";
+    public string SupplierUseActivityContextKey { get; set; } = "purchase_order_issue";
 
-    public bool EmitVendorUseFindings { get; set; }
+    public bool EmitSupplierUseFindings { get; set; }
 }

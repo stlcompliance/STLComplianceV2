@@ -79,7 +79,7 @@ public sealed class TenantIsolationLiveTests
     }
 
     [SkippableFact]
-    public async Task Live_SupplyArr_cross_tenant_vendor_get_returns_not_found()
+    public async Task Live_SupplyArr_cross_tenant_supplier_get_returns_not_found()
     {
         Skip.IfNot(LiveServiceProbe.LiveModeEnabled, "Set E2E_LIVE=1 to run live tenant isolation probes.");
 
@@ -107,16 +107,25 @@ public sealed class TenantIsolationLiveTests
             ["supplyarr"],
             "tenant_admin");
 
-        var createVendorRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/vendors", tenantAToken);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createVendorRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/suppliers", tenantAToken);
+        createVendorRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             $"live-iso-{Guid.NewGuid():N}".Substring(0, 12),
-            "Live Isolation Vendor",
-            "Live Isolation Vendor LLC",
             null,
-            "Live tenant isolation probe"));
+            null,
+            "Live Isolation Supplier",
+            "Live Isolation Supplier LLC",
+            null,
+            "Live tenant isolation probe",
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
         var createVendorResponse = await supplyarrClient.SendAsync(createVendorRequest);
         createVendorResponse.EnsureSuccessStatusCode();
-        var created = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        var created = (await createVendorResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var tenantBToken = MintUserJwt(
             E2ETenants.TenantBId,
@@ -126,7 +135,7 @@ public sealed class TenantIsolationLiveTests
             "tenant_admin");
 
         var crossTenantResponse = await supplyarrClient.SendAsync(
-            HttpTestClient.Authorized(HttpMethod.Get, $"/api/vendors/{created.PartyId}", tenantBToken));
+            HttpTestClient.Authorized(HttpMethod.Get, $"/api/suppliers/{created.SupplierId}", tenantBToken));
 
         Assert.Equal(HttpStatusCode.NotFound, crossTenantResponse.StatusCode);
     }

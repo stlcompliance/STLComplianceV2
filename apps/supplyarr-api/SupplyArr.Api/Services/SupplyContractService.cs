@@ -18,7 +18,6 @@ public sealed class SupplyContractService(
     public async Task<IReadOnlyList<SupplyContractResponse>> ListAsync(
         Guid tenantId,
         Guid? supplierId,
-        Guid? vendorPartyId,
         string? status,
         int? limit,
         CancellationToken cancellationToken = default)
@@ -29,10 +28,9 @@ public sealed class SupplyContractService(
         var take = NormalizeLimit(limit);
 
         var query = QueryContracts(tenantId);
-        var selectedSupplierId = supplierId ?? vendorPartyId;
-        if (selectedSupplierId.HasValue)
+        if (supplierId.HasValue)
         {
-            query = query.Where(x => x.VendorPartyId == selectedSupplierId.Value);
+            query = query.Where(x => x.SupplierId == supplierId.Value);
         }
 
         if (normalizedStatus is not null)
@@ -75,19 +73,17 @@ public sealed class SupplyContractService(
             throw new StlApiException("contracts.duplicate_key", "A contract with this key already exists.", 409);
         }
 
-        var selectedSupplierId = request.SupplierId ?? request.VendorPartyId
+        var selectedSupplierId = request.SupplierId
             ?? throw new StlApiException("contracts.supplier_required", "Supplier is required.", 400);
 
-        var vendor = await db.ExternalParties.AsNoTracking()
-            .Include(x => x.ParentExternalParty)
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == selectedSupplierId, cancellationToken)
-            ?? throw new StlApiException("contracts.vendor_not_found", "Vendor party was not found.", 404);
-
-        if (!string.Equals(vendor.PartyType, "vendor", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(vendor.PartyType, "supplier", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new StlApiException("contracts.vendor_type_required", "Contracts must reference a vendor or supplier party.", 400);
-        }
+        var supplier = await db.Suppliers.AsNoTracking()
+            .Include(x => x.ParentSupplier)
+            .FirstOrDefaultAsync(
+                x => x.TenantId == tenantId
+                    && x.Id == selectedSupplierId
+                   ,
+                cancellationToken)
+            ?? throw new StlApiException("contracts.supplier_not_found", "Supplier was not found.", 404);
 
         var effectiveAt = request.EffectiveAt ?? DateTimeOffset.UtcNow;
         if (request.ExpiresAt.HasValue && request.ExpiresAt.Value <= effectiveAt)
@@ -110,7 +106,7 @@ public sealed class SupplyContractService(
             ContractKey = contractKey,
             ContractType = NormalizeRequired(request.ContractType, "contracts.invalid_type", 64),
             Title = NormalizeRequired(request.Title, "contracts.invalid_title", 256),
-            VendorPartyId = selectedSupplierId,
+            SupplierId = selectedSupplierId,
             EffectiveAt = effectiveAt,
             ExpiresAt = request.ExpiresAt,
             RenewalAt = request.RenewalAt,
@@ -143,7 +139,7 @@ public sealed class SupplyContractService(
 
     private IQueryable<SupplyContract> QueryContracts(Guid tenantId) =>
         db.SupplyContracts.AsNoTracking()
-            .Include(x => x.VendorParty).ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier).ThenInclude(x => x!.ParentSupplier)
             .Where(x => x.TenantId == tenantId);
 
     private static SupplyContractResponse Map(SupplyContract entity) =>
@@ -152,16 +148,13 @@ public sealed class SupplyContractService(
             entity.ContractKey,
             entity.ContractType,
             entity.Title,
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
-            entity.VendorParty.ParentExternalPartyId,
-            entity.VendorParty.ParentExternalParty?.DisplayName,
-            entity.VendorParty.UnitKind,
-            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
+            entity.SupplierId,
+            entity.Supplier.SupplierKey,
+            entity.Supplier.DisplayName,
+            entity.Supplier.ParentSupplierId,
+            entity.Supplier.ParentSupplier?.DisplayName,
+            entity.Supplier.UnitKind,
+            ParseServiceTypes(entity.Supplier.ServiceTypesJson),
             entity.EffectiveAt,
             entity.ExpiresAt,
             entity.RenewalAt,
@@ -269,3 +262,5 @@ public sealed class SupplyContractService(
         return Math.Min(limit.Value, MaxListLimit);
     }
 }
+
+

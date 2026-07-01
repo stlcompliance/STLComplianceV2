@@ -9,8 +9,8 @@ namespace SupplyArr.Api.Services;
 
 public sealed class PurchaseOrderService(
     SupplyArrDbContext db,
-    VendorProcurementGuardService vendorProcurementGuard,
-    ComplianceCoreVendorUseGateClient complianceCoreVendorUseGate,
+    SupplierProcurementGuardService supplierProcurementGuard,
+    ComplianceCoreSupplierUseGateClient complianceCoreSupplierUseGate,
     StaffarrProcurementApprovalAuthorityService approvalAuthority,
     SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
@@ -26,8 +26,8 @@ public sealed class PurchaseOrderService(
     {
         var query = db.PurchaseOrders
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -65,8 +65,8 @@ public sealed class PurchaseOrderService(
         var purchaseRequest = await db.PurchaseRequests
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.Id == purchaseRequestId,
                 cancellationToken)
@@ -86,7 +86,7 @@ public sealed class PurchaseOrderService(
                 409);
         }
 
-        if (!purchaseRequest.VendorPartyId.HasValue)
+        if (!purchaseRequest.SupplierId.HasValue)
         {
             throw new StlApiException(
                 "purchase_orders.purchase_request.supplier_required",
@@ -94,10 +94,10 @@ public sealed class PurchaseOrderService(
                 400);
         }
 
-        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+        await supplierProcurementGuard.EnsureSupplierAllowedForScopeAsync(
             tenantId,
-            purchaseRequest.VendorPartyId.Value,
-            VendorRestrictionScopes.PurchaseOrders,
+            purchaseRequest.SupplierId.Value,
+            SupplierRestrictionScopes.PurchaseOrders,
             cancellationToken);
 
         if (purchaseRequest.Lines.Count == 0)
@@ -143,7 +143,7 @@ public sealed class PurchaseOrderService(
             Notes = NormalizeNotes(request.Notes ?? purchaseRequest.Notes),
             Status = PurchaseOrderStatuses.Draft,
             PurchaseRequestId = purchaseRequest.Id,
-            VendorPartyId = purchaseRequest.VendorPartyId.Value,
+            SupplierId = purchaseRequest.SupplierId.Value,
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now
@@ -369,10 +369,10 @@ public sealed class PurchaseOrderService(
                 409);
         }
 
-        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+        await supplierProcurementGuard.EnsureSupplierAllowedForScopeAsync(
             tenantId,
-            entity.VendorPartyId,
-            VendorRestrictionScopes.PurchaseOrders,
+            entity.SupplierId,
+            SupplierRestrictionScopes.PurchaseOrders,
             cancellationToken);
 
         await approvalAuthority.EnsureCanIssuePurchaseOrderAsync(
@@ -382,7 +382,7 @@ public sealed class PurchaseOrderService(
             entity,
             cancellationToken);
 
-        await EnsureComplianceCoreVendorUseAllowedAsync(entity, cancellationToken);
+        await EnsureComplianceCoreSupplierUseAllowedAsync(entity, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         entity.Status = PurchaseOrderStatuses.Issued;
@@ -409,7 +409,7 @@ public sealed class PurchaseOrderService(
         await notificationEnqueue.TryEnqueueAsync(
             tenantId,
             ProcurementNotificationEventKinds.PurchaseOrderIssued,
-            entity.VendorPartyId,
+            entity.SupplierId,
             "purchase_order",
             entity.Id,
             cancellationToken);
@@ -419,17 +419,17 @@ public sealed class PurchaseOrderService(
             IntegrationOutboxEventKinds.PurchaseOrderIssued,
             "purchase_order",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Purchase order issued: {entity.OrderKey}", entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Purchase order issued: {entity.OrderKey}", entity.SupplierId),
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
-    private async Task EnsureComplianceCoreVendorUseAllowedAsync(
+    private async Task EnsureComplianceCoreSupplierUseAllowedAsync(
         PurchaseOrder purchaseOrder,
         CancellationToken cancellationToken)
     {
-        if (!complianceCoreVendorUseGate.IsConfigured)
+        if (!complianceCoreSupplierUseGate.IsConfigured)
         {
             return;
         }
@@ -442,10 +442,10 @@ public sealed class PurchaseOrderService(
             ["purchase_order_id"] = purchaseOrder.Id.ToString("D"),
             ["purchaseOrderKey"] = purchaseOrder.OrderKey,
             ["purchase_order_key"] = purchaseOrder.OrderKey,
-            ["vendorPartyId"] = purchaseOrder.VendorPartyId.ToString("D"),
-            ["vendor_party_id"] = purchaseOrder.VendorPartyId.ToString("D"),
-            ["vendorPartyKey"] = purchaseOrder.VendorParty.PartyKey,
-            ["vendor_party_key"] = purchaseOrder.VendorParty.PartyKey,
+            ["supplierId"] = purchaseOrder.SupplierId.ToString("D"),
+            ["supplier_id"] = purchaseOrder.SupplierId.ToString("D"),
+            ["supplierKey"] = purchaseOrder.Supplier.SupplierKey,
+            ["supplier_key"] = purchaseOrder.Supplier.SupplierKey,
         };
 
         context["purchaseRequestId"] = purchaseOrder.PurchaseRequestId.ToString("D");
@@ -462,10 +462,10 @@ public sealed class PurchaseOrderService(
             context["part_ids"] = string.Join(",", partIds);
         }
 
-        var result = await complianceCoreVendorUseGate.CheckVendorUseAsync(
+        var result = await complianceCoreSupplierUseGate.CheckSupplierUseAsync(
             purchaseOrder.TenantId,
-            purchaseOrder.VendorPartyId,
-            purchaseOrder.VendorParty.DisplayName,
+            purchaseOrder.SupplierId,
+            purchaseOrder.Supplier.DisplayName,
             context,
             cancellationToken);
 
@@ -475,7 +475,7 @@ public sealed class PurchaseOrderService(
         }
 
         throw new StlApiException(
-            "purchase_orders.compliancecore_vendor_gate_blocked",
+            "purchase_orders.compliancecore_supplier_gate_blocked",
             result.Message,
             409,
             new Dictionary<string, object?>
@@ -596,8 +596,8 @@ public sealed class PurchaseOrderService(
     {
         return await db.PurchaseOrders
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -616,8 +616,8 @@ public sealed class PurchaseOrderService(
         CancellationToken cancellationToken)
     {
         return await db.PurchaseOrders
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.PurchaseRequest)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -639,16 +639,13 @@ public sealed class PurchaseOrderService(
             entity.Status,
             entity.PurchaseRequestId,
             entity.PurchaseRequest.RequestKey,
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
-            entity.VendorParty.ParentExternalPartyId,
-            entity.VendorParty.ParentExternalParty?.DisplayName,
-            entity.VendorParty.UnitKind,
-            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
+            entity.SupplierId,
+            entity.Supplier.SupplierKey,
+            entity.Supplier.DisplayName,
+            entity.Supplier.ParentSupplierId,
+            entity.Supplier.ParentSupplier?.DisplayName,
+            entity.Supplier.UnitKind,
+            ParseServiceTypes(entity.Supplier.ServiceTypesJson),
             entity.CreatedByUserId,
             entity.ApprovedAt,
             entity.ApprovedByUserId,
@@ -774,3 +771,4 @@ public sealed class PurchaseOrderService(
         return decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
     }
 }
+

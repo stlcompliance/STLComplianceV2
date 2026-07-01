@@ -24,8 +24,8 @@ vi.mock('../../components/RfqPanel', () => ({
   RfqPanel: () => null,
 }))
 
-vi.mock('../../components/VendorEmailInboxPanel', () => ({
-  VendorEmailInboxPanel: () => <div data-testid="supplyarr-vendor-email-inbox-panel" />,
+vi.mock('../../components/SupplierEmailInboxPanel', () => ({
+  SupplierEmailInboxPanel: () => <div data-testid="supplyarr-supplier-email-inbox-panel" />,
 }))
 
 vi.mock('../../components/ProcurementCoordinationPanel', () => ({
@@ -107,7 +107,7 @@ describe('PurchasingSection', () => {
     )
     expect(screen.getByTestId('supplyarr-purchasing-po-workspace')).toBeInTheDocument()
     expect(screen.getByTestId('supplyarr-purchasing-pr-workspace')).toBeInTheDocument()
-    expect(screen.getByTestId('supplyarr-vendor-email-inbox-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-supplier-email-inbox-panel')).toBeInTheDocument()
     expect(screen.getByTestId('supplyarr-contract-import-panel')).toBeInTheDocument()
   })
 })

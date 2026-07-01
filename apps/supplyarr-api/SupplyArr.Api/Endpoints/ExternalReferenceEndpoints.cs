@@ -38,7 +38,7 @@ public static class ExternalReferenceEndpoints
         SupplyArrAuthorizationService authorization,
         HttpContext context)
     {
-        authorization.RequirePartiesRead(context.User);
+        authorization.RequireSuppliersRead(context.User);
         return Results.Ok(new ExternalReferenceContractIndexResponse(
             EntityContracts,
             DateTimeOffset.UtcNow));
@@ -142,7 +142,7 @@ public static class ExternalReferenceEndpoints
     {
         return normalizedEntityType switch
         {
-            "party" or "vendor" or "supplier" or "dealer" or "carrier" => await ResolveSupplierAsync(
+            "supplier" => await ResolveSupplierAsync(
                 normalizedKey,
                 tenantId,
                 authorization,
@@ -190,21 +190,21 @@ public static class ExternalReferenceEndpoints
         SupplyArrDbContext db,
         CancellationToken cancellationToken)
     {
-        authorization.RequirePartiesRead(context.User);
+        authorization.RequireSuppliersRead(context.User);
 
-        var party = await db.ExternalParties
-            .Where(x => x.TenantId == tenantId && x.PartyKey == key)
-            .Select(x => new { x.Id, x.PartyKey, x.DisplayName })
+        var supplier = await db.Suppliers
+            .Where(x => x.TenantId == tenantId && x.SupplierKey == key)
+            .Select(x => new { x.Id, x.SupplierKey, x.DisplayName })
             .SingleOrDefaultAsync(cancellationToken);
 
-        return party is null
+        return supplier is null
             ? null
             : new ExternalReferenceResolutionResponse(
                 "supplier",
-                party.PartyKey,
-                party.Id,
-                party.PartyKey,
-                party.DisplayName,
+                supplier.SupplierKey,
+                supplier.Id,
+                supplier.SupplierKey,
+                supplier.DisplayName,
                 DateTimeOffset.UtcNow);
     }
 
@@ -341,3 +341,4 @@ public static class ExternalReferenceEndpoints
     private static string RouteSuffix(string routePrefix) =>
         routePrefix.Contains("/v1/", StringComparison.OrdinalIgnoreCase) ? "V1" : string.Empty;
 }
+

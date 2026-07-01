@@ -32,7 +32,7 @@ export const PROCUREMENT_REJECTION_REASON_OPTIONS: PickerOption[] = [
   { value: 'budget_exceeded', label: 'Budget exceeded' },
   { value: 'wrong_part', label: 'Wrong part or specification' },
   { value: 'duplicate_request', label: 'Duplicate request' },
-  { value: 'vendor_unavailable', label: 'Supplier unavailable' },
+  { value: 'supplier_unavailable', label: 'Supplier unavailable' },
   { value: 'policy_exception', label: 'Policy exception' },
   { value: 'other', label: 'Other (explain in notes)' },
 ]
@@ -40,7 +40,7 @@ export const PROCUREMENT_REJECTION_REASON_OPTIONS: PickerOption[] = [
 export const PROCUREMENT_CANCEL_REASON_OPTIONS: PickerOption[] = [
   { value: 'no_longer_needed', label: 'No longer needed' },
   { value: 'sourced_elsewhere', label: 'Sourced elsewhere' },
-  { value: 'vendor_cancelled', label: 'Supplier cancelled' },
+  { value: 'supplier_cancelled', label: 'Supplier cancelled' },
   { value: 'data_entry_error', label: 'Data entry error' },
   { value: 'other', label: 'Other (explain in notes)' },
 ]
@@ -67,7 +67,6 @@ export interface SupplierUnitPickerSource {
   supplierKey: string
   parentSupplierDisplayName?: string | null
   unitKind?: string | null
-  partyId?: string
 }
 
 export function formatProcurementReason(code: string, notes: string): string {

@@ -215,19 +215,16 @@ public static class PartCatalogEndpoints
         })
         .WithName($"CreatePartSource{nameSuffix}");
 
-        MapPartSupplierLinkRoutes(group, "vendor-links", "VendorLink", nameSuffix);
-        MapPartSupplierLinkRoutes(group, "supplier-links", "SupplierLink", nameSuffix);
+        MapPartSupplierLinkRoutes(group, nameSuffix);
     }
 
     private static void MapPartSupplierLinkRoutes(
         RouteGroupBuilder group,
-        string routeSegment,
-        string namePrefix,
         string nameSuffix)
     {
-        group.MapPost($"/{{partId:guid}}/{routeSegment}", async (
+        group.MapPost("/{partId:guid}/supplier-links", async (
             Guid partId,
-            CreatePartVendorLinkRequest request,
+            CreatePartSupplierLinkRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             PartRegistryService service,
@@ -242,14 +239,14 @@ public static class PartCatalogEndpoints
                 partId,
                 request,
                 cancellationToken);
-            return Results.Created($"/api/parts/{partId}/{routeSegment}/{link.LinkId}", link);
+            return Results.Created($"/api/parts/{partId}/supplier-links/{link.LinkId}", link);
         })
-        .WithName($"CreatePart{namePrefix}{nameSuffix}");
+        .WithName($"CreatePartSupplierLink{nameSuffix}");
 
-        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-price", async (
+        group.MapPut("/{partId:guid}/supplier-links/{linkId:guid}/catalog-price", async (
             Guid partId,
             Guid linkId,
-            UpsertPartVendorLinkCatalogPriceRequest request,
+            UpsertPartSupplierLinkCatalogPriceRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             PartRegistryService service,
@@ -258,7 +255,7 @@ public static class PartCatalogEndpoints
             authorization.RequirePartsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.UpsertVendorLinkCatalogPriceAsync(
+            return Results.Ok(await service.UpsertSupplierLinkCatalogPriceAsync(
                 tenantId,
                 actorUserId,
                 partId,
@@ -266,12 +263,12 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPart{namePrefix}CatalogPrice{nameSuffix}");
+        .WithName($"UpsertPartSupplierLinkCatalogPrice{nameSuffix}");
 
-        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-lead-time", async (
+        group.MapPut("/{partId:guid}/supplier-links/{linkId:guid}/catalog-lead-time", async (
             Guid partId,
             Guid linkId,
-            UpsertPartVendorLinkCatalogLeadTimeRequest request,
+            UpsertPartSupplierLinkCatalogLeadTimeRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             PartRegistryService service,
@@ -280,7 +277,7 @@ public static class PartCatalogEndpoints
             authorization.RequirePartsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.UpsertVendorLinkCatalogLeadTimeAsync(
+            return Results.Ok(await service.UpsertSupplierLinkCatalogLeadTimeAsync(
                 tenantId,
                 actorUserId,
                 partId,
@@ -288,12 +285,12 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPart{namePrefix}CatalogLeadTime{nameSuffix}");
+        .WithName($"UpsertPartSupplierLinkCatalogLeadTime{nameSuffix}");
 
-        group.MapPut($"/{{partId:guid}}/{routeSegment}/{{linkId:guid}}/catalog-availability", async (
+        group.MapPut("/{partId:guid}/supplier-links/{linkId:guid}/catalog-availability", async (
             Guid partId,
             Guid linkId,
-            UpsertPartVendorLinkCatalogAvailabilityRequest request,
+            UpsertPartSupplierLinkCatalogAvailabilityRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             PartRegistryService service,
@@ -302,7 +299,7 @@ public static class PartCatalogEndpoints
             authorization.RequirePartsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.UpsertVendorLinkCatalogAvailabilityAsync(
+            return Results.Ok(await service.UpsertSupplierLinkCatalogAvailabilityAsync(
                 tenantId,
                 actorUserId,
                 partId,
@@ -310,6 +307,6 @@ public static class PartCatalogEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertPart{namePrefix}CatalogAvailability{nameSuffix}");
+        .WithName($"UpsertPartSupplierLinkCatalogAvailability{nameSuffix}");
     }
 }

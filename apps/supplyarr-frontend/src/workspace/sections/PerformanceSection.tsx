@@ -1,6 +1,6 @@
 import { PartsInventoryReportsPanel } from '../../components/PartsInventoryReportsPanel'
 import { PurchasingReportsPanel } from '../../components/PurchasingReportsPanel'
-import { SupplierReportsPanel } from '../../components/VendorReportsPanel'
+import { SupplierReportsPanel } from '../../components/SupplierReportsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }

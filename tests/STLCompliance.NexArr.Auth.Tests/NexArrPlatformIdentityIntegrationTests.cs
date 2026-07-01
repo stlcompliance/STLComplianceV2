@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
@@ -16,6 +17,7 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
 {
     private readonly WebApplicationFactory<global::NexArr.Api.Program> _factory;
     private readonly HttpClient _client;
+    private readonly RecordingStaffArrProvisioningClient _staffArrProvisioning = new();
 
     public NexArrPlatformIdentityIntegrationTests(WebApplicationFactory<global::NexArr.Api.Program> factory)
     {
@@ -39,6 +41,8 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
 
                 services.AddDbContext<NexArrDbContext>(options =>
                     options.UseInMemoryDatabase("NexArrPlatformIdentityIntegrationTests"));
+                services.RemoveAll<IStaffArrPersonProvisioningClient>();
+                services.AddSingleton<IStaffArrPersonProvisioningClient>(_staffArrProvisioning);
             });
         });
         _client = _factory.CreateClient();
@@ -69,6 +73,10 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Assert.True(created.MembershipWasCreated);
         Assert.False(created.Identity.CanLogin);
         Assert.Equal("invited", created.Identity.Status);
+        Assert.Contains(_staffArrProvisioning.Requests, call =>
+            call.TenantId == PlatformSeeder.DemoTenantId
+            && call.ExternalUserId == created.Identity.PersonId
+            && call.Email == "new.worker@example.com");
         Assert.Contains(created.Identity.TenantMemberships, m =>
             m.TenantId == PlatformSeeder.DemoTenantId && m.RoleKey == "driver" && m.IsActive);
 
@@ -206,6 +214,10 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
 
         Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, identity.PersonId);
         Assert.Equal("Updated Tenant Admin", identity.DisplayName);
+        Assert.Contains(_staffArrProvisioning.Requests, call =>
+            call.TenantId == PlatformSeeder.DemoTenantId
+            && call.ExternalUserId == PlatformSeeder.DemoTenantAdminUserId
+            && call.DisplayName == "Updated Tenant Admin");
         Assert.True(identity.LaunchEligible);
         Assert.Contains(identity.TenantMemberships, x =>
             x.TenantId == PlatformSeeder.DemoTenantId
@@ -294,6 +306,7 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
 
     private async Task SeedDatabaseAsync()
     {
+        _staffArrProvisioning.Requests.Clear();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         await db.Database.EnsureDeletedAsync();
@@ -301,4 +314,28 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
     }
+
+    private sealed class RecordingStaffArrProvisioningClient : IStaffArrPersonProvisioningClient
+    {
+        public List<ProvisioningCall> Requests { get; } = [];
+
+        public Task EnsurePersonAsync(
+            Guid tenantId,
+            Guid externalUserId,
+            string email,
+            string displayName,
+            Guid? requestedByUserId,
+            CancellationToken cancellationToken = default)
+        {
+            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, requestedByUserId));
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed record ProvisioningCall(
+        Guid TenantId,
+        Guid ExternalUserId,
+        string Email,
+        string DisplayName,
+        Guid? RequestedByUserId);
 }

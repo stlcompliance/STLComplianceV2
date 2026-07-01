@@ -33,9 +33,9 @@ public sealed class ContactsCsvImportService(
             return BuildResponse(request.DryRun, rows.Count, 0, 0, issues);
         }
 
-        var supplierIdsByKey = await db.ExternalParties
+        var supplierIdsByKey = await db.Suppliers
             .Where(x => x.TenantId == tenantId)
-            .ToDictionaryAsync(x => x.PartyKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
+            .ToDictionaryAsync(x => x.SupplierKey, x => x.Id, StringComparer.OrdinalIgnoreCase, cancellationToken);
         var accepted = 0;
 
         foreach (var row in rows)
@@ -57,11 +57,11 @@ public sealed class ContactsCsvImportService(
         var created = 0;
         foreach (var row in rows)
         {
-            await parties.AddExternalPartyContactAsync(
+            await parties.AddSupplierContactAsync(
                 tenantId,
                 actorUserId,
                 supplierIdsByKey[row.SupplierKey],
-                new CreatePartyContactRequest(
+                new CreateSupplierContactRequest(
                     row.ContactName,
                     row.Email,
                     row.Phone,
@@ -101,12 +101,10 @@ public sealed class ContactsCsvImportService(
         }
 
         var headerFields = ParseRow(lines[0]);
-        var normalizedHeaders = headerFields
-            .Select(header => string.Equals(header, "party_key", StringComparison.OrdinalIgnoreCase) ? "supplier_key" : header)
-            .ToArray();
+        var normalizedHeaders = headerFields.ToArray();
         if (normalizedHeaders.Length != Headers.Length || !normalizedHeaders.SequenceEqual(Headers, StringComparer.OrdinalIgnoreCase))
         {
-            issues.Add(new ContactsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}. Legacy party_key remains accepted."));
+            issues.Add(new ContactsCsvImportIssue(1, "csv.header", $"Header must be: {string.Join(",", Headers)}."));
             return [];
         }
 
@@ -246,3 +244,4 @@ public sealed class ContactsCsvImportService(
         string RoleLabel,
         bool IsPrimary);
 }
+

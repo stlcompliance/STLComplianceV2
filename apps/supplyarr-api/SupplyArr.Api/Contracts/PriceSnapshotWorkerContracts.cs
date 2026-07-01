@@ -10,17 +10,14 @@ public sealed record UpsertPriceSnapshotSettingsRequest(
     int StalenessHours);
 
 public sealed record PendingPriceSnapshotCaptureItem(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
     Guid SupplierId,
     string SupplierKey,
     string SupplierDisplayName,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     decimal CatalogUnitPrice,
     string CatalogCurrencyCode,
     decimal? CatalogMinimumOrderQuantity,
@@ -52,7 +49,7 @@ public sealed record ProcessPriceSnapshotCapturesRequest(
     int? StalenessHours);
 
 public sealed record PriceSnapshotCaptureSkip(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     string Reason);
 
 public sealed record ProcessPriceSnapshotCapturesResponse(
@@ -65,7 +62,7 @@ public sealed record ProcessPriceSnapshotCapturesResponse(
     IReadOnlyList<PricingSnapshotResponse> Captured,
     IReadOnlyList<PriceSnapshotCaptureSkip> Skipped);
 
-public sealed record UpsertPartVendorLinkCatalogPriceRequest(
+public sealed record UpsertPartSupplierLinkCatalogPriceRequest(
     decimal CatalogUnitPrice,
     string? CatalogCurrencyCode,
     decimal? CatalogMinimumOrderQuantity);

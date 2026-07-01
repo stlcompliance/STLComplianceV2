@@ -18,7 +18,8 @@ public sealed class PlatformUserAdminService(
     IConfiguration configuration,
     MfaSecretProtector mfaSecretProtector,
     MfaService mfaService,
-    PlatformSessionSettingsService sessionSettingsService)
+    PlatformSessionSettingsService sessionSettingsService,
+    IStaffArrPersonProvisioningClient staffArrProvisioning)
 {
     private static readonly HashSet<string> AllowedTenantRoleKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -931,6 +932,13 @@ public sealed class PlatformUserAdminService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await staffArrProvisioning.EnsurePersonAsync(
+            tenant.Id,
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            actorUserId,
+            cancellationToken);
 
         await audit.WriteAsync(
             "tenant.membership_added",

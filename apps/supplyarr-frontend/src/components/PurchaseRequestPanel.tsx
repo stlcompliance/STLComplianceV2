@@ -328,14 +328,14 @@ export function PurchaseRequestPanel({
               />
             </label>
             <StaticSearchPicker
-              id="purchase-request-create-vendor"
+              id="purchase-request-create-supplier"
               label="Supplier identity or sub-unit (optional)"
               value={selectedSupplierUnitId}
               onChange={onSelectedSupplierUnitIdChange}
               options={supplierOptions}
               selectedOption={selectedSupplierUnitOption}
               placeholder="Search supplier identities or sub-units…"
-              testId="purchase-request-create-vendor"
+              testId="purchase-request-create-supplier"
             />
             {selectedSupplierUnit ? (
               <p className="text-xs text-[var(--color-text-muted)]">

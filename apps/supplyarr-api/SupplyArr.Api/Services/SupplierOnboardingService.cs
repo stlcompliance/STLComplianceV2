@@ -9,7 +9,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class SupplierOnboardingService(
     SupplyArrDbContext db,
-    PartyComplianceDocumentService complianceDocuments,
+    SupplierComplianceDocumentService complianceDocuments,
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
@@ -75,8 +75,8 @@ public sealed class SupplierOnboardingService(
     {
         var supplier = await LoadOnboardableSupplierAsync(tenantId, request.SupplierId, cancellationToken);
 
-        var existing = await db.PartySupplierOnboardings
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == supplier.Id, cancellationToken);
+        var existing = await db.SupplierOnboardings
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.SupplierId == supplier.Id, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         if (existing is not null)
@@ -101,17 +101,17 @@ public sealed class SupplierOnboardingService(
         }
         else
         {
-            existing = new PartySupplierOnboarding
+            existing = new SupplierOnboarding
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                ExternalPartyId = supplier.Id,
+                SupplierId = supplier.Id,
                 OnboardingStatus = SupplierOnboardingStatuses.Draft,
                 Notes = NormalizeNotes(request.Notes),
                 CreatedAt = now,
                 UpdatedAt = now,
             };
-            db.PartySupplierOnboardings.Add(existing);
+            db.SupplierOnboardings.Add(existing);
         }
 
         supplier.ApprovalStatus = "pending";
@@ -123,7 +123,7 @@ public sealed class SupplierOnboardingService(
             "supplier_onboarding.start",
             tenantId,
             actorUserId,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             existing.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
@@ -131,20 +131,14 @@ public sealed class SupplierOnboardingService(
         return await MapOnboardingResponseAsync(tenantId, existing.Id, cancellationToken);
     }
 
-    public async Task<SupplierOnboardingResponse> GetByPartyAsync(
-        Guid tenantId,
-        Guid externalPartyId,
-        CancellationToken cancellationToken = default)
-        => await GetBySupplierAsync(tenantId, externalPartyId, cancellationToken);
-
     public async Task<SupplierOnboardingResponse> GetBySupplierAsync(
         Guid tenantId,
         Guid supplierId,
         CancellationToken cancellationToken = default)
     {
-        var onboarding = await db.PartySupplierOnboardings
+        var onboarding = await db.SupplierOnboardings
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == supplierId, cancellationToken)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.SupplierId == supplierId, cancellationToken)
             ?? throw new StlApiException("supplier_onboarding.not_found", "Supplier onboarding was not found.", 404);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
@@ -154,7 +148,7 @@ public sealed class SupplierOnboardingService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var ids = await db.PartySupplierOnboardings
+        var ids = await db.SupplierOnboardings
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId && x.OnboardingStatus == SupplierOnboardingStatuses.PendingReview)
             .OrderBy(x => x.SubmittedAt)
@@ -225,7 +219,7 @@ public sealed class SupplierOnboardingService(
             "supplier_onboarding.submit",
             tenantId,
             actorUserId,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
@@ -233,21 +227,13 @@ public sealed class SupplierOnboardingService(
         await integrationOutbox.TryEnqueueAsync(
             tenantId,
             IntegrationOutboxEventKinds.SupplierOnboardingSubmitted,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id,
-            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding submitted: {onboarding.ExternalParty.DisplayName}"),
+            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding submitted: {onboarding.Supplier.DisplayName}"),
             cancellationToken: cancellationToken);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
-
-    public Task<SupplierOnboardingResponse> SubmitForReviewByPartyAsync(
-        Guid tenantId,
-        Guid actorUserId,
-        Guid externalPartyId,
-        SubmitSupplierOnboardingForReviewRequest request,
-        CancellationToken cancellationToken = default) =>
-        SubmitForReviewAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
 
     public Task<SupplierOnboardingResponse> SubmitForReviewBySupplierAsync(
         Guid tenantId,
@@ -278,8 +264,8 @@ public sealed class SupplierOnboardingService(
         onboarding.ReviewedByUserId = actorUserId;
         onboarding.UpdatedAt = now;
 
-        onboarding.ExternalParty.ApprovalStatus = "approved";
-        onboarding.ExternalParty.UpdatedAt = now;
+        onboarding.Supplier.ApprovalStatus = "approved";
+        onboarding.Supplier.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -287,7 +273,7 @@ public sealed class SupplierOnboardingService(
             "supplier_onboarding.approve",
             tenantId,
             actorUserId,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
@@ -295,20 +281,13 @@ public sealed class SupplierOnboardingService(
         await integrationOutbox.TryEnqueueAsync(
             tenantId,
             IntegrationOutboxEventKinds.SupplierOnboardingApproved,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id,
-            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding approved: {onboarding.ExternalParty.DisplayName}"),
+            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding approved: {onboarding.Supplier.DisplayName}"),
             cancellationToken: cancellationToken);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
-
-    public Task<SupplierOnboardingResponse> ApproveByPartyAsync(
-        Guid tenantId,
-        Guid actorUserId,
-        Guid externalPartyId,
-        CancellationToken cancellationToken = default) =>
-        ApproveAsync(tenantId, actorUserId, externalPartyId, cancellationToken);
 
     public Task<SupplierOnboardingResponse> ApproveSupplierAsync(
         Guid tenantId,
@@ -341,8 +320,8 @@ public sealed class SupplierOnboardingService(
         onboarding.ReviewedByUserId = actorUserId;
         onboarding.UpdatedAt = now;
 
-        onboarding.ExternalParty.ApprovalStatus = "restricted";
-        onboarding.ExternalParty.UpdatedAt = now;
+        onboarding.Supplier.ApprovalStatus = "restricted";
+        onboarding.Supplier.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -350,7 +329,7 @@ public sealed class SupplierOnboardingService(
             "supplier_onboarding.reject",
             tenantId,
             actorUserId,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id.ToString(),
             "Succeeded",
             reasonCode: reason,
@@ -359,21 +338,13 @@ public sealed class SupplierOnboardingService(
         await integrationOutbox.TryEnqueueAsync(
             tenantId,
             IntegrationOutboxEventKinds.SupplierOnboardingRejected,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id,
-            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding rejected: {onboarding.ExternalParty.DisplayName}"),
+            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding rejected: {onboarding.Supplier.DisplayName}"),
             cancellationToken: cancellationToken);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
-
-    public Task<SupplierOnboardingResponse> RejectByPartyAsync(
-        Guid tenantId,
-        Guid actorUserId,
-        Guid externalPartyId,
-        RejectSupplierOnboardingRequest request,
-        CancellationToken cancellationToken = default) =>
-        RejectAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
 
     public Task<SupplierOnboardingResponse> RejectSupplierAsync(
         Guid tenantId,
@@ -407,8 +378,8 @@ public sealed class SupplierOnboardingService(
         }
 
         onboarding.UpdatedAt = now;
-        onboarding.ExternalParty.ApprovalStatus = "restricted";
-        onboarding.ExternalParty.UpdatedAt = now;
+        onboarding.Supplier.ApprovalStatus = "restricted";
+        onboarding.Supplier.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -416,7 +387,7 @@ public sealed class SupplierOnboardingService(
             "supplier_onboarding.suspend",
             tenantId,
             actorUserId,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
@@ -424,21 +395,13 @@ public sealed class SupplierOnboardingService(
         await integrationOutbox.TryEnqueueAsync(
             tenantId,
             IntegrationOutboxEventKinds.SupplierOnboardingSuspended,
-            "party_supplier_onboarding",
+            "supplier_onboarding",
             onboarding.Id,
-            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding suspended: {onboarding.ExternalParty.DisplayName}"),
+            new IntegrationOutboxPayload(tenantId, $"Supplier onboarding suspended: {onboarding.Supplier.DisplayName}"),
             cancellationToken: cancellationToken);
 
         return await MapOnboardingResponseAsync(tenantId, onboarding.Id, cancellationToken);
     }
-
-    public Task<SupplierOnboardingResponse> SuspendByPartyAsync(
-        Guid tenantId,
-        Guid actorUserId,
-        Guid externalPartyId,
-        SuspendSupplierOnboardingRequest request,
-        CancellationToken cancellationToken = default) =>
-        SuspendAsync(tenantId, actorUserId, externalPartyId, request, cancellationToken);
 
     public Task<SupplierOnboardingResponse> SuspendSupplierAsync(
         Guid tenantId,
@@ -453,10 +416,10 @@ public sealed class SupplierOnboardingService(
         Guid onboardingId,
         CancellationToken cancellationToken)
     {
-        var onboarding = await db.PartySupplierOnboardings
+        var onboarding = await db.SupplierOnboardings
             .AsNoTracking()
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .FirstAsync(x => x.TenantId == tenantId && x.Id == onboardingId, cancellationToken);
 
         var requirements = await LoadRequirementDefinitionsAsync(tenantId, cancellationToken);
@@ -464,12 +427,12 @@ public sealed class SupplierOnboardingService(
         var checklist = new List<OnboardingDocumentRequirementStatus>();
         foreach (var requirement in requirements)
         {
-            var docs = await db.PartyComplianceDocuments
+            var docs = await db.SupplierComplianceDocuments
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId
-                    && x.ExternalPartyId == onboarding.ExternalPartyId
+                    && x.SupplierId == onboarding.SupplierId
                     && x.DocumentTypeKey == requirement.DocumentTypeKey
-                    && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                    && x.ReviewStatus == SupplierComplianceDocumentReviewStatuses.Approved
                     && (x.ExpiresAt == null || x.ExpiresAt > asOf))
                 .OrderByDescending(x => x.Version)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -485,12 +448,12 @@ public sealed class SupplierOnboardingService(
 
         return new SupplierOnboardingResponse(
             onboarding.Id,
-            onboarding.ExternalPartyId,
-            onboarding.ExternalParty.PartyKey,
-            onboarding.ExternalParty.UnitKind,
-            onboarding.ExternalParty.ParentExternalPartyId,
-            onboarding.ExternalParty.ParentExternalParty?.DisplayName,
-            onboarding.ExternalParty.DisplayName,
+            onboarding.SupplierId,
+            onboarding.Supplier.SupplierKey,
+            onboarding.Supplier.UnitKind,
+            onboarding.Supplier.ParentSupplierId,
+            onboarding.Supplier.ParentSupplier?.DisplayName,
+            onboarding.Supplier.DisplayName,
             onboarding.OnboardingStatus,
             onboarding.Notes,
             onboarding.SubmittedAt,
@@ -530,34 +493,26 @@ public sealed class SupplierOnboardingService(
             true)).ToList();
     }
 
-    private async Task<ExternalParty> LoadOnboardableSupplierAsync(
+    private async Task<Supplier> LoadOnboardableSupplierAsync(
         Guid tenantId,
         Guid supplierId,
         CancellationToken cancellationToken)
     {
-        var supplier = await db.ExternalParties.FirstOrDefaultAsync(
+        var supplier = await db.Suppliers.FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == supplierId,
             cancellationToken)
-            ?? throw new StlApiException("parties.not_found", "Supplier was not found.", 404);
-
-        if (!SupplierIdentityRecordTypes.Allowed.Contains(supplier.PartyType))
-        {
-            throw new StlApiException(
-                "supplier_onboarding.party_type",
-                "Onboarding is only available for supplier records.",
-                409);
-        }
+            ?? throw new StlApiException("suppliers.not_found", "Supplier was not found.", 404);
 
         return supplier;
     }
 
-    private async Task<PartySupplierOnboarding> LoadOnboardingTrackedAsync(
+    private async Task<SupplierOnboarding> LoadOnboardingTrackedAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken) =>
-        await db.PartySupplierOnboardings
-            .Include(x => x.ExternalParty)
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.ExternalPartyId == externalPartyId, cancellationToken)
+        await db.SupplierOnboardings
+            .Include(x => x.Supplier)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.SupplierId == supplierId, cancellationToken)
         ?? throw new StlApiException("supplier_onboarding.not_found", "Supplier onboarding was not found.", 404);
 
     private static string NormalizeNotes(string? value) => value?.Trim() ?? string.Empty;
@@ -572,3 +527,5 @@ public sealed class SupplierOnboardingService(
         return value.Trim();
     }
 }
+
+

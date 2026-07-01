@@ -16,7 +16,7 @@ public sealed class FieldInboxService
         _ = cancellationToken;
 
         // LoadArr owns receiving execution and therefore owns field/mobile receiving tasks.
-        // SupplyArr keeps the endpoint for compatibility, but it no longer emits receiving work.
+        // SupplyArr exposes an empty field inbox response because it does not own receiving work.
         return Task.FromResult(FieldInboxRules.BuildProductResponse([]));
     }
 }

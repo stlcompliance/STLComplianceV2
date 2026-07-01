@@ -17,8 +17,6 @@ public static class SupplyReferenceTypes
 {
     public const string Supplier = "supplier";
 
-    public const string ExternalParty = "external_party";
-
     public const string Part = "part";
 
     public const string PurchaseRequest = "purchase_request";
@@ -29,17 +27,16 @@ public static class SupplyReferenceTypes
 
     public const string WarrantyClaim = "warranty_claim";
 
-    public const string VendorReturn = "vendor_return";
+    public const string SupplierReturn = "supplier_return";
 
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         Supplier,
-        ExternalParty,
         Part,
         PurchaseRequest,
         PurchaseOrder,
         ReceivingReceipt,
         WarrantyClaim,
-        VendorReturn,
+        SupplierReturn,
     };
 }

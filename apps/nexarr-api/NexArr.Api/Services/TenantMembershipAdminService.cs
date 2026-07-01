@@ -12,7 +12,8 @@ public sealed class TenantMembershipAdminService(
     NexArrDbContext db,
     PlatformAuthorizationService authorization,
     IPlatformAuditService audit,
-    PlatformOutboxEnqueueService outboxEnqueue)
+    PlatformOutboxEnqueueService outboxEnqueue,
+    IStaffArrPersonProvisioningClient staffArrProvisioning)
 {
     private static readonly HashSet<string> AllowedRoleKeys = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -103,6 +104,13 @@ public sealed class TenantMembershipAdminService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await staffArrProvisioning.EnsurePersonAsync(
+            tenantId,
+            user.Id,
+            user.Email,
+            user.DisplayName,
+            actorUserId,
+            cancellationToken);
 
         await audit.WriteAsync(
             "tenant.membership_added",

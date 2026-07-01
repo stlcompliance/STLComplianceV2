@@ -10,14 +10,14 @@ public sealed record UpsertAvailabilitySnapshotSettingsRequest(
     int StalenessHours);
 
 public sealed record PendingAvailabilitySnapshotCaptureItem(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
-    string VendorPartNumber,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    string SupplierPartNumber,
     decimal? CatalogQuantityAvailable,
     string? CatalogAvailabilityStatus,
     decimal? CurrentQuantityAvailable,
@@ -48,7 +48,7 @@ public sealed record ProcessAvailabilitySnapshotCapturesRequest(
     int? StalenessHours);
 
 public sealed record AvailabilitySnapshotCaptureSkip(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     string Reason);
 
 public sealed record ProcessAvailabilitySnapshotCapturesResponse(
@@ -61,6 +61,6 @@ public sealed record ProcessAvailabilitySnapshotCapturesResponse(
     IReadOnlyList<AvailabilitySnapshotResponse> Captured,
     IReadOnlyList<AvailabilitySnapshotCaptureSkip> Skipped);
 
-public sealed record UpsertPartVendorLinkCatalogAvailabilityRequest(
+public sealed record UpsertPartSupplierLinkCatalogAvailabilityRequest(
     decimal? CatalogQuantityAvailable,
     string? CatalogAvailabilityStatus);

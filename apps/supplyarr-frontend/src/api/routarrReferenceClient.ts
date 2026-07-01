@@ -9,14 +9,14 @@ export interface RoutArrTripReference {
   vehicleRefKey: string | null
   scheduledStartAt: string | null
   scheduledEndAt: string | null
-  vendorOrderId?: string | null
+  supplierOrderId?: string | null
   brokerOrderId?: string | null
   dispatchBlockReason?: string | null
-  vendorReadinessStatusSnapshot?: string | null
-  vendorQuantityReadySnapshot?: number | null
-  vendorOrderedQuantitySnapshot?: number | null
-  vendorExpectedReadyAtSnapshot?: string | null
-  vendorConfirmedReadyAtSnapshot?: string | null
+  supplierReadinessStatusSnapshot?: string | null
+  supplierQuantityReadySnapshot?: number | null
+  supplierOrderedQuantitySnapshot?: number | null
+  supplierExpectedReadyAtSnapshot?: string | null
+  supplierConfirmedReadyAtSnapshot?: string | null
   dispatchOverrideAt?: string | null
   dispatchOverrideReason?: string | null
   dispatchBlocks?: Array<{
@@ -41,15 +41,15 @@ function authHeaders(accessToken: string): HeadersInit {
   }
 }
 
-export async function listRoutArrTripsByVendorOrder(
+export async function listRoutArrTripsBySupplierOrder(
   accessToken: string,
-  vendorOrderId: string,
+  supplierOrderId: string,
 ): Promise<RoutArrTripReference[]> {
   if (!apiBase) {
     return []
   }
 
-  const query = new URLSearchParams({ vendorOrderId })
+  const query = new URLSearchParams({ supplierOrderId })
   const response = await fetch(`${apiBase}/api/v1/trips?${query.toString()}`, {
     headers: authHeaders(accessToken),
   })

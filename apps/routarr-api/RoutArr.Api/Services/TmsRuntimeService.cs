@@ -99,7 +99,7 @@ public sealed class TmsRuntimeService(
             HandlingRequirementsJson = SerializeList(request.HandlingRequirements),
             CustomerRefsJson = SerializeList(request.CustomerRefs),
             OrderRefsJson = SerializeList(request.OrderRefs),
-            VendorRefsJson = SerializeList(request.VendorRefs),
+            SupplierRefsJson = SerializeList(request.SupplierRefs),
             RequirementRefsJson = SerializeList(request.RequirementRefs),
             PlanningStatus = status == TransportationDemandStatuses.Planning || status == TransportationDemandStatuses.Planned
                 ? status
@@ -1152,7 +1152,7 @@ public sealed class TmsRuntimeService(
             DeserializeList(demand.HandlingRequirementsJson),
             DeserializeList(demand.CustomerRefsJson),
             DeserializeList(demand.OrderRefsJson),
-            DeserializeList(demand.VendorRefsJson),
+            DeserializeList(demand.SupplierRefsJson),
             DeserializeList(demand.RequirementRefsJson),
             demand.PlanningStatus,
             demand.TenderStatus,

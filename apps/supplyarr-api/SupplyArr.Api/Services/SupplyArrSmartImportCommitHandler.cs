@@ -34,11 +34,9 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
             return await CommitPurchaseRequestAsync(request, cancellationToken);
         }
 
-        if (entityType.Contains("vendor", StringComparison.OrdinalIgnoreCase)
-            || entityType.Contains("supplier", StringComparison.OrdinalIgnoreCase)
-            || entityType.Contains("party", StringComparison.OrdinalIgnoreCase))
+        if (entityType.Contains("supplier", StringComparison.OrdinalIgnoreCase))
         {
-            return await CommitExternalPartyAsync(request, cancellationToken);
+            return await CommitSupplierAsync(request, cancellationToken);
         }
 
         return SmartImportDestinationCommitResponses.ReviewRequired(
@@ -46,12 +44,12 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
             $"SupplyArr does not have a Smart Import commit handler for entity type '{entityType}'.");
     }
 
-    private async Task<SmartImportDestinationCommitResponse> CommitExternalPartyAsync(
+    private async Task<SmartImportDestinationCommitResponse> CommitSupplierAsync(
         SmartImportDestinationCommitRequest request,
         CancellationToken cancellationToken)
     {
-        var existing = await db.ExternalParties.FirstOrDefaultAsync(
-            party => party.TenantId == request.TenantId && party.Id == request.CommitStepId,
+        var existing = await db.Suppliers.FirstOrDefaultAsync(
+            supplier => supplier.TenantId == request.TenantId && supplier.Id == request.CommitStepId,
             cancellationToken);
         if (existing is not null)
         {
@@ -61,13 +59,13 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
         var payload = request.DeterministicPayload;
         var shortId = SmartImportPayloadReader.ShortId(request.CommitStepId);
         var displayName = SmartImportPayloadReader.DisplayName(payload, $"Imported supplier {shortId}");
-        var partyKey = SmartImportPayloadReader.SlugKey(
-            SmartImportPayloadReader.GetString(payload, "partyKey", "vendorKey", "supplierKey", "code", "vendorNumber", "supplierNumber")
+        var supplierKey = SmartImportPayloadReader.SlugKey(
+            SmartImportPayloadReader.GetString(payload, "supplierKey", "code", "supplierNumber")
             ?? displayName,
-            $"si_party_{shortId}",
+            $"si_supplier_{shortId}",
             128);
-        var duplicate = await db.ExternalParties.FirstOrDefaultAsync(
-            party => party.TenantId == request.TenantId && party.PartyKey == partyKey,
+        var duplicate = await db.Suppliers.FirstOrDefaultAsync(
+            supplier => supplier.TenantId == request.TenantId && supplier.SupplierKey == supplierKey,
             cancellationToken);
         if (duplicate is not null)
         {
@@ -75,12 +73,12 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
         }
 
         var now = DateTimeOffset.UtcNow;
-        var partyEntity = new ExternalParty
+        var supplierEntity = new Supplier
         {
             Id = request.CommitStepId,
             TenantId = request.TenantId,
-            PartyKey = partyKey,
-            PartyType = NormalizePartyType(SmartImportPayloadReader.GetString(payload, "partyType", "type")),
+            SupplierKey = supplierKey,
+            
             DisplayName = SmartImportPayloadReader.Truncate(displayName, 256),
             LegalName = SmartImportPayloadReader.Truncate(
                 SmartImportPayloadReader.GetString(payload, "legalName", "name") ?? displayName,
@@ -101,10 +99,10 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
             UpdatedAt = now
         };
 
-        db.ExternalParties.Add(partyEntity);
-        AddAudit(request, "smart_import.external_party_created", "external_party", partyEntity.Id.ToString("D"), now);
+        db.Suppliers.Add(supplierEntity);
+        AddAudit(request, "smart_import.supplier_created", "supplier", supplierEntity.Id.ToString("D"), now);
         await db.SaveChangesAsync(cancellationToken);
-        return Committed(partyEntity.Id, partyEntity.DisplayName);
+        return Committed(supplierEntity.Id, supplierEntity.DisplayName);
     }
 
     private async Task<SmartImportDestinationCommitResponse> CommitPartAsync(
@@ -249,9 +247,8 @@ public sealed class SupplyArrSmartImportCommitHandler(SupplyArrDbContext db) : I
         });
     }
 
-    private static string NormalizePartyType(string? partyType) =>
-        string.IsNullOrWhiteSpace(partyType) ? "vendor" : SmartImportPayloadReader.Truncate(partyType.ToLowerInvariant(), 32);
-
     private static SmartImportDestinationCommitResponse Committed(Guid id, string displayName) =>
         SmartImportDestinationCommitResponses.Committed(id.ToString("D"), displayName);
 }
+
+

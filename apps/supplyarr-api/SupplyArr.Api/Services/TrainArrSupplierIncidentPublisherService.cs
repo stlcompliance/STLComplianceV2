@@ -26,7 +26,7 @@ public sealed class TrainArrSupplierIncidentPublisherService(
         }
 
         var incident = await db.SupplierIncidents
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken);
@@ -53,8 +53,8 @@ public sealed class TrainArrSupplierIncidentPublisherService(
                     incident.IncidentType,
                     incident.Severity,
                     incident.Status,
-                    incident.ExternalPartyId,
-                    incident.ExternalParty.DisplayName,
+                    incident.SupplierId,
+                    incident.Supplier.DisplayName,
                     incident.PurchaseRequestId,
                     incident.PurchaseOrderId,
                     incident.ReceivingReceiptId,
@@ -86,5 +86,6 @@ public sealed class TrainArrSupplierIncidentPublisherService(
         || string.Equals(incident.Severity, SupplierIncidentSeverities.Critical, StringComparison.OrdinalIgnoreCase);
 
     private static string BuildSummary(SupplierIncident incident) =>
-        $"SupplyArr supplier incident {incident.IncidentKey} for {incident.ExternalParty.DisplayName}: {incident.Description}";
+        $"SupplyArr supplier incident {incident.IncidentKey} for {incident.Supplier.DisplayName}: {incident.Description}";
 }
+

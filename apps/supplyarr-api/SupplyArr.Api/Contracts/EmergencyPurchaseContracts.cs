@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SupplyArr.Api.Contracts;
 
 public sealed record EmergencyPurchaseResponse(
@@ -13,9 +15,6 @@ public sealed record EmergencyPurchaseResponse(
     string? ParentSupplierDisplayName,
     string? SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    Guid? VendorPartyId,
-    string? VendorPartyKey,
-    string? VendorDisplayName,
     string EmergencyReason,
     DateTimeOffset? EmergencyExpeditedAt,
     bool ManagerOverrideApproved,
@@ -27,26 +26,14 @@ public sealed record EmergencyPurchaseResponse(
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);
 
+[method: JsonConstructor]
 public sealed record CreateEmergencyPurchaseRequest(
     string RequestKey,
     string Title,
     string EmergencyReason,
     Guid? SupplierId,
-    Guid? VendorPartyId,
     string Notes,
-    IReadOnlyList<CreatePurchaseRequestLineRequest> Lines)
-{
-    public CreateEmergencyPurchaseRequest(
-        string requestKey,
-        string title,
-        string emergencyReason,
-        Guid vendorPartyId,
-        string notes,
-        IReadOnlyList<CreatePurchaseRequestLineRequest> lines)
-        : this(requestKey, title, emergencyReason, vendorPartyId, vendorPartyId, notes, lines)
-    {
-    }
-}
+    IReadOnlyList<CreatePurchaseRequestLineRequest> Lines);
 
 public sealed record ExpeditedSubmitEmergencyPurchaseRequest(string? Notes);
 

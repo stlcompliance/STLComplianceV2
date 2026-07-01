@@ -117,17 +117,17 @@ public static class IntegrationEventStatuses
 
 public static class IntegrationOutboxEventKinds
 {
-    public const string PartyCreated = "party.created";
+    public const string SupplierCreated = "supplier.created";
 
     public const string PartCreated = "part.created";
 
-    public const string SupplyArrVendorCreated = "supplyarr.vendor.created";
+    public const string SupplyArrSupplierCreated = "supplyarr.supplier.created";
 
-    public const string SupplyArrVendorUpdated = "supplyarr.vendor.updated";
+    public const string SupplyArrSupplierUpdated = "supplyarr.supplier.updated";
 
-    public const string SupplyArrVendorApproved = "supplyarr.vendor.approved";
+    public const string SupplyArrSupplierApproved = "supplyarr.supplier.approved";
 
-    public const string SupplyArrVendorBlocked = "supplyarr.vendor.blocked";
+    public const string SupplyArrSupplierBlocked = "supplyarr.supplier.blocked";
 
     public const string SupplyArrCustomerCreated = "supplyarr.customer.created";
 
@@ -163,7 +163,7 @@ public static class IntegrationOutboxEventKinds
 
     public const string RfqSubmitted = "rfq.submitted";
 
-    public const string RfqVendorsInvited = "rfq.vendors.invited";
+    public const string RfqSuppliersInvited = "rfq.suppliers.invited";
 
     public const string RfqQuoteSubmitted = "rfq.quote.submitted";
 
@@ -177,17 +177,17 @@ public static class IntegrationOutboxEventKinds
 
     public const string SupplierOnboardingSuspended = "supplier_onboarding.suspended";
 
-    public const string PartyComplianceDocumentRegistered = "party_compliance_document.registered";
+    public const string SupplierComplianceDocumentRegistered = "supplier_compliance_document.registered";
 
-    public const string PartyComplianceDocumentApproved = "party_compliance_document.approved";
+    public const string SupplierComplianceDocumentApproved = "supplier_compliance_document.approved";
 
-    public const string PartyComplianceDocumentRejected = "party_compliance_document.rejected";
+    public const string SupplierComplianceDocumentRejected = "supplier_compliance_document.rejected";
 
-    public const string VendorRestrictionCreated = "vendor_restriction.created";
+    public const string SupplierRestrictionCreated = "supplier_restriction.created";
 
-    public const string VendorRestrictionUpdated = "vendor_restriction.updated";
+    public const string SupplierRestrictionUpdated = "supplier_restriction.updated";
 
-    public const string VendorRestrictionLifted = "vendor_restriction.lifted";
+    public const string SupplierRestrictionLifted = "supplier_restriction.lifted";
 
     public const string SupplierIncidentCreated = "supplier_incident.created";
 
@@ -231,7 +231,7 @@ public static class IntegrationOutboxEventKinds
 
     public const string WarrantyClaimSubmitted = "warranty_claim.submitted";
 
-    public const string WarrantyClaimVendorResponded = "warranty_claim.vendor_responded";
+    public const string WarrantyClaimSupplierResponded = "warranty_claim.supplier_responded";
 
     public const string WarrantyClaimClosed = "warranty_claim.closed";
 
@@ -247,13 +247,13 @@ public static class IntegrationOutboxEventKinds
 
     public const string EmergencyPurchaseOrderIssued = "emergency_purchase.purchase_order_issued";
 
-    public const string VendorOrderStatusChanged = "supplyarr.vendor_order.status_changed";
+    public const string SupplierOrderStatusChanged = "supplyarr.supplier_order.status_changed";
 
-    public const string VendorOrderCompletedForDispatch = "supplyarr.vendor_order.completed_for_dispatch";
+    public const string SupplierOrderCompletedForDispatch = "supplyarr.supplier_order.completed_for_dispatch";
 
-    public const string VendorOrderPartialDispatchAuthorized = "supplyarr.vendor_order.partial_dispatch_authorized";
+    public const string SupplierOrderPartialDispatchAuthorized = "supplyarr.supplier_order.partial_dispatch_authorized";
 
-    public const string VendorOrderSplitCreated = "supplyarr.vendor_order.split_created";
+    public const string SupplierOrderSplitCreated = "supplyarr.supplier_order.split_created";
 }
 
 public static class IntegrationInboxEventKinds
@@ -266,3 +266,4 @@ public static class IntegrationInboxEventKinds
 
     public const string StaffarrDemandIngest = "staffarr.demand.ingest";
 }
+

@@ -107,10 +107,15 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
         Assert.Equal(1, summary.Analytics.ActiveProcurementExceptionCount);
         Assert.Equal(1, summary.Analytics.OpenReceivingExceptionCount);
         Assert.Equal(1, summary.Analytics.OpenWarrantyClaimCount);
-        Assert.Equal(1, summary.Analytics.VendorDocumentExpiringSoonCount);
-        Assert.Equal(1, summary.Analytics.BlockedVendorCount);
+        Assert.Equal(1, summary.Analytics.SupplierDocumentExpiringSoonCount);
+        Assert.Equal(1, summary.Analytics.BlockedSupplierCount);
         Assert.Equal(8, summary.Analytics.AverageLeadTimeDays);
         Assert.Equal(25m, summary.Analytics.EstimatedSpendThisMonth);
+        Assert.All(summary.Documents, document =>
+        {
+            Assert.True(string.IsNullOrWhiteSpace(document.SupplierDisplayName) is false);
+            Assert.NotNull(document.SupplierServiceTypes);
+        });
     }
 
     [Fact]
@@ -191,28 +196,28 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "V-PURCH",
-            PartyType = "vendor",
-            DisplayName = "Purchasing Vendor",
-            LegalName = "Purchasing Vendor",
+            SupplierKey = "V-PURCH",
+            
+            DisplayName = "Purchasing Supplier",
+            LegalName = "Purchasing Supplier",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        var blockedVendor = new ExternalParty
+        var blockedSupplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "V-BLOCKED",
-            PartyType = "vendor",
-            DisplayName = "Blocked Vendor",
-            LegalName = "Blocked Vendor",
+            SupplierKey = "V-BLOCKED",
+            
+            DisplayName = "Blocked Supplier",
+            LegalName = "Blocked Supplier",
             ApprovalStatus = "restricted",
             Status = "active",
             CreatedAt = now,
@@ -233,13 +238,13 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var vendorLink = new PartVendorLink
+        var supplierLink = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "VENDOR-PART-1",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "VENDOR-PART-1",
             IsPreferred = true,
             CatalogUnitPrice = 2.5m,
             CatalogCurrencyCode = "USD",
@@ -257,7 +262,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             Status = PurchaseRequestStatuses.Submitted,
             IsEmergency = true,
             EmergencyReason = "Emergency restock required",
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -283,7 +288,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             Title = "Purchasing report PO",
             Status = PurchaseOrderStatuses.Issued,
             PurchaseRequestId = purchaseRequest.Id,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             CreatedByUserId = PlatformSeeder.DemoAdminUserId,
             IssuedAt = now,
             CreatedAt = now,
@@ -355,7 +360,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             ClaimKey = "WC-PURCH",
             Status = WarrantyClaimStatuses.Submitted,
             ClaimType = WarrantyClaimTypes.Defective,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             PartId = part.Id,
             PurchaseOrderId = purchaseOrder.Id,
             PurchaseOrderLineId = purchaseOrder.Lines.First().Id,
@@ -374,7 +379,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             SubjectType = ProcurementExceptionSubjectTypes.PurchaseRequest,
             SubjectId = purchaseRequest.Id,
             SubjectKey = purchaseRequest.RequestKey,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             ExceptionCategory = ProcurementExceptionCategories.ApprovalDelay,
             Title = "Approval delay",
             Description = "Purchase request is awaiting approval.",
@@ -385,16 +390,16 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             LinkedPurchaseRequestId = purchaseRequest.Id,
         };
 
-        var complianceDocument = new PartyComplianceDocument
+        var complianceDocument = new SupplierComplianceDocument
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             DocumentKey = "DOC-PURCH",
             DocumentTypeKey = "insurance",
             Title = "Insurance Certificate",
             Version = 1,
-            ReviewStatus = PartyComplianceDocumentReviewStatuses.Approved,
+            ReviewStatus = SupplierComplianceDocumentReviewStatuses.Approved,
             EffectiveAt = now.AddDays(-30),
             ExpiresAt = now.AddDays(14),
             FileName = "insurance.pdf",
@@ -407,12 +412,12 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        db.PartVendorLinks.Add(vendorLink);
-        db.PartVendorLeadTimeSnapshots.Add(new PartVendorLeadTimeSnapshot
+        db.PartSupplierLinks.Add(supplierLink);
+        db.PartSupplierLeadTimeSnapshots.Add(new PartSupplierLeadTimeSnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = vendorLink.Id,
+            PartSupplierLinkId = supplierLink.Id,
             SnapshotKey = "LT-PURCH",
             LeadTimeDays = 8,
             EffectiveFrom = now.AddDays(-1),
@@ -421,8 +426,8 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
             CreatedAt = now,
             UpdatedAt = now,
         });
-        db.ExternalParties.Add(vendor);
-        db.ExternalParties.Add(blockedVendor);
+        db.Suppliers.Add(supplier);
+        db.Suppliers.Add(blockedSupplier);
         db.Parts.Add(part);
         db.PurchaseRequests.Add(purchaseRequest);
         db.PurchaseOrders.Add(purchaseOrder);
@@ -431,7 +436,7 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
         db.ReceivingExceptions.Add(receivingException);
         db.WarrantyClaims.Add(warrantyClaim);
         db.ProcurementExceptions.Add(procurementException);
-        db.PartyComplianceDocuments.Add(complianceDocument);
+        db.SupplierComplianceDocuments.Add(complianceDocument);
         await db.SaveChangesAsync();
         return (purchaseRequest.Id, purchaseOrder.Id);
     }
@@ -520,3 +525,6 @@ public sealed class SupplyArrPurchasingReportTests : IAsyncLifetime
         }
     }
 }
+
+
+

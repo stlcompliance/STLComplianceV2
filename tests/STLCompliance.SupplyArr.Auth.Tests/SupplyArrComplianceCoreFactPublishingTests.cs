@@ -17,8 +17,8 @@ using SupplyArr.Api.Data;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -141,7 +141,7 @@ public sealed class SupplyArrComplianceCoreFactPublishingTests : IAsyncLifetime
     [Fact]
     public async Task Purchase_request_submit_publishes_fact_to_compliance_core_mirror()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -149,7 +149,7 @@ public sealed class SupplyArrComplianceCoreFactPublishingTests : IAsyncLifetime
             $"fc-pr-{Guid.NewGuid():N}"[..20],
             "Fact publish PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var prResponse = await _supplyarrClient.SendAsync(createPrRequest);
         prResponse.EnsureSuccessStatusCode();
@@ -235,18 +235,27 @@ public sealed class SupplyArrComplianceCoreFactPublishingTests : IAsyncLifetime
         sourceResponse.EnsureSuccessStatusCode();
     }
 
-    private async Task<ExternalPartyResponse> CreateVendorAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
-        var request = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        request.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var request = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        request.Content = JsonContent.Create(new CreateSupplierRequest(
             $"fc-v-{Guid.NewGuid():N}"[..12],
-            "Fact Vendor",
+            null,
+            null,
+            "Fact Supplier",
             string.Empty,
             null,
-            string.Empty));
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
         var response = await _supplyarrClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private async Task<PartResponse> CreatePartAsync()

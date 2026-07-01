@@ -2,11 +2,11 @@ using RoutArr.Api.Contracts;
 
 namespace RoutArr.Api.Services;
 
-public sealed class SupplyArrVendorOrderEventIngestionService(
-    TripVendorReadinessService readinessService)
+public sealed class SupplyArrSupplierOrderEventIngestionService(
+    TripSupplierReadinessService readinessService)
 {
-    public Task<IngestSupplyArrVendorOrderEventResponse> IngestAsync(
-        IngestSupplyArrVendorOrderEventRequest request,
+    public Task<IngestSupplyArrSupplierOrderEventResponse> IngestAsync(
+        IngestSupplyArrSupplierOrderEventRequest request,
         CancellationToken cancellationToken = default) =>
-        readinessService.IngestVendorOrderEventAsync(request, cancellationToken);
+        readinessService.IngestSupplierOrderEventAsync(request, cancellationToken);
 }

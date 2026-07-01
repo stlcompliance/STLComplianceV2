@@ -56,8 +56,8 @@ const baseProps = {
       status: 'draft',
       purchaseRequestId: 'pr-1',
       purchaseRequestKey: 'pr-2026-001',
-      supplierId: 'vendor-1',
-      supplierKey: 'vendor-a',
+      supplierId: 'supplier-unit-1',
+      supplierKey: 'supplier-a',
       supplierDisplayName: 'North Yard Counter',
       parentSupplierId: 'supplier-1',
       parentSupplierDisplayName: 'Acme Supply',
@@ -99,8 +99,8 @@ const baseProps = {
       status: 'cancelled',
       purchaseRequestId: 'pr-2',
       purchaseRequestKey: 'pr-2026-002',
-      supplierId: 'vendor-1',
-      supplierKey: 'vendor-a',
+      supplierId: 'supplier-unit-1',
+      supplierKey: 'supplier-a',
       supplierDisplayName: 'North Yard Counter',
       parentSupplierId: 'supplier-1',
       parentSupplierDisplayName: 'Acme Supply',
@@ -113,7 +113,7 @@ const baseProps = {
       issuedByUserId: null,
       cancelledAt: '2026-05-28T00:00:00Z',
       cancelledByUserId: 'user-1',
-      cancellationReason: 'Vendor out of stock',
+      cancellationReason: 'Supplier out of stock',
       lines: [],
       createdAt: '2026-05-27T00:00:00Z',
       updatedAt: '2026-05-28T00:00:00Z',
@@ -126,8 +126,8 @@ const baseProps = {
       title: 'Shop restock',
       notes: '',
       status: 'approved',
-      supplierId: 'vendor-1',
-      supplierKey: 'vendor-a',
+      supplierId: 'supplier-unit-1',
+      supplierKey: 'supplier-a',
       supplierDisplayName: 'North Yard Counter',
       parentSupplierId: 'supplier-1',
       parentSupplierDisplayName: 'Acme Supply',
@@ -200,8 +200,8 @@ describe('PurchaseOrderPanel', () => {
             purchaseRequestId: 'pr-2',
             requestKey: 'pr-2026-002',
             title: 'Emergency repair kit',
-            supplierId: 'vendor-2',
-            supplierKey: 'vendor-b',
+            supplierId: 'supplier-unit-2',
+            supplierKey: 'supplier-b',
             supplierDisplayName: 'South Service Desk',
             parentSupplierId: 'supplier-2',
             parentSupplierDisplayName: 'Bravo Supply',
@@ -240,7 +240,7 @@ describe('PurchaseOrderPanel', () => {
     )
 
     expect(screen.getByTestId('purchase-order-cancellation-reason-display')).toHaveTextContent(
-      'Vendor out of stock',
+      'Supplier out of stock',
     )
     expect(screen.queryByTestId('purchase-order-cancel-button')).not.toBeInTheDocument()
   })

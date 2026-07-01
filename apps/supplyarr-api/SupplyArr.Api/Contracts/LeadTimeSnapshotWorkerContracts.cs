@@ -10,17 +10,14 @@ public sealed record UpsertLeadTimeSnapshotSettingsRequest(
     int StalenessHours);
 
 public sealed record PendingLeadTimeSnapshotCaptureItem(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
     Guid SupplierId,
     string SupplierKey,
     string SupplierDisplayName,
-    Guid VendorPartyId,
-    string VendorPartyKey,
-    string VendorDisplayName,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     int CatalogLeadTimeDays,
     int? CurrentLeadTimeDays,
     DateTimeOffset? LastCapturedAt);
@@ -49,7 +46,7 @@ public sealed record ProcessLeadTimeSnapshotCapturesRequest(
     int? StalenessHours);
 
 public sealed record LeadTimeSnapshotCaptureSkip(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     string Reason);
 
 public sealed record ProcessLeadTimeSnapshotCapturesResponse(
@@ -62,5 +59,5 @@ public sealed record ProcessLeadTimeSnapshotCapturesResponse(
     IReadOnlyList<LeadTimeSnapshotResponse> Captured,
     IReadOnlyList<LeadTimeSnapshotCaptureSkip> Skipped);
 
-public sealed record UpsertPartVendorLinkCatalogLeadTimeRequest(
+public sealed record UpsertPartSupplierLinkCatalogLeadTimeRequest(
     int CatalogLeadTimeDays);

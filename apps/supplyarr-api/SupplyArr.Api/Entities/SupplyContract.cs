@@ -14,7 +14,7 @@ public sealed class SupplyContract : IHasTenant
 
     public string Title { get; set; } = string.Empty;
 
-    public Guid VendorPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public DateTimeOffset EffectiveAt { get; set; }
 
@@ -44,7 +44,7 @@ public sealed class SupplyContract : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty VendorParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 }
 
 public static class SupplyContractStatuses
@@ -86,3 +86,4 @@ public static class SupplyContractApprovalStatuses
         Rejected
     };
 }
+

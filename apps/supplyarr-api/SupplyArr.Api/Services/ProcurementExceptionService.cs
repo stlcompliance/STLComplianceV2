@@ -111,7 +111,7 @@ public sealed class ProcurementExceptionService(
             SubjectType = normalizedSubjectType,
             SubjectId = subjectId,
             SubjectKey = subject.SubjectKey,
-            VendorPartyId = subject.VendorPartyId,
+            SupplierId = subject.SupplierId,
             ExceptionCategory = ProcurementExceptionRules.NormalizeCategory(request.ExceptionCategory),
             Title = ProcurementExceptionRules.NormalizeTitle(request.Title),
             Description = ProcurementExceptionRules.NormalizeDescription(request.Description),
@@ -561,7 +561,7 @@ public sealed class ProcurementExceptionService(
         }
     }
 
-    private sealed record SubjectSnapshot(string SubjectKey, Guid? VendorPartyId);
+    private sealed record SubjectSnapshot(string SubjectKey, Guid? SupplierId);
 
     private sealed record LinkedActionKeys(string? PurchaseRequestKey, string? PurchaseOrderKey);
 
@@ -576,7 +576,7 @@ public sealed class ProcurementExceptionService(
             var pr = await db.PurchaseRequests.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new StlApiException("procurement_exceptions.subject_not_found", "Purchase request was not found.", 404);
-            return new SubjectSnapshot(pr.RequestKey, pr.VendorPartyId);
+            return new SubjectSnapshot(pr.RequestKey, pr.SupplierId);
         }
 
         if (string.Equals(subjectType, ProcurementExceptionSubjectTypes.PurchaseOrder, StringComparison.OrdinalIgnoreCase))
@@ -584,7 +584,7 @@ public sealed class ProcurementExceptionService(
             var po = await db.PurchaseOrders.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new StlApiException("procurement_exceptions.subject_not_found", "Purchase order was not found.", 404);
-            return new SubjectSnapshot(po.OrderKey, po.VendorPartyId);
+            return new SubjectSnapshot(po.OrderKey, po.SupplierId);
         }
 
         if (string.Equals(subjectType, ProcurementExceptionSubjectTypes.Rfq, StringComparison.OrdinalIgnoreCase))
@@ -592,7 +592,7 @@ public sealed class ProcurementExceptionService(
             var rfq = await db.Rfqs.AsNoTracking()
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == subjectId, cancellationToken)
                 ?? throw new StlApiException("procurement_exceptions.subject_not_found", "RFQ was not found.", 404);
-            return new SubjectSnapshot(rfq.RfqKey, rfq.AwardedVendorPartyId);
+            return new SubjectSnapshot(rfq.RfqKey, rfq.AwardedSupplierId);
         }
 
         throw new StlApiException("procurement_exceptions.invalid_subject_type", "Subject type is not supported.", 400);
@@ -645,7 +645,7 @@ public sealed class ProcurementExceptionService(
             outboxKind,
             "procurement_exception",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, summary, entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, summary, entity.SupplierId),
             cancellationToken: cancellationToken);
     }
 
@@ -694,8 +694,7 @@ public sealed class ProcurementExceptionService(
 
     private static ProcurementExceptionResponse MapEntity(
         ProcurementException entity,
-        string? vendorKey,
-        string? vendorName,
+        SupplierSnapshot? supplier,
         string? linkedPurchaseRequestKey,
         string? linkedPurchaseOrderKey)
     {
@@ -706,9 +705,13 @@ public sealed class ProcurementExceptionService(
             entity.SubjectType,
             entity.SubjectId,
             entity.SubjectKey,
-            entity.VendorPartyId,
-            vendorKey,
-            vendorName,
+            supplier?.SupplierId,
+            supplier?.SupplierKey,
+            supplier?.SupplierDisplayName,
+            supplier?.ParentSupplierId,
+            supplier?.ParentSupplierDisplayName,
+            supplier?.SupplierUnitKind,
+            supplier?.SupplierServiceTypes ?? [],
             entity.ExceptionCategory,
             entity.Title,
             entity.Description,
@@ -746,18 +749,10 @@ public sealed class ProcurementExceptionService(
         ProcurementException entity,
         CancellationToken cancellationToken)
     {
-        string? vendorKey = null;
-        string? vendorName = null;
-        if (entity.VendorPartyId is Guid vendorId)
-        {
-            var vendor = await db.ExternalParties.AsNoTracking()
-                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == vendorId, cancellationToken);
-            vendorKey = vendor?.PartyKey;
-            vendorName = vendor?.DisplayName;
-        }
+        var supplier = await LoadSupplierSnapshotAsync(tenantId, entity.SupplierId, cancellationToken);
 
         var linked = await LoadLinkedActionKeysAsync(tenantId, entity, cancellationToken);
-        return MapEntity(entity, vendorKey, vendorName, linked.PurchaseRequestKey, linked.PurchaseOrderKey);
+        return MapEntity(entity, supplier, linked.PurchaseRequestKey, linked.PurchaseOrderKey);
     }
 
     private async Task<IReadOnlyList<ProcurementExceptionResponse>> MapListAsync(
@@ -765,12 +760,14 @@ public sealed class ProcurementExceptionService(
         IReadOnlyList<ProcurementException> entities,
         CancellationToken cancellationToken)
     {
-        var vendorIds = entities.Where(x => x.VendorPartyId.HasValue).Select(x => x.VendorPartyId!.Value).Distinct().ToList();
-        var vendors = vendorIds.Count == 0
-            ? []
-            : await db.ExternalParties.AsNoTracking()
-                .Where(x => x.TenantId == tenantId && vendorIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, cancellationToken);
+        var supplierIds = entities.Where(x => x.SupplierId.HasValue).Select(x => x.SupplierId!.Value).Distinct().ToList();
+        var suppliers = supplierIds.Count == 0
+            ? new Dictionary<Guid, SupplierSnapshot>()
+            : (await db.Suppliers.AsNoTracking()
+                .Include(x => x.ParentSupplier)
+                .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.Id))
+                .ToListAsync(cancellationToken))
+                .ToDictionary(x => x.Id, ToSupplierSnapshot);
 
         var linkedPrIds = entities.Where(x => x.LinkedPurchaseRequestId.HasValue)
             .Select(x => x.LinkedPurchaseRequestId!.Value)
@@ -794,15 +791,55 @@ public sealed class ProcurementExceptionService(
 
         return entities.Select(entity =>
         {
-            vendors.TryGetValue(entity.VendorPartyId ?? Guid.Empty, out var vendor);
+            suppliers.TryGetValue(entity.SupplierId ?? Guid.Empty, out var supplier);
             linkedPrs.TryGetValue(entity.LinkedPurchaseRequestId ?? Guid.Empty, out var prKey);
             linkedPos.TryGetValue(entity.LinkedPurchaseOrderId ?? Guid.Empty, out var poKey);
             return MapEntity(
                 entity,
-                vendor?.PartyKey,
-                vendor?.DisplayName,
+                supplier,
                 prKey,
                 poKey);
         }).ToList();
     }
+
+    private async Task<SupplierSnapshot?> LoadSupplierSnapshotAsync(
+        Guid tenantId,
+        Guid? supplierId,
+        CancellationToken cancellationToken)
+    {
+        if (supplierId is not Guid value)
+        {
+            return null;
+        }
+
+        var supplier = await db.Suppliers.AsNoTracking()
+            .Include(x => x.ParentSupplier)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == value, cancellationToken);
+        return supplier is null ? null : ToSupplierSnapshot(supplier);
+    }
+
+    private static SupplierSnapshot ToSupplierSnapshot(Supplier supplier) =>
+        new(
+            supplier.Id,
+            supplier.SupplierKey,
+            supplier.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
+            supplier.UnitKind,
+            ParseServiceTypes(supplier.ServiceTypesJson));
+
+    private static IReadOnlyList<string> ParseServiceTypes(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? []
+            : System.Text.Json.JsonSerializer.Deserialize<List<string>>(value, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)) ?? [];
+
+    private sealed record SupplierSnapshot(
+        Guid SupplierId,
+        string SupplierKey,
+        string SupplierDisplayName,
+        Guid? ParentSupplierId,
+        string? ParentSupplierDisplayName,
+        string? SupplierUnitKind,
+        IReadOnlyList<string> SupplierServiceTypes);
 }
+

@@ -78,7 +78,7 @@ vi.mock('../api/client', () => ({
         quantityReserved: 2,
         quantityAvailable: 6,
         belowReorderPoint: true,
-        vendorLinkCount: 1,
+        supplierLinkCount: 1,
       },
     ],
   }),

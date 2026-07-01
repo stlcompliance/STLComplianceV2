@@ -26,7 +26,7 @@ public sealed class StaffArrProductIncidentPublisherService(
         }
 
         var incident = await db.SupplierIncidents
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == outboxEvent.TenantId && x.Id == outboxEvent.RelatedEntityId,
                 cancellationToken);
@@ -78,7 +78,8 @@ public sealed class StaffArrProductIncidentPublisherService(
 
     private static string BuildDescription(SupplierIncident incident)
     {
-        var party = incident.ExternalParty.DisplayName;
-        return $"SupplyArr supplier incident {incident.IncidentKey} for {party}: {incident.Description}";
+        var supplierDisplayName = incident.Supplier.DisplayName;
+        return $"SupplyArr supplier incident {incident.IncidentKey} for {supplierDisplayName}: {incident.Description}";
     }
 }
+

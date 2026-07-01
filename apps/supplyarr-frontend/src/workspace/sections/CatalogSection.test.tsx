@@ -11,8 +11,8 @@ vi.mock('../../components/PartSubstitutionsPanel', () => ({
   PartSubstitutionsPanel: () => <div data-testid="supplyarr-part-substitutions-panel" />,
 }))
 
-vi.mock('../../components/VendorCatalogApiPanel', () => ({
-  VendorCatalogApiPanel: () => <div data-testid="supplyarr-vendor-catalog-api-panel" />,
+vi.mock('../../components/SupplierCatalogApiPanel', () => ({
+  SupplierCatalogApiPanel: () => <div data-testid="supplyarr-supplier-catalog-api-panel" />,
 }))
 
 const state = {
@@ -38,6 +38,6 @@ describe('CatalogSection', () => {
 
     expect(screen.getByTestId('supplyarr-part-catalog-panel')).toBeInTheDocument()
     expect(screen.getByTestId('supplyarr-part-substitutions-panel')).toBeInTheDocument()
-    expect(screen.getByTestId('supplyarr-vendor-catalog-api-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('supplyarr-supplier-catalog-api-panel')).toBeInTheDocument()
   })
 })

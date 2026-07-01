@@ -33,17 +33,14 @@ public sealed class PriceSnapshotWorkerService(
 
         var items = candidates
             .Select(x => new PendingPriceSnapshotCaptureItem(
-                x.PartVendorLinkId,
+                x.PartSupplierLinkId,
                 x.PartId,
                 x.PartKey,
                 x.PartDisplayName,
                 x.SupplierId,
                 x.SupplierKey,
                 x.SupplierDisplayName,
-                x.VendorPartyId,
-                x.VendorPartyKey,
-                x.VendorDisplayName,
-                x.VendorPartNumber,
+                x.SupplierPartNumber,
                 x.CatalogUnitPrice,
                 x.CatalogCurrencyCode,
                 x.CatalogMinimumOrderQuantity,
@@ -93,7 +90,7 @@ public sealed class PriceSnapshotWorkerService(
                 var snapshot = await pricingSnapshots.CreateWorkerCaptureAsync(
                     candidate.TenantId,
                     WorkerActorUserId,
-                    candidate.PartVendorLinkId,
+                    candidate.PartSupplierLinkId,
                     candidate.CatalogUnitPrice,
                     candidate.CatalogCurrencyCode,
                     candidate.CatalogMinimumOrderQuantity,
@@ -102,7 +99,7 @@ public sealed class PriceSnapshotWorkerService(
 
                 await UpsertCaptureStateAsync(
                     candidate.TenantId,
-                    candidate.PartVendorLinkId,
+                    candidate.PartSupplierLinkId,
                     candidate.CatalogUnitPrice,
                     candidate.CatalogCurrencyCode,
                     candidate.CatalogMinimumOrderQuantity,
@@ -118,7 +115,7 @@ public sealed class PriceSnapshotWorkerService(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                skipped.Add(new PriceSnapshotCaptureSkip(candidate.PartVendorLinkId, ex.Message));
+                skipped.Add(new PriceSnapshotCaptureSkip(candidate.PartSupplierLinkId, ex.Message));
                 stats = runStats[candidate.TenantId];
                 stats.Skipped++;
                 runStats[candidate.TenantId] = stats;
@@ -192,7 +189,7 @@ public sealed class PriceSnapshotWorkerService(
 
     private async Task UpsertCaptureStateAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         decimal catalogUnitPrice,
         string catalogCurrencyCode,
         decimal? catalogMinimumOrderQuantity,
@@ -200,22 +197,22 @@ public sealed class PriceSnapshotWorkerService(
         DateTimeOffset capturedAt,
         CancellationToken cancellationToken)
     {
-        var state = await db.PartVendorPriceCaptureStates
+        var state = await db.PartSupplierPriceCaptureStates
             .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.PartVendorLinkId == partVendorLinkId,
+                x => x.TenantId == tenantId && x.PartSupplierLinkId == partSupplierLinkId,
                 cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         if (state is null)
         {
-            state = new PartVendorPriceCaptureState
+            state = new PartSupplierPriceCaptureState
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                PartVendorLinkId = partVendorLinkId,
+                PartSupplierLinkId = partSupplierLinkId,
                 CreatedAt = now,
             };
-            db.PartVendorPriceCaptureStates.Add(state);
+            db.PartSupplierPriceCaptureStates.Add(state);
         }
 
         state.LastCapturedUnitPrice = catalogUnitPrice;
@@ -246,10 +243,10 @@ public sealed class PriceSnapshotWorkerService(
             return [];
         }
 
-        var links = await db.PartVendorLinks
+        var links = await db.PartSupplierLinks
             .AsNoTracking()
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x =>
                 enabledTenantIds.Contains(x.TenantId)
                 && x.CatalogUnitPrice != null
@@ -259,10 +256,10 @@ public sealed class PriceSnapshotWorkerService(
             .ToListAsync(cancellationToken);
 
         var linkIds = links.Select(x => x.Id).ToList();
-        var captureStates = await db.PartVendorPriceCaptureStates
+        var captureStates = await db.PartSupplierPriceCaptureStates
             .AsNoTracking()
-            .Where(x => enabledTenantIds.Contains(x.TenantId) && linkIds.Contains(x.PartVendorLinkId))
-            .ToDictionaryAsync(x => (x.TenantId, x.PartVendorLinkId), cancellationToken);
+            .Where(x => enabledTenantIds.Contains(x.TenantId) && linkIds.Contains(x.PartSupplierLinkId))
+            .ToDictionaryAsync(x => (x.TenantId, x.PartSupplierLinkId), cancellationToken);
 
         var currentSnapshots = await LoadCurrentSnapshotsAsync(enabledTenantIds, linkIds, asOfUtc, cancellationToken);
 
@@ -291,13 +288,10 @@ public sealed class PriceSnapshotWorkerService(
                 link.PartId,
                 link.Part.PartKey,
                 link.Part.DisplayName,
-                link.ExternalPartyId,
-                link.ExternalParty.PartyKey,
-                link.ExternalParty.DisplayName,
-                link.ExternalPartyId,
-                link.ExternalParty.PartyKey,
-                link.ExternalParty.DisplayName,
-                link.VendorPartNumber,
+                link.SupplierId,
+                link.Supplier.SupplierKey,
+                link.Supplier.DisplayName,
+                link.SupplierPartNumber,
                 link.CatalogUnitPrice!.Value,
                 PriceSnapshotCaptureRules.NormalizeCurrencyCode(link.CatalogCurrencyCode),
                 link.CatalogMinimumOrderQuantity,
@@ -318,7 +312,7 @@ public sealed class PriceSnapshotWorkerService(
             .ToList();
     }
 
-    private async Task<Dictionary<(Guid TenantId, Guid PartVendorLinkId), CurrentSnapshotValues>> LoadCurrentSnapshotsAsync(
+    private async Task<Dictionary<(Guid TenantId, Guid PartSupplierLinkId), CurrentSnapshotValues>> LoadCurrentSnapshotsAsync(
         IReadOnlyList<Guid> tenantIds,
         IReadOnlyList<Guid> linkIds,
         DateTimeOffset asOfUtc,
@@ -329,21 +323,21 @@ public sealed class PriceSnapshotWorkerService(
             return [];
         }
 
-        var snapshots = await db.PartVendorPricingSnapshots
+        var snapshots = await db.PartSupplierPricingSnapshots
             .AsNoTracking()
             .Where(x =>
                 tenantIds.Contains(x.TenantId)
-                && linkIds.Contains(x.PartVendorLinkId)
+                && linkIds.Contains(x.PartSupplierLinkId)
                 && x.EffectiveFrom <= asOfUtc
                 && (x.EffectiveTo == null || x.EffectiveTo > asOfUtc))
             .OrderByDescending(x => x.EffectiveFrom)
             .ThenByDescending(x => x.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var lookup = new Dictionary<(Guid TenantId, Guid PartVendorLinkId), CurrentSnapshotValues>();
+        var lookup = new Dictionary<(Guid TenantId, Guid PartSupplierLinkId), CurrentSnapshotValues>();
         foreach (var snapshot in snapshots)
         {
-            var key = (snapshot.TenantId, snapshot.PartVendorLinkId);
+            var key = (snapshot.TenantId, snapshot.PartSupplierLinkId);
             if (!lookup.ContainsKey(key))
             {
                 lookup[key] = new CurrentSnapshotValues(
@@ -362,7 +356,7 @@ public sealed class PriceSnapshotWorkerService(
         decimal? MinimumOrderQuantity);
 
     private sealed record PendingLinkCandidate(
-        Guid PartVendorLinkId,
+        Guid PartSupplierLinkId,
         Guid TenantId,
         Guid PartId,
         string PartKey,
@@ -370,10 +364,7 @@ public sealed class PriceSnapshotWorkerService(
         Guid SupplierId,
         string SupplierKey,
         string SupplierDisplayName,
-        Guid VendorPartyId,
-        string VendorPartyKey,
-        string VendorDisplayName,
-        string VendorPartNumber,
+        string SupplierPartNumber,
         decimal CatalogUnitPrice,
         string CatalogCurrencyCode,
         decimal? CatalogMinimumOrderQuantity,
@@ -381,3 +372,4 @@ public sealed class PriceSnapshotWorkerService(
         string? CurrentCurrencyCode,
         DateTimeOffset? LastCapturedAt);
 }
+

@@ -16,7 +16,7 @@ public sealed class PurchaseRequest : IHasTenant
 
     public string Status { get; set; } = PurchaseRequestStatuses.Draft;
 
-    public Guid? VendorPartyId { get; set; }
+    public Guid? SupplierId { get; set; }
 
     public Guid RequestedByUserId { get; set; }
 
@@ -54,7 +54,8 @@ public sealed class PurchaseRequest : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty? VendorParty { get; set; }
+    public Supplier? Supplier { get; set; }
 
     public ICollection<PurchaseRequestLine> Lines { get; set; } = new List<PurchaseRequestLine>();
 }
+

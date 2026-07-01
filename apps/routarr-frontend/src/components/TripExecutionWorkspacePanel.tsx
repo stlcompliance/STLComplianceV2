@@ -31,7 +31,7 @@ import {
   getTripCaptureReadiness,
   getTripExecutionSummary,
   listDispatchExceptions,
-  overrideTripVendorReadiness,
+  overrideTripSupplierReadiness,
   submitTripDvir,
   updateTripStatus,
 } from '../api/client'
@@ -45,7 +45,7 @@ type Props = {
   canDispatch: boolean
   canPerform: boolean
   canManage: boolean
-  canOverrideVendorReadiness: boolean
+  canOverrideSupplierReadiness: boolean
 }
 
 function formatTimestamp(iso: string | null | undefined) {
@@ -343,7 +343,7 @@ export function TripExecutionWorkspacePanel({
   canDispatch,
   canPerform,
   canManage,
-  canOverrideVendorReadiness,
+  canOverrideSupplierReadiness,
 }: Props) {
   const queryClient = useQueryClient()
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
@@ -426,15 +426,15 @@ export function TripExecutionWorkspacePanel({
     onError: (error: Error) => setDvirError(error.message),
   })
 
-  const vendorOverrideMutation = useMutation({
+  const supplierOverrideMutation = useMutation({
     mutationFn: (reason: string) =>
-      overrideTripVendorReadiness(accessToken, tripId, { reason }),
+      overrideTripSupplierReadiness(accessToken, tripId, { reason }),
     onMutate: () => {
       setOverrideSuccessMessage(null)
     },
     onSuccess: async () => {
       setOverrideReason('')
-      setOverrideSuccessMessage('Vendor-readiness override recorded. Dispatch can proceed with audit trail.')
+      setOverrideSuccessMessage('Supplier-readiness override recorded. Dispatch can proceed with audit trail.')
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip', accessToken, tripId] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip-readiness', accessToken, tripId] })
       await queryClient.invalidateQueries({ queryKey: ['routarr-trip-execution', accessToken, tripId] })
@@ -474,34 +474,34 @@ export function TripExecutionWorkspacePanel({
   const hasReadinessGap = Boolean(
     readiness?.items.some((item) => item.required && !item.satisfied),
   )
-  const activeVendorBlock =
+  const activeSupplierBlock =
     trip.dispatchBlocks?.find(
-      (block) => block.blockType === 'vendor_readiness' && block.status === 'active',
+      (block) => block.blockType === 'supplier_readiness' && block.status === 'active',
     ) ?? null
-  const hasVendorLink = Boolean(trip.vendorOrderId || trip.brokerOrderId)
+  const hasSupplierLink = Boolean(trip.supplierOrderId || trip.brokerOrderId)
   const blocked =
     trip.dispatchStatus === 'cancelled' ||
     !trip.assignedDriverPersonId ||
     !trip.vehicleRefKey ||
-    Boolean(activeVendorBlock)
+    Boolean(activeSupplierBlock)
   const atRisk = openExceptionCount > 0 || hasReadinessGap || Boolean(trip.dispatchOverrideAt)
   const decisionTone: DetailTone = blocked ? 'bad' : atRisk ? 'warn' : 'good'
-  const decisionLabel = activeVendorBlock
-    ? 'Blocked by vendor readiness'
+  const decisionLabel = activeSupplierBlock
+    ? 'Blocked by supplier readiness'
     : blocked
       ? 'Needs assignment'
       : atRisk
         ? 'Watch closely'
         : 'Dispatchable'
-  const decisionSummary = activeVendorBlock
-    ? 'Trip is blocked until SupplyArr releases vendor readiness or an authorized override is recorded.'
+  const decisionSummary = activeSupplierBlock
+    ? 'Trip is blocked until SupplyArr releases supplier readiness or an authorized override is recorded.'
     : blocked
       ? 'Trip needs dispatch attention'
     : atRisk
       ? 'Trip is on watch for capture readiness gaps or open exceptions'
       : 'Trip can proceed through dispatch'
-  const decisionDetail = activeVendorBlock
-    ? 'Vendor readiness is tracked separately from trip execution. Resolve the active block or record an override reason before dispatch.'
+  const decisionDetail = activeSupplierBlock
+    ? 'Supplier readiness is tracked separately from trip execution. Resolve the active block or record an override reason before dispatch.'
     : blocked
       ? 'Driver, vehicle, or lifecycle status must be resolved before normal dispatch execution.'
     : atRisk
@@ -509,53 +509,53 @@ export function TripExecutionWorkspacePanel({
       : 'Driver, vehicle, capture readiness, and trip status support normal dispatch execution.'
   const railSections: DetailRailSectionConfig[] = [
     {
-      title: 'Vendor readiness',
+      title: 'Supplier readiness',
       icon: <Package className="h-5 w-5" />,
-      content: hasVendorLink || activeVendorBlock || trip.vendorReadinessStatusSnapshot ? (
-        <div className="space-y-4" data-testid="trip-workspace-vendor-readiness">
+      content: hasSupplierLink || activeSupplierBlock || trip.supplierReadinessStatusSnapshot ? (
+        <div className="space-y-4" data-testid="trip-workspace-supplier-readiness">
           <div className="flex flex-wrap items-center gap-2">
-            {trip.vendorOrderId ? (
-              <DetailBadge label={`Vendor order ${trip.vendorOrderId}`} tone="info" />
+            {trip.supplierOrderId ? (
+              <DetailBadge label={`Supplier order ${trip.supplierOrderId}`} tone="info" />
             ) : null}
             {trip.brokerOrderId ? (
               <DetailBadge label={`Broker order ${trip.brokerOrderId}`} tone="neutral" />
             ) : null}
             <DetailBadge
-              label={trip.releasedForDispatchAt ? 'Released for dispatch' : activeVendorBlock ? 'Dispatch blocked' : humanize(trip.vendorReadinessStatusSnapshot)}
-              tone={trip.releasedForDispatchAt ? 'good' : activeVendorBlock ? 'bad' : statusTone(trip.vendorReadinessStatusSnapshot)}
+              label={trip.releasedForDispatchAt ? 'Released for dispatch' : activeSupplierBlock ? 'Dispatch blocked' : humanize(trip.supplierReadinessStatusSnapshot)}
+              tone={trip.releasedForDispatchAt ? 'good' : activeSupplierBlock ? 'bad' : statusTone(trip.supplierReadinessStatusSnapshot)}
             />
             {trip.dispatchOverrideAt ? (
               <DetailBadge label="Override recorded" tone="warn" />
             ) : null}
           </div>
 
-          {activeVendorBlock ? (
+          {activeSupplierBlock ? (
             <div className="rounded-xl border border-red-800/60 bg-red-950/30 p-4 text-sm text-red-100">
-              <p className="font-semibold">Vendor-readiness block is active.</p>
+              <p className="font-semibold">Supplier-readiness block is active.</p>
               <p className="mt-1 text-xs text-red-100/80">
-                {humanize(activeVendorBlock.blockReason)}. Dispatch remains blocked until SupplyArr releases the linked order or an authorized override is recorded in RoutArr.
+                {humanize(activeSupplierBlock.blockReason)}. Dispatch remains blocked until SupplyArr releases the linked order or an authorized override is recorded in RoutArr.
               </p>
             </div>
           ) : null}
 
           <dl className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Vendor status snapshot</dt>
-              <dd className="mt-1 text-sm text-slate-100">{humanize(trip.vendorReadinessStatusSnapshot)}</dd>
+              <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Supplier status snapshot</dt>
+              <dd className="mt-1 text-sm text-slate-100">{humanize(trip.supplierReadinessStatusSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
               <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Quantity snapshot</dt>
               <dd className="mt-1 text-sm text-slate-100">
-                {formatQuantity(trip.vendorQuantityReadySnapshot)} of {formatQuantity(trip.vendorOrderedQuantitySnapshot)} ready
+                {formatQuantity(trip.supplierQuantityReadySnapshot)} of {formatQuantity(trip.supplierOrderedQuantitySnapshot)} ready
               </dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
               <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Expected ready</dt>
-              <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.vendorExpectedReadyAtSnapshot)}</dd>
+              <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.supplierExpectedReadyAtSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
               <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Confirmed ready</dt>
-              <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.vendorConfirmedReadyAtSnapshot)}</dd>
+              <dd className="mt-1 text-sm text-slate-100">{formatTimestamp(trip.supplierConfirmedReadyAtSnapshot)}</dd>
             </div>
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
               <dt className="text-xs uppercase tracking-wide text-[var(--color-text-muted)]">Released for dispatch</dt>
@@ -577,45 +577,45 @@ export function TripExecutionWorkspacePanel({
             </div>
           ) : null}
 
-          {canOverrideVendorReadiness && activeVendorBlock ? (
+          {canOverrideSupplierReadiness && activeSupplierBlock ? (
             <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-              <h4 className="text-sm font-semibold text-slate-100">Vendor-readiness override</h4>
+              <h4 className="text-sm font-semibold text-slate-100">Supplier-readiness override</h4>
               <p className="mt-1 text-xs text-slate-400">
                 Tenant admins, RoutArr admins, and RoutArr managers can resolve the block with a required reason. This writes an audit trail and emits `routarr.dispatch.override.performed`.
               </p>
-              <label className="mt-3 block text-sm text-slate-300" htmlFor="trip-workspace-vendor-override-reason">
+              <label className="mt-3 block text-sm text-slate-300" htmlFor="trip-workspace-supplier-override-reason">
                 Override reason
                 <textarea
-                  id="trip-workspace-vendor-override-reason"
+                  id="trip-workspace-supplier-override-reason"
                   className="mt-1 min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"
                   value={overrideReason}
                   onChange={(event) => setOverrideReason(event.target.value)}
-                  placeholder="Explain why dispatch should proceed despite the vendor-readiness block."
+                  placeholder="Explain why dispatch should proceed despite the supplier-readiness block."
                 />
               </label>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-50"
-                  disabled={vendorOverrideMutation.isPending || !overrideReason.trim()}
-                  onClick={() => vendorOverrideMutation.mutate(overrideReason.trim())}
+                  disabled={supplierOverrideMutation.isPending || !overrideReason.trim()}
+                  onClick={() => supplierOverrideMutation.mutate(overrideReason.trim())}
                 >
-                  {vendorOverrideMutation.isPending ? 'Recording override…' : 'Override vendor-readiness block'}
+                  {supplierOverrideMutation.isPending ? 'Recording override…' : 'Override supplier-readiness block'}
                 </button>
                 {overrideSuccessMessage ? (
                   <p className="text-xs text-emerald-300">{overrideSuccessMessage}</p>
                 ) : null}
               </div>
-              {vendorOverrideMutation.isError ? (
+              {supplierOverrideMutation.isError ? (
                 <p className="mt-2 text-xs text-red-300" role="alert">
-                  {getErrorMessage(vendorOverrideMutation.error, 'Failed to record vendor-readiness override.')}
+                  {getErrorMessage(supplierOverrideMutation.error, 'Failed to record supplier-readiness override.')}
                 </p>
               ) : null}
             </div>
           ) : null}
         </div>
       ) : (
-        <DetailEmptyState text="This trip does not have a linked vendor order or vendor-readiness snapshot." />
+        <DetailEmptyState text="This trip does not have a linked supplier order or supplier-readiness snapshot." />
       ),
     },
     {
@@ -889,10 +889,10 @@ export function TripExecutionWorkspacePanel({
           <span>{trip.assignedDriverPersonId ?? 'Unassigned driver'}</span>
           <span className="text-[var(--color-text-muted)]">-</span>
           <span>{trip.vehicleRefKey ?? 'Unassigned vehicle'}</span>
-          {trip.vendorOrderId ? (
+          {trip.supplierOrderId ? (
             <>
               <span className="text-[var(--color-text-muted)]">-</span>
-              <span>Vendor order {trip.vendorOrderId}</span>
+              <span>Supplier order {trip.supplierOrderId}</span>
             </>
           ) : null}
         </span>
@@ -900,8 +900,8 @@ export function TripExecutionWorkspacePanel({
       badges={[
         { label: trip.tripNumber, tone: 'info' },
         { label: humanize(trip.dispatchStatus), tone: statusTone(trip.dispatchStatus) },
-        activeVendorBlock
-          ? { label: 'Vendor blocked', tone: 'bad' as const }
+        activeSupplierBlock
+          ? { label: 'Supplier blocked', tone: 'bad' as const }
           : { label: atRisk ? 'At risk' : 'On track', tone: atRisk ? 'warn' : 'good' as const },
       ]}
       actions={
@@ -936,19 +936,19 @@ export function TripExecutionWorkspacePanel({
           tone: routes.length > 0 ? 'info' : 'neutral',
         },
         {
-          label: 'Vendor readiness',
-          value: activeVendorBlock
+          label: 'Supplier readiness',
+          value: activeSupplierBlock
             ? 'Blocked'
             : trip.releasedForDispatchAt
               ? 'Released'
-              : trip.vendorOrderId
-                ? humanize(trip.vendorReadinessStatusSnapshot)
+              : trip.supplierOrderId
+                ? humanize(trip.supplierReadinessStatusSnapshot)
                 : 'No link',
-          hint: trip.vendorOrderId
-            ? `${formatQuantity(trip.vendorQuantityReadySnapshot)} of ${formatQuantity(trip.vendorOrderedQuantitySnapshot)} ready`
-            : 'No linked SupplyArr vendor order',
+          hint: trip.supplierOrderId
+            ? `${formatQuantity(trip.supplierQuantityReadySnapshot)} of ${formatQuantity(trip.supplierOrderedQuantitySnapshot)} ready`
+            : 'No linked SupplyArr supplier order',
           icon: <Package className="h-5 w-5" />,
-          tone: activeVendorBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : trip.vendorOrderId ? 'warn' : 'neutral',
+          tone: activeSupplierBlock ? 'bad' : trip.releasedForDispatchAt ? 'good' : trip.supplierOrderId ? 'warn' : 'neutral',
         },
         {
           label: 'Proofs',
@@ -980,27 +980,27 @@ export function TripExecutionWorkspacePanel({
         { label: 'Scheduled start', value: formatTimestamp(trip.scheduledStartAt), source: 'Dispatch plan' },
         { label: 'Scheduled end', value: formatTimestamp(trip.scheduledEndAt), source: 'Dispatch plan' },
         { label: 'Assigned at', value: formatTimestamp(trip.assignedAt), source: 'Execution record' },
-        { label: 'Vendor order', value: trip.vendorOrderId ?? 'Not linked', source: 'SupplyArr reference' },
+        { label: 'Supplier order', value: trip.supplierOrderId ?? 'Not linked', source: 'SupplyArr reference' },
         { label: 'Broker order', value: trip.brokerOrderId ?? 'Not linked', source: 'OrdArr reference snapshot' },
-        { label: 'Vendor readiness', value: humanize(trip.vendorReadinessStatusSnapshot), source: 'SupplyArr readiness snapshot' },
+        { label: 'Supplier readiness', value: humanize(trip.supplierReadinessStatusSnapshot), source: 'SupplyArr readiness snapshot' },
         {
-          label: 'Vendor quantity ready',
-          value: formatQuantity(trip.vendorQuantityReadySnapshot),
+          label: 'Supplier quantity ready',
+          value: formatQuantity(trip.supplierQuantityReadySnapshot),
           source: 'SupplyArr quantity snapshot',
         },
         {
-          label: 'Vendor ordered quantity',
-          value: formatQuantity(trip.vendorOrderedQuantitySnapshot),
+          label: 'Supplier ordered quantity',
+          value: formatQuantity(trip.supplierOrderedQuantitySnapshot),
           source: 'SupplyArr quantity snapshot',
         },
         {
-          label: 'Vendor expected ready',
-          value: formatTimestamp(trip.vendorExpectedReadyAtSnapshot),
+          label: 'Supplier expected ready',
+          value: formatTimestamp(trip.supplierExpectedReadyAtSnapshot),
           source: 'SupplyArr readiness snapshot',
         },
         {
-          label: 'Vendor confirmed ready',
-          value: formatTimestamp(trip.vendorConfirmedReadyAtSnapshot),
+          label: 'Supplier confirmed ready',
+          value: formatTimestamp(trip.supplierConfirmedReadyAtSnapshot),
           source: 'SupplyArr readiness snapshot',
         },
         {
@@ -1058,9 +1058,9 @@ export function TripExecutionWorkspacePanel({
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                 Operator override for dispatch status. Capture requirements still apply on driver portal start/complete.
               </p>
-              {activeVendorBlock ? (
+              {activeSupplierBlock ? (
                 <div className="mt-3 rounded-xl border border-amber-700/50 bg-amber-950/30 p-3 text-sm text-amber-100">
-                  Vendor readiness is currently blocking dispatch with reason {humanize(activeVendorBlock.blockReason)}.
+                  Supplier readiness is currently blocking dispatch with reason {humanize(activeSupplierBlock.blockReason)}.
                   Resolve the linked SupplyArr order or record an authorized override before dispatching.
                 </div>
               ) : null}

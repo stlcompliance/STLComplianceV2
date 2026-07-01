@@ -11,7 +11,7 @@ public sealed class SupplyArrDocumentStorageService(
 
     public async Task<string> SaveAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         Guid documentId,
         string fileName,
         Stream content,
@@ -20,7 +20,7 @@ public sealed class SupplyArrDocumentStorageService(
         var safeFileName = SanitizeFileName(fileName);
         var relativeKey = Path.Combine(
             tenantId.ToString("N"),
-            externalPartyId.ToString("N"),
+            supplierId.ToString("N"),
             $"{documentId:N}_{safeFileName}");
         var absolutePath = Path.Combine(_rootPath, relativeKey);
         Directory.CreateDirectory(Path.GetDirectoryName(absolutePath)!);

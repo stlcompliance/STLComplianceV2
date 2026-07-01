@@ -39,7 +39,7 @@ vi.mock('../../components/ProcurementExceptionEscalationSettingsPanel', () => ({
   ),
 }))
 
-vi.mock('../../components/VendorOrderSettingsPanel', () => ({
+vi.mock('../../components/SupplierOrderSettingsPanel', () => ({
   SupplierOrderSettingsPanel: () => <div data-testid="supplier-order-settings-panel" />,
 }))
 

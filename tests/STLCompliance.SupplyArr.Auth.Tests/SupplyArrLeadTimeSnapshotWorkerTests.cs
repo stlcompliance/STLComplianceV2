@@ -91,7 +91,7 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task Process_batch_creates_lead_time_snapshot_from_catalog_lead_time()
     {
-        var linkId = await SeedVendorLinkWithCatalogLeadTimeAsync(catalogLeadTimeDays: 14);
+        var linkId = await SeedSupplierLinkWithCatalogLeadTimeAsync(catalogLeadTimeDays: 14);
         await UpsertSettingsAsync();
 
         var processRequest = Authorized(
@@ -111,12 +111,12 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
         Assert.Equal(1, body.CapturedCount);
         Assert.Single(body.Captured);
         Assert.Equal(14, body.Captured[0].LeadTimeDays);
-        Assert.Equal(SnapshotSources.VendorFeed, body.Captured[0].Source);
+        Assert.Equal(SnapshotSources.SupplierFeed, body.Captured[0].Source);
 
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
-        var captureState = await db.PartVendorLeadTimeCaptureStates
-            .SingleAsync(x => x.PartVendorLinkId == linkId);
+        var captureState = await db.PartSupplierLeadTimeCaptureStates
+            .SingleAsync(x => x.PartSupplierLinkId == linkId);
         Assert.Equal(14, captureState.LastCapturedLeadTimeDays);
         Assert.NotNull(captureState.LastLeadTimeSnapshotId);
     }
@@ -124,7 +124,7 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task List_pending_lead_time_snapshot_returns_catalog_drift_candidates()
     {
-        await SeedVendorLinkWithCatalogLeadTimeAsync(catalogLeadTimeDays: 21, currentLeadTimeDays: 14);
+        await SeedSupplierLinkWithCatalogLeadTimeAsync(catalogLeadTimeDays: 21, currentLeadTimeDays: 14);
         await UpsertSettingsAsync();
 
         var pendingRequest = Authorized(
@@ -137,6 +137,8 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
         var pending = (await pendingResponse.Content.ReadFromJsonAsync<PendingLeadTimeSnapshotCapturesResponse>())!;
         Assert.NotEmpty(pending.Items);
         Assert.Equal(21, pending.Items[0].CatalogLeadTimeDays);
+        Assert.NotEqual(Guid.Empty, pending.Items[0].SupplierId);
+        Assert.False(string.IsNullOrWhiteSpace(pending.Items[0].SupplierDisplayName));
     }
 
     private async Task UpsertSettingsAsync()
@@ -156,7 +158,7 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task<Guid> SeedVendorLinkWithCatalogLeadTimeAsync(
+    private async Task<Guid> SeedSupplierLinkWithCatalogLeadTimeAsync(
         int catalogLeadTimeDays,
         int? currentLeadTimeDays = null)
     {
@@ -165,14 +167,13 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
-            PartyType = "vendor",
-            DisplayName = "Lead-time vendor",
-            LegalName = "Lead-time vendor LLC",
+            SupplierKey = $"supplier-{Guid.NewGuid():N}"[..16],
+            DisplayName = "Lead-time supplier",
+            LegalName = "Lead-time supplier LLC",
             TaxIdentifier = string.Empty,
             ApprovalStatus = "approved",
             Status = "active",
@@ -197,30 +198,30 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var link = new PartVendorLink
+        var link = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "VPN-200",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "VPN-200",
             IsPreferred = true,
             CatalogLeadTimeDays = catalogLeadTimeDays,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        db.ExternalParties.Add(vendor);
+        db.Suppliers.Add(supplier);
         db.Parts.Add(part);
-        db.PartVendorLinks.Add(link);
+        db.PartSupplierLinks.Add(link);
 
         if (currentLeadTimeDays is not null)
         {
-            db.PartVendorLeadTimeSnapshots.Add(new PartVendorLeadTimeSnapshot
+            db.PartSupplierLeadTimeSnapshots.Add(new PartSupplierLeadTimeSnapshot
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                PartVendorLinkId = link.Id,
+                PartSupplierLinkId = link.Id,
                 SnapshotKey = $"manual-{Guid.NewGuid():N}"[..24],
                 LeadTimeDays = currentLeadTimeDays.Value,
                 EffectiveFrom = now.AddDays(-1),
@@ -305,3 +306,6 @@ public sealed class SupplyArrLeadTimeSnapshotWorkerTests : IAsyncLifetime
         return request;
     }
 }
+
+
+

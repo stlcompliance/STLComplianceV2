@@ -27,9 +27,6 @@ public sealed record PurchaseRequestResponse(
     string? ParentSupplierDisplayName,
     string? SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    Guid? VendorPartyId,
-    string? VendorPartyKey,
-    string? VendorDisplayName,
     Guid RequestedByUserId,
     DateTimeOffset? SubmittedAt,
     Guid? SubmittedByUserId,
@@ -60,16 +57,15 @@ public sealed record CreatePurchaseRequestRequest(
     string Notes,
     Guid? SupplierId = null,
     Guid? SupplierUnitId = null,
-    Guid? VendorPartyId = null,
     IReadOnlyList<CreatePurchaseRequestLineRequest>? Lines = null)
 {
     public CreatePurchaseRequestRequest(
         string requestKey,
         string title,
         string notes,
-        Guid? vendorPartyId,
+        Guid? supplierId,
         IReadOnlyList<CreatePurchaseRequestLineRequest>? lines)
-        : this(requestKey, title, notes, vendorPartyId, vendorPartyId, vendorPartyId, lines)
+        : this(requestKey, title, notes, supplierId, null, lines)
     {
     }
 }
@@ -78,8 +74,7 @@ public sealed record UpdatePurchaseRequestRequest(
     string Title,
     string Notes,
     Guid? SupplierId = null,
-    Guid? SupplierUnitId = null,
-    Guid? VendorPartyId = null);
+    Guid? SupplierUnitId = null);
 
 public sealed record AddPurchaseRequestLineRequest(
     Guid PartId,

@@ -15,8 +15,8 @@ using SupplyArr.Api.Entities;
 using SupplyArr.Api.Services;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using CreatePartCatalogRequest = SupplyArr.Api.Contracts.CreatePartCatalogRequest;
 using PartCatalogResponse = SupplyArr.Api.Contracts.PartCatalogResponse;
 using CreatePartRequest = SupplyArr.Api.Contracts.CreatePartRequest;
@@ -94,7 +94,7 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
     [Fact]
     public async Task Emergency_purchase_end_to_end_override_approve_and_issue_po()
     {
-        var (vendor, part) = await SeedVendorAndPartAsync();
+        var (supplierSubUnit, part) = await SeedSupplierUnitAndPartAsync();
         var requestKey = $"emg-{Guid.NewGuid():N}"[..12];
 
         var createRequest = Authorized(HttpMethod.Post, "/api/emergency-purchases", _userToken);
@@ -102,7 +102,7 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
             requestKey,
             "Emergency brake pads",
             "Fleet down — safety critical",
-            vendor.PartyId,
+            supplierSubUnit.SupplierId,
             "Urgent replenishment",
             [new CreatePurchaseRequestLineRequest(part.PartId, 5m, "line")]));
         var createResponse = await _supplyarrClient.SendAsync(createRequest);
@@ -163,7 +163,7 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
     [Fact]
     public async Task Issue_purchase_order_fails_without_manager_override()
     {
-        var (vendor, part) = await SeedVendorAndPartAsync();
+        var (supplierSubUnit, part) = await SeedSupplierUnitAndPartAsync();
         var requestKey = $"emg-{Guid.NewGuid():N}"[..12];
 
         var createRequest = Authorized(HttpMethod.Post, "/api/emergency-purchases", _userToken);
@@ -171,7 +171,7 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
             requestKey,
             "Emergency part",
             "Test",
-            vendor.PartyId,
+            supplierSubUnit.SupplierId,
             string.Empty,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         (await _supplyarrClient.SendAsync(createRequest)).EnsureSuccessStatusCode();
@@ -194,6 +194,27 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Conflict, issueResponse.StatusCode);
     }
 
+    [Fact]
+    public async Task Emergency_purchase_rejects_supplier_sub_unit_without_parts_coverage()
+    {
+        var (_, maintenanceOnlySubUnit, part) = await SeedSupplierHierarchyAndPartAsync(["maintenance"]);
+        var requestKey = $"emg-{Guid.NewGuid():N}"[..12];
+
+        var createRequest = Authorized(HttpMethod.Post, "/api/emergency-purchases", _userToken);
+        createRequest.Content = JsonContent.Create(new CreateEmergencyPurchaseRequest(
+            requestKey,
+            "Maintenance-only branch should not source parts",
+            "Coverage gate",
+            maintenanceOnlySubUnit.SupplierId,
+            "Coverage mismatch",
+            [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
+        var createResponse = await _supplyarrClient.SendAsync(createRequest);
+
+        Assert.Equal(HttpStatusCode.Conflict, createResponse.StatusCode);
+        var payload = await createResponse.Content.ReadAsStringAsync();
+        Assert.Contains("include products or parts", payload, StringComparison.OrdinalIgnoreCase);
+    }
+
     private async Task<EmergencyPurchaseResponse> dbGetEmergencyByKey(string requestKey)
     {
         var listResponse = await _supplyarrClient.SendAsync(
@@ -203,18 +224,53 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
         return list.First(x => x.RequestKey == requestKey);
     }
 
-    private async Task<(ExternalPartyResponse Vendor, PartResponse Part)> SeedVendorAndPartAsync()
+    private async Task<(SupplierResponse SupplierSubUnit, PartResponse Part)> SeedSupplierUnitAndPartAsync()
     {
-        var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendor.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"v-emg-{Guid.NewGuid():N}"[..10],
-            "Emergency Vendor",
+        var (_, supplierSubUnit, part) = await SeedSupplierHierarchyAndPartAsync(["parts", "products"]);
+        return (supplierSubUnit, part);
+    }
+
+    private async Task<(SupplierResponse ParentSupplier, SupplierResponse SupplierSubUnit, PartResponse Part)> SeedSupplierHierarchyAndPartAsync(IReadOnlyList<string> subUnitServiceTypes)
+    {
+        var createParent = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createParent.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"v-emg-parent-{Guid.NewGuid():N}"[..16],
+            null,
+            "identity",
+            "Emergency Supplier Parent",
             string.Empty,
             null,
-            string.Empty));
-        var vendorResponse = await _supplyarrClient.SendAsync(createVendor);
-        vendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await vendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            string.Empty,
+            ["parts", "products"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var parentResponse = await _supplyarrClient.SendAsync(createParent);
+        parentResponse.EnsureSuccessStatusCode();
+        var parentSupplier = (await parentResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+
+        var createSubUnit = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSubUnit.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"v-emg-sub-{Guid.NewGuid():N}"[..16],
+            parentSupplier.SupplierId,
+            "sub_unit",
+            "Emergency Supplier Branch",
+            string.Empty,
+            null,
+            string.Empty,
+            subUnitServiceTypes,
+            "100 Branch Way",
+            null,
+            "Tulsa",
+            "OK",
+            "74101",
+            "US"));
+        var subUnitResponse = await _supplyarrClient.SendAsync(createSubUnit);
+        subUnitResponse.EnsureSuccessStatusCode();
+        var supplierSubUnit = (await subUnitResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createCatalog = Authorized(HttpMethod.Post, "/api/catalogs", _userToken);
         createCatalog.Content = JsonContent.Create(new CreatePartCatalogRequest(
@@ -239,7 +295,7 @@ public sealed class SupplyArrEmergencyPurchaseTests : IAsyncLifetime
         partResponse.EnsureSuccessStatusCode();
         var part = (await partResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        return (vendor, part);
+        return (parentSupplier, supplierSubUnit, part);
     }
 
     private static void RemoveDbContext<TContext>(IServiceCollection services)

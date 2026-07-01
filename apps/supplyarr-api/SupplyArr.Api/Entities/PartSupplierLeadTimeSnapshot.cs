@@ -1,0 +1,65 @@
+using STLCompliance.Shared.Data;
+
+
+
+namespace SupplyArr.Api.Entities;
+
+
+
+public sealed class PartSupplierLeadTimeSnapshot : IHasTenant
+
+{
+
+    public Guid Id { get; set; }
+
+
+
+    public Guid TenantId { get; set; }
+
+
+
+    public Guid PartSupplierLinkId { get; set; }
+
+
+
+    public string SnapshotKey { get; set; } = string.Empty;
+
+
+
+    public int LeadTimeDays { get; set; }
+
+
+
+    public DateTimeOffset EffectiveFrom { get; set; }
+
+
+
+    public DateTimeOffset? EffectiveTo { get; set; }
+
+
+
+    public string Source { get; set; } = SnapshotSources.Manual;
+
+
+
+    public string Notes { get; set; } = string.Empty;
+
+
+
+    public Guid CreatedByUserId { get; set; }
+
+
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+
+
+    public DateTimeOffset UpdatedAt { get; set; }
+
+
+
+    public PartSupplierLink PartSupplierLink { get; set; } = null!;
+
+}
+
+

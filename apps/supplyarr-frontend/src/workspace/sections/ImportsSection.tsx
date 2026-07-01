@@ -261,12 +261,12 @@ export function ImportsSection({ state }: Props) {
 
 function canManageManifest(state: SupplyArrWorkspaceState, manifest: ProductImportManifest) {
   switch (manifest.importTypeKey) {
-    case 'external_parties_csv':
+    case 'suppliers_csv':
     case 'contacts_csv':
-    case 'vendor_documents_csv':
+    case 'supplier_documents_csv':
       return state.canManage
     case 'part_catalog_csv':
-    case 'vendor_catalog_csv':
+    case 'supplier_catalog_csv':
       return state.canManageCatalog
     case 'inventory_counts_csv':
       return state.canManageInv

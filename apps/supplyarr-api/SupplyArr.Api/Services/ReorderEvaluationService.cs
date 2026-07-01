@@ -130,7 +130,6 @@ public sealed class ReorderEvaluationService(
                 Title: request.Title,
                 Notes: request.Notes,
                 SupplierId: supplierId,
-                VendorPartyId: supplierId,
                 Lines: lines),
             cancellationToken);
 
@@ -229,7 +228,6 @@ public sealed class ReorderEvaluationService(
                         Title: "Auto reorder evaluation",
                         Notes: "Draft purchase request created by reorder evaluation worker.",
                         SupplierId: supplierGroup.Key,
-                        VendorPartyId: supplierGroup.Key,
                         Lines: groupItems
                             .Select(x => new CreatePurchaseRequestLineRequest(
                                 x.PartId,
@@ -326,8 +324,8 @@ public sealed class ReorderEvaluationService(
 
         var query = db.Parts
             .AsNoTracking()
-            .Include(x => x.VendorLinks)
-                .ThenInclude(x => x.ExternalParty)
+            .Include(x => x.SupplierLinks)
+                .ThenInclude(x => x.Supplier)
             .Where(x => x.TenantId == tenantId
                 && x.Status == "active"
                 && x.ReorderPoint != null);
@@ -358,9 +356,9 @@ public sealed class ReorderEvaluationService(
                 continue;
             }
 
-            var preferredVendor = part.VendorLinks
+            var preferredSupplier = part.SupplierLinks
                 .OrderByDescending(x => x.IsPreferred)
-                .ThenBy(x => x.ExternalParty.DisplayName)
+                .ThenBy(x => x.Supplier.DisplayName)
                 .FirstOrDefault();
 
             var hasOpenPurchaseRequest = openPartIds.Contains(part.Id);
@@ -378,12 +376,9 @@ public sealed class ReorderEvaluationService(
                     quantityAvailable,
                     reorderPoint,
                     part.ReorderQuantity),
-                preferredVendor?.ExternalPartyId,
-                preferredVendor?.ExternalParty.PartyKey,
-                preferredVendor?.ExternalParty.DisplayName,
-                preferredVendor?.ExternalPartyId,
-                preferredVendor?.ExternalParty.PartyKey,
-                preferredVendor?.ExternalParty.DisplayName,
+                preferredSupplier?.SupplierId,
+                preferredSupplier?.Supplier.SupplierKey,
+                preferredSupplier?.Supplier.DisplayName,
                 hasOpenPurchaseRequest,
                 hasOpenPurchaseRequest ? "open_purchase_request" : null));
         }
@@ -498,3 +493,4 @@ public sealed class ReorderEvaluationService(
         return value;
     }
 }
+

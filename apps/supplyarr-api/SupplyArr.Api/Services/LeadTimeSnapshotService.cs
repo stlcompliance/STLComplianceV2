@@ -15,7 +15,7 @@ public sealed class LeadTimeSnapshotService(
 
     public async Task<IReadOnlyList<LeadTimeSnapshotResponse>> ListAsync(
         Guid tenantId,
-        Guid? partVendorLinkId = null,
+        Guid? partSupplierLinkId = null,
         Guid? partId = null,
         Guid? supplierId = null,
         DateTimeOffset? asOf = null,
@@ -23,19 +23,19 @@ public sealed class LeadTimeSnapshotService(
     {
         var query = BaseQuery(tenantId);
 
-        if (partVendorLinkId is not null)
+        if (partSupplierLinkId is not null)
         {
-            query = query.Where(x => x.PartVendorLinkId == partVendorLinkId);
+            query = query.Where(x => x.PartSupplierLinkId == partSupplierLinkId);
         }
 
         if (partId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.PartId == partId);
+            query = query.Where(x => x.PartSupplierLink.PartId == partId);
         }
 
         if (supplierId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.ExternalPartyId == supplierId);
+            query = query.Where(x => x.PartSupplierLink.SupplierId == supplierId);
         }
 
         if (asOf is not null)
@@ -69,7 +69,7 @@ public sealed class LeadTimeSnapshotService(
         CreateLeadTimeSnapshotRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, request.PartVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, request.PartSupplierLinkId, cancellationToken);
         var snapshotKey = NormalizeSnapshotKey(request.SnapshotKey);
         await EnsureUniqueKeyAsync(tenantId, snapshotKey, cancellationToken);
 
@@ -85,11 +85,11 @@ public sealed class LeadTimeSnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorLeadTimeSnapshot
+        var entity = new PartSupplierLeadTimeSnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             LeadTimeDays = leadTimeDays,
             EffectiveFrom = effectiveFrom,
@@ -101,7 +101,7 @@ public sealed class LeadTimeSnapshotService(
             UpdatedAt = now,
         };
 
-        db.PartVendorLeadTimeSnapshots.Add(entity);
+        db.PartSupplierLeadTimeSnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "lead_time_snapshot.create",
@@ -118,14 +118,14 @@ public sealed class LeadTimeSnapshotService(
     public async Task<LeadTimeSnapshotResponse> CreateWorkerCaptureAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         int leadTimeDays,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, partSupplierLinkId, cancellationToken);
         var normalizedLeadTimeDays = LeadTimeSnapshotCaptureRules.NormalizeLeadTimeDays(leadTimeDays);
-        var snapshotKey = LeadTimeSnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+        var snapshotKey = LeadTimeSnapshotCaptureRules.BuildWorkerSnapshotKey(partSupplierLinkId, effectiveFrom);
 
         await CloseOpenSnapshotsAsync(
             tenantId,
@@ -134,23 +134,23 @@ public sealed class LeadTimeSnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorLeadTimeSnapshot
+        var entity = new PartSupplierLeadTimeSnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             LeadTimeDays = normalizedLeadTimeDays,
             EffectiveFrom = effectiveFrom,
             EffectiveTo = null,
-            Source = SnapshotSources.VendorFeed,
-            Notes = "Automated vendor catalog lead-time capture.",
+            Source = SnapshotSources.SupplierFeed,
+            Notes = "Automated supplier catalog lead-time capture.",
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        db.PartVendorLeadTimeSnapshots.Add(entity);
+        db.PartSupplierLeadTimeSnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "lead_time_snapshot.worker_capture",
@@ -164,17 +164,17 @@ public sealed class LeadTimeSnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
-    private IQueryable<PartVendorLeadTimeSnapshot> BaseQuery(Guid tenantId) =>
-        db.PartVendorLeadTimeSnapshots
+    private IQueryable<PartSupplierLeadTimeSnapshot> BaseQuery(Guid tenantId) =>
+        db.PartSupplierLeadTimeSnapshots
             .AsNoTracking()
-            .Include(x => x.PartVendorLink)
+            .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-            .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
-                    .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
+                    .ThenInclude(x => x.ParentSupplier)
             .Where(x => x.TenantId == tenantId);
 
-    private async Task<PartVendorLeadTimeSnapshot> LoadAsync(
+    private async Task<PartSupplierLeadTimeSnapshot> LoadAsync(
         Guid tenantId,
         Guid leadTimeSnapshotId,
         CancellationToken cancellationToken)
@@ -189,36 +189,36 @@ public sealed class LeadTimeSnapshotService(
                 404);
     }
 
-    private async Task<PartVendorLink> LoadVendorLinkAsync(
+    private async Task<PartSupplierLink> LoadSupplierLinkAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         CancellationToken cancellationToken)
     {
-        var link = await db.PartVendorLinks
+        var link = await db.PartSupplierLinks
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
-                .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == partVendorLinkId,
+                x => x.TenantId == tenantId && x.Id == partSupplierLinkId,
                 cancellationToken);
 
         return link
             ?? throw new StlApiException(
-                "lead_time_snapshot.vendor_link.not_found",
-                "Part vendor link was not found.",
+                "lead_time_snapshot.supplier_link.not_found",
+                "Part supplier link was not found.",
                 404);
     }
 
     private async Task CloseOpenSnapshotsAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken)
     {
-        var openSnapshots = await db.PartVendorLeadTimeSnapshots
+        var openSnapshots = await db.PartSupplierLeadTimeSnapshots
             .Where(x =>
                 x.TenantId == tenantId
-                && x.PartVendorLinkId == partVendorLinkId
+                && x.PartSupplierLinkId == partSupplierLinkId
                 && x.EffectiveTo == null
                 && x.EffectiveFrom < effectiveFrom)
             .ToListAsync(cancellationToken);
@@ -243,7 +243,7 @@ public sealed class LeadTimeSnapshotService(
         string snapshotKey,
         CancellationToken cancellationToken)
     {
-        var exists = await db.PartVendorLeadTimeSnapshots.AnyAsync(
+        var exists = await db.PartSupplierLeadTimeSnapshots.AnyAsync(
             x => x.TenantId == tenantId && x.SnapshotKey == snapshotKey,
             cancellationToken);
 
@@ -256,29 +256,29 @@ public sealed class LeadTimeSnapshotService(
         }
     }
 
-    private static LeadTimeSnapshotResponse Map(PartVendorLeadTimeSnapshot entity)
+    private static LeadTimeSnapshotResponse Map(PartSupplierLeadTimeSnapshot entity)
     {
-        var link = entity.PartVendorLink;
+        var link = entity.PartSupplierLink;
         var part = link.Part;
-        var supplier = link.ExternalParty;
+        var supplier = link.Supplier;
         var now = DateTimeOffset.UtcNow;
         var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
         return new LeadTimeSnapshotResponse(
             entity.Id,
             entity.SnapshotKey,
-            entity.PartVendorLinkId,
+            entity.PartSupplierLinkId,
             part.Id,
             part.PartKey,
             part.DisplayName,
             supplier.Id,
-            supplier.PartyKey,
+            supplier.SupplierKey,
             supplier.DisplayName,
-            supplier.ParentExternalPartyId,
-            supplier.ParentExternalParty?.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
             supplier.UnitKind,
             serviceTypes,
-            link.VendorPartNumber,
+            link.SupplierPartNumber,
             entity.LeadTimeDays,
             entity.EffectiveFrom,
             entity.EffectiveTo,
@@ -363,3 +363,4 @@ public sealed class LeadTimeSnapshotService(
     private static string NormalizeNotes(string notes) =>
         notes.Length <= 1024 ? notes : notes[..1024];
 }
+

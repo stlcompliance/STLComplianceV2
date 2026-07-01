@@ -13,8 +13,6 @@ public static class SupplyReadinessEndpoints
                 .WithName($"{namePrefix}GetSupplyArrSupplyReadinessDashboard");
             group.MapGet("/parts/{partId:guid}", GetPartReadinessAsync)
                 .WithName($"{namePrefix}GetSupplyArrPartSupplyReadiness");
-            group.MapGet("/vendors/{externalPartyId:guid}", GetVendorReadinessAsync)
-                .WithName($"{namePrefix}GetSupplyArrVendorSupplyReadiness");
             group.MapGet("/suppliers/{supplierId:guid}", GetSupplierReadinessAsync)
                 .WithName($"{namePrefix}GetSupplyArrSupplierSupplyReadiness");
             group.MapGet("/procurement-path", GetProcurementPathReadinessAsync)
@@ -64,25 +62,6 @@ public static class SupplyReadinessEndpoints
             return Results.Ok(result);
         }
 
-        static async Task<IResult> GetVendorReadinessAsync(
-            Guid externalPartyId,
-            SupplyArrAuthorizationService authorization,
-            SupplyReadinessService service,
-            HttpContext context,
-            CancellationToken cancellationToken)
-        {
-            authorization.RequireSupplyReadinessRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            var result = await service.GetVendorReadinessAsync(
-                tenantId,
-                externalPartyId,
-                cancellationToken,
-                actorUserId,
-                SupplyReadinessService.VendorSnapshotKind);
-            return Results.Ok(result);
-        }
-
         static async Task<IResult> GetSupplierReadinessAsync(
             Guid supplierId,
             SupplyArrAuthorizationService authorization,
@@ -105,7 +84,6 @@ public static class SupplyReadinessEndpoints
         static async Task<IResult> GetProcurementPathReadinessAsync(
             Guid partId,
             Guid supplierId,
-            Guid? externalPartyId,
             decimal? quantity,
             SupplyArrAuthorizationService authorization,
             SupplyReadinessService service,

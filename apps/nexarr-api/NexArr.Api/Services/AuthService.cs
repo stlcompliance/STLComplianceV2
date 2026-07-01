@@ -20,7 +20,8 @@ public sealed class AuthService(
     MfaService mfaService,
     MfaSecretProtector mfaSecretProtector,
     PlatformAuthorizationService authorization,
-    FixedSuiteProductAccessService productAccess)
+    FixedSuiteProductAccessService productAccess,
+    LocalDevAuthBypassPolicy localDevAuthBypassPolicy)
 {
     public const int FailedLoginLockoutThreshold = 5;
     public const int LockoutMinutes = 15;
@@ -147,6 +148,54 @@ public sealed class AuthService(
         }
 
         return response;
+    }
+
+    public async Task<AuthTokenResponse> LocalDevBypassLoginAsync(
+        LocalDevBypassLoginRequest request,
+        HttpRequest httpRequest,
+        string? userAgent,
+        string? ipAddress,
+        CancellationToken cancellationToken = default)
+    {
+        if (!localDevAuthBypassPolicy.TryAuthorize(httpRequest, out var authorizationReason))
+        {
+            await audit.WriteAsync(
+                "local-dev-auth",
+                "user",
+                request.Email.Trim().ToLowerInvariant(),
+                "Denied",
+                reasonCode: authorizationReason,
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.local_dev_bypass_forbidden", "Local development auth bypass is not available.", 403);
+        }
+
+        return await IssueLocalDevBypassSessionAsync(
+            request.Email,
+            request.TenantId,
+            request.RememberDevice,
+            userAgent,
+            ipAddress,
+            cancellationToken);
+    }
+
+    public async Task<AuthTokenResponse?> TryAutoLocalDevBypassSessionAsync(
+        HttpRequest httpRequest,
+        string? userAgent,
+        string? ipAddress,
+        CancellationToken cancellationToken = default)
+    {
+        if (!localDevAuthBypassPolicy.TryAuthorize(httpRequest, out _))
+        {
+            return null;
+        }
+
+        return await IssueLocalDevBypassSessionAsync(
+            localDevAuthBypassPolicy.ResolveDefaultEmail(),
+            null,
+            rememberDevice: true,
+            userAgent,
+            ipAddress,
+            cancellationToken);
     }
 
     public async Task<AuthTokenResponse> RenewAsync(
@@ -628,7 +677,8 @@ public sealed class AuthService(
         string? userAgent,
         string? ipAddress,
         bool rememberDevice,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string auditAction = "auth.login")
     {
         var settings = await sessionSettingsService.LoadOrDefaultAsync(cancellationToken);
         var sessionId = Guid.NewGuid();
@@ -658,7 +708,7 @@ public sealed class AuthService(
             settings.AccessTokenMinutes);
 
         await audit.WriteAsync(
-            "auth.login",
+            auditAction,
             "session",
             sessionId.ToString(),
             "Success",
@@ -674,6 +724,71 @@ public sealed class AuthService(
             sessionId,
             user.Id,
             tenantId);
+    }
+
+    private async Task<AuthTokenResponse> IssueLocalDevBypassSessionAsync(
+        string email,
+        Guid? requestedTenantId,
+        bool rememberDevice,
+        string? userAgent,
+        string? ipAddress,
+        CancellationToken cancellationToken)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await db.Users
+            .Include(u => u.Memberships)
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
+
+        if (user is null || !user.IsActive)
+        {
+            await audit.WriteAsync(
+                "local-dev-auth",
+                "user",
+                normalizedEmail,
+                "Denied",
+                reasonCode: "invalid_user",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.invalid_credentials", "Invalid user for local development auth bypass.", 401);
+        }
+
+        if (user.IsPlatformAdmin)
+        {
+            await audit.WriteAsync(
+                "local-dev-auth",
+                "user",
+                user.Id.ToString(),
+                "Denied",
+                actorUserId: user.Id,
+                reasonCode: "platform_admin_forbidden",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.local_dev_bypass_forbidden", "Platform administrators cannot use local development auth bypass.", 403);
+        }
+
+        var tenant = await ResolveTenantAsync(user, requestedTenantId, cancellationToken);
+        if (tenant.Status != TenantStatuses.Active)
+        {
+            await audit.WriteAsync(
+                "local-dev-auth",
+                "tenant",
+                tenant.Id.ToString(),
+                "Denied",
+                tenantId: tenant.Id,
+                actorUserId: user.Id,
+                reasonCode: "tenant_suspended",
+                cancellationToken: cancellationToken);
+            throw new StlApiException("auth.tenant_suspended", "Tenant is not active.", 403);
+        }
+
+        var launchableProductKeys = await GetAccessibleProductsAsync(user.IsPlatformAdmin, cancellationToken);
+        return await IssueSessionAsync(
+            user,
+            tenant.Id,
+            launchableProductKeys,
+            userAgent,
+            ipAddress,
+            rememberDevice,
+            cancellationToken,
+            "local-dev-auth");
     }
 
     private static int ResolveRefreshTokenLifetimeDays(

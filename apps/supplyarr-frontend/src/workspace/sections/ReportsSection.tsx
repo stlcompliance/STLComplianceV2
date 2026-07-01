@@ -1,7 +1,7 @@
 import { ComplianceReportsPanel } from '../../components/ComplianceReportsPanel'
 import { PartsInventoryReportsPanel } from '../../components/PartsInventoryReportsPanel'
 import { PurchasingReportsPanel } from '../../components/PurchasingReportsPanel'
-import { SupplierReportsPanel } from '../../components/VendorReportsPanel'
+import { SupplierReportsPanel } from '../../components/SupplierReportsPanel'
 import {
   canExportComplianceReports,
   canExportPartsInventoryReports,

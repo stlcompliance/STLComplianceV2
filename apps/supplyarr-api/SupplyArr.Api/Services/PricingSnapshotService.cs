@@ -15,7 +15,7 @@ public sealed class PricingSnapshotService(
 
     public async Task<IReadOnlyList<PricingSnapshotResponse>> ListAsync(
         Guid tenantId,
-        Guid? partVendorLinkId = null,
+        Guid? partSupplierLinkId = null,
         Guid? partId = null,
         Guid? supplierId = null,
         DateTimeOffset? asOf = null,
@@ -23,19 +23,19 @@ public sealed class PricingSnapshotService(
     {
         var query = BaseQuery(tenantId);
 
-        if (partVendorLinkId is not null)
+        if (partSupplierLinkId is not null)
         {
-            query = query.Where(x => x.PartVendorLinkId == partVendorLinkId);
+            query = query.Where(x => x.PartSupplierLinkId == partSupplierLinkId);
         }
 
         if (partId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.PartId == partId);
+            query = query.Where(x => x.PartSupplierLink.PartId == partId);
         }
 
         if (supplierId is not null)
         {
-            query = query.Where(x => x.PartVendorLink.ExternalPartyId == supplierId);
+            query = query.Where(x => x.PartSupplierLink.SupplierId == supplierId);
         }
 
         if (asOf is not null)
@@ -69,7 +69,7 @@ public sealed class PricingSnapshotService(
         CreatePricingSnapshotRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, request.PartVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, request.PartSupplierLinkId, cancellationToken);
         var snapshotKey = NormalizeSnapshotKey(request.SnapshotKey);
         await EnsureUniqueKeyAsync(tenantId, snapshotKey, cancellationToken);
 
@@ -89,11 +89,11 @@ public sealed class PricingSnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorPricingSnapshot
+        var entity = new PartSupplierPricingSnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             UnitPrice = unitPrice,
             CurrencyCode = currencyCode,
@@ -107,7 +107,7 @@ public sealed class PricingSnapshotService(
             UpdatedAt = now,
         };
 
-        db.PartVendorPricingSnapshots.Add(entity);
+        db.PartSupplierPricingSnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "pricing_snapshot.create",
@@ -124,20 +124,20 @@ public sealed class PricingSnapshotService(
     public async Task<PricingSnapshotResponse> CreateWorkerCaptureAsync(
         Guid tenantId,
         Guid actorUserId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         decimal unitPrice,
         string currencyCode,
         decimal? minimumOrderQuantity,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken = default)
     {
-        var link = await LoadVendorLinkAsync(tenantId, partVendorLinkId, cancellationToken);
+        var link = await LoadSupplierLinkAsync(tenantId, partSupplierLinkId, cancellationToken);
         var normalizedUnitPrice = NormalizeUnitPrice(unitPrice);
         var normalizedCurrencyCode = NormalizeCurrencyCode(currencyCode);
         decimal? normalizedMinimumOrderQuantity = minimumOrderQuantity is null
             ? null
             : NormalizeMinimumOrderQuantity(minimumOrderQuantity.Value);
-        var snapshotKey = PriceSnapshotCaptureRules.BuildWorkerSnapshotKey(partVendorLinkId, effectiveFrom);
+        var snapshotKey = PriceSnapshotCaptureRules.BuildWorkerSnapshotKey(partSupplierLinkId, effectiveFrom);
 
         await CloseOpenSnapshotsAsync(
             tenantId,
@@ -146,25 +146,25 @@ public sealed class PricingSnapshotService(
             cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
-        var entity = new PartVendorPricingSnapshot
+        var entity = new PartSupplierPricingSnapshot
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartVendorLinkId = link.Id,
+            PartSupplierLinkId = link.Id,
             SnapshotKey = snapshotKey,
             UnitPrice = normalizedUnitPrice,
             CurrencyCode = normalizedCurrencyCode,
             MinimumOrderQuantity = normalizedMinimumOrderQuantity,
             EffectiveFrom = effectiveFrom,
             EffectiveTo = null,
-            Source = SnapshotSources.VendorFeed,
-            Notes = "Automated vendor catalog price capture.",
+            Source = SnapshotSources.SupplierFeed,
+            Notes = "Automated supplier catalog price capture.",
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        db.PartVendorPricingSnapshots.Add(entity);
+        db.PartSupplierPricingSnapshots.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
             "pricing_snapshot.worker_capture",
@@ -178,17 +178,17 @@ public sealed class PricingSnapshotService(
         return await GetAsync(tenantId, entity.Id, cancellationToken);
     }
 
-    private IQueryable<PartVendorPricingSnapshot> BaseQuery(Guid tenantId) =>
-        db.PartVendorPricingSnapshots
+    private IQueryable<PartSupplierPricingSnapshot> BaseQuery(Guid tenantId) =>
+        db.PartSupplierPricingSnapshots
             .AsNoTracking()
-            .Include(x => x.PartVendorLink)
+            .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-            .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
-                    .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
+                    .ThenInclude(x => x.ParentSupplier)
             .Where(x => x.TenantId == tenantId);
 
-    private async Task<PartVendorPricingSnapshot> LoadAsync(
+    private async Task<PartSupplierPricingSnapshot> LoadAsync(
         Guid tenantId,
         Guid pricingSnapshotId,
         CancellationToken cancellationToken)
@@ -203,36 +203,36 @@ public sealed class PricingSnapshotService(
                 404);
     }
 
-    private async Task<PartVendorLink> LoadVendorLinkAsync(
+    private async Task<PartSupplierLink> LoadSupplierLinkAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         CancellationToken cancellationToken)
     {
-        var link = await db.PartVendorLinks
+        var link = await db.PartSupplierLinks
             .Include(x => x.Part)
-            .Include(x => x.ExternalParty)
-                .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
-                x => x.TenantId == tenantId && x.Id == partVendorLinkId,
+                x => x.TenantId == tenantId && x.Id == partSupplierLinkId,
                 cancellationToken);
 
         return link
             ?? throw new StlApiException(
-                "pricing_snapshot.vendor_link.not_found",
-                "Part vendor link was not found.",
+                "pricing_snapshot.supplier_link.not_found",
+                "Part supplier link was not found.",
                 404);
     }
 
     private async Task CloseOpenSnapshotsAsync(
         Guid tenantId,
-        Guid partVendorLinkId,
+        Guid partSupplierLinkId,
         DateTimeOffset effectiveFrom,
         CancellationToken cancellationToken)
     {
-        var openSnapshots = await db.PartVendorPricingSnapshots
+        var openSnapshots = await db.PartSupplierPricingSnapshots
             .Where(x =>
                 x.TenantId == tenantId
-                && x.PartVendorLinkId == partVendorLinkId
+                && x.PartSupplierLinkId == partSupplierLinkId
                 && x.EffectiveTo == null
                 && x.EffectiveFrom < effectiveFrom)
             .ToListAsync(cancellationToken);
@@ -257,7 +257,7 @@ public sealed class PricingSnapshotService(
         string snapshotKey,
         CancellationToken cancellationToken)
     {
-        var exists = await db.PartVendorPricingSnapshots.AnyAsync(
+        var exists = await db.PartSupplierPricingSnapshots.AnyAsync(
             x => x.TenantId == tenantId && x.SnapshotKey == snapshotKey,
             cancellationToken);
 
@@ -270,29 +270,29 @@ public sealed class PricingSnapshotService(
         }
     }
 
-    private static PricingSnapshotResponse Map(PartVendorPricingSnapshot entity)
+    private static PricingSnapshotResponse Map(PartSupplierPricingSnapshot entity)
     {
-        var link = entity.PartVendorLink;
+        var link = entity.PartSupplierLink;
         var part = link.Part;
-        var supplier = link.ExternalParty;
+        var supplier = link.Supplier;
         var now = DateTimeOffset.UtcNow;
         var serviceTypes = ParseServiceTypes(supplier.ServiceTypesJson);
 
         return new PricingSnapshotResponse(
             entity.Id,
             entity.SnapshotKey,
-            entity.PartVendorLinkId,
+            entity.PartSupplierLinkId,
             part.Id,
             part.PartKey,
             part.DisplayName,
             supplier.Id,
-            supplier.PartyKey,
+            supplier.SupplierKey,
             supplier.DisplayName,
-            supplier.ParentExternalPartyId,
-            supplier.ParentExternalParty?.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
             supplier.UnitKind,
             serviceTypes,
-            link.VendorPartNumber,
+            link.SupplierPartNumber,
             entity.UnitPrice,
             entity.CurrencyCode,
             entity.MinimumOrderQuantity,
@@ -399,10 +399,10 @@ public sealed class PricingSnapshotService(
             SnapshotSources.Manual => SnapshotSources.Manual,
             SnapshotSources.Quote => SnapshotSources.Quote,
             SnapshotSources.Contract => SnapshotSources.Contract,
-            SnapshotSources.VendorFeed => SnapshotSources.VendorFeed,
+            SnapshotSources.SupplierFeed => SnapshotSources.SupplierFeed,
             _ => throw new StlApiException(
                 "pricing_snapshot.source.invalid",
-                "Source must be manual, quote, contract, or vendor_feed.",
+                "Source must be manual, quote, contract, or supplier_feed.",
                 400),
         };
     }
@@ -410,3 +410,4 @@ public sealed class PricingSnapshotService(
     private static string NormalizeNotes(string notes) =>
         notes.Length <= 1024 ? notes : notes[..1024];
 }
+

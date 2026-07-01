@@ -8,7 +8,7 @@ public sealed class SupplierIncident : IHasTenant
 
     public Guid TenantId { get; set; }
 
-    public Guid ExternalPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public string IncidentKey { get; set; } = string.Empty;
 
@@ -30,7 +30,7 @@ public sealed class SupplierIncident : IHasTenant
 
     public Guid? ReceivingExceptionId { get; set; }
 
-    public Guid? VendorRestrictionId { get; set; }
+    public Guid? SupplierRestrictionId { get; set; }
 
     public Guid ReportedByUserId { get; set; }
 
@@ -78,9 +78,9 @@ public sealed class SupplierIncident : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty ExternalParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 
-    public VendorRestriction? VendorRestriction { get; set; }
+    public SupplierRestriction? SupplierRestriction { get; set; }
 }
 
 public static class SupplierIncidentStatuses
@@ -155,3 +155,4 @@ public static class SupplierIncidentSeverities
         Critical,
     };
 }
+

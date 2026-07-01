@@ -8,7 +8,7 @@ public static class IntegrationEndpoints
 {
     public const string SupplyarrDemandStatusIngestActionScope = "routarr.demand_status.write";
     public const string SupplyarrShipmentCreateActionScope = "routarr.shipments.create";
-    public const string SupplyarrVendorOrderEventIngestActionScope = "routarr.vendor_orders.write";
+    public const string SupplyarrSupplierOrderEventIngestActionScope = "routarr.supplier_orders.write";
 
     public static void MapRoutArrIntegrationEndpoints(this WebApplication app)
     {
@@ -60,11 +60,11 @@ public static class IntegrationEndpoints
         })
         .WithName($"CreateSupplyarrShipmentIntent{nameSuffix}");
 
-            integrations.MapPost("/supplyarr-vendor-order-events", async (
-            IngestSupplyArrVendorOrderEventRequest request,
+            integrations.MapPost("/supplyarr-supplier-order-events", async (
+            IngestSupplyArrSupplierOrderEventRequest request,
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
-            SupplyArrVendorOrderEventIngestionService service,
+            SupplyArrSupplierOrderEventIngestionService service,
             CancellationToken cancellationToken) =>
         {
             tokenValidator.ValidateOrThrow(
@@ -74,13 +74,13 @@ public static class IntegrationEndpoints
                     ExpectedSourceProduct = "supplyarr",
                     RequiredTargetProduct = "routarr",
                     TenantId = request.TenantId,
-                    RequiredActionScope = SupplyarrVendorOrderEventIngestActionScope
+                    RequiredActionScope = SupplyarrSupplierOrderEventIngestActionScope
                 });
 
             var result = await service.IngestAsync(request, cancellationToken);
             return Results.Ok(result);
         })
-        .WithName($"IngestSupplyarrVendorOrderEvents{nameSuffix}");
+        .WithName($"IngestSupplyarrSupplierOrderEvents{nameSuffix}");
         }
 
         MapRoutes(app.MapGroup("/api/integrations"), string.Empty);

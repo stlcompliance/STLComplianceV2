@@ -12,7 +12,7 @@ public static class SnapshotSources
 
     public const string Contract = "contract";
 
-    public const string VendorFeed = "vendor_feed";
+    public const string SupplierFeed = "supplier_feed";
 
 }
 

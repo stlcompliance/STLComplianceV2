@@ -47,14 +47,14 @@ public static class WorkflowAliasEndpoints
                     x.PurchaseRequestId,
                     x.RequestKey,
                     x.Status,
-                    x.VendorPartyId,
+                    x.SupplierId,
                     x.UpdatedAt))
                 .Concat(pendingPurchaseOrders.Select(x => new ApprovalQueueItemResponse(
                     "purchase_order",
                     x.PurchaseOrderId,
                     x.OrderKey,
                     x.Status,
-                    x.VendorPartyId,
+                    x.SupplierId,
                     x.UpdatedAt)))
                 .OrderByDescending(x => x.UpdatedAt)
                 .ToList();

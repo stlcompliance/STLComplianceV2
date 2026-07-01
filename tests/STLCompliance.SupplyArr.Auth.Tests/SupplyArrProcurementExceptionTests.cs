@@ -14,8 +14,8 @@ using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Auth;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -89,7 +89,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     [Fact]
     public async Task Procurement_exception_workflow_on_purchase_request_with_waive_approval()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -97,7 +97,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"pex-pr-{Guid.NewGuid():N}"[..20],
             "Exception subject PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 2m, string.Empty)]));
         var prResponse = await _supplyarrClient.SendAsync(createPrRequest);
         prResponse.EnsureSuccessStatusCode();
@@ -119,6 +119,11 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
         Assert.Equal(ProcurementExceptionStatuses.Open, exception.Status);
         Assert.Equal(ProcurementExceptionSubjectTypes.PurchaseRequest, exception.SubjectType);
         Assert.Equal(pr.PurchaseRequestId, exception.SubjectId);
+        Assert.Equal(supplier.SupplierId, exception.SupplierId);
+        Assert.Equal(supplier.SupplierKey, exception.SupplierKey);
+        Assert.Equal(supplier.DisplayName, exception.SupplierDisplayName);
+        Assert.Equal("identity", exception.SupplierUnitKind);
+        Assert.Contains("parts", exception.SupplierServiceTypes);
 
         var investigateResponse = await _supplyarrClient.SendAsync(
             Authorized(
@@ -164,7 +169,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     [Fact]
     public async Task Procurement_exception_resolve_and_cancel_paths()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -172,7 +177,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"pex-pr2-{Guid.NewGuid():N}"[..20],
             "Resolve path PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
 
@@ -184,7 +189,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             "PEX-RESOLVE-001",
             ProcurementExceptionCategories.PricingVariance,
             "Quote mismatch",
-            "Vendor quote differed from catalog price.",
+            "Supplier quote differed from catalog price.",
             null));
         (await _supplyarrClient.SendAsync(createResolve)).EnsureSuccessStatusCode();
 
@@ -208,7 +213,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"/api/procurement-exceptions/{resolveTarget.ExceptionId}/resolve",
             _userToken);
         resolveRequest.Content = JsonContent.Create(new ResolveProcurementExceptionRequest(
-            "Vendor issued revised quote matching catalog."));
+            "Supplier issued revised quote matching catalog."));
         (await _supplyarrClient.SendAsync(resolveRequest)).EnsureSuccessStatusCode();
 
         var createCancel = Authorized(
@@ -237,7 +242,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     [Fact]
     public async Task Procurement_exception_cancel_then_reopen_resumes_investigation()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -245,7 +250,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"pex-reopen-{Guid.NewGuid():N}"[..20],
             "Reopen path PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
 
@@ -304,7 +309,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     [Fact]
     public async Task Procurement_exception_resolution_depth_assign_sla_template_and_links()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -312,7 +317,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"pex-depth-{Guid.NewGuid():N}"[..20],
             "Depth PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
 
@@ -376,7 +381,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
     [Fact]
     public async Task Create_procurement_exception_enqueues_outbox_event()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", _userToken);
@@ -384,7 +389,7 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
             $"pex-out-{Guid.NewGuid():N}"[..20],
             "Outbox PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var pr = (await (await _supplyarrClient.SendAsync(createPrRequest)).Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
 
@@ -408,18 +413,27 @@ public sealed class SupplyArrProcurementExceptionTests : IAsyncLifetime
         Assert.NotEmpty(outbox);
     }
 
-    private async Task<ExternalPartyResponse> CreateVendorAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
-        var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendor.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSupplier.Content = JsonContent.Create(new CreateSupplierRequest(
             $"v-pex-{Guid.NewGuid():N}"[..12],
-            "Exception Vendor",
+            null,
+            null,
+            "Exception Supplier",
             string.Empty,
             null,
-            string.Empty));
-        var response = await _supplyarrClient.SendAsync(createVendor);
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var response = await _supplyarrClient.SendAsync(createSupplier);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private async Task<PartResponse> CreatePartAsync()

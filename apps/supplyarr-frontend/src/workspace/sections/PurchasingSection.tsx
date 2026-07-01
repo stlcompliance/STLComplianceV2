@@ -8,7 +8,7 @@ import { PurchaseRequestPanel } from '../../components/PurchaseRequestPanel'
 import { RfqPanel } from '../../components/RfqPanel'
 import { EmergencyPurchasePanel } from '../../components/EmergencyPurchasePanel'
 import { ContractsImportPanel } from '../../components/ContractsImportPanel'
-import { VendorEmailInboxPanel } from '../../components/VendorEmailInboxPanel'
+import { SupplierEmailInboxPanel } from '../../components/SupplierEmailInboxPanel'
 import { Link, useLocation } from 'react-router-dom'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 import type { SupplierUnitPickerSource } from '../../forms/controlledFormHelpers'
@@ -80,7 +80,7 @@ export function PurchasingSection({ state: s }: Props) {
         suppliers={suppliers}
         supplierDirectory={s.supplierDirectory}
       />
-      <VendorEmailInboxPanel accessToken={s.accessToken} canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo} />
+      <SupplierEmailInboxPanel accessToken={s.accessToken} canManage={s.canCreatePr || s.canApprovePr || s.canCreatePo} />
       <PurchaseRequestPanel
         purchaseRequests={s.purchaseRequestsQuery.data ?? []}
         parts={s.partsQuery.data ?? []}

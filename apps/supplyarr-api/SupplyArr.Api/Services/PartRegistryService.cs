@@ -19,7 +19,7 @@ public sealed class PartRegistryService(
 
     private static readonly HashSet<string> AllowedSourceTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "vendor",
+        "supplier",
         "manufacturer",
         "internal_fabrication",
         "rebuilt",
@@ -40,9 +40,9 @@ public sealed class PartRegistryService(
             .Include(x => x.PartCatalog)
             .Include(x => x.ManufacturerAliases)
             .Include(x => x.Sources)
-            .Include(x => x.VendorLinks)
-            .ThenInclude(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.SupplierLinks)
+            .ThenInclude(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .Where(x => x.TenantId == tenantId);
 
         if (catalogId is not null)
@@ -315,19 +315,11 @@ public sealed class PartRegistryService(
         return MapSource(entity);
     }
 
-    public Task<PartVendorLinkResponse> AddVendorLinkAsync(
+    public async Task<PartSupplierLinkResponse> AddSupplierLinkAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid partId,
-        CreatePartVendorLinkRequest request,
-        CancellationToken cancellationToken = default) =>
-        AddSupplierLinkAsync(tenantId, actorUserId, partId, request, cancellationToken);
-
-    public async Task<PartVendorLinkResponse> AddSupplierLinkAsync(
-        Guid tenantId,
-        Guid actorUserId,
-        Guid partId,
-        CreatePartVendorLinkRequest request,
+        CreatePartSupplierLinkRequest request,
         CancellationToken cancellationToken = default)
     {
         var partExists = await db.Parts.AnyAsync(
@@ -338,7 +330,7 @@ public sealed class PartRegistryService(
             throw new StlApiException("parts.not_found", "Part was not found.", 404);
         }
 
-        var supplierId = request.SupplierUnitId ?? request.SupplierId ?? request.PartyId;
+        var supplierId = request.SupplierUnitId ?? request.SupplierId;
         if (supplierId is null)
         {
             throw new StlApiException(
@@ -347,39 +339,31 @@ public sealed class PartRegistryService(
                 400);
         }
 
-        var party = await db.ExternalParties
-            .Include(x => x.ParentExternalParty)
+        var supplier = await db.Suppliers
+            .Include(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
             x => x.TenantId == tenantId && x.Id == supplierId,
             cancellationToken);
-        if (party is null)
+        if (supplier is null)
         {
             throw new StlApiException("suppliers.not_found", "Supplier was not found.", 404);
         }
 
-        if (!string.Equals(party.PartyType, "supplier", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new StlApiException(
-                "parts.validation",
-                "Supplier links require a supplier identity or sub-unit.",
-                400);
-        }
-
-        var duplicate = await db.PartVendorLinks.AnyAsync(
-            x => x.TenantId == tenantId && x.PartId == partId && x.ExternalPartyId == supplierId,
+        var duplicate = await db.PartSupplierLinks.AnyAsync(
+            x => x.TenantId == tenantId && x.PartId == partId && x.SupplierId == supplierId,
             cancellationToken);
         if (duplicate)
         {
             throw new StlApiException(
-                "parts.vendor_link_duplicate",
-                "This part is already linked to the supplier unit.",
+                "parts.supplier_link_duplicate",
+                "This part is already linked to the supplier identity or sub-unit.",
                 409);
         }
 
         var now = DateTimeOffset.UtcNow;
         if (request.IsPreferred)
         {
-            var existingPreferred = await db.PartVendorLinks
+            var existingPreferred = await db.PartSupplierLinks
                 .Where(x => x.TenantId == tenantId && x.PartId == partId && x.IsPreferred)
                 .ToListAsync(cancellationToken);
             foreach (var link in existingPreferred)
@@ -389,49 +373,49 @@ public sealed class PartRegistryService(
             }
         }
 
-        var entity = new PartVendorLink
+        var entity = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = partId,
-            ExternalPartyId = supplierId.Value,
-            VendorPartNumber = NormalizeVendorPartNumber(request.VendorPartNumber),
+            SupplierId = supplierId.Value,
+            SupplierPartNumber = NormalizeSupplierPartNumber(request.SupplierPartNumber),
             IsPreferred = request.IsPreferred,
             CreatedAt = now,
             UpdatedAt = now
         };
 
-        db.PartVendorLinks.Add(entity);
+        db.PartSupplierLinks.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
-            "part_vendor_link.create",
+            "part_supplier_link.create",
             tenantId,
             actorUserId,
-            "part_vendor_link",
+            "part_supplier_link",
             entity.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return MapVendorLink(entity, party);
+        return MapSupplierLink(entity, supplier);
     }
 
-    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogPriceAsync(
+    public async Task<PartSupplierLinkResponse> UpsertSupplierLinkCatalogPriceAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid partId,
         Guid linkId,
-        UpsertPartVendorLinkCatalogPriceRequest request,
+        UpsertPartSupplierLinkCatalogPriceRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await db.PartVendorLinks
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+        var link = await db.PartSupplierLinks
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
         if (link is null)
         {
-            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+            throw new StlApiException("parts.supplier_link.not_found", "Part supplier link was not found.", 404);
         }
 
         link.CatalogUnitPrice = NormalizeCatalogUnitPrice(request.CatalogUnitPrice);
@@ -441,34 +425,34 @@ public sealed class PartRegistryService(
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteAsync(
-            "part_vendor_link.catalog_price.upsert",
+            "part_supplier_link.catalog_price.upsert",
             tenantId,
             actorUserId,
-            "part_vendor_link",
+            "part_supplier_link",
             link.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return MapVendorLink(link, link.ExternalParty);
+        return MapSupplierLink(link, link.Supplier);
     }
 
-    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogLeadTimeAsync(
+    public async Task<PartSupplierLinkResponse> UpsertSupplierLinkCatalogLeadTimeAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid partId,
         Guid linkId,
-        UpsertPartVendorLinkCatalogLeadTimeRequest request,
+        UpsertPartSupplierLinkCatalogLeadTimeRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await db.PartVendorLinks
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+        var link = await db.PartSupplierLinks
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
         if (link is null)
         {
-            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+            throw new StlApiException("parts.supplier_link.not_found", "Part supplier link was not found.", 404);
         }
 
         link.CatalogLeadTimeDays = LeadTimeSnapshotCaptureRules.NormalizeLeadTimeDays(request.CatalogLeadTimeDays);
@@ -476,34 +460,34 @@ public sealed class PartRegistryService(
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteAsync(
-            "part_vendor_link.catalog_lead_time.upsert",
+            "part_supplier_link.catalog_lead_time.upsert",
             tenantId,
             actorUserId,
-            "part_vendor_link",
+            "part_supplier_link",
             link.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return MapVendorLink(link, link.ExternalParty);
+        return MapSupplierLink(link, link.Supplier);
     }
 
-    public async Task<PartVendorLinkResponse> UpsertVendorLinkCatalogAvailabilityAsync(
+    public async Task<PartSupplierLinkResponse> UpsertSupplierLinkCatalogAvailabilityAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid partId,
         Guid linkId,
-        UpsertPartVendorLinkCatalogAvailabilityRequest request,
+        UpsertPartSupplierLinkCatalogAvailabilityRequest request,
         CancellationToken cancellationToken = default)
     {
-        var link = await db.PartVendorLinks
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+        var link = await db.PartSupplierLinks
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(
                 x => x.TenantId == tenantId && x.PartId == partId && x.Id == linkId,
                 cancellationToken);
         if (link is null)
         {
-            throw new StlApiException("parts.vendor_link.not_found", "Part vendor link was not found.", 404);
+            throw new StlApiException("parts.supplier_link.not_found", "Part supplier link was not found.", 404);
         }
 
         if (request.CatalogQuantityAvailable is null && string.IsNullOrWhiteSpace(request.CatalogAvailabilityStatus))
@@ -522,15 +506,15 @@ public sealed class PartRegistryService(
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteAsync(
-            "part_vendor_link.catalog_availability.upsert",
+            "part_supplier_link.catalog_availability.upsert",
             tenantId,
             actorUserId,
-            "part_vendor_link",
+            "part_supplier_link",
             link.Id.ToString(),
             "Succeeded",
             cancellationToken: cancellationToken);
 
-        return MapVendorLink(link, link.ExternalParty);
+        return MapSupplierLink(link, link.Supplier);
     }
 
     private async Task ValidateCatalogAsync(
@@ -562,9 +546,9 @@ public sealed class PartRegistryService(
             .Include(x => x.PartCatalog)
             .Include(x => x.ManufacturerAliases.OrderBy(a => a.AliasKey))
             .Include(x => x.Sources.OrderBy(s => s.CreatedAt))
-            .Include(x => x.VendorLinks)
-            .ThenInclude(x => x.ExternalParty)
-            .ThenInclude(x => x.ParentExternalParty)
+            .Include(x => x.SupplierLinks)
+            .ThenInclude(x => x.Supplier)
+            .ThenInclude(x => x.ParentSupplier)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == partId, cancellationToken);
         if (entity is null)
         {
@@ -600,10 +584,10 @@ public sealed class PartRegistryService(
                 .OrderBy(x => x.CreatedAt)
                 .Select(MapSource)
                 .ToList(),
-            entity.VendorLinks
+            entity.SupplierLinks
                 .OrderByDescending(x => x.IsPreferred)
-                .ThenBy(x => x.ExternalParty.DisplayName)
-                .Select(x => MapVendorLink(x, x.ExternalParty))
+                .ThenBy(x => x.Supplier.DisplayName)
+                .Select(x => MapSupplierLink(x, x.Supplier))
                 .ToList(),
             entity.CreatedAt,
             entity.UpdatedAt);
@@ -624,23 +608,23 @@ public sealed class PartRegistryService(
             entity.Notes,
             entity.CreatedAt);
 
-    private static PartVendorLinkResponse MapVendorLink(PartVendorLink entity, ExternalParty party) =>
+    private static PartSupplierLinkResponse MapSupplierLink(PartSupplierLink entity, Supplier supplier) =>
         new(
             entity.Id,
-            party.Id,
-            party.PartyKey,
-            party.DisplayName,
-            party.ParentExternalPartyId,
-            party.ParentExternalParty?.PartyKey,
-            party.ParentExternalParty?.DisplayName,
-            party.UnitKind,
-            ParseServiceTypes(party.ServiceTypesJson),
-            party.AddressLine1,
-            party.Locality,
-            party.RegionCode,
-            party.PostalCode,
-            party.CountryCode,
-            entity.VendorPartNumber,
+            supplier.Id,
+            supplier.SupplierKey,
+            supplier.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.SupplierKey,
+            supplier.ParentSupplier?.DisplayName,
+            supplier.UnitKind,
+            ParseServiceTypes(supplier.ServiceTypesJson),
+            supplier.AddressLine1,
+            supplier.Locality,
+            supplier.RegionCode,
+            supplier.PostalCode,
+            supplier.CountryCode,
+            entity.SupplierPartNumber,
             entity.IsPreferred,
             entity.CatalogUnitPrice,
             entity.CatalogCurrencyCode,
@@ -847,7 +831,7 @@ public sealed class PartRegistryService(
         return normalized;
     }
 
-    private static string NormalizeVendorPartNumber(string? value) =>
+    private static string NormalizeSupplierPartNumber(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
 
     private static string NormalizeStatus(string status)
@@ -864,3 +848,5 @@ public sealed class PartRegistryService(
         return normalized;
     }
 }
+
+

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using NexArr.Api.Contracts;
 using NexArr.Api.Data;
 using NexArr.Api.Entities;
@@ -16,6 +17,7 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
 {
     private readonly WebApplicationFactory<global::NexArr.Api.Program> _factory;
     private readonly HttpClient _client;
+    private readonly RecordingStaffArrProvisioningClient _staffArrProvisioning = new();
 
     public NexArrTenantMembershipOutboxTests(WebApplicationFactory<global::NexArr.Api.Program> factory)
     {
@@ -39,6 +41,8 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
 
                 services.AddDbContext<NexArrDbContext>(options =>
                     options.UseInMemoryDatabase("NexArrTenantMembershipOutboxTests"));
+                services.RemoveAll<IStaffArrPersonProvisioningClient>();
+                services.AddSingleton<IStaffArrPersonProvisioningClient>(_staffArrProvisioning);
             });
         });
         _client = _factory.CreateClient();
@@ -64,6 +68,9 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
             "tenant_user"));
         var addResponse = await _client.SendAsync(addRequest);
         addResponse.EnsureSuccessStatusCode();
+        Assert.Contains(_staffArrProvisioning.Requests, call =>
+            call.TenantId == tenant.TenantId
+            && call.ExternalUserId == PlatformSeeder.DemoTenantAdminUserId);
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
@@ -149,6 +156,7 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
 
     private async Task SeedDatabaseAsync()
     {
+        _staffArrProvisioning.Requests.Clear();
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
         await db.Database.EnsureDeletedAsync();
@@ -156,4 +164,28 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         await PlatformSeeder.SeedAsync(db, hasher);
     }
+
+    private sealed class RecordingStaffArrProvisioningClient : IStaffArrPersonProvisioningClient
+    {
+        public List<ProvisioningCall> Requests { get; } = [];
+
+        public Task EnsurePersonAsync(
+            Guid tenantId,
+            Guid externalUserId,
+            string email,
+            string displayName,
+            Guid? requestedByUserId,
+            CancellationToken cancellationToken = default)
+        {
+            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, requestedByUserId));
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed record ProvisioningCall(
+        Guid TenantId,
+        Guid ExternalUserId,
+        string Email,
+        string DisplayName,
+        Guid? RequestedByUserId);
 }

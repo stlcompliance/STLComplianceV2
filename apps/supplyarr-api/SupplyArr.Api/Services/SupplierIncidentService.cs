@@ -9,7 +9,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class SupplierIncidentService(
     SupplyArrDbContext db,
-    VendorRestrictionService vendorRestrictions,
+    SupplierRestrictionService supplierRestrictions,
     IntegrationOutboxEnqueueService integrationOutbox,
     ISupplyArrAuditService audit)
 {
@@ -24,7 +24,7 @@ public sealed class SupplierIncidentService(
     {
         var query = db.SupplierIncidents
             .AsNoTracking()
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId);
 
         if (!string.IsNullOrWhiteSpace(status))
@@ -34,7 +34,7 @@ public sealed class SupplierIncidentService(
 
         if (supplierId is not null)
         {
-            query = query.Where(x => x.ExternalPartyId == supplierId);
+            query = query.Where(x => x.SupplierId == supplierId);
         }
 
         if (!string.IsNullOrWhiteSpace(severity))
@@ -71,7 +71,7 @@ public sealed class SupplierIncidentService(
         CreateSupplierIncidentRequest request,
         CancellationToken cancellationToken = default)
     {
-        var party = await EnsureIncidentPartyAsync(tenantId, request.SupplierId, cancellationToken);
+        var supplier = await EnsureIncidentSupplierAsync(tenantId, request.SupplierId, cancellationToken);
         var incidentKey = SupplierIncidentRules.NormalizeIncidentKey(request.IncidentKey);
 
         var duplicateKey = await db.SupplierIncidents.AnyAsync(
@@ -92,7 +92,7 @@ public sealed class SupplierIncidentService(
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            ExternalPartyId = party.Id,
+            SupplierId = supplier.Id,
             IncidentKey = incidentKey,
             Title = SupplierIncidentRules.NormalizeTitle(request.Title),
             Description = SupplierIncidentRules.NormalizeDescription(request.Description),
@@ -338,7 +338,7 @@ public sealed class SupplierIncidentService(
                 409);
         }
 
-        if (entity.VendorRestrictionId is not null)
+        if (entity.SupplierRestrictionId is not null)
         {
             throw new StlApiException(
                 "supplier_incidents.restriction_already_applied",
@@ -350,11 +350,11 @@ public sealed class SupplierIncidentService(
             ? $"Supplier incident {entity.IncidentKey}: {entity.Title}"
             : request.Reason.Trim();
 
-        var restriction = await vendorRestrictions.CreateAsync(
+        var restriction = await supplierRestrictions.CreateAsync(
             tenantId,
             actorUserId,
-            entity.ExternalPartyId,
-            new CreateVendorRestrictionRequest(
+            entity.SupplierId,
+            new CreateSupplierRestrictionRequest(
                 request.RestrictionKey,
                 request.Scopes,
                 reason,
@@ -362,7 +362,7 @@ public sealed class SupplierIncidentService(
                 null),
             cancellationToken);
 
-        entity.VendorRestrictionId = restriction.RestrictionId;
+        entity.SupplierRestrictionId = restriction.RestrictionId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
 
@@ -432,25 +432,17 @@ public sealed class SupplierIncidentService(
         }
     }
 
-    private async Task<ExternalParty> EnsureIncidentPartyAsync(
+    private async Task<Supplier> EnsureIncidentSupplierAsync(
         Guid tenantId,
-        Guid externalPartyId,
+        Guid supplierId,
         CancellationToken cancellationToken)
     {
-        var party = await db.ExternalParties
+        var supplier = await db.Suppliers
             .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken)
+            .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == supplierId, cancellationToken)
             ?? throw new StlApiException("supplier_incidents.supplier_not_found", "Supplier was not found.", 404);
 
-        if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
-        {
-            throw new StlApiException(
-                "supplier_incidents.supplier_type_not_allowed",
-                "Incidents apply only to supplier records.",
-                400);
-        }
-
-        return party;
+        return supplier;
     }
 
     private async Task WriteAuditAndOutboxAsync(
@@ -476,7 +468,7 @@ public sealed class SupplierIncidentService(
             outboxKind,
             "supplier_incident",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, summary, entity.ExternalPartyId),
+            new IntegrationOutboxPayload(tenantId, summary, entity.SupplierId),
             cancellationToken: cancellationToken);
     }
 
@@ -486,8 +478,8 @@ public sealed class SupplierIncidentService(
         CancellationToken cancellationToken) =>
         await db.SupplierIncidents
             .AsNoTracking()
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x!.ParentSupplier)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken)
             ?? throw new StlApiException("supplier_incidents.not_found", "Supplier incident was not found.", 404);
 
@@ -496,21 +488,21 @@ public sealed class SupplierIncidentService(
         Guid incidentId,
         CancellationToken cancellationToken) =>
         await db.SupplierIncidents
-            .Include(x => x.ExternalParty)
-            .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+            .ThenInclude(x => x!.ParentSupplier)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == incidentId, cancellationToken)
             ?? throw new StlApiException("supplier_incidents.not_found", "Supplier incident was not found.", 404);
 
     private static SupplierIncidentResponse Map(SupplierIncident entity) =>
         new(
             entity.Id,
-            entity.ExternalPartyId,
-            entity.ExternalParty.PartyKey,
-            entity.ExternalParty.DisplayName,
-            entity.ExternalParty.ParentExternalPartyId,
-            entity.ExternalParty.ParentExternalParty?.DisplayName,
-            entity.ExternalParty.UnitKind,
-            ParseServiceTypes(entity.ExternalParty.ServiceTypesJson),
+            entity.SupplierId,
+            entity.Supplier.SupplierKey,
+            entity.Supplier.DisplayName,
+            entity.Supplier.ParentSupplierId,
+            entity.Supplier.ParentSupplier?.DisplayName,
+            entity.Supplier.UnitKind,
+            ParseServiceTypes(entity.Supplier.ServiceTypesJson),
             entity.IncidentKey,
             entity.Title,
             entity.Description,
@@ -521,7 +513,7 @@ public sealed class SupplierIncidentService(
             entity.PurchaseOrderId,
             entity.ReceivingReceiptId,
             entity.ReceivingExceptionId,
-            entity.VendorRestrictionId,
+            entity.SupplierRestrictionId,
             entity.ReportedByUserId,
             entity.AssignedToUserId,
             entity.InvolvedStaffarrPersonId,
@@ -563,3 +555,5 @@ public sealed class SupplierIncidentService(
         }
     }
 }
+
+

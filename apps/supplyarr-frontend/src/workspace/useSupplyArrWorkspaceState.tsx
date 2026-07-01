@@ -10,14 +10,14 @@ import {
   createPartCatalog,
   createPartSource,
 
-  createPartVendorLink,
+  createPartSupplierLink,
 
   createPurchaseRequest,
 
   createPurchaseOrderFromPurchaseRequest,
 
   getBackorders,
-  getVendorReturns,
+  getSupplierReturns,
   getPricingSnapshots,
   getLeadTimeSnapshots,
   getAvailabilitySnapshots,
@@ -321,7 +321,7 @@ export function useSupplyArrWorkspaceState() {
 
     queryFn: () =>
 
-      getVendorReturns(session!.accessToken, {
+      getSupplierReturns(session!.accessToken, {
 
         status: undefined,
 
@@ -609,9 +609,9 @@ export function useSupplyArrWorkspaceState() {
 
     mutationFn: () =>
 
-      createPartVendorLink(session!.accessToken, selectedPartId, {
+      createPartSupplierLink(session!.accessToken, selectedPartId, {
         supplierUnitId: selectedSupplierUnitId,
-        vendorPartNumber: supplierPartNumber,
+        supplierPartNumber: supplierPartNumber,
 
         isPreferred: true,
 
@@ -821,7 +821,7 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: pricingSnapshotKey,
 
-        partVendorLinkId: selectedPricingSourceLinkId,
+        partSupplierLinkId: selectedPricingSourceLinkId,
         
 
         unitPrice: Number(snapshotUnitPrice),
@@ -864,7 +864,7 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: leadTimeSnapshotKey,
 
-        partVendorLinkId: selectedPricingSourceLinkId,
+        partSupplierLinkId: selectedPricingSourceLinkId,
 
         leadTimeDays: Number(snapshotLeadTimeDays),
 
@@ -896,7 +896,7 @@ export function useSupplyArrWorkspaceState() {
 
         snapshotKey: availabilitySnapshotKey,
 
-        partVendorLinkId: selectedAvailabilitySourceLinkId,
+        partSupplierLinkId: selectedAvailabilitySourceLinkId,
 
         quantityAvailable: availabilityQuantity ? Number(availabilityQuantity) : null,
 

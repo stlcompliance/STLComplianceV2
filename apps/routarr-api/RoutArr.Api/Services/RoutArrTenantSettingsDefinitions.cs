@@ -363,7 +363,7 @@ internal static class RoutArrTenantSettingsDefinitions
             Bool("wmsLoadArrIntegrationEnabled", "WMS/LoadArr integration enabled", true, "Enables LoadArr handoff behavior."),
             Bool("maintainArrIntegrationEnabled", "MaintainArr integration enabled", true, "Enables MaintainArr readiness consumption."),
             Bool("staffArrIntegrationEnabled", "StaffArr integration enabled", true, "Enables StaffArr people/location reference behavior."),
-            Bool("supplyArrIntegrationEnabled", "SupplyArr integration enabled", true, "Enables SupplyArr carrier/vendor/customer reference behavior."),
+            Bool("supplyArrIntegrationEnabled", "SupplyArr integration enabled", true, "Enables SupplyArr carrier/supplier/customer reference behavior."),
             Bool("complianceCoreIntegrationEnabled", "Compliance Core integration enabled", true, "Enables Compliance Core signal consumption."),
             Bool("recordArrIntegrationEnabled", "RecordArr integration enabled", true, "Enables RecordArr document handoff behavior."),
             Bool("webhookSubscriptionsEnabled", "Webhook subscriptions enabled", true, "Enables outbound webhook subscription behavior."),

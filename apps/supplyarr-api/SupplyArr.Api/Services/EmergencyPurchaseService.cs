@@ -9,7 +9,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class EmergencyPurchaseService(
     SupplyArrDbContext db,
-    VendorProcurementGuardService vendorProcurementGuard,
+    SupplierProcurementGuardService supplierProcurementGuard,
     PurchaseOrderService purchaseOrderService,
     SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
     ProcurementNotificationEnqueueService notificationEnqueue,
@@ -25,8 +25,8 @@ public sealed class EmergencyPurchaseService(
     {
         var query = db.PurchaseRequests
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .Where(x => x.TenantId == tenantId && x.IsEmergency);
@@ -81,7 +81,7 @@ public sealed class EmergencyPurchaseService(
                 400);
         }
 
-        var selectedSupplierId = request.SupplierId ?? request.VendorPartyId
+        var selectedSupplierId = request.SupplierId
             ?? throw new StlApiException(
                 "emergency_purchase.supplier.required",
                 "Supplier is required for an emergency purchase.",
@@ -98,7 +98,7 @@ public sealed class EmergencyPurchaseService(
             Title = NormalizeTitle(request.Title),
             Notes = NormalizeNotes(request.Notes),
             Status = PurchaseRequestStatuses.Draft,
-            VendorPartyId = selectedSupplierId,
+            SupplierId = selectedSupplierId,
             RequestedByUserId = actorUserId,
             IsEmergency = true,
             EmergencyReason = NormalizeEmergencyReason(request.EmergencyReason),
@@ -129,7 +129,7 @@ public sealed class EmergencyPurchaseService(
             IntegrationOutboxEventKinds.EmergencyPurchaseCreated,
             "purchase_request",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Emergency purchase created: {entity.RequestKey}", entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Emergency purchase created: {entity.RequestKey}", entity.SupplierId),
             cancellationToken: cancellationToken);
 
         return await MapAsync(tenantId, entity.Id, cancellationToken);
@@ -159,7 +159,7 @@ public sealed class EmergencyPurchaseService(
                 400);
         }
 
-        if (!entity.VendorPartyId.HasValue)
+        if (!entity.SupplierId.HasValue)
         {
             throw new StlApiException(
                 "emergency_purchase.supplier.required",
@@ -200,7 +200,7 @@ public sealed class EmergencyPurchaseService(
         await notificationEnqueue.TryEnqueueAsync(
             tenantId,
             ProcurementNotificationEventKinds.PurchaseRequestSubmitted,
-            entity.VendorPartyId,
+            entity.SupplierId,
             "purchase_request",
             entity.Id,
             cancellationToken);
@@ -210,7 +210,7 @@ public sealed class EmergencyPurchaseService(
             IntegrationOutboxEventKinds.EmergencyPurchaseExpeditedSubmitted,
             "purchase_request",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Emergency purchase expedited: {entity.RequestKey}", entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Emergency purchase expedited: {entity.RequestKey}", entity.SupplierId),
             cancellationToken: cancellationToken);
 
         return await MapAsync(tenantId, entity.Id, cancellationToken);
@@ -271,7 +271,7 @@ public sealed class EmergencyPurchaseService(
         await notificationEnqueue.TryEnqueueAsync(
             tenantId,
             ProcurementNotificationEventKinds.PurchaseRequestApproved,
-            entity.VendorPartyId,
+            entity.SupplierId,
             "purchase_request",
             entity.Id,
             cancellationToken);
@@ -281,7 +281,7 @@ public sealed class EmergencyPurchaseService(
             IntegrationOutboxEventKinds.EmergencyPurchaseManagerOverrideApproved,
             "purchase_request",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Emergency purchase manager override approved: {entity.RequestKey}", entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Emergency purchase manager override approved: {entity.RequestKey}", entity.SupplierId),
             cancellationToken: cancellationToken);
 
         await integrationOutbox.TryEnqueueAsync(
@@ -289,7 +289,7 @@ public sealed class EmergencyPurchaseService(
             IntegrationOutboxEventKinds.PurchaseRequestApproved,
             "purchase_request",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, $"Purchase request approved: {entity.RequestKey}", entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, $"Purchase request approved: {entity.RequestKey}", entity.SupplierId),
             cancellationToken: cancellationToken);
 
         return await MapAsync(tenantId, entity.Id, cancellationToken);
@@ -346,7 +346,7 @@ public sealed class EmergencyPurchaseService(
             new IntegrationOutboxPayload(
                 tenantId,
                 $"Emergency purchase order issued: {purchaseOrder.OrderKey}",
-                purchaseOrder.VendorPartyId),
+                purchaseOrder.SupplierId),
             cancellationToken: cancellationToken);
 
         var emergency = await MapAsync(tenantId, purchaseRequestId, cancellationToken);
@@ -397,16 +397,13 @@ public sealed class EmergencyPurchaseService(
             entity.Title,
             entity.Notes,
             entity.Status,
-            entity.VendorPartyId,
-            entity.VendorParty?.PartyKey,
-            entity.VendorParty?.DisplayName,
-            entity.VendorParty?.ParentExternalPartyId,
-            entity.VendorParty?.ParentExternalParty?.DisplayName,
-            entity.VendorParty?.UnitKind,
-            ParseServiceTypes(entity.VendorParty?.ServiceTypesJson),
-            entity.VendorPartyId,
-            entity.VendorParty?.PartyKey,
-            entity.VendorParty?.DisplayName,
+            entity.SupplierId,
+            entity.Supplier?.SupplierKey,
+            entity.Supplier?.DisplayName,
+            entity.Supplier?.ParentSupplierId,
+            entity.Supplier?.ParentSupplier?.DisplayName,
+            entity.Supplier?.UnitKind,
+            ParseServiceTypes(entity.Supplier?.ServiceTypesJson),
             entity.EmergencyReason,
             entity.EmergencyExpeditedAt,
             entity.ManagerOverrideApproved,
@@ -474,10 +471,10 @@ public sealed class EmergencyPurchaseService(
         Guid tenantId,
         Guid supplierId,
         CancellationToken cancellationToken) =>
-        vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+        supplierProcurementGuard.EnsureSupplierAllowedForScopeAsync(
             tenantId,
             supplierId,
-            VendorRestrictionScopes.PurchaseRequests,
+            SupplierRestrictionScopes.PurchaseRequests,
             cancellationToken);
 
     private async Task<PurchaseRequest> LoadEmergencyAsync(
@@ -487,8 +484,8 @@ public sealed class EmergencyPurchaseService(
     {
         var entity = await db.PurchaseRequests
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -508,8 +505,8 @@ public sealed class EmergencyPurchaseService(
         CancellationToken cancellationToken)
     {
         var entity = await db.PurchaseRequests
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
             .FirstOrDefaultAsync(
@@ -609,3 +606,4 @@ public sealed class EmergencyPurchaseService(
         return decimal.Round(quantity, 4, MidpointRounding.AwayFromZero);
     }
 }
+

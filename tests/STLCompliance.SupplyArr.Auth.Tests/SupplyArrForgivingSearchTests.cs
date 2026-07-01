@@ -30,7 +30,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
     private string _serviceToken = null!;
     private string _userToken = null!;
     private Guid _partId;
-    private Guid _vendorPartyId;
+    private Guid _supplierId;
 
     public async Task InitializeAsync()
     {
@@ -78,7 +78,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
         _userToken = await RedeemHandoffAsync(handoffCode);
-        (_partId, _vendorPartyId) = await SeedSearchCorpusAsync();
+        (_partId, _supplierId) = await SeedSearchCorpusAsync();
     }
 
     public async Task DisposeAsync()
@@ -106,8 +106,8 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
         var payload = await response.Content.ReadFromJsonAsync<ForgivingSearchResponse>();
         Assert.NotNull(payload);
         Assert.Contains(payload!.Results, x => x.EntityType == "part" && x.EntityId == _partId);
-        Assert.Contains(payload.Results, x => x.EntityType == "vendor" && x.EntityId == _vendorPartyId);
-        Assert.Contains(payload.Results, x => x.EntityType == "vendor_sku");
+        Assert.Contains(payload.Results, x => x.EntityType == "supplier" && x.EntityId == _supplierId);
+        Assert.Contains(payload.Results, x => x.EntityType == "supplier_sku");
         Assert.Contains(payload.Results, x => x.EntityType == "purchase_request");
         Assert.Contains(payload.Results, x => x.EntityType == "purchase_order");
     }
@@ -154,7 +154,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task External_reference_resolve_returns_part_and_vendor_matches()
+    public async Task External_reference_resolve_returns_part_and_supplier_matches()
     {
         var resolvePartResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=part&key=BRK-PAD-001", _userToken));
@@ -165,14 +165,14 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
         Assert.Equal(_partId, partResolution.EntityId);
         Assert.Equal("BRK-PAD-001", partResolution.DisplayCode);
 
-        var resolveVendorResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=vendor&key=ACME-BRK", _userToken));
-        resolveVendorResponse.EnsureSuccessStatusCode();
-        var vendorResolution = await resolveVendorResponse.Content.ReadFromJsonAsync<ExternalReferenceResolutionResponse>();
-        Assert.NotNull(vendorResolution);
-        Assert.Equal("vendor", vendorResolution!.EntityType);
-        Assert.Equal(_vendorPartyId, vendorResolution.EntityId);
-        Assert.Equal("ACME-BRK", vendorResolution.DisplayCode);
+        var resolveSupplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/references/resolve?entityType=supplier&key=ACME-BRK", _userToken));
+        resolveSupplierResponse.EnsureSuccessStatusCode();
+        var supplierResolution = await resolveSupplierResponse.Content.ReadFromJsonAsync<ExternalReferenceResolutionResponse>();
+        Assert.NotNull(supplierResolution);
+        Assert.Equal("supplier", supplierResolution!.EntityType);
+        Assert.Equal(_supplierId, supplierResolution.EntityId);
+        Assert.Equal("ACME-BRK", supplierResolution.DisplayCode);
     }
 
     [Fact]
@@ -208,7 +208,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
         var request = new ExternalReferenceBatchResolveRequest(
         [
             new ExternalReferenceResolveRequest("part", "BRK-PAD-001"),
-            new ExternalReferenceResolveRequest("vendor", "ACME-BRK"),
+            new ExternalReferenceResolveRequest("supplier", "ACME-BRK"),
             new ExternalReferenceResolveRequest("purchase_order", "MISSING-PO")
         ]);
 
@@ -222,24 +222,24 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
         Assert.True(payload.Items[0].Found);
         Assert.Equal("part", payload.Items[0].Resolution!.EntityType);
         Assert.True(payload.Items[1].Found);
-        Assert.Equal("vendor", payload.Items[1].Resolution!.EntityType);
+        Assert.Equal("supplier", payload.Items[1].Resolution!.EntityType);
         Assert.False(payload.Items[2].Found);
         Assert.Null(payload.Items[2].Resolution);
     }
 
-    private async Task<(Guid PartId, Guid VendorPartyId)> SeedSearchCorpusAsync()
+    private async Task<(Guid PartId, Guid SupplierId)> SeedSearchCorpusAsync()
     {
         await using var scope = _supplyarrFactory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "ACME-BRK",
-            PartyType = "vendor",
+            SupplierKey = "ACME-BRK",
+            
             DisplayName = "Acme Brake Supply",
             LegalName = "Acme Brake Supply LLC",
             ApprovalStatus = "approved",
@@ -276,13 +276,13 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
             UpdatedAt = now,
         });
 
-        var vendorLink = new PartVendorLink
+        var supplierLink = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "ACME-BRKPAD-SKU",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "ACME-BRKPAD-SKU",
             IsPreferred = true,
             CreatedAt = now,
             UpdatedAt = now,
@@ -295,7 +295,7 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
             RequestKey = "PR-BRKPAD",
             Title = "Brake pad replenishment",
             Status = PurchaseRequestStatuses.Submitted,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             RequestedByUserId = PlatformSeeder.DemoAdminUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -309,20 +309,20 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
             Title = "Brake pad purchase order",
             Status = PurchaseOrderStatuses.Issued,
             PurchaseRequestId = purchaseRequest.Id,
-            VendorPartyId = vendor.Id,
+            SupplierId = supplier.Id,
             CreatedByUserId = PlatformSeeder.DemoAdminUserId,
             IssuedAt = now,
             CreatedAt = now,
             UpdatedAt = now,
         };
 
-        db.ExternalParties.Add(vendor);
+        db.Suppliers.Add(supplier);
         db.Parts.Add(part);
-        db.PartVendorLinks.Add(vendorLink);
+        db.PartSupplierLinks.Add(supplierLink);
         db.PurchaseRequests.Add(purchaseRequest);
         db.PurchaseOrders.Add(purchaseOrder);
         await db.SaveChangesAsync();
-        return (part.Id, vendor.Id);
+        return (part.Id, supplier.Id);
     }
 
     private async Task SeedNexArrAsync()
@@ -409,3 +409,5 @@ public sealed class SupplyArrForgivingSearchTests : IAsyncLifetime
         }
     }
 }
+
+

@@ -47,10 +47,10 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         if (supplierId is not null)
         {
             purchaseRequests = purchaseRequests
-                .Where(x => x.VendorPartyId == supplierId)
+                .Where(x => x.SupplierId == supplierId)
                 .ToList();
             purchaseOrders = purchaseOrders
-                .Where(x => x.VendorPartyId == supplierId)
+                .Where(x => x.SupplierId == supplierId)
                 .ToList();
         }
 
@@ -70,25 +70,25 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 .ToListAsync(cancellationToken);
 
         var supplierIds = purchaseRequests
-            .Where(x => x.VendorPartyId != null)
-            .Select(x => x.VendorPartyId!.Value)
-            .Concat(purchaseOrders.Select(x => x.VendorPartyId))
+            .Where(x => x.SupplierId != null)
+            .Select(x => x.SupplierId!.Value)
+            .Concat(purchaseOrders.Select(x => x.SupplierId))
             .Distinct()
             .ToList();
 
         var suppliers = supplierIds.Count == 0
             ? []
-            : await db.ExternalParties
+            : await db.Suppliers
                 .AsNoTracking()
-                .Include(x => x.ParentExternalParty)
+                .Include(x => x.ParentSupplier)
                 .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.Id))
                 .ToDictionaryAsync(x => x.Id, cancellationToken);
 
-        var blockedSupplierCount = await db.ExternalParties
+        var blockedSupplierCount = await db.Suppliers
             .AsNoTracking()
             .Where(x =>
                 x.TenantId == tenantId
-                && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                && true
                 && x.Status == "active")
             .ToListAsync(cancellationToken);
 
@@ -107,25 +107,25 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
-        var supplierDocumentExpiringSoonCount = await db.PartyComplianceDocuments
+        var supplierDocumentExpiringSoonCount = await db.SupplierComplianceDocuments
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .ToListAsync(cancellationToken);
 
-        var partVendorLinks = await db.PartVendorLinks
+        var partSupplierLinks = await db.PartSupplierLinks
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId)
             .Select(x => new
             {
                 x.Id,
-                x.ExternalPartyId,
+                x.SupplierId,
                 x.PartId,
                 x.CatalogUnitPrice,
                 x.CatalogLeadTimeDays,
             })
             .ToListAsync(cancellationToken);
 
-        var currentLeadTimeByLinkId = await db.PartVendorLeadTimeSnapshots
+        var currentLeadTimeByLinkId = await db.PartSupplierLeadTimeSnapshots
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
                 && x.EffectiveFrom <= now
@@ -134,16 +134,16 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .ThenByDescending(x => x.UpdatedAt)
             .Select(x => new
             {
-                x.PartVendorLinkId,
+                x.PartSupplierLinkId,
                 x.LeadTimeDays,
             })
             .ToListAsync(cancellationToken);
 
         var currentLeadTimeByLinkIdLookup = currentLeadTimeByLinkId
-            .GroupBy(x => x.PartVendorLinkId)
+            .GroupBy(x => x.PartSupplierLinkId)
             .ToDictionary(g => g.Key, g => g.First().LeadTimeDays);
 
-        var leadTimeSamples = partVendorLinks
+        var leadTimeSamples = partSupplierLinks
             .Select(link =>
             {
                 if (currentLeadTimeByLinkIdLookup.TryGetValue(link.Id, out var leadTimeDays))
@@ -161,8 +161,8 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             ? (int?)Math.Round(leadTimeSamples.Average())
             : null;
 
-        var partVendorLookup = partVendorLinks.ToDictionary(
-            x => (x.ExternalPartyId, x.PartId),
+        var partSupplierLookup = partSupplierLinks.ToDictionary(
+            x => (x.SupplierId, x.PartId),
             x => x);
 
         var monthStart = new DateTimeOffset(now.Year, now.Month, 1, 0, 0, 0, TimeSpan.Zero);
@@ -172,7 +172,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .SelectMany(x => x.Lines.Select(line => new { PurchaseOrder = x, Line = line }))
             .Sum(item =>
             {
-                if (!partVendorLookup.TryGetValue((item.PurchaseOrder.VendorPartyId, item.Line.PartId), out var link)
+                if (!partSupplierLookup.TryGetValue((item.PurchaseOrder.SupplierId, item.Line.PartId), out var link)
                     || link.CatalogUnitPrice is not decimal unitPrice
                     || unitPrice <= 0)
                 {
@@ -205,7 +205,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 continue;
             }
 
-            var supplier = Supplier(pr.VendorPartyId);
+            var supplier = Supplier(pr.SupplierId);
             documents.Add(new PurchasingDocumentSummaryItemResponse(
                 "purchase_request",
                 pr.Id,
@@ -223,10 +223,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 prLines?.Count ?? 0,
                 prLines?.Qty ?? 0m,
                 0m,
-                pr.UpdatedAt,
-                pr.VendorPartyId,
-                supplier?.SupplierKey,
-                supplier?.SupplierDisplayName));
+                pr.UpdatedAt));
         }
 
         foreach (var po in purchaseOrders.OrderByDescending(x => x.UpdatedAt))
@@ -242,7 +239,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 continue;
             }
 
-            var supplier = Supplier(po.VendorPartyId);
+            var supplier = Supplier(po.SupplierId);
             documents.Add(new PurchasingDocumentSummaryItemResponse(
                 "purchase_order",
                 po.Id,
@@ -260,10 +257,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
                 lineCount,
                 qtyOrdered,
                 qtyReceived,
-                po.UpdatedAt,
-                po.VendorPartyId,
-                supplier?.SupplierKey,
-                supplier?.SupplierDisplayName));
+                po.UpdatedAt));
         }
 
         documents = documents.OrderByDescending(x => x.UpdatedAt).ToList();
@@ -295,13 +289,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             receivingExceptionCount.Count(x => string.Equals(x.Status, ReceivingExceptionStatuses.Open, StringComparison.OrdinalIgnoreCase)),
             warrantyClaimCount.Count(x => WarrantyClaimStatuses.Open.Contains(x.Status)),
             supplierDocumentExpiringSoonCount.Count(x =>
-                x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
-                && x.ExpiresAt != null
-                && x.ExpiresAt >= now
-                && x.ExpiresAt <= now.AddDays(30)),
-            blockedSupplierCount.Count(x => BlockedApprovalStatuses.Contains(x.ApprovalStatus)),
-            supplierDocumentExpiringSoonCount.Count(x =>
-                x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                x.ReviewStatus == SupplierComplianceDocumentReviewStatuses.Approved
                 && x.ExpiresAt != null
                 && x.ExpiresAt >= now
                 && x.ExpiresAt <= now.AddDays(30)),
@@ -340,7 +328,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == purchaseRequestId, cancellationToken)
             ?? throw new StlApiException("purchase_request.not_found", "Purchase request was not found.", 404);
 
-        var summaryResponse = await GetSummaryAsync(tenantId, null, pr.VendorPartyId, cancellationToken);
+        var summaryResponse = await GetSummaryAsync(tenantId, null, pr.SupplierId, cancellationToken);
         var summary = summaryResponse.Documents.FirstOrDefault(x =>
                 x.DocumentType == "purchase_request" && x.DocumentId == purchaseRequestId)
             ?? await BuildPurchaseRequestSummaryAsync(tenantId, pr, cancellationToken);
@@ -385,7 +373,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == purchaseOrderId, cancellationToken)
             ?? throw new StlApiException("purchase_order.not_found", "Purchase order was not found.", 404);
 
-        var summaryResponse = await GetSummaryAsync(tenantId, null, po.VendorPartyId, cancellationToken);
+        var summaryResponse = await GetSummaryAsync(tenantId, null, po.SupplierId, cancellationToken);
         var summary = summaryResponse.Documents.FirstOrDefault(x =>
                 x.DocumentType == "purchase_order" && x.DocumentId == purchaseOrderId)
             ?? await BuildPurchaseOrderSummaryAsync(tenantId, po, cancellationToken);
@@ -478,12 +466,12 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         PurchaseRequest pr,
         CancellationToken cancellationToken)
     {
-        var supplier = pr.VendorPartyId is null
+        var supplier = pr.SupplierId is null
             ? null
-            : await db.ExternalParties
+            : await db.Suppliers
                 .AsNoTracking()
-                .Include(x => x.ParentExternalParty)
-                .Where(x => x.TenantId == tenantId && x.Id == pr.VendorPartyId)
+                .Include(x => x.ParentSupplier)
+                .Where(x => x.TenantId == tenantId && x.Id == pr.SupplierId)
                 .FirstOrDefaultAsync(cancellationToken);
 
         var lineStats = await db.PurchaseRequestLines
@@ -512,10 +500,7 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             lineStats?.Count ?? 0,
             lineStats?.Qty ?? 0m,
             0m,
-            pr.UpdatedAt,
-            pr.VendorPartyId,
-            supplierSnapshot?.SupplierKey,
-            supplierSnapshot?.SupplierDisplayName);
+            pr.UpdatedAt);
     }
 
     private async Task<PurchasingDocumentSummaryItemResponse> BuildPurchaseOrderSummaryAsync(
@@ -523,10 +508,10 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         PurchaseOrder po,
         CancellationToken cancellationToken)
     {
-        var supplier = await db.ExternalParties
+        var supplier = await db.Suppliers
             .AsNoTracking()
-            .Include(x => x.ParentExternalParty)
-            .Where(x => x.TenantId == tenantId && x.Id == po.VendorPartyId)
+            .Include(x => x.ParentSupplier)
+            .Where(x => x.TenantId == tenantId && x.Id == po.SupplierId)
             .FirstOrDefaultAsync(cancellationToken);
 
         var supplierSnapshot = supplier is null ? null : MapSupplierSnapshot(supplier);
@@ -548,22 +533,19 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
             po.Lines.Count,
             po.Lines.Sum(x => x.QuantityOrdered),
             po.Lines.Sum(x => x.QuantityReceived),
-            po.UpdatedAt,
-            po.VendorPartyId,
-            supplierSnapshot?.SupplierKey,
-            supplierSnapshot?.SupplierDisplayName);
+            po.UpdatedAt);
     }
 
-    private static SupplierRecordSnapshot MapSupplierSnapshot(ExternalParty supplier) =>
+    private static SupplierRecordSnapshot MapSupplierSnapshot(Supplier supplier) =>
         new(
             supplier.Id,
-            supplier.PartyKey,
+            supplier.SupplierKey,
             supplier.DisplayName,
-            supplier.ParentExternalPartyId,
-            supplier.ParentExternalParty?.DisplayName,
+            supplier.ParentSupplierId,
+            supplier.ParentSupplier?.DisplayName,
             supplier.UnitKind,
             DeserializeServiceTypes(supplier.ServiceTypesJson),
-            supplier.PartyType);
+            "supplier");
 
     private static IReadOnlyList<string> DeserializeServiceTypes(string? serviceTypesJson)
     {
@@ -602,3 +584,5 @@ public sealed class PurchasingReportService(SupplyArrDbContext db)
         IReadOnlyList<string> SupplierServiceTypes,
         string SupplierType);
 }
+
+

@@ -6,61 +6,61 @@ using STLCompliance.Shared.Contracts;
 
 namespace RoutArr.Api.Services;
 
-public sealed class TripVendorReadinessService(
+public sealed class TripSupplierReadinessService(
     RoutArrDbContext db,
-    SupplyArrVendorOrderClient supplyArrVendorOrderClient)
+    SupplyArrSupplierOrderClient supplyArrSupplierOrderClient)
 {
-    public async Task ApplyInitialVendorOrderLinkAsync(
+    public async Task ApplyInitialSupplierOrderLinkAsync(
         Trip trip,
         CancellationToken cancellationToken = default)
     {
-        if (!trip.VendorOrderId.HasValue)
+        if (!trip.SupplierOrderId.HasValue)
         {
             return;
         }
 
-        var vendorOrder = await supplyArrVendorOrderClient.GetVendorOrderAsync(
+        var supplierOrder = await supplyArrSupplierOrderClient.GetSupplierOrderAsync(
             trip.TenantId,
-            trip.VendorOrderId.Value,
+            trip.SupplierOrderId.Value,
             cancellationToken);
 
-        trip.BrokerOrderId ??= vendorOrder.BrokerOrderId;
+        trip.BrokerOrderId ??= supplierOrder.BrokerOrderId;
         StampSnapshots(
             trip,
-            vendorOrder.Status,
-            vendorOrder.QuantityReady,
-            vendorOrder.OrderedQuantity,
-            vendorOrder.ExpectedReadyAt,
-            vendorOrder.ConfirmedReadyAt);
+            supplierOrder.Status,
+            supplierOrder.QuantityReady,
+            supplierOrder.OrderedQuantity,
+            supplierOrder.ExpectedReadyAt,
+            supplierOrder.ConfirmedReadyAt);
 
         var now = DateTimeOffset.UtcNow;
-        if (IsReadyForDispatch(vendorOrder.Status))
+        if (IsReadyForDispatch(supplierOrder.Status))
         {
-            ResolveActiveVendorBlocks(trip, null, null, null, now);
+            ResolveActiveSupplierBlocks(trip, null, null, null, now);
             trip.ReleasedForDispatchAt ??= now;
         }
         else
         {
-            EnsureActiveVendorBlock(
+            EnsureActiveSupplierBlock(
                 trip,
-                vendorOrder.VendorOrderId,
-                MapBlockReason(vendorOrder.Status),
+                supplierOrder.SupplierOrderId,
+                MapBlockReason(supplierOrder.Status),
                 now);
         }
     }
 
     public void EnsureDispatchAllowed(Trip trip)
     {
-        if (GetActiveVendorBlock(trip) is not null)
+        if (GetActiveSupplierBlock(trip) is not null)
         {
             throw new StlApiException(
-                "trip.vendor_readiness_blocked",
-                "Trip is blocked until vendor readiness is released or explicitly overridden.",
+                "trip.supplier_readiness_blocked",
+                "Trip is blocked until supplier readiness is released or explicitly overridden.",
                 409);
         }
     }
 
-    public TripDetailResponse ApplyVendorReadinessOverride(
+    public TripDetailResponse ApplySupplierReadinessOverride(
         Trip trip,
         string reason,
         string actorPersonId,
@@ -69,20 +69,20 @@ public sealed class TripVendorReadinessService(
         if (string.IsNullOrWhiteSpace(reason))
         {
             throw new StlApiException(
-                "trip.vendor_readiness_override_reason_required",
-                "Vendor readiness overrides require a non-empty reason.",
+                "trip.supplier_readiness_override_reason_required",
+                "Supplier readiness overrides require a non-empty reason.",
                 400);
         }
 
-        if (GetActiveVendorBlock(trip) is null)
+        if (GetActiveSupplierBlock(trip) is null)
         {
             throw new StlApiException(
-                "trip.vendor_readiness_override_not_needed",
-                "Trip does not have an active vendor-readiness block.",
+                "trip.supplier_readiness_override_not_needed",
+                "Trip does not have an active supplier-readiness block.",
                 409);
         }
 
-        ResolveActiveVendorBlocks(trip, null, actorPersonId, reason.Trim(), occurredAt);
+        ResolveActiveSupplierBlocks(trip, null, actorPersonId, reason.Trim(), occurredAt);
         trip.DispatchOverrideAt = occurredAt;
         trip.DispatchOverrideByPersonId = actorPersonId.Trim();
         trip.DispatchOverrideReason = reason.Trim();
@@ -91,16 +91,16 @@ public sealed class TripVendorReadinessService(
         return TripMappings.MapDetail(trip);
     }
 
-    public async Task<IngestSupplyArrVendorOrderEventResponse> IngestVendorOrderEventAsync(
-        IngestSupplyArrVendorOrderEventRequest request,
+    public async Task<IngestSupplyArrSupplierOrderEventResponse> IngestSupplierOrderEventAsync(
+        IngestSupplyArrSupplierOrderEventRequest request,
         CancellationToken cancellationToken = default)
     {
-        var replay = await db.SupplyArrVendorOrderEventReceipts.AnyAsync(
+        var replay = await db.SupplyArrSupplierOrderEventReceipts.AnyAsync(
             x => x.TenantId == request.TenantId && x.EventId == request.EventId,
             cancellationToken);
         if (replay)
         {
-            return new IngestSupplyArrVendorOrderEventResponse(request.EventId, true, 0);
+            return new IngestSupplyArrSupplierOrderEventResponse(request.EventId, true, 0);
         }
 
         var trips = await LoadMatchingTripsAsync(request, cancellationToken);
@@ -109,18 +109,18 @@ public sealed class TripVendorReadinessService(
             ApplyEventToTrip(trip, request, request.OccurredAt);
         }
 
-        db.SupplyArrVendorOrderEventReceipts.Add(new SupplyArrVendorOrderEventReceipt
+        db.SupplyArrSupplierOrderEventReceipts.Add(new SupplyArrSupplierOrderEventReceipt
         {
             Id = Guid.NewGuid(),
             TenantId = request.TenantId,
             EventId = request.EventId,
             EventType = request.EventType,
-            VendorOrderId = request.VendorOrderId,
+            SupplierOrderId = request.SupplierOrderId,
             ProcessedAt = DateTimeOffset.UtcNow,
         });
 
         await db.SaveChangesAsync(cancellationToken);
-        return new IngestSupplyArrVendorOrderEventResponse(request.EventId, false, trips.Count);
+        return new IngestSupplyArrSupplierOrderEventResponse(request.EventId, false, trips.Count);
     }
 
     public static IReadOnlyList<DispatchBlockResponse> MapBlocks(Trip trip) =>
@@ -143,33 +143,33 @@ public sealed class TripVendorReadinessService(
             block.ResolvedByPersonId,
             block.OverrideReason);
 
-    public static DispatchBlock? GetActiveVendorBlock(Trip trip) =>
+    public static DispatchBlock? GetActiveSupplierBlock(Trip trip) =>
         trip.DispatchBlocks.FirstOrDefault(x =>
-            string.Equals(x.BlockType, DispatchBlockTypes.VendorReadiness, StringComparison.OrdinalIgnoreCase)
+            string.Equals(x.BlockType, DispatchBlockTypes.SupplierReadiness, StringComparison.OrdinalIgnoreCase)
             && string.Equals(x.Status, DispatchBlockStatuses.Active, StringComparison.OrdinalIgnoreCase));
 
     public static void StampSnapshots(
         Trip trip,
-        string? vendorStatus,
+        string? supplierStatus,
         decimal quantityReady,
         decimal orderedQuantity,
         DateTimeOffset? expectedReadyAt,
         DateTimeOffset? confirmedReadyAt)
     {
-        trip.VendorReadinessStatusSnapshot = NormalizeOptional(vendorStatus, 64);
-        trip.VendorQuantityReadySnapshot = quantityReady;
-        trip.VendorOrderedQuantitySnapshot = orderedQuantity;
-        trip.VendorExpectedReadyAtSnapshot = expectedReadyAt;
-        trip.VendorConfirmedReadyAtSnapshot = confirmedReadyAt;
+        trip.SupplierReadinessStatusSnapshot = NormalizeOptional(supplierStatus, 64);
+        trip.SupplierQuantityReadySnapshot = quantityReady;
+        trip.SupplierOrderedQuantitySnapshot = orderedQuantity;
+        trip.SupplierExpectedReadyAtSnapshot = expectedReadyAt;
+        trip.SupplierConfirmedReadyAtSnapshot = confirmedReadyAt;
     }
 
-    public static void EnsureActiveVendorBlock(
+    public static void EnsureActiveSupplierBlock(
         Trip trip,
-        Guid vendorOrderId,
+        Guid supplierOrderId,
         string blockReason,
         DateTimeOffset now)
     {
-        var existing = GetActiveVendorBlock(trip);
+        var existing = GetActiveSupplierBlock(trip);
         if (existing is null)
         {
             trip.DispatchBlocks.Add(new DispatchBlock
@@ -177,10 +177,10 @@ public sealed class TripVendorReadinessService(
                 Id = Guid.NewGuid(),
                 TenantId = trip.TenantId,
                 TripId = trip.Id,
-                BlockType = DispatchBlockTypes.VendorReadiness,
+                BlockType = DispatchBlockTypes.SupplierReadiness,
                 BlockReason = blockReason,
-                BlockingEntityType = "vendor_order",
-                BlockingEntityId = vendorOrderId.ToString(),
+                BlockingEntityType = "supplier_order",
+                BlockingEntityId = supplierOrderId.ToString(),
                 Status = DispatchBlockStatuses.Active,
                 CreatedAt = now,
             });
@@ -188,7 +188,7 @@ public sealed class TripVendorReadinessService(
         else
         {
             existing.BlockReason = blockReason;
-            existing.BlockingEntityId = vendorOrderId.ToString();
+            existing.BlockingEntityId = supplierOrderId.ToString();
             existing.Status = DispatchBlockStatuses.Active;
             existing.ResolvedAt = null;
             existing.ResolvedByEventId = null;
@@ -200,7 +200,7 @@ public sealed class TripVendorReadinessService(
         trip.UpdatedAt = now;
     }
 
-    public static void ResolveActiveVendorBlocks(
+    public static void ResolveActiveSupplierBlocks(
         Trip trip,
         Guid? eventId,
         string? personId,
@@ -208,7 +208,7 @@ public sealed class TripVendorReadinessService(
         DateTimeOffset now)
     {
         foreach (var block in trip.DispatchBlocks.Where(x =>
-                     string.Equals(x.BlockType, DispatchBlockTypes.VendorReadiness, StringComparison.OrdinalIgnoreCase)
+                     string.Equals(x.BlockType, DispatchBlockTypes.SupplierReadiness, StringComparison.OrdinalIgnoreCase)
                      && string.Equals(x.Status, DispatchBlockStatuses.Active, StringComparison.OrdinalIgnoreCase)))
         {
             block.Status = DispatchBlockStatuses.Resolved;
@@ -222,20 +222,20 @@ public sealed class TripVendorReadinessService(
         trip.UpdatedAt = now;
     }
 
-    public static bool IsReadyForDispatch(string? vendorStatus) =>
-        string.Equals(vendorStatus, "completed_ready_for_dispatch", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(vendorStatus, "partial_dispatch_authorized", StringComparison.OrdinalIgnoreCase);
+    public static bool IsReadyForDispatch(string? supplierStatus) =>
+        string.Equals(supplierStatus, "completed_ready_for_dispatch", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(supplierStatus, "partial_dispatch_authorized", StringComparison.OrdinalIgnoreCase);
 
-    public static string MapBlockReason(string? vendorStatus) =>
-        vendorStatus?.Trim().ToLowerInvariant() switch
+    public static string MapBlockReason(string? supplierStatus) =>
+        supplierStatus?.Trim().ToLowerInvariant() switch
         {
-            "unable_to_fulfill" => DispatchBlockReasons.VendorUnableToFulfill,
-            "partially_ready" => DispatchBlockReasons.VendorOrderPartiallyReady,
-            _ => DispatchBlockReasons.VendorOrderNotComplete,
+            "unable_to_fulfill" => DispatchBlockReasons.SupplierUnableToFulfill,
+            "partially_ready" => DispatchBlockReasons.SupplierOrderPartiallyReady,
+            _ => DispatchBlockReasons.SupplierOrderNotComplete,
         };
 
     private async Task<List<Trip>> LoadMatchingTripsAsync(
-        IngestSupplyArrVendorOrderEventRequest request,
+        IngestSupplyArrSupplierOrderEventRequest request,
         CancellationToken cancellationToken)
     {
         var query = db.Trips
@@ -245,16 +245,16 @@ public sealed class TripVendorReadinessService(
         if (request.SelectedTripId.HasValue)
         {
             query = query.Where(x => x.Id == request.SelectedTripId.Value
-                || x.VendorOrderId == request.VendorOrderId
+                || x.SupplierOrderId == request.SupplierOrderId
                 || (request.BrokerOrderId.HasValue && x.BrokerOrderId == request.BrokerOrderId.Value));
         }
         else if (request.BrokerOrderId.HasValue)
         {
-            query = query.Where(x => x.VendorOrderId == request.VendorOrderId || x.BrokerOrderId == request.BrokerOrderId.Value);
+            query = query.Where(x => x.SupplierOrderId == request.SupplierOrderId || x.BrokerOrderId == request.BrokerOrderId.Value);
         }
         else
         {
-            query = query.Where(x => x.VendorOrderId == request.VendorOrderId);
+            query = query.Where(x => x.SupplierOrderId == request.SupplierOrderId);
         }
 
         return await query.ToListAsync(cancellationToken);
@@ -262,16 +262,16 @@ public sealed class TripVendorReadinessService(
 
     private static void ApplyEventToTrip(
         Trip trip,
-        IngestSupplyArrVendorOrderEventRequest request,
+        IngestSupplyArrSupplierOrderEventRequest request,
         DateTimeOffset occurredAt)
     {
         trip.BrokerOrderId ??= request.BrokerOrderId;
-        if (!trip.VendorOrderId.HasValue || trip.VendorOrderId == request.VendorOrderId || request.ReadyChildVendorOrderId.HasValue)
+        if (!trip.SupplierOrderId.HasValue || trip.SupplierOrderId == request.SupplierOrderId || request.ReadyChildSupplierOrderId.HasValue)
         {
-            trip.VendorOrderId ??= request.VendorOrderId;
+            trip.SupplierOrderId ??= request.SupplierOrderId;
         }
 
-        if (string.Equals(request.EventType, "supplyarr.vendor_order.completed_for_dispatch", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.EventType, "supplyarr.supplier_order.completed_for_dispatch", StringComparison.OrdinalIgnoreCase))
         {
             StampSnapshots(
                 trip,
@@ -280,13 +280,13 @@ public sealed class TripVendorReadinessService(
                 request.OrderedQuantity,
                 request.ExpectedReadyAt,
                 request.ConfirmedReadyAt);
-            ResolveActiveVendorBlocks(trip, request.EventId, null, null, occurredAt);
+            ResolveActiveSupplierBlocks(trip, request.EventId, null, null, occurredAt);
             trip.ReleasedForDispatchAt = occurredAt;
             trip.ReleasedForDispatchByEventId = request.EventId;
             return;
         }
 
-        if (string.Equals(request.EventType, "supplyarr.vendor_order.partial_dispatch_authorized", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.EventType, "supplyarr.supplier_order.partial_dispatch_authorized", StringComparison.OrdinalIgnoreCase))
         {
             if (request.SelectedTripId.HasValue && trip.Id != request.SelectedTripId.Value)
             {
@@ -300,22 +300,22 @@ public sealed class TripVendorReadinessService(
                 request.OrderedQuantity,
                 request.ExpectedReadyAt,
                 request.ConfirmedReadyAt);
-            ResolveActiveVendorBlocks(trip, request.EventId, null, null, occurredAt);
+            ResolveActiveSupplierBlocks(trip, request.EventId, null, null, occurredAt);
             trip.ReleasedForDispatchAt = occurredAt;
             trip.ReleasedForDispatchByEventId = request.EventId;
             return;
         }
 
-        if (string.Equals(request.EventType, "supplyarr.vendor_order.split_created", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(request.EventType, "supplyarr.supplier_order.split_created", StringComparison.OrdinalIgnoreCase))
         {
             if (request.SelectedTripId.HasValue && trip.Id != request.SelectedTripId.Value)
             {
                 return;
             }
 
-            if (request.ReadyChildVendorOrderId.HasValue)
+            if (request.ReadyChildSupplierOrderId.HasValue)
             {
-                trip.VendorOrderId = request.ReadyChildVendorOrderId.Value;
+                trip.SupplierOrderId = request.ReadyChildSupplierOrderId.Value;
             }
 
             StampSnapshots(
@@ -325,7 +325,7 @@ public sealed class TripVendorReadinessService(
                 request.OrderedQuantity,
                 request.ExpectedReadyAt,
                 request.ConfirmedReadyAt);
-            ResolveActiveVendorBlocks(trip, request.EventId, null, null, occurredAt);
+            ResolveActiveSupplierBlocks(trip, request.EventId, null, null, occurredAt);
             trip.ReleasedForDispatchAt ??= occurredAt;
             trip.ReleasedForDispatchByEventId ??= request.EventId;
             return;
@@ -341,20 +341,20 @@ public sealed class TripVendorReadinessService(
 
         if (IsReadyForDispatch(request.NewStatus))
         {
-            ResolveActiveVendorBlocks(trip, request.EventId, null, null, occurredAt);
+            ResolveActiveSupplierBlocks(trip, request.EventId, null, null, occurredAt);
             trip.ReleasedForDispatchAt = occurredAt;
             trip.ReleasedForDispatchByEventId = request.EventId;
             return;
         }
 
-        if (!trip.VendorOrderId.HasValue)
+        if (!trip.SupplierOrderId.HasValue)
         {
-            trip.VendorOrderId = request.VendorOrderId;
+            trip.SupplierOrderId = request.SupplierOrderId;
         }
 
-        EnsureActiveVendorBlock(
+        EnsureActiveSupplierBlock(
             trip,
-            trip.VendorOrderId ?? request.VendorOrderId,
+            trip.SupplierOrderId ?? request.SupplierOrderId,
             MapBlockReason(request.NewStatus),
             occurredAt);
     }
@@ -408,20 +408,20 @@ internal static class TripMappings
             trip.CompletedAt,
             trip.ClosedAt,
             trip.CancelledAt,
-            trip.VendorOrderId,
+            trip.SupplierOrderId,
             trip.BrokerOrderId,
             trip.DispatchBlockReason,
-            trip.VendorReadinessStatusSnapshot,
-            trip.VendorQuantityReadySnapshot,
-            trip.VendorOrderedQuantitySnapshot,
-            trip.VendorExpectedReadyAtSnapshot,
-            trip.VendorConfirmedReadyAtSnapshot,
+            trip.SupplierReadinessStatusSnapshot,
+            trip.SupplierQuantityReadySnapshot,
+            trip.SupplierOrderedQuantitySnapshot,
+            trip.SupplierExpectedReadyAtSnapshot,
+            trip.SupplierConfirmedReadyAtSnapshot,
             trip.ReleasedForDispatchAt,
             trip.ReleasedForDispatchByEventId,
             trip.DispatchOverrideAt,
             trip.DispatchOverrideByPersonId,
             trip.DispatchOverrideReason,
-            TripVendorReadinessService.MapBlocks(trip),
+            TripSupplierReadinessService.MapBlocks(trip),
             trip.DispatchReleaseSnapshot is null
                 ? null
                 : new TripDispatchReleaseSnapshotResponse(

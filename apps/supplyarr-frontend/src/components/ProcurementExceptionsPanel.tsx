@@ -25,7 +25,7 @@ import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
 
 const CATEGORIES = [
   'approval_delay',
-  'vendor_issue',
+  'supplier_issue',
   'budget_override',
   'policy_violation',
   'pricing_variance',

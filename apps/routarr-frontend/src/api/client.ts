@@ -117,7 +117,7 @@ import type {
   UpsertAttachmentRetentionSettingsRequest,
   AttachmentRetentionRunsResponse,
   TripSummaryResponse,
-  TripVendorReadinessOverrideRequest,
+  TripSupplierReadinessOverrideRequest,
   UpdateRouteStopStatusRequest,
   UpdateTripDispatchStatusRequest,
   CarrierTenderResponse,
@@ -293,20 +293,20 @@ export async function getTrips(
     | string
     | {
         dispatchStatus?: string
-        vendorOrderId?: string
+        supplierOrderId?: string
         brokerOrderId?: string
       },
 ): Promise<TripSummaryResponse[]> {
   const search = new URLSearchParams()
   const dispatchStatus = typeof options === 'string' ? options : options?.dispatchStatus
-  const vendorOrderId = typeof options === 'string' ? undefined : options?.vendorOrderId
+  const supplierOrderId = typeof options === 'string' ? undefined : options?.supplierOrderId
   const brokerOrderId = typeof options === 'string' ? undefined : options?.brokerOrderId
 
   if (dispatchStatus) {
     search.set('dispatchStatus', dispatchStatus)
   }
-  if (vendorOrderId) {
-    search.set('vendorOrderId', vendorOrderId)
+  if (supplierOrderId) {
+    search.set('supplierOrderId', supplierOrderId)
   }
   if (brokerOrderId) {
     search.set('brokerOrderId', brokerOrderId)
@@ -804,17 +804,17 @@ export async function updateTripStatus(
   return parseJsonResponse<TripDetailResponse>(response, 'Failed to update trip status')
 }
 
-export async function overrideTripVendorReadiness(
+export async function overrideTripSupplierReadiness(
   accessToken: string,
   tripId: string,
-  payload: TripVendorReadinessOverrideRequest,
+  payload: TripSupplierReadinessOverrideRequest,
 ): Promise<TripDetailResponse> {
-  const response = await fetch(`${apiBase}/api/trips/${tripId}/vendor-readiness-override`, {
+  const response = await fetch(`${apiBase}/api/trips/${tripId}/supplier-readiness-override`, {
     method: 'POST',
     headers: authHeaders(accessToken),
     body: JSON.stringify(payload),
   })
-  return parseJsonResponse<TripDetailResponse>(response, 'Failed to override vendor readiness block')
+  return parseJsonResponse<TripDetailResponse>(response, 'Failed to override supplier readiness block')
 }
 
 export async function getRoutes(

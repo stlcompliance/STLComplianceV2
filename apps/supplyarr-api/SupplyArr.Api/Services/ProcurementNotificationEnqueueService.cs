@@ -11,7 +11,7 @@ public sealed class ProcurementNotificationEnqueueService(
     public async Task<Guid?> TryEnqueueAsync(
         Guid tenantId,
         string eventKind,
-        Guid? vendorPartyId,
+        Guid? supplierId,
         string relatedEntityType,
         Guid relatedEntityId,
         CancellationToken cancellationToken = default)
@@ -42,7 +42,7 @@ public sealed class ProcurementNotificationEnqueueService(
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             EventKind = eventKind,
-            VendorPartyId = vendorPartyId,
+            SupplierId = supplierId,
             RelatedEntityType = relatedEntityType,
             RelatedEntityId = relatedEntityId,
             DispatchStatus = ProcurementNotificationDispatchStatuses.Pending,
@@ -57,7 +57,7 @@ public sealed class ProcurementNotificationEnqueueService(
     public async Task<Guid?> TryEnqueueRepeatableAsync(
         Guid tenantId,
         string eventKind,
-        Guid? vendorPartyId,
+        Guid? supplierId,
         string relatedEntityType,
         Guid relatedEntityId,
         CancellationToken cancellationToken = default)
@@ -87,7 +87,7 @@ public sealed class ProcurementNotificationEnqueueService(
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             EventKind = eventKind,
-            VendorPartyId = vendorPartyId,
+            SupplierId = supplierId,
             RelatedEntityType = relatedEntityType,
             RelatedEntityId = relatedEntityId,
             DispatchStatus = ProcurementNotificationDispatchStatuses.Pending,

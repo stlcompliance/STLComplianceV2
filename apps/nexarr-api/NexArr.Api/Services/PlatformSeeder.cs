@@ -1236,6 +1236,16 @@ public static class PlatformSeeder
         "http://localhost:5175"
     ];
 
+    private static readonly string[] DevLoopbackCallbackPrefixes =
+    [
+        "http://localhost:",
+        "https://localhost:",
+        "http://127.0.0.1:",
+        "https://127.0.0.1:",
+        "http://[::1]:",
+        "https://[::1]:",
+    ];
+
     public static Task EnsureDevSuiteShellOriginsAsync(
         NexArrDbContext db,
         CancellationToken cancellationToken = default) =>
@@ -1272,6 +1282,44 @@ public static class PlatformSeeder
                     TenantId = null,
                     UrlPattern = origin,
                     PatternType = CallbackPatternTypes.Origin,
+                    IsActive = true,
+                    CreatedAt = now,
+                    ModifiedAt = now
+                });
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public static async Task EnsureDevLoopbackCallbackPrefixesAsync(
+        NexArrDbContext db,
+        CancellationToken cancellationToken = default)
+    {
+        foreach (var product in Products)
+        {
+            foreach (var prefix in DevLoopbackCallbackPrefixes)
+            {
+                var exists = await db.CallbackAllowlist.AnyAsync(
+                    e => e.ProductKey == product.Key
+                        && e.TenantId == null
+                        && e.UrlPattern == prefix
+                        && e.PatternType == CallbackPatternTypes.Prefix
+                        && e.IsActive,
+                    cancellationToken);
+                if (exists)
+                {
+                    continue;
+                }
+
+                var now = DateTimeOffset.UtcNow;
+                db.CallbackAllowlist.Add(new ProductCallbackAllowlistEntry
+                {
+                    Id = Guid.NewGuid(),
+                    ProductKey = product.Key,
+                    TenantId = null,
+                    UrlPattern = prefix,
+                    PatternType = CallbackPatternTypes.Prefix,
                     IsActive = true,
                     CreatedAt = now,
                     ModifiedAt = now

@@ -175,7 +175,7 @@ public sealed class ApprovalReminderWorkerService(
             notificationDispatchId = await notificationEnqueue.TryEnqueueRepeatableAsync(
                 candidate.TenantId,
                 eventKind,
-                candidate.VendorPartyId,
+                candidate.SupplierId,
                 ApprovalReminderRules.GetRelatedEntityType(candidate.SubjectType),
                 candidate.SubjectId,
                 cancellationToken);
@@ -205,7 +205,7 @@ public sealed class ApprovalReminderWorkerService(
         state.DocumentKey = candidate.DocumentKey;
         state.Title = candidate.Title;
         state.DocumentStatus = candidate.DocumentStatus;
-        state.VendorPartyId = candidate.VendorPartyId;
+        state.SupplierId = candidate.SupplierId;
         state.PendingSince = candidate.PendingSince;
         state.LastReminderSentAt = asOfUtc;
         state.ReminderCount = candidate.ReminderCount + 1;
@@ -264,7 +264,7 @@ public sealed class ApprovalReminderWorkerService(
                 x.RequestKey,
                 x.Title,
                 x.Status,
-                x.VendorPartyId,
+                x.SupplierId,
                 PendingSince = x.SubmittedAt ?? x.UpdatedAt,
             })
             .ToListAsync(cancellationToken);
@@ -316,7 +316,7 @@ public sealed class ApprovalReminderWorkerService(
                 pr.RequestKey,
                 pr.Title,
                 pr.Status,
-                pr.VendorPartyId,
+                pr.SupplierId,
                 pr.PendingSince,
                 lastReminderSentAt,
                 reminderCount,
@@ -334,7 +334,7 @@ public sealed class ApprovalReminderWorkerService(
                 x.OrderKey,
                 x.Title,
                 x.Status,
-                x.VendorPartyId,
+                x.SupplierId,
                 PendingSince = x.UpdatedAt,
             })
             .ToListAsync(cancellationToken);
@@ -386,7 +386,7 @@ public sealed class ApprovalReminderWorkerService(
                 po.OrderKey,
                 po.Title,
                 po.Status,
-                po.VendorPartyId,
+                po.SupplierId,
                 po.PendingSince,
                 lastReminderSentAt,
                 reminderCount,
@@ -407,7 +407,7 @@ public sealed class ApprovalReminderWorkerService(
         string DocumentKey,
         string Title,
         string DocumentStatus,
-        Guid? VendorPartyId,
+        Guid? SupplierId,
         DateTimeOffset PendingSince,
         DateTimeOffset? LastReminderSentAt,
         int ReminderCount,

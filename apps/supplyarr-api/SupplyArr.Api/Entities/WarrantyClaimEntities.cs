@@ -14,7 +14,7 @@ public sealed class WarrantyClaim : IHasTenant
 
     public string ClaimType { get; set; } = WarrantyClaimTypes.Defective;
 
-    public Guid VendorPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public Guid PartId { get; set; }
 
@@ -30,11 +30,11 @@ public sealed class WarrantyClaim : IHasTenant
 
     public string ProblemDescription { get; set; } = string.Empty;
 
-    public string VendorRmaNumber { get; set; } = string.Empty;
+    public string SupplierRmaNumber { get; set; } = string.Empty;
 
-    public string VendorDisposition { get; set; } = string.Empty;
+    public string SupplierDisposition { get; set; } = string.Empty;
 
-    public string VendorResponseNotes { get; set; } = string.Empty;
+    public string SupplierResponseNotes { get; set; } = string.Empty;
 
     public string ClosureNotes { get; set; } = string.Empty;
 
@@ -46,9 +46,9 @@ public sealed class WarrantyClaim : IHasTenant
 
     public DateTimeOffset? SubmittedAt { get; set; }
 
-    public Guid? VendorRespondedByUserId { get; set; }
+    public Guid? SupplierRespondedByUserId { get; set; }
 
-    public DateTimeOffset? VendorRespondedAt { get; set; }
+    public DateTimeOffset? SupplierRespondedAt { get; set; }
 
     public Guid? ClosedByUserId { get; set; }
 
@@ -68,7 +68,7 @@ public sealed class WarrantyClaim : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty VendorParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 
     public Part Part { get; set; } = null!;
 
@@ -87,7 +87,7 @@ public static class WarrantyClaimStatuses
 
     public const string Submitted = "submitted";
 
-    public const string VendorResponded = "vendor_responded";
+    public const string SupplierResponded = "supplier_responded";
 
     public const string Closed = "closed";
 
@@ -99,7 +99,7 @@ public static class WarrantyClaimStatuses
     {
         Draft,
         Submitted,
-        VendorResponded,
+        SupplierResponded,
         Closed,
         Denied,
         Cancelled,
@@ -109,7 +109,7 @@ public static class WarrantyClaimStatuses
     {
         Draft,
         Submitted,
-        VendorResponded,
+        SupplierResponded,
     };
 }
 
@@ -132,7 +132,7 @@ public static class WarrantyClaimTypes
     };
 }
 
-public static class WarrantyClaimVendorDispositions
+public static class WarrantyClaimSupplierDispositions
 {
     public const string Approved = "approved";
 
@@ -150,3 +150,4 @@ public static class WarrantyClaimVendorDispositions
         Denied,
     };
 }
+

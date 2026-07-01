@@ -19,6 +19,8 @@ public static class NexArrServiceRegistration
 
     public static void ConfigureServices(WebApplicationBuilder builder)
     {
+        LocalDevAuthBypassPolicy.ValidateStartupConfiguration(builder.Configuration, builder.Environment);
+
         builder.Services.AddStlJwtAuthentication(builder.Configuration);
         builder.Services.AddStlAiServices(builder.Configuration);
         builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
@@ -37,6 +39,7 @@ public static class NexArrServiceRegistration
             client.Timeout = TimeSpan.FromMinutes(2);
         });
         builder.Services.AddScoped<AuthService>();
+        builder.Services.AddScoped<LocalDevAuthBypassPolicy>();
         builder.Services.AddScoped<MfaService>();
         builder.Services.AddScoped<PasswordResetService>();
         builder.Services.AddScoped<PlatformAuthorizationService>();
@@ -80,6 +83,10 @@ public static class NexArrServiceRegistration
         builder.Services.AddHttpClient(HybridDataPlaneService.HttpClientName, client =>
         {
             client.Timeout = TimeSpan.FromSeconds(5);
+        });
+        builder.Services.AddHttpClient<IStaffArrPersonProvisioningClient, StaffArrPersonProvisioningClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
         });
         builder.Services.AddScoped<FieldCompanionAuthService>();
         builder.Services.AddScoped<FieldCompanionFieldInboxService>();
@@ -230,6 +237,10 @@ public static class NexArrServiceRegistration
             passwordHasher,
             app.Configuration,
             app.Environment);
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
+        {
+            await PlatformSeeder.SeedDemoBusinessDataAsync(db, passwordHasher, cancellationToken: CancellationToken.None);
+        }
         if (ShouldSeedMasterReferenceDataOnStartup(app.Configuration, app.Environment))
         {
             app.Logger.LogInformation("Running NexArr master reference data startup seed from {SeedCsvPath}.", seedCsvPath);
@@ -245,6 +256,7 @@ public static class NexArrServiceRegistration
         if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Testing")
         {
             await PlatformSeeder.EnsureDevSuiteShellOriginsAsync(db);
+            await PlatformSeeder.EnsureDevLoopbackCallbackPrefixesAsync(db);
         }
         else if (app.Environment.IsProduction())
         {

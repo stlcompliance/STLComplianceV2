@@ -3544,17 +3544,17 @@
         }
       }
     },
-    "/api/integrations/supplyarr-vendor-order-events": {
+    "/api/integrations/supplyarr-supplier-order-events": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestSupplyarrVendorOrderEvents",
+        "operationId": "IngestSupplyarrSupplierOrderEvents",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestSupplyArrVendorOrderEventRequest"
+                "$ref": "#/components/schemas/IngestSupplyArrSupplierOrderEventRequest"
               }
             }
           },
@@ -3582,7 +3582,7 @@
             }
           },
           {
-            "name": "vendorOrderId",
+            "name": "supplierOrderId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -6067,7 +6067,7 @@
             }
           },
           {
-            "name": "vendorOrderId",
+            "name": "supplierOrderId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -6834,12 +6834,12 @@
         }
       }
     },
-    "/api/trips/{tripId}/vendor-readiness-override": {
+    "/api/trips/{tripId}/supplier-readiness-override": {
       "post": {
         "tags": [
           "Trips"
         ],
-        "operationId": "OverrideTripVendorReadiness",
+        "operationId": "OverrideTripSupplierReadiness",
         "parameters": [
           {
             "name": "tripId",
@@ -6855,7 +6855,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TripVendorReadinessOverrideRequest"
+                "$ref": "#/components/schemas/TripSupplierReadinessOverrideRequest"
               }
             }
           },
@@ -8844,17 +8844,17 @@
         }
       }
     },
-    "/api/v1/integrations/supplyarr-vendor-order-events": {
+    "/api/v1/integrations/supplyarr-supplier-order-events": {
       "post": {
         "tags": [
           "Integrations"
         ],
-        "operationId": "IngestSupplyarrVendorOrderEventsV1",
+        "operationId": "IngestSupplyarrSupplierOrderEventsV1",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/IngestSupplyArrVendorOrderEventRequest"
+                "$ref": "#/components/schemas/IngestSupplyArrSupplierOrderEventRequest"
               }
             }
           },
@@ -8882,7 +8882,7 @@
             }
           },
           {
-            "name": "vendorOrderId",
+            "name": "supplierOrderId",
             "in": "query",
             "schema": {
               "type": "string",
@@ -12776,7 +12776,7 @@
           "handlingRequirements",
           "customerRefs",
           "orderRefs",
-          "vendorRefs",
+          "supplierRefs",
           "requirementRefs",
           "lines",
           "requirements",
@@ -12958,7 +12958,7 @@
               "type": "string"
             }
           },
-          "vendorRefs": {
+          "supplierRefs": {
             "type": [
               "null",
               "array"
@@ -13138,7 +13138,7 @@
           "title",
           "description",
           "vehicleRefKey",
-          "vendorOrderId",
+          "supplierOrderId",
           "brokerOrderId",
           "scheduledStartAt",
           "scheduledEndAt",
@@ -13158,7 +13158,7 @@
               "string"
             ]
           },
-          "vendorOrderId": {
+          "supplierOrderId": {
             "type": [
               "null",
               "string"
@@ -13680,19 +13680,19 @@
           }
         }
       },
-      "IngestSupplyArrVendorOrderEventRequest": {
+      "IngestSupplyArrSupplierOrderEventRequest": {
         "required": [
           "eventId",
           "eventType",
           "occurredAt",
           "tenantId",
-          "vendorOrderId",
+          "supplierOrderId",
           "brokerOrderId",
           "brokerOrderNumberSnapshot",
           "previousStatus",
           "newStatus",
-          "vendorId",
-          "vendorNameSnapshot",
+          "supplierId",
+          "supplierNameSnapshot",
           "pickupLocationNameSnapshot",
           "pickupAddressSnapshot",
           "deliveryLocationNameSnapshot",
@@ -13709,8 +13709,8 @@
           "source",
           "selectedTripId",
           "authorizedQuantity",
-          "readyChildVendorOrderId",
-          "remainingChildVendorOrderId"
+          "readyChildSupplierOrderId",
+          "remainingChildSupplierOrderId"
         ],
         "type": "object",
         "properties": {
@@ -13729,7 +13729,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "vendorOrderId": {
+          "supplierOrderId": {
             "type": "string",
             "format": "uuid"
           },
@@ -13758,11 +13758,11 @@
               "string"
             ]
           },
-          "vendorId": {
+          "supplierId": {
             "type": "string",
             "format": "uuid"
           },
-          "vendorNameSnapshot": {
+          "supplierNameSnapshot": {
             "type": "string"
           },
           "pickupLocationNameSnapshot": {
@@ -13869,14 +13869,14 @@
             ],
             "format": "double"
           },
-          "readyChildVendorOrderId": {
+          "readyChildSupplierOrderId": {
             "type": [
               "null",
               "string"
             ],
             "format": "uuid"
           },
-          "remainingChildVendorOrderId": {
+          "remainingChildSupplierOrderId": {
             "type": [
               "null",
               "string"
@@ -14818,7 +14818,7 @@
           }
         }
       },
-      "TripVendorReadinessOverrideRequest": {
+      "TripSupplierReadinessOverrideRequest": {
         "required": [
           "reason"
         ],

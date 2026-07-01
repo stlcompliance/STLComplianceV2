@@ -35,7 +35,7 @@ public sealed class ProcurementNotificationDispatch : IHasTenant
 
     public string EventKind { get; set; } = string.Empty;
 
-    public Guid? VendorPartyId { get; set; }
+    public Guid? SupplierId { get; set; }
 
     public string RelatedEntityType { get; set; } = string.Empty;
 

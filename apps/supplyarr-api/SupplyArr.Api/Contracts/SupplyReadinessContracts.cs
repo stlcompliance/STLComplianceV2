@@ -13,7 +13,7 @@ public sealed record SupplyReadinessTotalsResponse(
     int IssuedPurchaseOrderCount,
     int OpenDemandRefCount,
     int ComplianceAttentionCount,
-    int ActiveVendorRestrictionCount,
+    int ActiveSupplierRestrictionCount,
     int ActiveProcurementExceptionCount);
 
 public sealed record SupplyReadinessDemandRefSourceCountResponse(
@@ -72,7 +72,7 @@ public sealed record SupplyReadinessSourceSnapshotResponse(
     int? StalenessMinutes);
 
 public sealed record SupplyReadinessPricingLeadTimeSnapshotResponse(
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     decimal? UnitPrice,
     string? CurrencyCode,
     decimal? MinimumOrderQuantity,
@@ -124,39 +124,6 @@ public record SupplierSupplyReadinessResponse(
     IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
     SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
     SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null);
-
-public sealed record VendorSupplyReadinessResponse(
-    Guid SupplierId,
-    string SupplierKey,
-    string DisplayName,
-    Guid? ParentSupplierId,
-    string? ParentSupplierDisplayName,
-    string SupplierUnitKind,
-    IReadOnlyList<string> SupplierServiceTypes,
-    string ApprovalStatus,
-    string Status,
-    string ReadinessStatus,
-    string ReadinessBasis,
-    DateTimeOffset CalculatedAt,
-    IReadOnlyList<SupplyReadinessBlockerResponse> Blockers,
-    SupplyReadinessSourceSnapshotResponse? SourceSnapshot = null,
-    SupplyReadinessDecisionSnapshotResponse? AuditSnapshot = null)
-    : SupplierSupplyReadinessResponse(
-        SupplierId,
-        SupplierKey,
-        DisplayName,
-        ParentSupplierId,
-        ParentSupplierDisplayName,
-        SupplierUnitKind,
-        SupplierServiceTypes,
-        ApprovalStatus,
-        Status,
-        ReadinessStatus,
-        ReadinessBasis,
-        CalculatedAt,
-        Blockers,
-        SourceSnapshot,
-        AuditSnapshot);
 
 public sealed record ProcurementPathReadinessResponse(
     Guid PartId,

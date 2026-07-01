@@ -27,11 +27,11 @@ public static class CoverageAliasEndpoints
                 "manufacturer_name",
                 "manufacturer_part_number"
             ],
-            ["vendor_catalog_csv"] =
+            ["supplier_catalog_csv"] =
             [
                 "supplier_key",
                 "part_key",
-                "vendor_part_number",
+                "supplier_part_number",
                 "is_preferred",
                 "catalog_unit_price",
                 "catalog_currency_code",
@@ -40,7 +40,7 @@ public static class CoverageAliasEndpoints
                 "catalog_quantity_available",
                 "catalog_availability_status"
             ],
-            ["vendor_documents_csv"] =
+            ["supplier_documents_csv"] =
             [
                 "supplier_key",
                 "document_key",
@@ -111,7 +111,7 @@ public static class CoverageAliasEndpoints
                 "status",
                 "notes"
             ],
-            ["external_parties_csv"] =
+            ["suppliers_csv"] =
             [
                 "supplier_key",
                 "parent_supplier_key",
@@ -121,7 +121,8 @@ public static class CoverageAliasEndpoints
                 "tax_identifier",
                 "approval_status",
                 "status",
-                "notes"
+                "notes",
+                "service_types"
             ],
             ["contacts_csv"] =
             [
@@ -164,14 +165,14 @@ public static class CoverageAliasEndpoints
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             ["part_catalog_csv"] = "Import part catalogs and parts from CSV.",
-            ["vendor_catalog_csv"] = "Import supplier catalog links and catalog facts from CSV.",
-            ["vendor_documents_csv"] = "Import supplier compliance document metadata.",
+            ["supplier_catalog_csv"] = "Import supplier catalog links and catalog facts from CSV.",
+            ["supplier_documents_csv"] = "Import supplier compliance document metadata.",
             ["inventory_counts_csv"] = "Import inventory count quantities by location, bin, and part.",
             ["price_list_csv"] = "Import supplier price list snapshots by supplier and part.",
             ["lead_time_list_csv"] = "Import supplier lead-time snapshots by supplier and part.",
             ["availability_list_csv"] = "Import supplier availability snapshots by supplier and part.",
             ["contracts_csv"] = "Import supplier identity and sub-unit contracts from CSV.",
-            ["external_parties_csv"] = "Import supplier identities and supplier sub-units from CSV.",
+            ["suppliers_csv"] = "Import supplier identities, supplier sub-units, and service coverage from CSV.",
             ["contacts_csv"] = "Import supplier contacts from CSV.",
             ["open_purchase_orders_csv"] = "Import open purchase orders from CSV.",
             ["purchase_history_csv"] = "Import fully received historical purchases from CSV."
@@ -223,7 +224,7 @@ public static class CoverageAliasEndpoints
         var group = app.MapGroup("/api/v1/documents").WithTags("Documents").RequireAuthorization();
 
         group.MapGet("/", async (
-            Guid? partyId,
+            Guid? supplierId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             SupplyArrDbContext db,
@@ -231,23 +232,23 @@ public static class CoverageAliasEndpoints
         {
             authorization.RequireSupplierOnboardingRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var query = db.PartyComplianceDocuments
+            var query = db.SupplierComplianceDocuments
                 .AsNoTracking()
-                .Include(x => x.ExternalParty)
+                .Include(x => x.Supplier)
                 .Where(x => x.TenantId == tenantId);
-            if (partyId.HasValue)
+            if (supplierId.HasValue)
             {
-                query = query.Where(x => x.ExternalPartyId == partyId.Value);
+                query = query.Where(x => x.SupplierId == supplierId.Value);
             }
 
             var items = await query
                 .OrderByDescending(x => x.UpdatedAt)
                 .Select(x => new SupplyDocumentItemResponse(
                     x.Id,
-                    x.ExternalPartyId,
-                    x.ExternalParty.PartyKey,
-                    x.ExternalParty.DisplayName,
-                    x.ExternalParty.PartyType,
+                    x.SupplierId,
+                    x.Supplier.SupplierKey,
+                    x.Supplier.DisplayName,
+                    x.Supplier.UnitKind,
                     x.DocumentKey,
                     x.DocumentTypeKey,
                     x.Title,
@@ -267,7 +268,7 @@ public static class CoverageAliasEndpoints
             CreateSupplyDocumentRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            PartyComplianceDocumentService service,
+            SupplierComplianceDocumentService service,
             CancellationToken cancellationToken) =>
         {
             authorization.RequireSupplierOnboardingManage(context.User);
@@ -276,8 +277,8 @@ public static class CoverageAliasEndpoints
             var created = await service.RegisterAsync(
                 tenantId,
                 actorUserId,
-                request.PartyId,
-                new RegisterPartyComplianceDocumentRequest(
+                request.SupplierId,
+                new SupplierComplianceDocumentRegistrationRequest(
                     request.DocumentKey,
                     request.DocumentTypeKey,
                     request.Title,
@@ -304,66 +305,66 @@ public static class CoverageAliasEndpoints
             authorization.RequirePartsRead(context.User);
             var tenantId = context.User.GetTenantId();
 
-            var pricing = await db.PartVendorPricingSnapshots
+            var pricing = await db.PartSupplierPricingSnapshots
                 .AsNoTracking()
-                .Include(x => x.PartVendorLink)
+                .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-                .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
+                .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
                 .Where(x => x.TenantId == tenantId && x.Source == SnapshotSources.Contract)
                 .Select(x => new ContractSnapshotItemResponse(
                     "pricing",
                     x.Id,
-                    x.PartVendorLink.PartId,
-                    x.PartVendorLink.Part.PartKey,
-                    x.PartVendorLink.Part.DisplayName,
-                    x.PartVendorLink.ExternalPartyId,
-                    x.PartVendorLink.ExternalParty.PartyKey,
-                    x.PartVendorLink.ExternalParty.DisplayName,
+                    x.PartSupplierLink.PartId,
+                    x.PartSupplierLink.Part.PartKey,
+                    x.PartSupplierLink.Part.DisplayName,
+                    x.PartSupplierLink.SupplierId,
+                    x.PartSupplierLink.Supplier.SupplierKey,
+                    x.PartSupplierLink.Supplier.DisplayName,
                     x.SnapshotKey,
                     x.EffectiveFrom,
                     x.EffectiveTo,
                     x.UpdatedAt))
                 .ToListAsync(cancellationToken);
 
-            var leadTimes = await db.PartVendorLeadTimeSnapshots
+            var leadTimes = await db.PartSupplierLeadTimeSnapshots
                 .AsNoTracking()
-                .Include(x => x.PartVendorLink)
+                .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-                .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
+                .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
                 .Where(x => x.TenantId == tenantId && x.Source == SnapshotSources.Contract)
                 .Select(x => new ContractSnapshotItemResponse(
                     "lead_time",
                     x.Id,
-                    x.PartVendorLink.PartId,
-                    x.PartVendorLink.Part.PartKey,
-                    x.PartVendorLink.Part.DisplayName,
-                    x.PartVendorLink.ExternalPartyId,
-                    x.PartVendorLink.ExternalParty.PartyKey,
-                    x.PartVendorLink.ExternalParty.DisplayName,
+                    x.PartSupplierLink.PartId,
+                    x.PartSupplierLink.Part.PartKey,
+                    x.PartSupplierLink.Part.DisplayName,
+                    x.PartSupplierLink.SupplierId,
+                    x.PartSupplierLink.Supplier.SupplierKey,
+                    x.PartSupplierLink.Supplier.DisplayName,
                     x.SnapshotKey,
                     x.EffectiveFrom,
                     x.EffectiveTo,
                     x.UpdatedAt))
                 .ToListAsync(cancellationToken);
 
-            var availability = await db.PartVendorAvailabilitySnapshots
+            var availability = await db.PartSupplierAvailabilitySnapshots
                 .AsNoTracking()
-                .Include(x => x.PartVendorLink)
+                .Include(x => x.PartSupplierLink)
                 .ThenInclude(x => x.Part)
-                .Include(x => x.PartVendorLink)
-                .ThenInclude(x => x.ExternalParty)
+                .Include(x => x.PartSupplierLink)
+                .ThenInclude(x => x.Supplier)
                 .Where(x => x.TenantId == tenantId && x.Source == SnapshotSources.Contract)
                 .Select(x => new ContractSnapshotItemResponse(
                     "availability",
                     x.Id,
-                    x.PartVendorLink.PartId,
-                    x.PartVendorLink.Part.PartKey,
-                    x.PartVendorLink.Part.DisplayName,
-                    x.PartVendorLink.ExternalPartyId,
-                    x.PartVendorLink.ExternalParty.PartyKey,
-                    x.PartVendorLink.ExternalParty.DisplayName,
+                    x.PartSupplierLink.PartId,
+                    x.PartSupplierLink.Part.PartKey,
+                    x.PartSupplierLink.Part.DisplayName,
+                    x.PartSupplierLink.SupplierId,
+                    x.PartSupplierLink.Supplier.SupplierKey,
+                    x.PartSupplierLink.Supplier.DisplayName,
                     x.SnapshotKey,
                     x.EffectiveFrom,
                     x.EffectiveTo,
@@ -622,11 +623,11 @@ public static class CoverageAliasEndpoints
         .RequireAuthorization()
         .WithName("ImportPartCatalogCsvV1");
 
-        app.MapPost("/api/v1/imports/vendor-catalog-csv", async (
-            VendorCatalogCsvImportRequest request,
+        app.MapPost("/api/v1/imports/supplier-catalog-csv", async (
+            SupplierCatalogCsvImportRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorCatalogCsvImportService service,
+            SupplierCatalogCsvImportService service,
             ISupplyArrAuditService audit,
             CancellationToken cancellationToken) =>
         {
@@ -639,13 +640,13 @@ public static class CoverageAliasEndpoints
         })
         .WithTags("Imports")
         .RequireAuthorization()
-        .WithName("ImportVendorCatalogCsvV1");
+        .WithName("ImportSupplierCatalogCsvV1");
 
-        app.MapPost("/api/v1/imports/vendor-documents-csv", async (
-            VendorDocumentsCsvImportRequest request,
+        app.MapPost("/api/v1/imports/supplier-documents-csv", async (
+            SupplierDocumentsCsvImportRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            VendorDocumentsCsvImportService service,
+            SupplierDocumentsCsvImportService service,
             ISupplyArrAuditService audit,
             CancellationToken cancellationToken) =>
         {
@@ -658,7 +659,7 @@ public static class CoverageAliasEndpoints
         })
         .WithTags("Imports")
         .RequireAuthorization()
-        .WithName("ImportVendorDocumentsCsvV1");
+        .WithName("ImportSupplierDocumentsCsvV1");
 
         app.MapPost("/api/v1/imports/inventory-counts-csv", async (
             InventoryCountsCsvImportRequest request,
@@ -755,15 +756,15 @@ public static class CoverageAliasEndpoints
         .RequireAuthorization()
         .WithName("ImportContractsCsvV1");
 
-        app.MapPost("/api/v1/imports/external-parties-csv", async (
-            ExternalPartiesCsvImportRequest request,
+        app.MapPost("/api/v1/imports/suppliers-csv", async (
+            SuppliersCsvImportRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
-            ExternalPartiesCsvImportService service,
+            SuppliersCsvImportService service,
             ISupplyArrAuditService audit,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
@@ -772,7 +773,7 @@ public static class CoverageAliasEndpoints
         })
         .WithTags("Imports")
         .RequireAuthorization()
-        .WithName("ImportExternalPartiesCsvV1");
+        .WithName("ImportSuppliersCsvV1");
 
         app.MapPost("/api/v1/imports/contacts-csv", async (
             ContactsCsvImportRequest request,
@@ -782,7 +783,7 @@ public static class CoverageAliasEndpoints
             ISupplyArrAuditService audit,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequirePartiesManage(context.User);
+            authorization.RequireSuppliersManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var result = await service.ImportAsync(tenantId, actorUserId, request, cancellationToken);
@@ -844,7 +845,6 @@ public static class CoverageAliasEndpoints
                 new ExportOptionResponse("supplier_summary_csv", "Supplier report summary export", "/api/v1/reports/suppliers/summary/export"),
                 new ExportOptionResponse("supplier_list_csv", "Supplier list export", "/api/v1/exports/suppliers.csv"),
                 new ExportOptionResponse("approved_supplier_list_csv", "Approved supplier list export", "/api/v1/exports/approved-suppliers.csv"),
-                new ExportOptionResponse("customer_list_csv", "Customer list export", "/api/v1/exports/customers.csv"),
                 new ExportOptionResponse("parts_catalog_csv", "Parts catalog export", "/api/v1/exports/parts-catalog.csv"),
                 new ExportOptionResponse("inventory_valuation_csv", "Inventory valuation export", "/api/v1/exports/inventory-valuation.csv"),
                 new ExportOptionResponse("purchase_orders_csv", "Purchase order line export", "/api/v1/exports/purchase-orders.csv"),
@@ -870,15 +870,15 @@ public static class CoverageAliasEndpoints
             CancellationToken cancellationToken,
             bool approvedOnly)
         {
-            authorization.RequirePartiesRead(context.User);
+            authorization.RequireSuppliersRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var suppliers = await db.ExternalParties
+            var suppliers = await db.Suppliers
                 .AsNoTracking()
-                .Include(x => x.ParentExternalParty)
+                .Include(x => x.ParentSupplier)
                 .Where(x => x.TenantId == tenantId
-                    && (x.PartyType == "vendor" || x.PartyType == "supplier")
+                    && true
                     && (!approvedOnly || x.ApprovalStatus == "approved"))
-                .OrderBy(x => x.PartyKey)
+                .OrderBy(x => x.SupplierKey)
                 .ToListAsync(cancellationToken);
             var prefix = approvedOnly ? "supplyarr-approved-suppliers" : "supplyarr-suppliers";
             return Results.File(BuildSupplierListCsv(suppliers), "text/csv", $"{prefix}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
@@ -894,16 +894,6 @@ public static class CoverageAliasEndpoints
         .RequireAuthorization()
         .WithName("ExportSupplierListV1");
 
-        app.MapGet("/api/v1/exports/vendors.csv", async (
-            HttpContext context,
-            SupplyArrAuthorizationService authorization,
-            SupplyArrDbContext db,
-            CancellationToken cancellationToken) =>
-            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: false))
-        .WithTags("Exports")
-        .RequireAuthorization()
-        .WithName("ExportVendorListV1");
-
         app.MapGet("/api/v1/exports/approved-suppliers.csv", async (
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -913,35 +903,6 @@ public static class CoverageAliasEndpoints
         .WithTags("Exports")
         .RequireAuthorization()
         .WithName("ExportApprovedSupplierListV1");
-
-        app.MapGet("/api/v1/exports/approved-vendors.csv", async (
-            HttpContext context,
-            SupplyArrAuthorizationService authorization,
-            SupplyArrDbContext db,
-            CancellationToken cancellationToken) =>
-            await ExportSupplierListAsync(context, authorization, db, cancellationToken, approvedOnly: true))
-        .WithTags("Exports")
-        .RequireAuthorization()
-        .WithName("ExportApprovedVendorListV1");
-
-        app.MapGet("/api/v1/exports/customers.csv", async (
-            HttpContext context,
-            SupplyArrAuthorizationService authorization,
-            SupplyArrDbContext db,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequirePartiesRead(context.User);
-            var tenantId = context.User.GetTenantId();
-            var customers = await db.ExternalParties
-                .AsNoTracking()
-                .Where(x => x.TenantId == tenantId && x.PartyType == "customer")
-                .OrderBy(x => x.PartyKey)
-                .ToListAsync(cancellationToken);
-            return Results.File(BuildPartiesCsv(customers), "text/csv", $"supplyarr-customers-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}.csv");
-        })
-        .WithTags("Exports")
-        .RequireAuthorization()
-        .WithName("ExportCustomerListV1");
 
         app.MapGet("/api/v1/exports/parts-catalog.csv", async (
             HttpContext context,
@@ -998,7 +959,7 @@ public static class CoverageAliasEndpoints
             var tenantId = context.User.GetTenantId();
             var query = db.PurchaseOrders
                 .AsNoTracking()
-                .Include(x => x.VendorParty)
+                .Include(x => x.Supplier)
                 .Include(x => x.PurchaseRequest)
                 .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -1028,7 +989,7 @@ public static class CoverageAliasEndpoints
             var query = db.ReceivingReceipts
                 .AsNoTracking()
                 .Include(x => x.PurchaseOrder)
-                .ThenInclude(x => x.VendorParty)
+                .ThenInclude(x => x.Supplier)
                 .Include(x => x.InventoryBin)
                 .ThenInclude(x => x.InventoryLocation)
                 .Include(x => x.Lines)
@@ -1059,7 +1020,7 @@ public static class CoverageAliasEndpoints
             var query = db.ReceivingReceipts
                 .AsNoTracking()
                 .Include(x => x.PurchaseOrder)
-                .ThenInclude(x => x.VendorParty)
+                .ThenInclude(x => x.Supplier)
                 .Include(x => x.PurchaseOrder)
                 .ThenInclude(x => x.PurchaseRequest)
                 .Include(x => x.InventoryBin)
@@ -1096,12 +1057,12 @@ public static class CoverageAliasEndpoints
         {
             authorization.RequireSupplierOnboardingRead(context.User);
             var tenantId = context.User.GetTenantId();
-            var documents = await db.PartyComplianceDocuments
+            var documents = await db.SupplierComplianceDocuments
                 .AsNoTracking()
-                .Include(x => x.ExternalParty)
-                .ThenInclude(x => x.ParentExternalParty)
+                .Include(x => x.Supplier)
+                .ThenInclude(x => x.ParentSupplier)
                 .Where(x => x.TenantId == tenantId)
-                .OrderBy(x => x.ExternalParty.PartyKey)
+                .OrderBy(x => x.Supplier.SupplierKey)
                 .ThenBy(x => x.DocumentKey)
                 .ThenByDescending(x => x.Version)
                 .ToListAsync(cancellationToken);
@@ -1112,7 +1073,7 @@ public static class CoverageAliasEndpoints
         .WithName("ExportSupplierDocumentsV1");
 
         app.MapGet("/api/v1/exports/compliance-evidence-packet.csv", async (
-            Guid? vendorPartyId,
+            Guid? supplierId,
             Guid? purchaseOrderId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -1123,7 +1084,7 @@ public static class CoverageAliasEndpoints
             var tenantId = context.User.GetTenantId();
             var ordersQuery = db.PurchaseOrders
                 .AsNoTracking()
-                .Include(x => x.VendorParty)
+                .Include(x => x.Supplier)
                 .Include(x => x.PurchaseRequest)
                 .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -1133,25 +1094,25 @@ public static class CoverageAliasEndpoints
                 ordersQuery = ordersQuery.Where(x => x.Id == purchaseOrderId.Value);
             }
 
-            if (vendorPartyId is not null)
+            if (supplierId is not null)
             {
-                ordersQuery = ordersQuery.Where(x => x.VendorPartyId == vendorPartyId.Value);
+                ordersQuery = ordersQuery.Where(x => x.SupplierId == supplierId.Value);
             }
 
             var orders = await ordersQuery
                 .OrderBy(x => x.OrderKey)
                 .ToListAsync(cancellationToken);
-            var scopedVendorIds = orders.Select(x => x.VendorPartyId).Distinct().ToList();
-            if (vendorPartyId is not null && !scopedVendorIds.Contains(vendorPartyId.Value))
+            var scopedSupplierIds = orders.Select(x => x.SupplierId).Distinct().ToList();
+            if (supplierId is not null && !scopedSupplierIds.Contains(supplierId.Value))
             {
-                scopedVendorIds.Add(vendorPartyId.Value);
+                scopedSupplierIds.Add(supplierId.Value);
             }
 
             var orderIds = orders.Select(x => x.Id).ToList();
             var receipts = await db.ReceivingReceipts
                 .AsNoTracking()
                 .Include(x => x.PurchaseOrder)
-                .ThenInclude(x => x.VendorParty)
+                .ThenInclude(x => x.Supplier)
                 .Include(x => x.InventoryBin)
                 .ThenInclude(x => x.InventoryLocation)
                 .Include(x => x.Lines)
@@ -1159,13 +1120,13 @@ public static class CoverageAliasEndpoints
                 .Where(x => x.TenantId == tenantId && orderIds.Contains(x.PurchaseOrderId))
                 .OrderBy(x => x.ReceiptKey)
                 .ToListAsync(cancellationToken);
-            IReadOnlyList<PartyComplianceDocument> documents = scopedVendorIds.Count == 0
+            IReadOnlyList<SupplierComplianceDocument> documents = scopedSupplierIds.Count == 0
                 ? []
-                : await db.PartyComplianceDocuments
+                : await db.SupplierComplianceDocuments
                     .AsNoTracking()
-                    .Include(x => x.ExternalParty)
-                    .Where(x => x.TenantId == tenantId && scopedVendorIds.Contains(x.ExternalPartyId))
-                    .OrderBy(x => x.ExternalParty.PartyKey)
+                    .Include(x => x.Supplier)
+                    .Where(x => x.TenantId == tenantId && scopedSupplierIds.Contains(x.SupplierId))
+                    .OrderBy(x => x.Supplier.SupplierKey)
                     .ThenBy(x => x.DocumentKey)
                     .ToListAsync(cancellationToken);
             var targetIds = orderIds.Select(x => x.ToString("D")).ToList();
@@ -1195,7 +1156,7 @@ public static class CoverageAliasEndpoints
             var tenantId = context.User.GetTenantId();
             var orders = await db.PurchaseOrders
                 .AsNoTracking()
-                .Include(x => x.VendorParty)
+                .Include(x => x.Supplier)
                 .Include(x => x.PurchaseRequest)
                 .Include(x => x.Lines)
                 .ThenInclude(x => x.Part)
@@ -1353,14 +1314,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key", "catalog_name", "part_key", "part_name"],
-            "vendor_catalog_csv" => ["supplier_key", "part_key", "vendor_part_number"],
-            "vendor_documents_csv" => ["supplier_key", "document_key", "document_type_key", "title"],
+            "supplier_catalog_csv" => ["supplier_key", "part_key", "supplier_part_number"],
+            "supplier_documents_csv" => ["supplier_key", "document_key", "document_type_key", "title"],
             "inventory_counts_csv" => ["part_key", "location_key", "quantity_on_hand"],
             "price_list_csv" => ["supplier_key", "part_key", "snapshot_key", "unit_price", "currency_code"],
             "lead_time_list_csv" => ["supplier_key", "part_key", "snapshot_key", "lead_time_days"],
             "availability_list_csv" => ["supplier_key", "part_key", "snapshot_key", "availability_status"],
             "contracts_csv" => ["supplier_key", "contract_key", "contract_type", "title", "effective_from", "status"],
-            "external_parties_csv" => ["supplier_key", "display_name", "status"],
+            "suppliers_csv" => ["supplier_key", "display_name", "status"],
             "contacts_csv" => ["supplier_key", "contact_name", "email"],
             "open_purchase_orders_csv" => ["order_key", "supplier_key", "part_key", "quantity_ordered"],
             "purchase_history_csv" => ["order_key", "receipt_key", "supplier_key", "part_key", "quantity_received"],
@@ -1371,14 +1332,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key"],
-            "vendor_catalog_csv" => ["supplier_key", "part_key"],
-            "vendor_documents_csv" => ["supplier_key"],
+            "supplier_catalog_csv" => ["supplier_key", "part_key"],
+            "supplier_documents_csv" => ["supplier_key"],
             "inventory_counts_csv" => ["part_key", "location_key", "bin_key"],
             "price_list_csv" => ["supplier_key", "part_key"],
             "lead_time_list_csv" => ["supplier_key", "part_key"],
             "availability_list_csv" => ["supplier_key", "part_key"],
             "contracts_csv" => ["supplier_key"],
-            "external_parties_csv" => ["parent_supplier_key"],
+            "suppliers_csv" => ["parent_supplier_key", "service_types"],
             "contacts_csv" => ["supplier_key"],
             "open_purchase_orders_csv" => ["request_key", "supplier_key", "part_key"],
             "purchase_history_csv" => ["request_key", "supplier_key", "part_key", "inventory_bin_key"],
@@ -1398,14 +1359,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["catalog_key + part_key"],
-            "vendor_catalog_csv" => ["supplier_key + part_key + vendor_part_number"],
-            "vendor_documents_csv" => ["supplier_key + document_key"],
+            "supplier_catalog_csv" => ["supplier_key + part_key + supplier_part_number"],
+            "supplier_documents_csv" => ["supplier_key + document_key"],
             "inventory_counts_csv" => ["part_key + location_key + bin_key"],
             "price_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "lead_time_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "availability_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "contracts_csv" => ["supplier_key + contract_key"],
-            "external_parties_csv" => ["supplier_key"],
+            "suppliers_csv" => ["supplier_key"],
             "contacts_csv" => ["supplier_key + email"],
             "open_purchase_orders_csv" => ["order_key + part_key + supplier_key"],
             "purchase_history_csv" => ["order_key + receipt_key + part_key"],
@@ -1416,14 +1377,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["part_key", "manufacturer_name + manufacturer_part_number"],
-            "vendor_catalog_csv" => ["supplier_key + part_key + vendor_part_number"],
-            "vendor_documents_csv" => ["supplier_key + document_key"],
+            "supplier_catalog_csv" => ["supplier_key + part_key + supplier_part_number"],
+            "supplier_documents_csv" => ["supplier_key + document_key"],
             "inventory_counts_csv" => ["part_key + location_key + bin_key"],
             "price_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "lead_time_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "availability_list_csv" => ["supplier_key + part_key + snapshot_key"],
             "contracts_csv" => ["supplier_key + contract_key", "title + supplier_key"],
-            "external_parties_csv" => ["supplier_key", "display_name + parent_supplier_key"],
+            "suppliers_csv" => ["supplier_key", "display_name + parent_supplier_key"],
             "contacts_csv" => ["supplier_key + email"],
             "open_purchase_orders_csv" => ["order_key + part_key"],
             "purchase_history_csv" => ["order_key + receipt_key + part_key"],
@@ -1434,15 +1395,15 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => "part_catalog",
-            "vendor_catalog_csv" => "part_vendor_link",
-            "vendor_documents_csv" => "party_compliance_document",
+            "supplier_catalog_csv" => "part_supplier_link",
+            "supplier_documents_csv" => "supplier_compliance_document",
             "inventory_counts_csv" => "inventory_count",
-            "price_list_csv" => "part_vendor_pricing_snapshot",
-            "lead_time_list_csv" => "part_vendor_lead_time_snapshot",
-            "availability_list_csv" => "part_vendor_availability_snapshot",
+            "price_list_csv" => "part_supplier_pricing_snapshot",
+            "lead_time_list_csv" => "part_supplier_lead_time_snapshot",
+            "availability_list_csv" => "part_supplier_availability_snapshot",
             "contracts_csv" => "supply_contract",
-            "external_parties_csv" => "external_party",
-            "contacts_csv" => "party_contact",
+            "suppliers_csv" => "supplier",
+            "contacts_csv" => "supplier_contact",
             "open_purchase_orders_csv" => "purchase_order",
             "purchase_history_csv" => "purchase_history",
             _ => "supply_import"
@@ -1453,7 +1414,7 @@ public static class CoverageAliasEndpoints
         {
             "inventory_counts_csv" => "Applies inventory quantity adjustments through SupplyArr inventory services.",
             "purchase_history_csv" => "Creates historical purchase and receipt records through normal procurement services.",
-            "contracts_csv" => "Registers contract metadata and linked vendor references without bypassing RecordArr ownership for files.",
+            "contracts_csv" => "Registers contract metadata and linked supplier references without bypassing RecordArr ownership for files.",
             _ => "Creates or stages SupplyArr records through normal product services after deterministic CSV validation."
         };
 
@@ -1461,8 +1422,8 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "contracts_csv" => ["supplyarr.contract.imported"],
-            "external_parties_csv" => ["supplyarr.supplier.created"],
-            "contacts_csv" => ["supplyarr.vendor_contact.created"],
+            "suppliers_csv" => ["supplyarr.supplier.created"],
+            "contacts_csv" => ["supplyarr.supplier_contact.created"],
             "open_purchase_orders_csv" => ["supplyarr.purchase_order.imported"],
             "purchase_history_csv" => ["supplyarr.purchase_order.imported", "supplyarr.receipt.imported"],
             "inventory_counts_csv" => ["supplyarr.inventory_count.imported"],
@@ -1473,14 +1434,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => "Part catalog",
-            "vendor_catalog_csv" => "Supplier catalog",
-            "vendor_documents_csv" => "Supplier documents",
+            "supplier_catalog_csv" => "Supplier catalog",
+            "supplier_documents_csv" => "Supplier documents",
             "inventory_counts_csv" => "Inventory counts",
             "price_list_csv" => "Price list",
             "lead_time_list_csv" => "Lead time list",
             "availability_list_csv" => "Availability list",
             "contracts_csv" => "Contracts",
-            "external_parties_csv" => "Supplier directory",
+            "suppliers_csv" => "Supplier directory",
             "contacts_csv" => "Supplier contacts",
             "open_purchase_orders_csv" => "Open purchase orders",
             "purchase_history_csv" => "Purchase history",
@@ -1491,14 +1452,14 @@ public static class CoverageAliasEndpoints
         NormalizeImportType(importTypeKey) switch
         {
             "part_catalog_csv" => ["CAT-100", "Core parts", "Primary stocked parts", "PART-100", "Brake pad", "Fleet brake pad", "brakes", "each", "Acme", "ACM-100"],
-            "vendor_catalog_csv" => ["SUP-100", "PART-100", "SUP-100-PART-100", "true", "29.95", "USD", "10", "7", "120", "in_stock"],
-            "vendor_documents_csv" => ["SUP-100", "DOC-100", "insurance_certificate", "General liability certificate", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z", "insurance.pdf", "application/pdf", "24576", "recordarr://documents/doc-100"],
+            "supplier_catalog_csv" => ["SUP-100", "PART-100", "SUP-100-PART-100", "true", "29.95", "USD", "10", "7", "120", "in_stock"],
+            "supplier_documents_csv" => ["SUP-100", "DOC-100", "insurance_certificate", "General liability certificate", "2026-01-01T00:00:00Z", "2027-01-01T00:00:00Z", "insurance.pdf", "application/pdf", "24576", "recordarr://documents/doc-100"],
             "inventory_counts_csv" => ["PART-100", "WH1", "BIN-A1", "42"],
-            "price_list_csv" => ["SUP-100", "PART-100", "PRICE-2026-01", "29.95", "USD", "10", "2026-01-01T00:00:00Z", "vendor_portal", "Annual pricing refresh"],
-            "lead_time_list_csv" => ["SUP-100", "PART-100", "LEAD-2026-01", "7", "2026-01-01T00:00:00Z", "vendor_portal", "Standard lead time"],
-            "availability_list_csv" => ["SUP-100", "PART-100", "AVAIL-2026-01", "120", "in_stock", "2026-01-01T00:00:00Z", "vendor_portal", "Warehouse availability"],
+            "price_list_csv" => ["SUP-100", "PART-100", "PRICE-2026-01", "29.95", "USD", "10", "2026-01-01T00:00:00Z", "supplier_portal", "Annual pricing refresh"],
+            "lead_time_list_csv" => ["SUP-100", "PART-100", "LEAD-2026-01", "7", "2026-01-01T00:00:00Z", "supplier_portal", "Standard lead time"],
+            "availability_list_csv" => ["SUP-100", "PART-100", "AVAIL-2026-01", "120", "in_stock", "2026-01-01T00:00:00Z", "supplier_portal", "Warehouse availability"],
             "contracts_csv" => ["SUP-100", "CON-2026-01", "master_supply_agreement", "Supply agreement 2026", "2026-01-01T00:00:00Z", "2026-12-31T00:00:00Z", "2026-11-01T00:00:00Z", "Net 30", "FOB destination", "12 months", "25000", "95% on-time", "approved", "active", "Priority supplier"],
-            "external_parties_csv" => ["SUP-100-KC", "SUP-100", "sub_unit", "Acme Supply Kansas City", "Acme Supply LLC", "12-3456789", "approved", "active", "Regional brake supplier"],
+            "suppliers_csv" => ["SUP-100-KC", "SUP-100", "sub_unit", "Acme Supply Kansas City", "Acme Supply LLC", "12-3456789", "approved", "active", "Regional brake supplier", "parts|maintenance"],
             "contacts_csv" => ["SUP-100", "Morgan Lee", "morgan.lee@example.com", "555-0100", "Account manager", "true"],
             "open_purchase_orders_csv" => ["PO-100", "PR-100", "SUP-100", "PART-100", "25", "Brake pads replenishment", "Line note", "Order note"],
             "purchase_history_csv" => ["PO-100", "PR-100", "RCV-100", "SUP-100", "PART-100", "25", "25", "BIN-A1", "Brake pads replenishment", "Line note", "Order note", "Receipt note"],
@@ -1518,7 +1479,7 @@ public static class CoverageAliasEndpoints
         return value;
     }
 
-    private static byte[] BuildSupplierListCsv(IReadOnlyList<ExternalParty> suppliers)
+    private static byte[] BuildSupplierListCsv(IReadOnlyList<Supplier> suppliers)
     {
         var builder = new StringBuilder();
         builder.AppendLine("supplierKey,parentSupplierKey,displayName,legalName,taxIdentifier,approvalStatus,status,unitKind,serviceTypes,addressLine1,addressLine2,locality,regionCode,postalCode,countryCode,createdAt,updatedAt");
@@ -1526,8 +1487,8 @@ public static class CoverageAliasEndpoints
         {
             AppendCsvRow(
                 builder,
-                supplier.PartyKey,
-                supplier.ParentExternalParty?.PartyKey ?? string.Empty,
+                supplier.SupplierKey,
+                supplier.ParentSupplier?.SupplierKey ?? string.Empty,
                 supplier.DisplayName,
                 supplier.LegalName,
                 supplier.TaxIdentifier ?? string.Empty,
@@ -1563,29 +1524,6 @@ public static class CoverageAliasEndpoints
         {
             return [];
         }
-    }
-
-    private static byte[] BuildPartiesCsv(IReadOnlyList<ExternalParty> parties)
-    {
-        var builder = new StringBuilder();
-        builder.AppendLine("partyKey,partyType,displayName,legalName,taxIdentifier,approvalStatus,status,notes,createdAt,updatedAt");
-        foreach (var party in parties)
-        {
-            AppendCsvRow(
-                builder,
-                party.PartyKey,
-                party.PartyType,
-                party.DisplayName,
-                party.LegalName,
-                party.TaxIdentifier ?? string.Empty,
-                party.ApprovalStatus,
-                party.Status,
-                party.Notes,
-                party.CreatedAt.ToString("O"),
-                party.UpdatedAt.ToString("O"));
-        }
-
-        return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
     private static byte[] BuildPartsCatalogCsv(IReadOnlyList<Part> parts)
@@ -1644,7 +1582,7 @@ public static class CoverageAliasEndpoints
     private static byte[] BuildPurchaseOrdersCsv(IReadOnlyList<PurchaseOrder> orders)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("orderKey,status,requestKey,vendorPartyKey,vendorDisplayName,title,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,quantityRemaining,unitOfMeasure,lineNotes,approvedAt,issuedAt,createdAt,updatedAt");
+        builder.AppendLine("orderKey,status,requestKey,supplierKey,supplierDisplayName,title,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,quantityRemaining,unitOfMeasure,lineNotes,approvedAt,issuedAt,createdAt,updatedAt");
         foreach (var order in orders)
         {
             foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
@@ -1654,8 +1592,8 @@ public static class CoverageAliasEndpoints
                     order.OrderKey,
                     order.Status,
                     order.PurchaseRequest.RequestKey,
-                    order.VendorParty.PartyKey,
-                    order.VendorParty.DisplayName,
+                    order.Supplier.SupplierKey,
+                    order.Supplier.DisplayName,
                     order.Title,
                     line.LineNumber.ToString(),
                     line.Part.PartKey,
@@ -1678,7 +1616,7 @@ public static class CoverageAliasEndpoints
     private static byte[] BuildReceiptsCsv(IReadOnlyList<ReceivingReceipt> receipts)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("receiptKey,status,orderKey,vendorPartyKey,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityExpected,quantityReceived,postedAt,notes,createdAt,updatedAt");
+        builder.AppendLine("receiptKey,status,orderKey,supplierKey,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityExpected,quantityReceived,postedAt,notes,createdAt,updatedAt");
         foreach (var receipt in receipts)
         {
             foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
@@ -1688,7 +1626,7 @@ public static class CoverageAliasEndpoints
                     receipt.ReceiptKey,
                     receipt.Status,
                     receipt.PurchaseOrder.OrderKey,
-                    receipt.PurchaseOrder.VendorParty.PartyKey,
+                    receipt.PurchaseOrder.Supplier.SupplierKey,
                     receipt.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
                     receipt.InventoryBin.BinKey,
                     line.LineNumber.ToString(),
@@ -1711,7 +1649,7 @@ public static class CoverageAliasEndpoints
         IReadOnlyDictionary<Guid, decimal> unitPrices)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,vendorPartyKey,vendorDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt");
+        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,supplierKey,supplierDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt");
         foreach (var receipt in receipts)
         {
             foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
@@ -1725,8 +1663,8 @@ public static class CoverageAliasEndpoints
                     receipt.PurchaseOrder.OrderKey,
                     receipt.PurchaseOrder.Status,
                     receipt.PurchaseOrder.PurchaseRequest.RequestKey,
-                    receipt.PurchaseOrder.VendorParty.PartyKey,
-                    receipt.PurchaseOrder.VendorParty.DisplayName,
+                    receipt.PurchaseOrder.Supplier.SupplierKey,
+                    receipt.PurchaseOrder.Supplier.DisplayName,
                     receipt.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
                     receipt.InventoryBin.BinKey,
                     line.LineNumber.ToString(),
@@ -1744,7 +1682,7 @@ public static class CoverageAliasEndpoints
         return Encoding.UTF8.GetBytes(builder.ToString());
     }
 
-    private static byte[] BuildSupplierDocumentsCsv(IReadOnlyList<PartyComplianceDocument> documents)
+    private static byte[] BuildSupplierDocumentsCsv(IReadOnlyList<SupplierComplianceDocument> documents)
     {
         var builder = new StringBuilder();
         builder.AppendLine("supplierKey,parentSupplierKey,supplierDisplayName,supplierUnitKind,documentKey,documentTypeKey,title,version,reviewStatus,effectiveAt,expiresAt,fileName,contentType,sizeBytes,reviewedAt,createdAt,updatedAt");
@@ -1752,10 +1690,10 @@ public static class CoverageAliasEndpoints
         {
             AppendCsvRow(
                 builder,
-                document.ExternalParty.PartyKey,
-                document.ExternalParty.ParentExternalParty?.PartyKey ?? string.Empty,
-                document.ExternalParty.DisplayName,
-                document.ExternalParty.UnitKind,
+                document.Supplier.SupplierKey,
+                document.Supplier.ParentSupplier?.SupplierKey ?? string.Empty,
+                document.Supplier.DisplayName,
+                document.Supplier.UnitKind,
                 document.DocumentKey,
                 document.DocumentTypeKey,
                 document.Title,
@@ -1779,7 +1717,7 @@ public static class CoverageAliasEndpoints
         IReadOnlyDictionary<Guid, decimal> unitPrices)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("orderKey,status,requestKey,vendorPartyKey,vendorDisplayName,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,unitPrice,orderedAmount,receivedAmount,issuedAt,createdAt");
+        builder.AppendLine("orderKey,status,requestKey,supplierKey,supplierDisplayName,lineNumber,partKey,partDisplayName,quantityOrdered,quantityReceived,unitPrice,orderedAmount,receivedAmount,issuedAt,createdAt");
         foreach (var order in orders)
         {
             foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
@@ -1790,8 +1728,8 @@ public static class CoverageAliasEndpoints
                     order.OrderKey,
                     order.Status,
                     order.PurchaseRequest.RequestKey,
-                    order.VendorParty.PartyKey,
-                    order.VendorParty.DisplayName,
+                    order.Supplier.SupplierKey,
+                    order.Supplier.DisplayName,
                     line.LineNumber.ToString(),
                     line.Part.PartKey,
                     line.Part.DisplayName,
@@ -1811,7 +1749,7 @@ public static class CoverageAliasEndpoints
     private static byte[] BuildComplianceEvidencePacketCsv(
         IReadOnlyList<PurchaseOrder> orders,
         IReadOnlyList<ReceivingReceipt> receipts,
-        IReadOnlyList<PartyComplianceDocument> documents,
+        IReadOnlyList<SupplierComplianceDocument> documents,
         IReadOnlyList<SupplyArrAuditEvent> auditEvents)
     {
         var builder = new StringBuilder();
@@ -1825,7 +1763,7 @@ public static class CoverageAliasEndpoints
                 order.OrderKey,
                 order.Status,
                 order.PurchaseRequest.RequestKey,
-                $"{order.VendorParty.PartyKey} · {order.Title}",
+                $"{order.Supplier.SupplierKey} · {order.Title}",
                 (order.IssuedAt ?? order.UpdatedAt).ToString("O"),
                 $"/api/v1/purchase-orders/{order.Id}");
             foreach (var line in order.Lines.OrderBy(x => x.LineNumber))
@@ -1852,7 +1790,7 @@ public static class CoverageAliasEndpoints
                 receipt.ReceiptKey,
                 receipt.Status,
                 receipt.PurchaseOrder.OrderKey,
-                $"{receipt.PurchaseOrder.VendorParty.PartyKey} · {receipt.InventoryBin.BinKey}",
+                $"{receipt.PurchaseOrder.Supplier.SupplierKey} · {receipt.InventoryBin.BinKey}",
                 (receipt.PostedAt ?? receipt.UpdatedAt).ToString("O"),
                 $"/api/v1/receipts/{receipt.Id}");
             foreach (var line in receipt.Lines.OrderBy(x => x.LineNumber))
@@ -1875,13 +1813,13 @@ public static class CoverageAliasEndpoints
             AppendCsvRow(
                 builder,
                 "supplier_document",
-                "party_compliance_document",
+                "supplier_compliance_document",
                 document.DocumentKey,
                 document.ReviewStatus,
-                document.ExternalParty.PartyKey,
+                document.Supplier.SupplierKey,
                 $"{document.DocumentTypeKey} · {document.Title}",
                 (document.ReviewedAt ?? document.UpdatedAt).ToString("O"),
-                $"/api/v1/supplier-onboarding/parties/{document.ExternalPartyId}/documents");
+                $"/api/v1/documents?supplierId={document.SupplierId}");
         }
 
         foreach (var auditEvent in auditEvents)
@@ -1912,13 +1850,13 @@ public static class CoverageAliasEndpoints
             return new Dictionary<Guid, decimal>();
         }
 
-        var snapshotPrices = await db.PartVendorPricingSnapshots
+        var snapshotPrices = await db.PartSupplierPricingSnapshots
             .AsNoTracking()
-            .Include(x => x.PartVendorLink)
-            .Where(x => x.TenantId == tenantId && partIds.Contains(x.PartVendorLink.PartId))
+            .Include(x => x.PartSupplierLink)
+            .Where(x => x.TenantId == tenantId && partIds.Contains(x.PartSupplierLink.PartId))
             .OrderByDescending(x => x.EffectiveFrom)
             .ThenByDescending(x => x.UpdatedAt)
-            .Select(x => new { x.PartVendorLink.PartId, x.UnitPrice })
+            .Select(x => new { x.PartSupplierLink.PartId, x.UnitPrice })
             .ToListAsync(cancellationToken);
         var prices = snapshotPrices
             .GroupBy(x => x.PartId)
@@ -1930,7 +1868,7 @@ public static class CoverageAliasEndpoints
             return prices;
         }
 
-        var catalogPrices = await db.PartVendorLinks
+        var catalogPrices = await db.PartSupplierLinks
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
                 && missingPartIds.Contains(x.PartId)
@@ -2028,4 +1966,6 @@ public static class CoverageAliasEndpoints
         return fields;
     }
 }
+
+
 

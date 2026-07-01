@@ -67,7 +67,7 @@ const parts = [
     reorderPoint: null,
     reorderQuantity: null,
     manufacturerAliases: [],
-    vendorLinks: [],
+    supplierLinks: [],
     createdAt: '2026-06-01T00:00:00Z',
     updatedAt: '2026-06-01T00:00:00Z',
   },

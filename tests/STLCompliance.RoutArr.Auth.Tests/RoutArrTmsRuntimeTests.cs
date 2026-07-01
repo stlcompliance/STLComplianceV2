@@ -326,7 +326,7 @@ public sealed class RoutArrTmsRuntimeTests : IAsyncLifetime
             handlingRequirements = new[] { "temperature_control" },
             customerRefs = new[] { "customarr:customer:alpha" },
             orderRefs = new[] { $"ordarr:order:{orderNumber}" },
-            vendorRefs = new[] { "supplyarr:carrier:carrier-a" },
+            supplierRefs = new[] { "supplyarr:carrier:carrier-a" },
             requirementRefs = new[] { "compliancecore:requirement:temperature" },
             lines = new[]
             {

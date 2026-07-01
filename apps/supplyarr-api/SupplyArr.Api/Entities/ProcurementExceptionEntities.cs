@@ -16,7 +16,7 @@ public sealed class ProcurementException : IHasTenant
 
     public string SubjectKey { get; set; } = string.Empty;
 
-    public Guid? VendorPartyId { get; set; }
+    public Guid? SupplierId { get; set; }
 
     public string ExceptionCategory { get; set; } = ProcurementExceptionCategories.Other;
 
@@ -107,7 +107,7 @@ public static class ProcurementExceptionCategories
 {
     public const string ApprovalDelay = "approval_delay";
 
-    public const string VendorIssue = "vendor_issue";
+    public const string SupplierIssue = "supplier_issue";
 
     public const string BudgetOverride = "budget_override";
 
@@ -120,7 +120,7 @@ public static class ProcurementExceptionCategories
     public static readonly IReadOnlySet<string> All = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         ApprovalDelay,
-        VendorIssue,
+        SupplierIssue,
         BudgetOverride,
         PolicyViolation,
         PricingVariance,
@@ -162,7 +162,7 @@ public static class ProcurementExceptionStatuses
 
 public static class ProcurementExceptionResolutionTemplates
 {
-    public const string VendorRequote = "vendor_requote";
+    public const string SupplierRequote = "supplier_requote";
 
     public const string PrResubmit = "pr_resubmit";
 
@@ -174,7 +174,7 @@ public static class ProcurementExceptionResolutionTemplates
 
     public static readonly IReadOnlyList<ProcurementExceptionResolutionTemplateDefinition> All =
     [
-        new(VendorRequote, "Vendor re-quote", "Request an updated vendor quote and attach to the subject record."),
+        new(SupplierRequote, "Supplier re-quote", "Request an updated supplier quote and attach to the subject record."),
         new(PrResubmit, "PR resubmit", "Correct the purchase request and resubmit through approval."),
         new(PoReissue, "PO reissue", "Cancel or revise the purchase order and reissue with corrected terms."),
         new(PolicyWaiverDocumented, "Policy waiver documented", "Document leadership approval for the policy exception."),
@@ -183,7 +183,7 @@ public static class ProcurementExceptionResolutionTemplates
 
     public static readonly IReadOnlySet<string> Keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        VendorRequote,
+        SupplierRequote,
         PrResubmit,
         PoReissue,
         PolicyWaiverDocumented,

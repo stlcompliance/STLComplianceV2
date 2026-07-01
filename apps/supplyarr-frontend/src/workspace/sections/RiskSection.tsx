@@ -2,7 +2,7 @@ import { ProcurementExceptionsPanel } from '../../components/ProcurementExceptio
 import { SupplierIncidentsPanel } from '../../components/SupplierIncidentsPanel'
 import { SupplyReadinessCheckPanel } from '../../components/SupplyReadinessCheckPanel'
 import { SupplyReadinessDashboardPanel } from '../../components/SupplyReadinessDashboardPanel'
-import { SupplierRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
+import { SupplierRestrictionsPanel } from '../../components/SupplierRestrictionsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }

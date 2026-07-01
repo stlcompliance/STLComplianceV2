@@ -91,7 +91,7 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task Process_batch_creates_availability_snapshot_from_catalog_availability()
     {
-        var linkId = await SeedVendorLinkWithCatalogAvailabilityAsync(
+        var linkId = await SeedSupplierLinkWithCatalogAvailabilityAsync(
             catalogQuantityAvailable: 25m,
             catalogAvailabilityStatus: AvailabilityStatuses.InStock);
         await UpsertSettingsAsync();
@@ -114,12 +114,12 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
         Assert.Single(body.Captured);
         Assert.Equal(25m, body.Captured[0].QuantityAvailable);
         Assert.Equal(AvailabilityStatuses.InStock, body.Captured[0].AvailabilityStatus);
-        Assert.Equal(SnapshotSources.VendorFeed, body.Captured[0].Source);
+        Assert.Equal(SnapshotSources.SupplierFeed, body.Captured[0].Source);
 
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
-        var captureState = await db.PartVendorAvailabilityCaptureStates
-            .SingleAsync(x => x.PartVendorLinkId == linkId);
+        var captureState = await db.PartSupplierAvailabilityCaptureStates
+            .SingleAsync(x => x.PartSupplierLinkId == linkId);
         Assert.Equal(25m, captureState.LastCapturedQuantityAvailable);
         Assert.Equal(AvailabilityStatuses.InStock, captureState.LastCapturedAvailabilityStatus);
         Assert.NotNull(captureState.LastAvailabilitySnapshotId);
@@ -128,7 +128,7 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
     [Fact]
     public async Task List_pending_availability_snapshot_returns_catalog_drift_candidates()
     {
-        await SeedVendorLinkWithCatalogAvailabilityAsync(
+        await SeedSupplierLinkWithCatalogAvailabilityAsync(
             catalogQuantityAvailable: 30m,
             catalogAvailabilityStatus: AvailabilityStatuses.Limited,
             currentQuantityAvailable: 25m,
@@ -146,6 +146,8 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
         Assert.NotEmpty(pending.Items);
         Assert.Equal(30m, pending.Items[0].CatalogQuantityAvailable);
         Assert.Equal(AvailabilityStatuses.Limited, pending.Items[0].CatalogAvailabilityStatus);
+        Assert.NotEqual(Guid.Empty, pending.Items[0].SupplierId);
+        Assert.False(string.IsNullOrWhiteSpace(pending.Items[0].SupplierKey));
     }
 
     private async Task UpsertSettingsAsync()
@@ -165,7 +167,7 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
         await db.SaveChangesAsync();
     }
 
-    private async Task<Guid> SeedVendorLinkWithCatalogAvailabilityAsync(
+    private async Task<Guid> SeedSupplierLinkWithCatalogAvailabilityAsync(
         decimal? catalogQuantityAvailable,
         string? catalogAvailabilityStatus,
         decimal? currentQuantityAvailable = null,
@@ -176,14 +178,13 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = $"vendor-{Guid.NewGuid():N}"[..16],
-            PartyType = "vendor",
-            DisplayName = "Availability vendor",
-            LegalName = "Availability vendor LLC",
+            SupplierKey = $"supplier-{Guid.NewGuid():N}"[..16],
+            DisplayName = "Availability supplier",
+            LegalName = "Availability supplier LLC",
             TaxIdentifier = string.Empty,
             ApprovalStatus = "approved",
             Status = "active",
@@ -208,13 +209,13 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var link = new PartVendorLink
+        var link = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "VPN-300",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "VPN-300",
             IsPreferred = true,
             CatalogQuantityAvailable = catalogQuantityAvailable,
             CatalogAvailabilityStatus = catalogAvailabilityStatus,
@@ -222,17 +223,17 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        db.ExternalParties.Add(vendor);
+        db.Suppliers.Add(supplier);
         db.Parts.Add(part);
-        db.PartVendorLinks.Add(link);
+        db.PartSupplierLinks.Add(link);
 
         if (currentQuantityAvailable is not null || !string.IsNullOrWhiteSpace(currentAvailabilityStatus))
         {
-            db.PartVendorAvailabilitySnapshots.Add(new PartVendorAvailabilitySnapshot
+            db.PartSupplierAvailabilitySnapshots.Add(new PartSupplierAvailabilitySnapshot
             {
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
-                PartVendorLinkId = link.Id,
+                PartSupplierLinkId = link.Id,
                 SnapshotKey = $"manual-{Guid.NewGuid():N}"[..24],
                 QuantityAvailable = currentQuantityAvailable,
                 AvailabilityStatus = currentAvailabilityStatus ?? AvailabilityStatuses.InStock,
@@ -318,3 +319,6 @@ public sealed class SupplyArrAvailabilitySnapshotWorkerTests : IAsyncLifetime
         return request;
     }
 }
+
+
+

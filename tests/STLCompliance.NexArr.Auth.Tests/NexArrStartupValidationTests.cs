@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using NexArr.Api.Services;
 
 namespace STLCompliance.NexArr.Auth.Tests;
 
@@ -19,5 +20,23 @@ public class NexArrStartupValidationTests
 
         var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
         Assert.Contains("AUTH_SIGNING_KEY must be configured", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Production_startup_rejects_local_dev_auth_bypass_when_enabled()
+    {
+        var factory = new WebApplicationFactory<global::NexArr.Api.Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.UseSetting("AUTH_SIGNING_KEY", "test-signing-key-at-least-32-chars-long");
+            builder.UseSetting("ConnectionStrings:Database", string.Empty);
+            builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.UseSetting(LocalDevAuthBypassPolicy.EnabledConfigKey, "true");
+            builder.UseSetting(LocalDevAuthBypassPolicy.NodeEnvConfigKey, "production");
+            builder.UseSetting(LocalDevAuthBypassPolicy.StlEnvConfigKey, "production");
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
+        Assert.Contains(LocalDevAuthBypassPolicy.EnabledConfigKey, exception.Message, StringComparison.Ordinal);
     }
 }

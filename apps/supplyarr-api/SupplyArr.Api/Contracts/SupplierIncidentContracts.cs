@@ -42,18 +42,7 @@ public sealed record SupplierIncidentResponse(
     string LastReopenReason,
     int ReopenCount,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
-{
-    public Guid ExternalPartyId => SupplierId;
-
-    public string PartyKey => SupplierKey;
-
-    public string PartyDisplayName => SupplierDisplayName;
-
-    public string PartyType => "supplier";
-
-    public Guid? VendorRestrictionId => SupplierRestrictionId;
-}
+    DateTimeOffset UpdatedAt);
 
 public sealed record CreateSupplierIncidentRequest(
     Guid SupplierId,

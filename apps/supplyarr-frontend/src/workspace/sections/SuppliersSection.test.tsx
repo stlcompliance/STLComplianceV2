@@ -8,7 +8,6 @@ import { SuppliersSection } from './SuppliersSection'
 const supplier = {
   supplierId: 'supplier-1',
   supplierKey: 'sup-2048',
-  supplierType: 'supplier',
   parentSupplierId: null,
   parentSupplierDisplayName: null,
   unitKind: 'identity',
@@ -58,9 +57,13 @@ const contract = {
   contractKey: 'SC-2048',
   contractType: 'master_supply_agreement',
   title: 'Supply Agreement 2026',
-  vendorPartyId: 'supplier-1',
-  vendorPartyKey: 'sup-2048',
-  vendorDisplayName: 'Midwest Fleet Parts & Service',
+  supplierId: 'supplier-1',
+  supplierKey: 'sup-2048',
+  supplierDisplayName: 'Midwest Fleet Parts & Service',
+  parentSupplierId: null,
+  parentSupplierDisplayName: null,
+  supplierUnitKind: 'identity',
+  supplierServiceTypes: ['products', 'parts'],
   effectiveAt: '2026-01-15T00:00:00Z',
   expiresAt: '2026-12-31T00:00:00Z',
   renewalAt: '2026-11-01T00:00:00Z',
@@ -144,7 +147,7 @@ describe('SuppliersSection', () => {
     renderSuppliersSection()
     expect(screen.getByTestId('supplyarr-supplier-directory')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Supplier directory' })).toBeInTheDocument()
-    expect(screen.getByText('0 supplier identities · 0 sub-units')).toBeInTheDocument()
+    expect(screen.getByText('0 supplier identities · 0 supplier sub-units')).toBeInTheDocument()
   })
 
   it('renders the replacement supplier profile detail view', () => {
@@ -161,10 +164,10 @@ describe('SuppliersSection', () => {
     expect(page.getAllByText('Supplier snapshot').at(-1)).toBeInTheDocument()
     expect(page.getByText('Contracts & terms')).toBeInTheDocument()
     expect(page.getByText('SC-2048')).toBeInTheDocument()
-    expect(page.getAllByText('Sub-units').at(-1)).toBeInTheDocument()
+    expect(page.getAllByText('Supplier sub-units').at(-1)).toBeInTheDocument()
     expect(page.getByText('Sourcing readiness')).toBeInTheDocument()
     expect(page.getByText('Stock and parts sourcing')).toBeInTheDocument()
-    expect(page.getByText('Use this identity when sourcing can route across multiple supplier locations.')).toBeInTheDocument()
+    expect(page.getByText('Use this identity when sourcing can route across multiple supplier sub-units.')).toBeInTheDocument()
     expect(page.getByText('Midwest Fleet Parts & Service - Kansas City')).toBeInTheDocument()
     expect(page.getAllByText(/Products, Parts/i).length).toBeGreaterThan(0)
   })

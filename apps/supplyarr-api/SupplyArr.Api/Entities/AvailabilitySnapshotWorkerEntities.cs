@@ -19,13 +19,13 @@ public sealed class TenantAvailabilitySnapshotSettings : IHasTenant
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-public sealed class PartVendorAvailabilityCaptureState : IHasTenant
+public sealed class PartSupplierAvailabilityCaptureState : IHasTenant
 {
     public Guid Id { get; set; }
 
     public Guid TenantId { get; set; }
 
-    public Guid PartVendorLinkId { get; set; }
+    public Guid PartSupplierLinkId { get; set; }
 
     public decimal? LastCapturedQuantityAvailable { get; set; }
 
@@ -39,7 +39,7 @@ public sealed class PartVendorAvailabilityCaptureState : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public PartVendorLink PartVendorLink { get; set; } = null!;
+    public PartSupplierLink PartSupplierLink { get; set; } = null!;
 }
 
 public sealed class AvailabilitySnapshotRun : IHasTenant

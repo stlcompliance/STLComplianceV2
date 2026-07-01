@@ -10,40 +10,34 @@ using Microsoft.Extensions.DependencyInjection;
 using SupplyArrRedeemRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 using SupplyArrMeResponse = SupplyArr.Api.Contracts.SupplyArrMeResponse;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using SupplierDirectoryMetadataResponse = SupplyArr.Api.Contracts.SupplierDirectoryMetadataResponse;
 using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
-using CreateExternalPartyRequest = SupplyArr.Api.Contracts.CreateExternalPartyRequest;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
 using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
-using CreatePartyContactRequest = SupplyArr.Api.Contracts.CreatePartyContactRequest;
-using CreateExternalPartyContactRequest = SupplyArr.Api.Contracts.CreateExternalPartyContactRequest;
-using PartyContactResponse = SupplyArr.Api.Contracts.PartyContactResponse;
-using UpdateExternalPartyApprovalStatusRequest = SupplyArr.Api.Contracts.UpdateExternalPartyApprovalStatusRequest;
+using CreateSupplierContactRequest = SupplyArr.Api.Contracts.CreateSupplierContactRequest;
+using UpdateSupplierApprovalStatusRequest = SupplyArr.Api.Contracts.UpdateSupplierApprovalStatusRequest;
 using PartCatalogResponse = SupplyArr.Api.Contracts.PartCatalogResponse;
 using CreatePartCatalogRequest = SupplyArr.Api.Contracts.CreatePartCatalogRequest;
 using PartResponse = SupplyArr.Api.Contracts.PartResponse;
 using CreatePartRequest = SupplyArr.Api.Contracts.CreatePartRequest;
 using CreatePartSourceRequest = SupplyArr.Api.Contracts.CreatePartSourceRequest;
-using CreatePartVendorLinkRequest = SupplyArr.Api.Contracts.CreatePartVendorLinkRequest;
-using PartVendorLinkResponse = SupplyArr.Api.Contracts.PartVendorLinkResponse;
-using UpsertPartVendorLinkCatalogPriceRequest = SupplyArr.Api.Contracts.UpsertPartVendorLinkCatalogPriceRequest;
+using CreatePartSupplierLinkRequest = SupplyArr.Api.Contracts.CreatePartSupplierLinkRequest;
+using PartSupplierLinkResponse = SupplyArr.Api.Contracts.PartSupplierLinkResponse;
+using UpsertPartSupplierLinkCatalogPriceRequest = SupplyArr.Api.Contracts.UpsertPartSupplierLinkCatalogPriceRequest;
 using InventoryLocationResponse = SupplyArr.Api.Contracts.InventoryLocationResponse;
 using CreateInventoryLocationRequest = SupplyArr.Api.Contracts.CreateInventoryLocationRequest;
-using RegisterVendorDocumentRequest = SupplyArr.Api.Contracts.RegisterVendorDocumentRequest;
-using PartyComplianceDocumentResponse = SupplyArr.Api.Contracts.PartyComplianceDocumentResponse;
 using SupplierComplianceDocumentResponse = SupplyArr.Api.Contracts.SupplierComplianceDocumentResponse;
 using SupplierComplianceDocumentRegistrationRequest = SupplyArr.Api.Contracts.SupplierComplianceDocumentRegistrationRequest;
 using ItemCategorySummaryResponse = SupplyArr.Api.Contracts.ItemCategorySummaryResponse;
 using ManufacturerSummaryResponse = SupplyArr.Api.Contracts.ManufacturerSummaryResponse;
-using VendorItemResponse = SupplyArr.Api.Contracts.VendorItemResponse;
-using CreateVendorItemRequest = SupplyArr.Api.Contracts.CreateVendorItemRequest;
-using CreateQuoteRequest = SupplyArr.Api.Contracts.CreateQuoteRequest;
-using UpsertQuoteLineRequest = SupplyArr.Api.Contracts.UpsertQuoteLineRequest;
+using SupplierItemResponse = SupplyArr.Api.Contracts.SupplierItemResponse;
+using CreateSupplierItemRequest = SupplyArr.Api.Contracts.CreateSupplierItemRequest;
+using CreateSupplierQuoteRequest = SupplyArr.Api.Contracts.CreateSupplierQuoteRequest;
+using UpsertSupplierQuoteLineRequest = SupplyArr.Api.Contracts.UpsertSupplierQuoteLineRequest;
 using CreateRfqRequest = SupplyArr.Api.Contracts.CreateRfqRequest;
 using CreateRfqLineRequest = SupplyArr.Api.Contracts.CreateRfqLineRequest;
-using InviteRfqVendorsRequest = SupplyArr.Api.Contracts.InviteRfqVendorsRequest;
-using VendorQuoteResponse = SupplyArr.Api.Contracts.VendorQuoteResponse;
-using CreateWarrantyClaimRequest = SupplyArr.Api.Contracts.CreateWarrantyClaimRequest;
+using InviteRfqSuppliersRequest = SupplyArr.Api.Contracts.InviteRfqSuppliersRequest;
+using SupplierQuoteResponse = SupplyArr.Api.Contracts.SupplierQuoteResponse;
+using CreateSupplierWarrantyClaimRequest = SupplyArr.Api.Contracts.CreateSupplierWarrantyClaimRequest;
 using SubmitWarrantyClaimRequest = SupplyArr.Api.Contracts.SubmitWarrantyClaimRequest;
 using SupplyArrSessionBootstrapResponse = SupplyArr.Api.Contracts.SupplyArrSessionBootstrapResponse;
 using ApprovalQueueItemResponse = SupplyArr.Api.Contracts.ApprovalQueueItemResponse;
@@ -65,10 +59,10 @@ using ImportFieldMappingRequest = SupplyArr.Api.Contracts.ImportFieldMappingRequ
 using ImportFieldMappingResponse = SupplyArr.Api.Contracts.ImportFieldMappingResponse;
 using PartCatalogCsvImportRequest = SupplyArr.Api.Contracts.PartCatalogCsvImportRequest;
 using PartCatalogCsvImportResponse = SupplyArr.Api.Contracts.PartCatalogCsvImportResponse;
-using VendorCatalogCsvImportRequest = SupplyArr.Api.Contracts.VendorCatalogCsvImportRequest;
-using VendorCatalogCsvImportResponse = SupplyArr.Api.Contracts.VendorCatalogCsvImportResponse;
-using VendorDocumentsCsvImportRequest = SupplyArr.Api.Contracts.VendorDocumentsCsvImportRequest;
-using VendorDocumentsCsvImportResponse = SupplyArr.Api.Contracts.VendorDocumentsCsvImportResponse;
+using SupplierCatalogCsvImportRequest = SupplyArr.Api.Contracts.SupplierCatalogCsvImportRequest;
+using SupplierCatalogCsvImportResponse = SupplyArr.Api.Contracts.SupplierCatalogCsvImportResponse;
+using SupplierDocumentsCsvImportRequest = SupplyArr.Api.Contracts.SupplierDocumentsCsvImportRequest;
+using SupplierDocumentsCsvImportResponse = SupplyArr.Api.Contracts.SupplierDocumentsCsvImportResponse;
 using InventoryCountsCsvImportRequest = SupplyArr.Api.Contracts.InventoryCountsCsvImportRequest;
 using InventoryCountsCsvImportResponse = SupplyArr.Api.Contracts.InventoryCountsCsvImportResponse;
 using PriceListCsvImportRequest = SupplyArr.Api.Contracts.PriceListCsvImportRequest;
@@ -79,8 +73,8 @@ using AvailabilityListCsvImportRequest = SupplyArr.Api.Contracts.AvailabilityLis
 using AvailabilityListCsvImportResponse = SupplyArr.Api.Contracts.AvailabilityListCsvImportResponse;
 using ContractsCsvImportRequest = SupplyArr.Api.Contracts.ContractsCsvImportRequest;
 using ContractsCsvImportResponse = SupplyArr.Api.Contracts.ContractsCsvImportResponse;
-using ExternalPartiesCsvImportRequest = SupplyArr.Api.Contracts.ExternalPartiesCsvImportRequest;
-using ExternalPartiesCsvImportResponse = SupplyArr.Api.Contracts.ExternalPartiesCsvImportResponse;
+using SuppliersCsvImportRequest = SupplyArr.Api.Contracts.SuppliersCsvImportRequest;
+using SuppliersCsvImportResponse = SupplyArr.Api.Contracts.SuppliersCsvImportResponse;
 using ContactsCsvImportRequest = SupplyArr.Api.Contracts.ContactsCsvImportRequest;
 using ContactsCsvImportResponse = SupplyArr.Api.Contracts.ContactsCsvImportResponse;
 using OpenPurchaseOrdersCsvImportRequest = SupplyArr.Api.Contracts.OpenPurchaseOrdersCsvImportRequest;
@@ -130,23 +124,22 @@ using ManagerOverrideApproveEmergencyPurchaseRequest = SupplyArr.Api.Contracts.M
 using BackorderResponse = SupplyArr.Api.Contracts.BackorderResponse;
 using CreateBackorderFromPurchaseOrderLineRequest = SupplyArr.Api.Contracts.CreateBackorderFromPurchaseOrderLineRequest;
 using CancelBackorderRequest = SupplyArr.Api.Contracts.CancelBackorderRequest;
-using VendorReturnResponse = SupplyArr.Api.Contracts.VendorReturnResponse;
-using CreateVendorReturnFromStockRequest = SupplyArr.Api.Contracts.CreateVendorReturnFromStockRequest;
-using CreateVendorReturnFromStockLineRequest = SupplyArr.Api.Contracts.CreateVendorReturnFromStockLineRequest;
-using CreateVendorReturnFromPurchaseOrderLineRequest = SupplyArr.Api.Contracts.CreateVendorReturnFromPurchaseOrderLineRequest;
-using CancelVendorReturnRequest = SupplyArr.Api.Contracts.CancelVendorReturnRequest;
+using SupplierReturnResponse = SupplyArr.Api.Contracts.SupplierReturnResponse;
+using CreateSupplierReturnFromStockLineRequest = SupplyArr.Api.Contracts.CreateSupplierReturnFromStockLineRequest;
+using CreateSupplierReturnFromStockRequest = SupplyArr.Api.Contracts.CreateSupplierReturnFromStockRequest;
+using CreateSupplierReturnFromPurchaseOrderLineRequest = SupplyArr.Api.Contracts.CreateSupplierReturnFromPurchaseOrderLineRequest;
+using CancelSupplierReturnRequest = SupplyArr.Api.Contracts.CancelSupplierReturnRequest;
 using PricingSnapshotResponse = SupplyArr.Api.Contracts.PricingSnapshotResponse;
 using CreatePricingSnapshotRequest = SupplyArr.Api.Contracts.CreatePricingSnapshotRequest;
 using LeadTimeSnapshotResponse = SupplyArr.Api.Contracts.LeadTimeSnapshotResponse;
 using CreateLeadTimeSnapshotRequest = SupplyArr.Api.Contracts.CreateLeadTimeSnapshotRequest;
 using AvailabilitySnapshotResponse = SupplyArr.Api.Contracts.AvailabilitySnapshotResponse;
 using CreateAvailabilitySnapshotRequest = SupplyArr.Api.Contracts.CreateAvailabilitySnapshotRequest;
-using VendorRestrictionResponse = SupplyArr.Api.Contracts.VendorRestrictionResponse;
-using CreateVendorRestrictionRequest = SupplyArr.Api.Contracts.CreateVendorRestrictionRequest;
+using SupplierRestrictionResponse = SupplyArr.Api.Contracts.SupplierRestrictionResponse;
+using CreateSupplierRestrictionRequest = SupplyArr.Api.Contracts.CreateSupplierRestrictionRequest;
 using SupplierOnboardingResponse = SupplyArr.Api.Contracts.SupplierOnboardingResponse;
 using StartSupplierOnboardingRequest = SupplyArr.Api.Contracts.StartSupplierOnboardingRequest;
 using SubmitSupplierOnboardingForReviewRequest = SupplyArr.Api.Contracts.SubmitSupplierOnboardingForReviewRequest;
-using RegisterPartyComplianceDocumentRequest = SupplyArr.Api.Contracts.RegisterPartyComplianceDocumentRequest;
 using SupplierIncidentResponse = SupplyArr.Api.Contracts.SupplierIncidentResponse;
 using CreateSupplierIncidentRequest = SupplyArr.Api.Contracts.CreateSupplierIncidentRequest;
 using ReorderEvaluationResponse = SupplyArr.Api.Contracts.ReorderEvaluationResponse;
@@ -226,9 +219,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             builder.UseSetting("TrainArr:ReceivingRulePackKey", "supplyarr_receiving_authorization");
             builder.UseSetting("ComplianceCore:BaseUrl", "http://compliancecore.test");
             builder.UseSetting("ComplianceCore:ServiceToken", "supplyarr-to-compliancecore-token");
-            builder.UseSetting("ComplianceCore:VendorUseActionKey", "can-use-vendor");
-            builder.UseSetting("ComplianceCore:VendorUseWorkflowKey", "can_use_vendor");
-            builder.UseSetting("ComplianceCore:VendorUseActivityContextKey", "purchase_order_issue");
+            builder.UseSetting("ComplianceCore:SupplierUseActionKey", "can-use-supplier");
+            builder.UseSetting("ComplianceCore:SupplierUseWorkflowKey", "can_use_supplier");
+            builder.UseSetting("ComplianceCore:SupplierUseActivityContextKey", "purchase_order_issue");
             builder.UseSetting("StaffArr:BaseUrl", "http://staffarr.test");
             builder.UseSetting("StaffArr:ServiceToken", "supplyarr-to-staffarr-token");
             builder.ConfigureServices(services =>
@@ -253,7 +246,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                     .ConfigurePrimaryHttpMessageHandler(() => _trainarrQualificationHandler);
                 services.AddHttpClient<ComplianceCoreFactPublicationClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreHandler);
-                services.AddHttpClient<ComplianceCoreVendorUseGateClient>()
+                services.AddHttpClient<ComplianceCoreSupplierUseGateClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _complianceCoreHandler);
                 services.AddHttpClient<StaffArrSiteLookupClient>()
                     .ConfigurePrimaryHttpMessageHandler(() => _staffarrSiteLookupHandler);
@@ -355,42 +348,39 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Party_registry_crud_happy_path()
+    public async Task Supplier_directory_crud_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             "acme-parts",
+            null,
+            null,
             "Acme Parts Co.",
             "Acme Parts Company LLC",
             "12-3456789",
-            "Preferred OEM vendor"));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        Assert.Equal("vendor", vendor.PartyType);
-        Assert.Equal("pending", vendor.ApprovalStatus);
-
-        var createPartyRequest = Authorized(HttpMethod.Post, "/api/parties", token);
-        createPartyRequest.Content = JsonContent.Create(new CreateExternalPartyRequest(
-            "regional-supply",
-            "supplier",
-            "Regional Supply Hub",
-            "Regional Supply Hub Inc.",
+            "Preferred OEM supplier",
+            ["parts", "products"],
             null,
-            string.Empty));
-        var createPartyResponse = await _supplyarrClient.SendAsync(createPartyRequest);
-        createPartyResponse.EnsureSuccessStatusCode();
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        Assert.Equal("pending", supplier.ApprovalStatus);
 
-        var listVendorsRequest = Authorized(HttpMethod.Get, "/api/vendors", token);
-        var listVendorsResponse = await _supplyarrClient.SendAsync(listVendorsRequest);
-        listVendorsResponse.EnsureSuccessStatusCode();
-        var vendors = (await listVendorsResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(vendors, x => x.PartyId == vendor.PartyId);
+        var listSuppliersRequest = Authorized(HttpMethod.Get, "/api/suppliers", token);
+        var listSuppliersResponse = await _supplyarrClient.SendAsync(listSuppliersRequest);
+        listSuppliersResponse.EnsureSuccessStatusCode();
+        var suppliers = (await listSuppliersResponse.Content.ReadFromJsonAsync<List<SupplierResponse>>())!;
+        Assert.Contains(suppliers, x => x.SupplierId == supplier.SupplierId);
 
-        var contactRequest = Authorized(HttpMethod.Post, $"/api/vendors/{vendor.PartyId}/contacts", token);
-        contactRequest.Content = JsonContent.Create(new CreatePartyContactRequest(
+        var contactRequest = Authorized(HttpMethod.Post, $"/api/suppliers/{supplier.SupplierId}/contacts", token);
+        contactRequest.Content = JsonContent.Create(new CreateSupplierContactRequest(
             "Jordan Lee",
             "jordan@acmeparts.example",
             "555-0100",
@@ -399,40 +389,48 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var contactResponse = await _supplyarrClient.SendAsync(contactRequest);
         contactResponse.EnsureSuccessStatusCode();
 
-        var approveRequest = Authorized(HttpMethod.Patch, $"/api/vendors/{vendor.PartyId}/approval-status", token);
-        approveRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
+        var approveRequest = Authorized(HttpMethod.Patch, $"/api/suppliers/{supplier.SupplierId}/approval-status", token);
+        approveRequest.Content = JsonContent.Create(new UpdateSupplierApprovalStatusRequest("approved"));
         var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
         approveResponse.EnsureSuccessStatusCode();
-        var approved = (await approveResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
         Assert.Equal("approved", approved.ApprovalStatus);
         Assert.Single(approved.Contacts);
     }
 
     [Fact]
-    public async Task Party_registry_v1_vendor_alias_crud_happy_path()
+    public async Task Supplier_directory_v1_crud_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/v1/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/v1/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             "acme-parts-v1",
+            null,
+            null,
             "Acme Parts Co V1",
             "Acme Parts Company V1 LLC",
             "98-7654321",
-            "Preferred OEM vendor v1"));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        Assert.Equal("vendor", vendor.PartyType);
+            "Preferred OEM supplier v1",
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var listVendorsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/vendors", token));
-        listVendorsResponse.EnsureSuccessStatusCode();
-        var vendors = (await listVendorsResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(vendors, x => x.PartyId == vendor.PartyId);
+        var listSuppliersResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/suppliers", token));
+        listSuppliersResponse.EnsureSuccessStatusCode();
+        var suppliers = (await listSuppliersResponse.Content.ReadFromJsonAsync<List<SupplierResponse>>())!;
+        Assert.Contains(suppliers, x => x.SupplierId == supplier.SupplierId);
 
-        var contactRequest = Authorized(HttpMethod.Post, $"/api/v1/vendors/{vendor.PartyId}/contacts", token);
-        contactRequest.Content = JsonContent.Create(new CreatePartyContactRequest(
+        var contactRequest = Authorized(HttpMethod.Post, $"/api/v1/suppliers/{supplier.SupplierId}/contacts", token);
+        contactRequest.Content = JsonContent.Create(new CreateSupplierContactRequest(
             "Taylor Reed",
             "taylor@acmepartsv1.example",
             "555-0199",
@@ -441,105 +439,146 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var contactResponse = await _supplyarrClient.SendAsync(contactRequest);
         contactResponse.EnsureSuccessStatusCode();
 
-        var approveRequest = Authorized(HttpMethod.Patch, $"/api/v1/vendors/{vendor.PartyId}/approval-status", token);
-        approveRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
+        var approveRequest = Authorized(HttpMethod.Patch, $"/api/v1/suppliers/{supplier.SupplierId}/approval-status", token);
+        approveRequest.Content = JsonContent.Create(new UpdateSupplierApprovalStatusRequest("approved"));
         var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
         approveResponse.EnsureSuccessStatusCode();
-        var approved = (await approveResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        var approved = (await approveResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
         Assert.Equal("approved", approved.ApprovalStatus);
         Assert.Single(approved.Contacts);
     }
 
     [Fact]
-    public async Task Party_registry_v1_external_parties_customers_and_contacts_aliases_work()
+    public async Task Supplier_directory_v1_metadata_and_contacts_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createExternalPartyRequest = Authorized(HttpMethod.Post, "/api/v1/external-parties", token);
-        createExternalPartyRequest.Content = JsonContent.Create(new CreateExternalPartyRequest(
-            "xparty-v1",
-            "vendor",
-            "External Party V1",
-            "External Party V1 LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/v1/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "midwest-supplier-v1",
             null,
-            string.Empty));
-        var createExternalPartyResponse = await _supplyarrClient.SendAsync(createExternalPartyRequest);
-        createExternalPartyResponse.EnsureSuccessStatusCode();
-        var externalParty = (await createExternalPartyResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-
-        var createCustomerRequest = Authorized(HttpMethod.Post, "/api/v1/customers", token);
-        createCustomerRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "cust-v1",
-            "Customer V1",
-            "Customer V1 LLC",
             null,
-            string.Empty));
-        var createCustomerResponse = await _supplyarrClient.SendAsync(createCustomerRequest);
-        createCustomerResponse.EnsureSuccessStatusCode();
-        var customer = (await createCustomerResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        Assert.Equal("customer", customer.PartyType);
+            "Midwest Supplier V1",
+            "Midwest Supplier V1 LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var createContactRequest = Authorized(HttpMethod.Post, "/api/v1/contacts", token);
-        createContactRequest.Content = JsonContent.Create(new CreateExternalPartyContactRequest(
-            externalParty.PartyId,
+        var createContactRequest = Authorized(HttpMethod.Post, $"/api/v1/suppliers/{supplier.SupplierId}/contacts", token);
+        createContactRequest.Content = JsonContent.Create(new CreateSupplierContactRequest(
             "Morgan Contact",
-            "morgan@xparty.example",
+            "morgan@midwestsupplier.example",
             "555-0101",
             "Coordinator",
             true));
         var createContactResponse = await _supplyarrClient.SendAsync(createContactRequest);
         createContactResponse.EnsureSuccessStatusCode();
 
-        var listExternalPartiesResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/external-parties", token));
-        listExternalPartiesResponse.EnsureSuccessStatusCode();
-        var parties = (await listExternalPartiesResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(parties, x => x.PartyId == externalParty.PartyId);
+        var metadataResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/suppliers/metadata", token));
+        metadataResponse.EnsureSuccessStatusCode();
+        var metadata = (await metadataResponse.Content.ReadFromJsonAsync<SupplierDirectoryMetadataResponse>())!;
+        Assert.Contains(metadata.UnitKindOptions, x => x.Value == "sub_unit" && x.Label == "Supplier sub-unit");
 
-        var listCustomersResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/customers", token));
-        listCustomersResponse.EnsureSuccessStatusCode();
-        var customers = (await listCustomersResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(customers, x => x.PartyId == customer.PartyId);
+        var listSuppliersResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/suppliers", token));
+        listSuppliersResponse.EnsureSuccessStatusCode();
+        var suppliers = (await listSuppliersResponse.Content.ReadFromJsonAsync<List<SupplierResponse>>())!;
+        Assert.Contains(suppliers, x => x.SupplierId == supplier.SupplierId);
 
-        var listContactsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/contacts?partyId={externalParty.PartyId}", token));
-        listContactsResponse.EnsureSuccessStatusCode();
-        var contacts = (await listContactsResponse.Content.ReadFromJsonAsync<List<PartyContactResponse>>())!;
-        Assert.Contains(contacts, x => x.ContactName == "Morgan Contact");
+        var getSupplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}", token));
+        getSupplierResponse.EnsureSuccessStatusCode();
+        var loadedSupplier = (await getSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        Assert.Contains(loadedSupplier.Contacts, x => x.ContactName == "Morgan Contact");
     }
 
     [Fact]
-    public async Task Party_create_denied_without_manage_role()
+    public async Task Supplier_directory_v1_rejects_legacy_location_unit_kind()
+    {
+        var token = await RedeemSupplyArrTokenAsync();
+
+        var request = Authorized(HttpMethod.Post, "/api/v1/suppliers", token);
+        request.Content = JsonContent.Create(new CreateSupplierRequest(
+            "legacy-location-kind-v1",
+            null,
+            "location",
+            "Legacy Location Kind",
+            "Legacy Location Kind LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+
+        var response = await _supplyarrClient.SendAsync(request);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Supplier unit kind must be identity or sub_unit.", payload, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Supplier_create_denied_without_manage_role()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_clerk");
-        var request = Authorized(HttpMethod.Post, "/api/vendors", token);
-        request.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "denied-vendor",
-            "Denied Vendor",
+        var request = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        request.Content = JsonContent.Create(new CreateSupplierRequest(
+            "denied-supplier",
+            null,
+            null,
+            "Denied Supplier",
             string.Empty,
             null,
-            string.Empty));
+            string.Empty,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
 
         var response = await _supplyarrClient.SendAsync(request);
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
-    public async Task Part_catalog_crud_with_vendor_link_happy_path()
+    public async Task Part_catalog_crud_with_supplier_link_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "parts-vendor",
-            "Parts Vendor Inc.",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "parts-supplier",
+            null,
+            null,
+            "Parts Supplier Inc.",
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createCatalogRequest = Authorized(HttpMethod.Post, "/api/catalogs", token);
         createCatalogRequest.Content = JsonContent.Create(new CreatePartCatalogRequest(
@@ -566,15 +605,16 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal("active", part.Status);
         Assert.Equal(catalog.CatalogKey, part.CatalogKey);
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
             "V-FLT-001",
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
         linkResponse.EnsureSuccessStatusCode();
-        var link = (await linkResponse.Content.ReadFromJsonAsync<PartVendorLinkResponse>())!;
-        Assert.Equal("V-FLT-001", link.VendorPartNumber);
+        var link = (await linkResponse.Content.ReadFromJsonAsync<PartSupplierLinkResponse>())!;
+        Assert.Equal("V-FLT-001", link.SupplierPartNumber);
 
         var listPartsRequest = Authorized(HttpMethod.Get, "/api/parts", token);
         var listPartsResponse = await _supplyarrClient.SendAsync(listPartsRequest);
@@ -586,13 +626,13 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var getPartResponse = await _supplyarrClient.SendAsync(getPartRequest);
         getPartResponse.EnsureSuccessStatusCode();
         var loaded = (await getPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
-        Assert.Single(loaded.VendorLinks);
-        Assert.Equal(vendor.PartyKey, loaded.VendorLinks[0].PartyKey);
-        Assert.True(loaded.VendorLinks[0].IsPreferred);
+        Assert.Single(loaded.SupplierLinks);
+        Assert.Equal(supplier.SupplierKey, loaded.SupplierLinks[0].SupplierKey);
+        Assert.True(loaded.SupplierLinks[0].IsPreferred);
     }
 
     [Fact]
-    public async Task Part_catalog_parts_can_store_operational_sources_without_vendor_links()
+    public async Task Part_catalog_parts_can_store_operational_sources_without_supplier_links()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
@@ -614,7 +654,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         Assert.True(part.IsTrackable);
         Assert.False(part.IsStocked);
-        Assert.Empty(part.VendorLinks);
+        Assert.Empty(part.SupplierLinks);
         Assert.Empty(part.Sources);
 
         var sourceRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/sources", token);
@@ -633,24 +673,33 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Single(loaded.Sources);
         Assert.Equal("salvage", loaded.Sources[0].SourceType);
         Assert.Equal("Retired Truck 104", loaded.Sources[0].Label);
-        Assert.Empty(loaded.VendorLinks);
+        Assert.Empty(loaded.SupplierLinks);
     }
 
     [Fact]
-    public async Task Part_catalog_crud_with_vendor_link_v1_alias_happy_path()
+    public async Task Part_catalog_crud_with_supplier_link_v1_alias_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "parts-vendor-v1",
-            "Parts Vendor V1 Inc.",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/v1/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "parts-supplier-v1",
+            null,
+            null,
+            "Parts Supplier V1 Inc.",
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createCatalogRequest = Authorized(HttpMethod.Post, "/api/v1/catalogs", token);
         createCatalogRequest.Content = JsonContent.Create(new CreatePartCatalogRequest(
@@ -675,9 +724,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/v1/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/v1/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
             "V-FLT-V1-001",
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
@@ -693,7 +743,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var getPartResponse = await _supplyarrClient.SendAsync(getPartRequest);
         getPartResponse.EnsureSuccessStatusCode();
         var loaded = (await getPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
-        Assert.Single(loaded.VendorLinks);
+        Assert.Single(loaded.SupplierLinks);
     }
 
     [Fact]
@@ -736,24 +786,35 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task V1_vendor_documents_alias_register_and_list_work()
+    public async Task V1_supplier_documents_alias_register_and_list_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "docs-vendor-v1",
-            "Docs Vendor V1",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "docs-supplier-v1",
+            null,
+            null,
+            "Docs Supplier V1",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var registerRequest = Authorized(HttpMethod.Post, "/api/v1/vendor-documents", token);
-        registerRequest.Content = JsonContent.Create(new RegisterVendorDocumentRequest(
-            vendor.PartyId,
+        var registerRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/suppliers/{supplier.SupplierId}/compliance-documents",
+            token);
+        registerRequest.Content = JsonContent.Create(new SupplierComplianceDocumentRegistrationRequest(
             "DOC-V1-1",
             "w9",
             "W9",
@@ -765,12 +826,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             string.Empty));
         var registerResponse = await _supplyarrClient.SendAsync(registerRequest);
         registerResponse.EnsureSuccessStatusCode();
-        var doc = (await registerResponse.Content.ReadFromJsonAsync<PartyComplianceDocumentResponse>())!;
+        var doc = (await registerResponse.Content.ReadFromJsonAsync<SupplierComplianceDocumentResponse>())!;
 
         var listResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/vendor-documents?partyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/compliance-documents", token));
         listResponse.EnsureSuccessStatusCode();
-        var docs = (await listResponse.Content.ReadFromJsonAsync<List<PartyComplianceDocumentResponse>>())!;
+        var docs = (await listResponse.Content.ReadFromJsonAsync<List<SupplierComplianceDocumentResponse>>())!;
         Assert.Contains(docs, x => x.DocumentId == doc.DocumentId);
     }
 
@@ -800,33 +861,48 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var reportsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports", token));
         reportsResponse.EnsureSuccessStatusCode();
-        var groups = (await reportsResponse.Content.ReadFromJsonAsync<List<string>>())!;
-        Assert.Contains("vendors", groups);
+        using var reportsDocument = JsonDocument.Parse(await reportsResponse.Content.ReadAsStringAsync());
+        var groups = reportsDocument.RootElement
+            .GetProperty("reports")
+            .EnumerateArray()
+            .Select(report => report.GetProperty("key").GetString())
+            .OfType<string>()
+            .ToList();
+        Assert.Contains("suppliers", groups);
         Assert.Contains("purchasing", groups);
     }
 
     [Fact]
-    public async Task V1_item_categories_manufacturers_and_vendor_items_aliases_work()
+    public async Task V1_item_categories_manufacturers_and_supplier_items_aliases_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "vim-vendor-v1",
-            "Vendor Items Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "vim-supplier-v1",
+            null,
+            null,
+            "Supplier Items Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
             "vim-part-v1",
             null,
-            "Vendor Item Part",
-            "Part for vendor-items alias",
+            "Supplier Item Part",
+            "Part for supplier-items alias",
             "filters",
             "each",
             "Fleet OEM",
@@ -835,14 +911,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var createVendorItemRequest = Authorized(HttpMethod.Post, "/api/v1/vendor-items", token);
-        createVendorItemRequest.Content = JsonContent.Create(new CreateVendorItemRequest(
+        var createSupplierItemRequest = Authorized(HttpMethod.Post, "/api/v1/supplier-items", token);
+        createSupplierItemRequest.Content = JsonContent.Create(new CreateSupplierItemRequest(
             part.PartId,
-            vendor.PartyId,
+            supplier.SupplierId,
             "VIM-001",
             true));
-        var createVendorItemResponse = await _supplyarrClient.SendAsync(createVendorItemRequest);
-        createVendorItemResponse.EnsureSuccessStatusCode();
+        var createSupplierItemResponse = await _supplyarrClient.SendAsync(createSupplierItemRequest);
+        createSupplierItemResponse.EnsureSuccessStatusCode();
 
         var categoriesResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/item-categories", token));
@@ -856,28 +932,37 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var manufacturers = (await manufacturersResponse.Content.ReadFromJsonAsync<List<ManufacturerSummaryResponse>>())!;
         Assert.Contains(manufacturers, x => x.ManufacturerName == "Fleet OEM");
 
-        var vendorItemsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/vendor-items?partyId={vendor.PartyId}", token));
-        vendorItemsResponse.EnsureSuccessStatusCode();
-        var vendorItems = (await vendorItemsResponse.Content.ReadFromJsonAsync<List<VendorItemResponse>>())!;
-        Assert.Contains(vendorItems, x => x.PartId == part.PartId && x.PartyId == vendor.PartyId);
+        var supplierItemsResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/supplier-items?supplierId={supplier.SupplierId}", token));
+        supplierItemsResponse.EnsureSuccessStatusCode();
+        var supplierItems = (await supplierItemsResponse.Content.ReadFromJsonAsync<List<SupplierItemResponse>>())!;
+        Assert.Contains(supplierItems, x => x.PartId == part.PartId && x.SupplierId == supplier.SupplierId);
     }
 
     [Fact]
-    public async Task V1_quotes_alias_crud_and_submit_work()
+    public async Task V1_supplier_quote_crud_and_submit_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "quote-vendor-v1",
-            "Quote Vendor V1",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "quote-supplier-v1",
+            null,
+            null,
+            "Quote Supplier V1",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -896,8 +981,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var createRfqRequest = Authorized(HttpMethod.Post, "/api/v1/rfqs", token);
         createRfqRequest.Content = JsonContent.Create(new CreateRfqRequest(
             "rfq-qalias-v1",
-            "RFQ Quote Alias",
-            "Alias flow",
+            "RFQ Quote Workflow",
+            "Supplier quote flow",
             [new CreateRfqLineRequest(part.PartId, 5, "line")]));
         var createRfqResponse = await _supplyarrClient.SendAsync(createRfqRequest);
         createRfqResponse.EnsureSuccessStatusCode();
@@ -907,25 +992,23 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Post, $"/api/v1/rfqs/{rfq.RfqId}/submit", token));
         submitRfqResponse.EnsureSuccessStatusCode();
 
-        var inviteRequest = Authorized(HttpMethod.Post, $"/api/v1/rfqs/{rfq.RfqId}/invite-vendors", token);
-        inviteRequest.Content = JsonContent.Create(new InviteRfqVendorsRequest([vendor.PartyId]));
+        var inviteRequest = Authorized(HttpMethod.Post, $"/api/v1/rfqs/{rfq.RfqId}/invite-suppliers", token);
+        inviteRequest.Content = JsonContent.Create(new InviteRfqSuppliersRequest([supplier.SupplierId]));
         var inviteResponse = await _supplyarrClient.SendAsync(inviteRequest);
         inviteResponse.EnsureSuccessStatusCode();
 
-        var createQuoteRequest = Authorized(HttpMethod.Post, "/api/v1/quotes", token);
-        createQuoteRequest.Content = JsonContent.Create(new CreateQuoteRequest(
-            rfq.RfqId,
-            vendor.PartyId,
+        var createQuoteRequest = Authorized(HttpMethod.Post, $"/api/v1/rfqs/{rfq.RfqId}/quotes", token);
+        createQuoteRequest.Content = JsonContent.Create(new CreateSupplierQuoteRequest(
+            supplier.SupplierId,
             "Q-ALIAS-001",
             "USD",
             "Alias quote"));
         var createQuoteResponse = await _supplyarrClient.SendAsync(createQuoteRequest);
         createQuoteResponse.EnsureSuccessStatusCode();
-        var quote = (await createQuoteResponse.Content.ReadFromJsonAsync<VendorQuoteResponse>())!;
+        var quote = (await createQuoteResponse.Content.ReadFromJsonAsync<SupplierQuoteResponse>())!;
 
-        var upsertLineRequest = Authorized(HttpMethod.Put, $"/api/v1/quotes/{quote.VendorQuoteId}/lines", token);
-        upsertLineRequest.Content = JsonContent.Create(new UpsertQuoteLineRequest(
-            rfq.RfqId,
+        var upsertLineRequest = Authorized(HttpMethod.Put, $"/api/v1/rfqs/{rfq.RfqId}/quotes/{quote.SupplierQuoteId}/lines", token);
+        upsertLineRequest.Content = JsonContent.Create(new UpsertSupplierQuoteLineRequest(
             rfq.Lines[0].LineId,
             10m,
             5m,
@@ -935,14 +1018,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         upsertLineResponse.EnsureSuccessStatusCode();
 
         var submitQuoteResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Post, $"/api/v1/quotes/{quote.VendorQuoteId}/submit?rfqId={rfq.RfqId}", token));
+            Authorized(HttpMethod.Post, $"/api/v1/rfqs/{rfq.RfqId}/quotes/{quote.SupplierQuoteId}/submit", token));
         submitQuoteResponse.EnsureSuccessStatusCode();
 
         var listQuotesResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/quotes?rfqId={rfq.RfqId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/rfqs/{rfq.RfqId}", token));
         listQuotesResponse.EnsureSuccessStatusCode();
-        var quotes = (await listQuotesResponse.Content.ReadFromJsonAsync<List<VendorQuoteResponse>>())!;
-        Assert.Contains(quotes, x => x.VendorQuoteId == quote.VendorQuoteId);
+        var updatedRfq = (await listQuotesResponse.Content.ReadFromJsonAsync<RfqResponse>())!;
+        Assert.Contains(updatedRfq.Quotes, x => x.SupplierQuoteId == quote.SupplierQuoteId);
     }
 
     [Fact]
@@ -1047,16 +1130,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "cov-vendor-v1",
-            "Coverage Vendor V1",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "cov-supplier-v1",
+            null,
+            null,
+            "Coverage Supplier V1",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -1088,7 +1180,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var createDocumentRequest = Authorized(HttpMethod.Post, "/api/v1/documents", token);
         createDocumentRequest.Content = JsonContent.Create(new CreateSupplyDocumentRequest(
-            vendor.PartyId,
+            supplier.SupplierId,
             "COV-DOC-1",
             "w9",
             "Coverage Doc",
@@ -1102,10 +1194,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createDocumentResponse.EnsureSuccessStatusCode();
 
         var listDocumentsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/documents?partyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/documents?supplierId={supplier.SupplierId}", token));
         listDocumentsResponse.EnsureSuccessStatusCode();
         var documents = (await listDocumentsResponse.Content.ReadFromJsonAsync<List<SupplyDocumentItemResponse>>())!;
-        Assert.Contains(documents, x => x.PartyId == vendor.PartyId);
+        Assert.Contains(documents, x => x.SupplierId == supplier.SupplierId);
 
         var contractsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/contracts", token));
@@ -1113,49 +1205,18 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var contracts = (await contractsResponse.Content.ReadFromJsonAsync<List<ContractSnapshotItemResponse>>())!;
         Assert.NotNull(contracts);
 
-        var createContractRequest = Authorized(HttpMethod.Post, "/api/v1/contracts/records", token);
-        createContractRequest.Content = JsonContent.Create(new CreateSupplyContractRequest(
-            "COV-CONTRACT-1",
-            "price_agreement",
-            "Coverage Vendor Blanket Agreement",
-            vendor.PartyId,
-            DateTimeOffset.UtcNow.AddDays(-1),
-            DateTimeOffset.UtcNow.AddDays(90),
-            DateTimeOffset.UtcNow.AddDays(60),
-            "net_30",
-            "vendor_prepaid",
-            "one_year_replacement",
-            2500m,
-            "Ships stocked lines within two business days.",
-            "approved",
-            "active",
-            "Coverage test contract"));
-        var createContractResponse = await _supplyarrClient.SendAsync(createContractRequest);
-        createContractResponse.EnsureSuccessStatusCode();
-        Assert.StartsWith("/api/v1/contracts/records/", createContractResponse.Headers.Location?.ToString());
-        var contract = (await createContractResponse.Content.ReadFromJsonAsync<SupplyContractResponse>())!;
-        Assert.Equal(vendor.PartyId, contract.VendorPartyId);
-        Assert.Equal("net_30", contract.PaymentTerms);
-        Assert.Equal("active", contract.Status);
-
-        var listContractRecordsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/contracts/records?vendorPartyId={vendor.PartyId}&status=active", token));
-        listContractRecordsResponse.EnsureSuccessStatusCode();
-        var contractRecords = (await listContractRecordsResponse.Content.ReadFromJsonAsync<List<SupplyContractResponse>>())!;
-        Assert.Contains(contractRecords, x => x.ContractId == contract.ContractId && x.WarrantyTerms == "one_year_replacement");
-
         var importsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/imports", token));
         importsResponse.EnsureSuccessStatusCode();
         var imports = (await importsResponse.Content.ReadFromJsonAsync<List<ImportOptionResponse>>())!;
         Assert.Contains(imports, x => x.ImportType == "part_catalog_csv");
-        Assert.Contains(imports, x => x.ImportType == "vendor_catalog_csv");
+        Assert.Contains(imports, x => x.ImportType == "supplier_catalog_csv");
         Assert.Contains(imports, x => x.ImportType == "inventory_counts_csv");
         Assert.Contains(imports, x => x.ImportType == "price_list_csv");
         Assert.Contains(imports, x => x.ImportType == "lead_time_list_csv");
         Assert.Contains(imports, x => x.ImportType == "availability_list_csv");
         Assert.Contains(imports, x => x.ImportType == "contracts_csv");
-        Assert.Contains(imports, x => x.ImportType == "external_parties_csv");
+        Assert.Contains(imports, x => x.ImportType == "suppliers_csv");
         Assert.Contains(imports, x => x.ImportType == "contacts_csv");
         Assert.Contains(imports, x => x.ImportType == "open_purchase_orders_csv");
         Assert.Contains(imports, x => x.ImportType == "purchase_history_csv");
@@ -1167,7 +1228,6 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Contains(exports, x => x.ExportType == "supplier_summary_csv");
         Assert.Contains(exports, x => x.ExportType == "supplier_list_csv");
         Assert.Contains(exports, x => x.ExportType == "approved_supplier_list_csv");
-        Assert.Contains(exports, x => x.ExportType == "customer_list_csv");
         Assert.Contains(exports, x => x.ExportType == "parts_catalog_csv");
         Assert.Contains(exports, x => x.ExportType == "inventory_valuation_csv");
         Assert.Contains(exports, x => x.ExportType == "purchase_orders_csv");
@@ -1318,38 +1378,37 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task V1_entity_exports_return_vendor_customer_and_parts_catalog_csv()
+    public async Task V1_entity_exports_return_supplier_and_parts_catalog_csv()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "export-vendor-v1",
-            "Export Vendor",
-            "Export Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "export-supplier-v1",
             null,
-            "vendor export"));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Export Supplier",
+            "Export Supplier LLC",
+            null,
+            "supplier export",
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var approveVendorRequest = Authorized(
+        var approveSupplierRequest = Authorized(
             HttpMethod.Patch,
-            $"/api/v1/vendors/{vendor.PartyId}/approval-status",
+            $"/api/v1/suppliers/{supplier.SupplierId}/approval-status",
             token);
-        approveVendorRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
-        var approveVendorResponse = await _supplyarrClient.SendAsync(approveVendorRequest);
-        approveVendorResponse.EnsureSuccessStatusCode();
-
-        var createCustomerRequest = Authorized(HttpMethod.Post, "/api/customers", token);
-        createCustomerRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "export-customer-v1",
-            "Export Customer",
-            "Export Customer Inc",
-            null,
-            "customer export"));
-        var createCustomerResponse = await _supplyarrClient.SendAsync(createCustomerRequest);
-        createCustomerResponse.EnsureSuccessStatusCode();
+        approveSupplierRequest.Content = JsonContent.Create(new UpdateSupplierApprovalStatusRequest("approved"));
+        var approveSupplierResponse = await _supplyarrClient.SendAsync(approveSupplierRequest);
+        approveSupplierResponse.EnsureSuccessStatusCode();
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -1364,25 +1423,19 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
         createPartResponse.EnsureSuccessStatusCode();
 
-        var vendorExportResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/exports/vendors.csv", token));
-        vendorExportResponse.EnsureSuccessStatusCode();
-        Assert.Equal("text/csv", vendorExportResponse.Content.Headers.ContentType?.MediaType);
-        var vendorCsv = await vendorExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("partyKey,partyType,displayName", vendorCsv, StringComparison.Ordinal);
-        Assert.Contains("export-vendor-v1,vendor,Export Vendor", vendorCsv, StringComparison.Ordinal);
+        var supplierExportResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/suppliers.csv", token));
+        supplierExportResponse.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", supplierExportResponse.Content.Headers.ContentType?.MediaType);
+        var supplierCsv = await supplierExportResponse.Content.ReadAsStringAsync();
+        Assert.Contains("supplierKey,parentSupplierKey,displayName", supplierCsv, StringComparison.Ordinal);
+        Assert.Contains("export-supplier-v1,,Export Supplier", supplierCsv, StringComparison.Ordinal);
 
-        var approvedVendorExportResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/exports/approved-vendors.csv", token));
-        approvedVendorExportResponse.EnsureSuccessStatusCode();
-        var approvedVendorCsv = await approvedVendorExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("export-vendor-v1,vendor,Export Vendor", approvedVendorCsv, StringComparison.Ordinal);
-
-        var customerExportResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/exports/customers.csv", token));
-        customerExportResponse.EnsureSuccessStatusCode();
-        var customerCsv = await customerExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("export-customer-v1,customer,Export Customer", customerCsv, StringComparison.Ordinal);
+        var approvedSupplierExportResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/exports/approved-suppliers.csv", token));
+        approvedSupplierExportResponse.EnsureSuccessStatusCode();
+        var approvedSupplierCsv = await approvedSupplierExportResponse.Content.ReadAsStringAsync();
+        Assert.Contains("export-supplier-v1,,Export Supplier", approvedSupplierCsv, StringComparison.Ordinal);
 
         var partsExportResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/parts-catalog.csv", token));
@@ -1397,20 +1450,31 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "export-valued-vendor-v1",
-            "Export Valued Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "export-valued-supplier-v1",
+            null,
+            null,
+            "Export Valued Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var documentRequest = Authorized(HttpMethod.Post, "/api/v1/vendor-documents", token);
-        documentRequest.Content = JsonContent.Create(new RegisterVendorDocumentRequest(
-            vendor.PartyId,
+        var documentRequest = Authorized(
+            HttpMethod.Post,
+            $"/api/v1/suppliers/{supplier.SupplierId}/compliance-documents",
+            token);
+        documentRequest.Content = JsonContent.Create(new SupplierComplianceDocumentRegistrationRequest(
             "EXPORT-DOC-1",
             "insurance",
             "Export Insurance",
@@ -1437,14 +1501,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var vendorLinkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        vendorLinkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(vendor.PartyId, "VAL-1", true));
-        var vendorLinkResponse = await _supplyarrClient.SendAsync(vendorLinkRequest);
-        vendorLinkResponse.EnsureSuccessStatusCode();
-        var link = (await vendorLinkResponse.Content.ReadFromJsonAsync<PartVendorLinkResponse>())!;
+        var supplierLinkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        supplierLinkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(null, supplier.SupplierId, "VAL-1", true));
+        var supplierLinkResponse = await _supplyarrClient.SendAsync(supplierLinkRequest);
+        supplierLinkResponse.EnsureSuccessStatusCode();
+        var link = (await supplierLinkResponse.Content.ReadFromJsonAsync<PartSupplierLinkResponse>())!;
 
-        var priceRequest = Authorized(HttpMethod.Put, $"/api/parts/{part.PartId}/vendor-links/{link.LinkId}/catalog-price", token);
-        priceRequest.Content = JsonContent.Create(new UpsertPartVendorLinkCatalogPriceRequest(15.25m, "USD", 1m));
+        var priceRequest = Authorized(HttpMethod.Put, $"/api/parts/{part.PartId}/supplier-links/{link.LinkId}/catalog-price", token);
+        priceRequest.Content = JsonContent.Create(new UpsertPartSupplierLinkCatalogPriceRequest(15.25m, "USD", 1m));
         var priceResponse = await _supplyarrClient.SendAsync(priceRequest);
         priceResponse.EnsureSuccessStatusCode();
 
@@ -1482,88 +1546,106 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/exports/supplier-documents.csv", token));
         documentsResponse.EnsureSuccessStatusCode();
         var documentsCsv = await documentsResponse.Content.ReadAsStringAsync();
-        Assert.Contains("partyKey,partyType,partyDisplayName,documentKey", documentsCsv, StringComparison.Ordinal);
-        Assert.Contains("export-valued-vendor-v1,vendor,Export Valued Vendor,EXPORT-DOC-1", documentsCsv, StringComparison.Ordinal);
+        Assert.Contains("supplierKey,parentSupplierKey,supplierDisplayName,supplierUnitKind,documentKey", documentsCsv, StringComparison.Ordinal);
+        Assert.Contains("export-valued-supplier-v1,,Export Valued Supplier,identity,EXPORT-DOC-1", documentsCsv, StringComparison.Ordinal);
 
         var spendResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/spend.csv", token));
         spendResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", spendResponse.Content.Headers.ContentType?.MediaType);
         var spendCsv = await spendResponse.Content.ReadAsStringAsync();
-        Assert.Contains("orderKey,status,requestKey,vendorPartyKey", spendCsv, StringComparison.Ordinal);
+        Assert.Contains("orderKey,status,requestKey,supplierKey", spendCsv, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task V1_vendor_documents_csv_import_preview_and_commit_register_documents()
+    public async Task V1_supplier_documents_csv_import_preview_and_commit_register_documents()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-doc-vendor-v1",
-            "CSV Document Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-doc-supplier-v1",
+            null,
+            null,
+            "CSV Document Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var csv = string.Join('\n', new[]
         {
-            "party_key,document_key,document_type_key,title,effective_at,expires_at,file_name,content_type,size_bytes,storage_uri",
-            "csv-doc-vendor-v1,DOC-CSV-1,w9,Imported W9,2026-01-01,2027-01-01,w9.pdf,application/pdf,2048,s3://supplyarr/documents/w9.pdf"
+            "supplier_key,document_key,document_type_key,title,effective_at,expires_at,file_name,content_type,size_bytes,storage_uri",
+            "csv-doc-supplier-v1,DOC-CSV-1,w9,Imported W9,2026-01-01,2027-01-01,w9.pdf,application/pdf,2048,s3://supplyarr/documents/w9.pdf"
         });
 
-        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/vendor-documents-csv", token);
-        previewRequest.Content = JsonContent.Create(new VendorDocumentsCsvImportRequest(csv, DryRun: true));
+        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/supplier-documents-csv", token);
+        previewRequest.Content = JsonContent.Create(new SupplierDocumentsCsvImportRequest(csv, DryRun: true));
         var previewResponse = await _supplyarrClient.SendAsync(previewRequest);
         previewResponse.EnsureSuccessStatusCode();
-        var preview = (await previewResponse.Content.ReadFromJsonAsync<VendorDocumentsCsvImportResponse>())!;
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<SupplierDocumentsCsvImportResponse>())!;
         Assert.True(preview.DryRun);
         Assert.True(preview.Succeeded);
         Assert.Equal(1, preview.RowsRead);
         Assert.Equal(1, preview.DocumentsAccepted);
         Assert.Equal(0, preview.DocumentsCreated);
 
-        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/vendor-documents-csv", token);
-        commitRequest.Content = JsonContent.Create(new VendorDocumentsCsvImportRequest(csv, DryRun: false));
+        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/supplier-documents-csv", token);
+        commitRequest.Content = JsonContent.Create(new SupplierDocumentsCsvImportRequest(csv, DryRun: false));
         var commitResponse = await _supplyarrClient.SendAsync(commitRequest);
         commitResponse.EnsureSuccessStatusCode();
-        var commit = (await commitResponse.Content.ReadFromJsonAsync<VendorDocumentsCsvImportResponse>())!;
+        var commit = (await commitResponse.Content.ReadFromJsonAsync<SupplierDocumentsCsvImportResponse>())!;
         Assert.False(commit.DryRun);
         Assert.True(commit.Succeeded);
         Assert.Equal(1, commit.DocumentsCreated);
 
         var documentsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/documents?partyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/documents?supplierId={supplier.SupplierId}", token));
         documentsResponse.EnsureSuccessStatusCode();
         var documents = (await documentsResponse.Content.ReadFromJsonAsync<List<SupplyDocumentItemResponse>>())!;
         Assert.Contains(documents, x => x.DocumentKey == "DOC-CSV-1" && x.DocumentTypeKey == "w9");
     }
 
     [Fact]
-    public async Task V1_vendor_catalog_csv_import_preview_and_commit_creates_vendor_link_with_catalog_facts()
+    public async Task V1_supplier_catalog_csv_import_preview_and_commit_creates_supplier_link_with_catalog_facts()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-vendor-catalog-vendor-v1",
-            "CSV Vendor Catalog Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-supplier-catalog-supplier-v1",
+            null,
+            null,
+            "CSV Supplier Catalog Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
-            "csv-vendor-catalog-part-v1",
+            "csv-supplier-catalog-part-v1",
             null,
-            "CSV Vendor Catalog Part",
-            "Imported vendor catalog part",
+            "CSV Supplier Catalog Part",
+            "Imported supplier catalog part",
             "general",
             "each",
             string.Empty,
@@ -1574,26 +1656,26 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "vendor_party_key,part_key,vendor_part_number,is_preferred,catalog_unit_price,catalog_currency_code,catalog_minimum_order_quantity,catalog_lead_time_days,catalog_quantity_available,catalog_availability_status",
-            "csv-vendor-catalog-vendor-v1,csv-vendor-catalog-part-v1,CSV-VENDOR-PART-1,true,12.50,USD,2,5,18,in_stock"
+            "supplier_key,part_key,supplier_part_number,is_preferred,catalog_unit_price,catalog_currency_code,catalog_minimum_order_quantity,catalog_lead_time_days,catalog_quantity_available,catalog_availability_status",
+            "csv-supplier-catalog-supplier-v1,csv-supplier-catalog-part-v1,CSV-SUPPLIER-PART-1,true,12.50,USD,2,5,18,in_stock"
         });
 
-        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/vendor-catalog-csv", token);
-        previewRequest.Content = JsonContent.Create(new VendorCatalogCsvImportRequest(csv, DryRun: true));
+        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/supplier-catalog-csv", token);
+        previewRequest.Content = JsonContent.Create(new SupplierCatalogCsvImportRequest(csv, DryRun: true));
         var previewResponse = await _supplyarrClient.SendAsync(previewRequest);
         previewResponse.EnsureSuccessStatusCode();
-        var preview = (await previewResponse.Content.ReadFromJsonAsync<VendorCatalogCsvImportResponse>())!;
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<SupplierCatalogCsvImportResponse>())!;
         Assert.True(preview.DryRun);
         Assert.True(preview.Succeeded);
         Assert.Equal(1, preview.RowsRead);
         Assert.Equal(1, preview.LinksAccepted);
         Assert.Equal(0, preview.LinksCreated);
 
-        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/vendor-catalog-csv", token);
-        commitRequest.Content = JsonContent.Create(new VendorCatalogCsvImportRequest(csv, DryRun: false));
+        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/supplier-catalog-csv", token);
+        commitRequest.Content = JsonContent.Create(new SupplierCatalogCsvImportRequest(csv, DryRun: false));
         var commitResponse = await _supplyarrClient.SendAsync(commitRequest);
         commitResponse.EnsureSuccessStatusCode();
-        var commit = (await commitResponse.Content.ReadFromJsonAsync<VendorCatalogCsvImportResponse>())!;
+        var commit = (await commitResponse.Content.ReadFromJsonAsync<SupplierCatalogCsvImportResponse>())!;
         Assert.False(commit.DryRun);
         Assert.True(commit.Succeeded);
         Assert.Equal(1, commit.LinksCreated);
@@ -1603,9 +1685,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         partResponse.EnsureSuccessStatusCode();
         var importedPart = (await partResponse.Content.ReadFromJsonAsync<PartResponse>())!;
         Assert.Contains(
-            importedPart.VendorLinks,
-            x => x.PartyId == vendor.PartyId
-                && x.VendorPartNumber == "CSV-VENDOR-PART-1"
+            importedPart.SupplierLinks,
+            x => x.SupplierId == supplier.SupplierId
+                && x.SupplierPartNumber == "CSV-SUPPLIER-PART-1"
                 && x.IsPreferred
                 && x.CatalogUnitPrice == 12.50m
                 && x.CatalogMinimumOrderQuantity == 2m
@@ -1690,16 +1772,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-price-vendor-v1",
-            "CSV Price Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-price-supplier-v1",
+            null,
+            null,
+            "CSV Price Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -1715,9 +1806,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
             "CSV-VP-1",
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
@@ -1725,8 +1817,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "vendor_party_key,part_key,snapshot_key,unit_price,currency_code,minimum_order_quantity,effective_from,source,notes",
-            "csv-price-vendor-v1,csv-price-part-v1,CSV-PRICE-1,42.75,USD,5,2026-01-01,vendor_feed,Imported vendor price list"
+            "supplier_key,part_key,snapshot_key,unit_price,currency_code,minimum_order_quantity,effective_from,source,notes",
+            "csv-price-supplier-v1,csv-price-part-v1,CSV-PRICE-1,42.75,USD,5,2026-01-01,supplier_feed,Imported supplier price list"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/price-list-csv", token);
@@ -1750,7 +1842,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(1, commit.PricesCreated);
 
         var pricesResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/pricing-snapshots?partId={part.PartId}&vendorPartyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/pricing-snapshots?partId={part.PartId}&supplierId={supplier.SupplierId}", token));
         pricesResponse.EnsureSuccessStatusCode();
         var prices = (await pricesResponse.Content.ReadFromJsonAsync<List<PricingSnapshotResponse>>())!;
         Assert.Contains(prices, x => x.SnapshotKey == "CSV-PRICE-1" && x.UnitPrice == 42.75m);
@@ -1761,16 +1853,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-lead-vendor-v1",
-            "CSV Lead Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-lead-supplier-v1",
+            null,
+            null,
+            "CSV Lead Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -1786,9 +1887,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
             "CSV-LT-1",
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
@@ -1796,8 +1898,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "vendor_party_key,part_key,snapshot_key,lead_time_days,effective_from,source,notes",
-            "csv-lead-vendor-v1,csv-lead-part-v1,CSV-LEAD-1,9,2026-01-01,manual,Imported lead-time list"
+            "supplier_key,part_key,snapshot_key,lead_time_days,effective_from,source,notes",
+            "csv-lead-supplier-v1,csv-lead-part-v1,CSV-LEAD-1,9,2026-01-01,manual,Imported lead-time list"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/lead-time-list-csv", token);
@@ -1821,7 +1923,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(1, commit.LeadTimesCreated);
 
         var leadTimesResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/lead-time-snapshots?partId={part.PartId}&vendorPartyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/lead-time-snapshots?partId={part.PartId}&supplierId={supplier.SupplierId}", token));
         leadTimesResponse.EnsureSuccessStatusCode();
         var leadTimes = (await leadTimesResponse.Content.ReadFromJsonAsync<List<LeadTimeSnapshotResponse>>())!;
         Assert.Contains(leadTimes, x => x.SnapshotKey == "CSV-LEAD-1" && x.LeadTimeDays == 9);
@@ -1832,16 +1934,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-avail-vendor-v1",
-            "CSV Availability Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-avail-supplier-v1",
+            null,
+            null,
+            "CSV Availability Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -1857,9 +1968,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
             "CSV-AVL-1",
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
@@ -1867,8 +1979,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "vendor_party_key,part_key,snapshot_key,quantity_available,availability_status,effective_from,source,notes",
-            "csv-avail-vendor-v1,csv-avail-part-v1,CSV-AVAIL-1,14,limited,2026-01-01,vendor_feed,Imported availability list"
+            "supplier_key,part_key,snapshot_key,quantity_available,availability_status,effective_from,source,notes",
+            "csv-avail-supplier-v1,csv-avail-part-v1,CSV-AVAIL-1,14,limited,2026-01-01,supplier_feed,Imported availability list"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/availability-list-csv", token);
@@ -1892,7 +2004,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(1, commit.AvailabilityCreated);
 
         var availabilityResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/availability-snapshots?partId={part.PartId}&vendorPartyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/availability-snapshots?partId={part.PartId}&supplierId={supplier.SupplierId}", token));
         availabilityResponse.EnsureSuccessStatusCode();
         var availability = (await availabilityResponse.Content.ReadFromJsonAsync<List<AvailabilitySnapshotResponse>>())!;
         Assert.Contains(availability, x => x.SnapshotKey == "CSV-AVAIL-1" && x.QuantityAvailable == 14m && x.AvailabilityStatus == "limited");
@@ -1903,21 +2015,30 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-contract-vendor-v1",
-            "CSV Contract Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-contract-supplier-v1",
+            null,
+            null,
+            "CSV Contract Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var csv = string.Join('\n', new[]
         {
-            "vendor_party_key,contract_key,contract_type,title,effective_at,expires_at,renewal_at,payment_terms,freight_terms,warranty_terms,minimum_spend,service_level_agreement,approval_status,status,notes",
-            "csv-contract-vendor-v1,CSV-CONTRACT-1,price_agreement,CSV Contract Import,2026-01-01,2027-01-01,2026-10-01,net_30,vendor_prepaid,one_year,2500,ships stocked parts within two business days,approved,active,Imported contract"
+            "supplier_key,contract_key,contract_type,title,effective_at,expires_at,renewal_at,payment_terms,freight_terms,warranty_terms,minimum_spend,service_level_agreement,approval_status,status,notes",
+            "csv-contract-supplier-v1,CSV-CONTRACT-1,price_agreement,CSV Contract Import,2026-01-01,2027-01-01,2026-10-01,net_30,supplier_prepaid,one_year,2500,ships stocked parts within two business days,approved,active,Imported contract"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/contracts-csv", token);
@@ -1941,76 +2062,80 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(1, commit.ContractsCreated);
 
         var contractsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/contracts/records?vendorPartyId={vendor.PartyId}&status=active", token));
+            Authorized(HttpMethod.Get, $"/api/v1/contracts/records?supplierId={supplier.SupplierId}&status=active", token));
         contractsResponse.EnsureSuccessStatusCode();
         var contracts = (await contractsResponse.Content.ReadFromJsonAsync<List<SupplyContractResponse>>())!;
         Assert.Contains(contracts, x => x.ContractKey == "CSV-CONTRACT-1" && x.MinimumSpend == 2500m);
     }
 
     [Fact]
-    public async Task V1_external_parties_csv_import_preview_and_commit_creates_vendors_and_customers()
+    public async Task V1_suppliers_csv_import_preview_and_commit_creates_parent_and_sub_unit_suppliers()
     {
         var token = await RedeemSupplyArrTokenAsync();
         var csv = string.Join('\n', new[]
         {
-            "party_key,party_type,display_name,legal_name,tax_identifier,approval_status,status,notes",
-            "csv-vendor-import-v1,vendor,CSV Vendor Import,CSV Vendor LLC,12-3456789,approved,active,Imported vendor",
-            "csv-customer-import-v1,customer,CSV Customer Import,CSV Customer Inc,,pending,active,Imported customer"
+            "supplier_key,parent_supplier_key,unit_kind,display_name,legal_name,tax_identifier,approval_status,status,notes,service_types",
+            "csv-supplier-import-parent-v1,,identity,CSV Supplier Parent,CSV Supplier Parent LLC,12-3456789,approved,active,Imported supplier identity,products|parts",
+            "csv-supplier-import-unit-v1,csv-supplier-import-parent-v1,sub_unit,CSV Supplier Unit,CSV Supplier Unit LLC,,pending,active,Imported supplier sub unit,parts|maintenance"
         });
 
-        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/external-parties-csv", token);
-        previewRequest.Content = JsonContent.Create(new ExternalPartiesCsvImportRequest(csv, DryRun: true));
+        var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/suppliers-csv", token);
+        previewRequest.Content = JsonContent.Create(new SuppliersCsvImportRequest(csv, DryRun: true));
         var previewResponse = await _supplyarrClient.SendAsync(previewRequest);
         previewResponse.EnsureSuccessStatusCode();
-        var preview = (await previewResponse.Content.ReadFromJsonAsync<ExternalPartiesCsvImportResponse>())!;
+        var preview = (await previewResponse.Content.ReadFromJsonAsync<SuppliersCsvImportResponse>())!;
         Assert.True(preview.DryRun);
         Assert.True(preview.Succeeded);
         Assert.Equal(2, preview.RowsRead);
-        Assert.Equal(2, preview.PartiesAccepted);
-        Assert.Equal(0, preview.PartiesCreated);
+        Assert.Equal(2, preview.SuppliersAccepted);
+        Assert.Equal(0, preview.SuppliersCreated);
 
-        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/external-parties-csv", token);
-        commitRequest.Content = JsonContent.Create(new ExternalPartiesCsvImportRequest(csv, DryRun: false));
+        var commitRequest = Authorized(HttpMethod.Post, "/api/v1/imports/suppliers-csv", token);
+        commitRequest.Content = JsonContent.Create(new SuppliersCsvImportRequest(csv, DryRun: false));
         var commitResponse = await _supplyarrClient.SendAsync(commitRequest);
         commitResponse.EnsureSuccessStatusCode();
-        var commit = (await commitResponse.Content.ReadFromJsonAsync<ExternalPartiesCsvImportResponse>())!;
+        var commit = (await commitResponse.Content.ReadFromJsonAsync<SuppliersCsvImportResponse>())!;
         Assert.False(commit.DryRun);
         Assert.True(commit.Succeeded);
-        Assert.Equal(2, commit.PartiesCreated);
+        Assert.Equal(2, commit.SuppliersCreated);
 
-        var vendorsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/vendors", token));
-        vendorsResponse.EnsureSuccessStatusCode();
-        var vendors = (await vendorsResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(vendors, x => x.PartyKey == "csv-vendor-import-v1" && x.ApprovalStatus == "approved");
-
-        var customersResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/customers", token));
-        customersResponse.EnsureSuccessStatusCode();
-        var customers = (await customersResponse.Content.ReadFromJsonAsync<List<ExternalPartyResponse>>())!;
-        Assert.Contains(customers, x => x.PartyKey == "csv-customer-import-v1");
+        var suppliersResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/suppliers", token));
+        suppliersResponse.EnsureSuccessStatusCode();
+        var suppliers = (await suppliersResponse.Content.ReadFromJsonAsync<List<SupplierResponse>>())!;
+        Assert.Contains(suppliers, x => x.SupplierKey == "csv-supplier-import-parent-v1" && x.ApprovalStatus == "approved" && x.ServiceTypes.SequenceEqual(["products", "parts"]));
+        Assert.Contains(suppliers, x => x.SupplierKey == "csv-supplier-import-unit-v1" && x.ParentSupplierDisplayName == "CSV Supplier Parent" && x.ServiceTypes.SequenceEqual(["parts", "maintenance"]));
     }
 
     [Fact]
-    public async Task V1_contacts_csv_import_preview_and_commit_creates_party_contacts()
+    public async Task V1_contacts_csv_import_preview_and_commit_creates_supplier_contacts()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-contact-vendor-v1",
-            "CSV Contact Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-contact-supplier-v1",
+            null,
+            null,
+            "CSV Contact Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplierRef = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var csv = string.Join('\n', new[]
         {
-            "party_key,contact_name,email,phone,role_label,is_primary",
-            "csv-contact-vendor-v1,CSV Contact,contact@csvvendor.example,555-0101,Sales,true"
+            "supplier_key,contact_name,email,phone,role_label,is_primary",
+            "csv-contact-supplier-v1,CSV Contact,contact@csvsupplier.example,555-0101,Sales,true"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/contacts-csv", token);
@@ -2034,10 +2159,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Equal(1, commit.ContactsCreated);
 
         var contactsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/contacts?partyId={vendor.PartyId}", token));
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplierRef.SupplierId}", token));
         contactsResponse.EnsureSuccessStatusCode();
-        var contacts = (await contactsResponse.Content.ReadFromJsonAsync<List<PartyContactResponse>>())!;
-        Assert.Contains(contacts, x => x.Email == "contact@csvvendor.example" && x.IsPrimary);
+        var supplier = (await contactsResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        Assert.Contains(supplier.Contacts, x => x.Email == "contact@csvsupplier.example" && x.IsPrimary);
     }
 
     [Fact]
@@ -2045,16 +2170,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-open-po-vendor-v1",
-            "CSV Open PO Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-open-po-supplier-v1",
+            null,
+            null,
+            "CSV Open PO Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -2071,8 +2205,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "order_key,request_key,vendor_party_key,part_key,quantity_ordered,title,line_notes,order_notes",
-            "csv-open-po-1,csv-open-pr-1,csv-open-po-vendor-v1,csv-open-po-part-v1,7,CSV Open PO,imported line,imported open purchase order"
+            "order_key,request_key,supplier_key,part_key,quantity_ordered,title,line_notes,order_notes",
+            "csv-open-po-1,csv-open-pr-1,csv-open-po-supplier-v1,csv-open-po-part-v1,7,CSV Open PO,imported line,imported open purchase order"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/open-purchase-orders-csv", token);
@@ -2103,7 +2237,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Contains(
             purchaseOrders,
             x => x.OrderKey == "csv-open-po-1"
-                && x.VendorPartyId == vendor.PartyId
+                && x.SupplierId == supplier.SupplierId
                 && x.Lines.Count == 1
                 && x.Lines[0].QuantityOrdered == 7m);
     }
@@ -2113,15 +2247,24 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "csv-history-vendor-v1",
-            "CSV History Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "csv-history-supplier-v1",
+            null,
+            null,
+            "CSV History Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -2157,8 +2300,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var csv = string.Join('\n', new[]
         {
-            "order_key,request_key,receipt_key,vendor_party_key,part_key,quantity_ordered,quantity_received,inventory_bin_key,title,line_notes,order_notes,receipt_notes",
-            "csv-history-po-1,csv-history-pr-1,csv-history-rcpt-1,csv-history-vendor-v1,csv-history-part-v1,4,4,csv-history-bin-v1,CSV Purchase History,imported historical line,imported historical order,imported historical receipt"
+            "order_key,request_key,receipt_key,supplier_key,part_key,quantity_ordered,quantity_received,inventory_bin_key,title,line_notes,order_notes,receipt_notes",
+            "csv-history-po-1,csv-history-pr-1,csv-history-rcpt-1,csv-history-supplier-v1,csv-history-part-v1,4,4,csv-history-bin-v1,CSV Purchase History,imported historical line,imported historical order,imported historical receipt"
         });
 
         var previewRequest = Authorized(HttpMethod.Post, "/api/v1/imports/purchase-history-csv", token);
@@ -2195,41 +2338,30 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                 && x.Lines[0].QuantityReceived == 4m
                 && x.Lines[0].QuantityRemaining == 0m);
 
-        var receiptsResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/receipts", token));
-        receiptsResponse.EnsureSuccessStatusCode();
-        var receipts = (await receiptsResponse.Content.ReadFromJsonAsync<List<ReceivingReceiptResponse>>())!;
-        Assert.Contains(
-            receipts,
-            x => x.ReceiptKey == "csv-history-rcpt-1"
-                && x.Status == "posted"
-                && x.Lines.Count == 1
-                && x.Lines[0].QuantityReceived == 4m);
-
         var purchaseOrdersExportResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/purchase-orders.csv?status=issued", token));
         purchaseOrdersExportResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", purchaseOrdersExportResponse.Content.Headers.ContentType?.MediaType);
         var purchaseOrdersCsv = await purchaseOrdersExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("orderKey,status,requestKey,vendorPartyKey", purchaseOrdersCsv, StringComparison.Ordinal);
-        Assert.Contains("csv-history-po-1,issued,csv-history-pr-1,csv-history-vendor-v1", purchaseOrdersCsv, StringComparison.Ordinal);
+        Assert.Contains("orderKey,status,requestKey,supplierKey", purchaseOrdersCsv, StringComparison.Ordinal);
+        Assert.Contains("csv-history-po-1,issued,csv-history-pr-1,csv-history-supplier-v1", purchaseOrdersCsv, StringComparison.Ordinal);
 
         var receiptsExportResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/receipts.csv?status=posted", token));
         receiptsExportResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", receiptsExportResponse.Content.Headers.ContentType?.MediaType);
         var receiptsCsv = await receiptsExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("receiptKey,status,orderKey,vendorPartyKey", receiptsCsv, StringComparison.Ordinal);
-        Assert.Contains("csv-history-rcpt-1,posted,csv-history-po-1,csv-history-vendor-v1", receiptsCsv, StringComparison.Ordinal);
+        Assert.Contains("receiptKey,status,orderKey,supplierKey", receiptsCsv, StringComparison.Ordinal);
+        Assert.Contains("csv-history-rcpt-1,posted,csv-history-po-1,csv-history-supplier-v1", receiptsCsv, StringComparison.Ordinal);
 
         var invoiceSupportExportResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/exports/invoice-support.csv?status=posted", token));
         invoiceSupportExportResponse.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", invoiceSupportExportResponse.Content.Headers.ContentType?.MediaType);
         var invoiceSupportCsv = await invoiceSupportExportResponse.Content.ReadAsStringAsync();
-        Assert.Contains("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,vendorPartyKey", invoiceSupportCsv, StringComparison.Ordinal);
+        Assert.Contains("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,supplierKey", invoiceSupportCsv, StringComparison.Ordinal);
         Assert.Contains("csv-history-rcpt-1,posted,", invoiceSupportCsv, StringComparison.Ordinal);
-        Assert.Contains(",csv-history-po-1,issued,csv-history-pr-1,csv-history-vendor-v1", invoiceSupportCsv, StringComparison.Ordinal);
+        Assert.Contains(",csv-history-po-1,issued,csv-history-pr-1,csv-history-supplier-v1", invoiceSupportCsv, StringComparison.Ordinal);
 
         var importedPurchaseOrder = purchaseOrders.Single(x => x.OrderKey == "csv-history-po-1");
         var evidencePacketResponse = await _supplyarrClient.SendAsync(
@@ -2619,7 +2751,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var listReturnsRequest = Authorized(HttpMethod.Get, "/api/v1/returns", token);
         var listReturnsResponse = await _supplyarrClient.SendAsync(listReturnsRequest);
         listReturnsResponse.EnsureSuccessStatusCode();
-        var returns = await listReturnsResponse.Content.ReadFromJsonAsync<List<VendorReturnResponse>>();
+        var returns = await listReturnsResponse.Content.ReadFromJsonAsync<List<SupplierReturnResponse>>();
         Assert.NotNull(returns);
     }
 
@@ -2653,16 +2785,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"wc-fact-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{keyPrefix}-vendor",
-            "Warranty Fact Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{keyPrefix}-supplier",
+            null,
+            null,
+            "Warranty Fact Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["maintenance"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -2679,10 +2820,11 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
         var createClaimRequest = Authorized(HttpMethod.Post, "/api/warranty-claims", token);
-        createClaimRequest.Content = JsonContent.Create(new CreateWarrantyClaimRequest(
+        createClaimRequest.Content = JsonContent.Create(new CreateSupplierWarrantyClaimRequest(
             $"{keyPrefix}-claim",
             WarrantyClaimTypes.Defective,
-            vendor.PartyId,
+            supplier.SupplierId,
+            supplier.SupplierId,
             part.PartId,
             1m,
             "Failed acceptance inspection.",
@@ -2699,7 +2841,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             HttpMethod.Post,
             $"/api/warranty-claims/{claim.WarrantyClaimId}/submit",
             token);
-        submitClaimRequest.Content = JsonContent.Create(new SubmitWarrantyClaimRequest("Filed with vendor."));
+        submitClaimRequest.Content = JsonContent.Create(new SubmitWarrantyClaimRequest("Filed with supplier."));
         var submitClaimResponse = await _supplyarrClient.SendAsync(submitClaimRequest);
         submitClaimResponse.EnsureSuccessStatusCode();
 
@@ -2938,24 +3080,33 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Supplier_incidents_v1_aliases_work()
+    public async Task Supplier_incidents_v1_supplier_routes_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "incident-vendor",
-            "Incident Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "incident-supplier",
+            null,
+            null,
+            "Incident Supplier",
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            string.Empty,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/v1/supplier-incidents", token);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            vendor.PartyId,
+            supplier.SupplierId,
             "incident-001",
             "Shipment quality issue",
             "Observed defects in received batch",
@@ -2969,15 +3120,15 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var createIncidentResponse = await _supplyarrClient.SendAsync(createIncidentRequest);
         createIncidentResponse.EnsureSuccessStatusCode();
         var incident = (await createIncidentResponse.Content.ReadFromJsonAsync<SupplierIncidentResponse>())!;
-        Assert.Equal(vendor.PartyId, incident.ExternalPartyId);
+        Assert.Equal(supplier.SupplierId, incident.SupplierId);
 
         var listResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/supplier-incidents", token));
         listResponse.EnsureSuccessStatusCode();
 
-        var byPartyResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/supplier-incidents", token));
-        byPartyResponse.EnsureSuccessStatusCode();
+        var bySupplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/supplier-incidents", token));
+        bySupplierResponse.EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -2986,20 +3137,29 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"si-fact-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{keyPrefix}-vendor",
-            "Supplier Incident Fact Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{keyPrefix}-supplier",
+            null,
+            null,
+            "Supplier Incident Fact Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createIncidentRequest = Authorized(HttpMethod.Post, "/api/v1/supplier-incidents", token);
         createIncidentRequest.Content = JsonContent.Create(new CreateSupplierIncidentRequest(
-            vendor.PartyId,
+            supplier.SupplierId,
             $"{keyPrefix}-incident",
             "Supplier incident fact",
             "Supplier shipment triggered a compliance incident.",
@@ -3035,46 +3195,55 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Vendor_restrictions_v1_aliases_work()
+    public async Task Supplier_restrictions_v1_routes_work()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "restricted-vendor",
-            "Restricted Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "restricted-supplier",
+            null,
+            null,
+            "Restricted Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createRestrictionRequest = Authorized(
             HttpMethod.Post,
-            $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions",
+            $"/api/v1/suppliers/{supplier.SupplierId}/restrictions",
             token);
-        createRestrictionRequest.Content = JsonContent.Create(new CreateVendorRestrictionRequest(
-            "hold-vendor",
+        createRestrictionRequest.Content = JsonContent.Create(new CreateSupplierRestrictionRequest(
+            "hold-supplier",
             ["purchase_orders"],
             "Open compliance hold",
             null,
             null));
         var createRestrictionResponse = await _supplyarrClient.SendAsync(createRestrictionRequest);
         createRestrictionResponse.EnsureSuccessStatusCode();
-        var restriction = (await createRestrictionResponse.Content.ReadFromJsonAsync<VendorRestrictionResponse>())!;
-        Assert.Equal(vendor.PartyId, restriction.ExternalPartyId);
+        var restriction = (await createRestrictionResponse.Content.ReadFromJsonAsync<SupplierRestrictionResponse>())!;
+        Assert.Equal(supplier.SupplierId, restriction.SupplierId);
 
         var listResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/vendor-restrictions", token));
+            Authorized(HttpMethod.Get, "/api/v1/supplier-restrictions", token));
         listResponse.EnsureSuccessStatusCode();
 
-        var byPartyResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions", token));
-        byPartyResponse.EnsureSuccessStatusCode();
+        var bySupplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/restrictions", token));
+        bySupplierResponse.EnsureSuccessStatusCode();
 
         var enforcementResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, $"/api/v1/parties/{vendor.PartyId}/vendor-restrictions/enforcement", token));
+            Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/restrictions/enforcement", token));
         enforcementResponse.EnsureSuccessStatusCode();
     }
 
@@ -3111,13 +3280,13 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             Authorized(HttpMethod.Get, "/api/v1/supplier-onboarding/pending", token));
         pendingResponse.EnsureSuccessStatusCode();
 
-        var partyDocsResponse = await _supplyarrClient.SendAsync(
+        var supplierDocsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, $"/api/v1/suppliers/{supplier.SupplierId}/compliance-documents", token));
-        partyDocsResponse.EnsureSuccessStatusCode();
+        supplierDocsResponse.EnsureSuccessStatusCode();
     }
 
     [Fact]
-    public async Task Supplier_onboarding_approval_publishes_vendor_approval_facts_to_compliancecore()
+    public async Task Supplier_onboarding_approval_publishes_supplier_approval_facts_to_compliancecore()
     {
         var token = await RedeemSupplyArrTokenAsync();
 
@@ -3202,25 +3371,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.True(_complianceCoreHandler.FactIngestCount >= 1);
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorApprovalStatus
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.SupplierApprovalStatus
                 && x.StringValue == "approved"
                 && x.SourceEventKind == IntegrationOutboxEventKinds.SupplierOnboardingApproved);
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorIsApproved
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.SupplierIsApproved
                 && x.BooleanValue == true
-                && x.ScopeKey == $"vendor:{supplier.SupplierId:D}".ToLowerInvariant());
+                && x.ScopeKey == $"supplier:{supplier.SupplierId:D}".ToLowerInvariant());
     }
 
     [Fact]
-    public async Task Vendor_document_approval_publishes_document_status_facts_to_compliancecore()
+    public async Task Supplier_document_approval_publishes_document_status_facts_to_compliancecore()
     {
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"doc-fact-{Guid.NewGuid():N}"[..18];
 
         var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
         createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
-            $"{keyPrefix}-vendor",
+            $"{keyPrefix}-supplier",
             null,
             null,
             "Document Fact Supplier",
@@ -3266,24 +3435,24 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         using var scope = _supplyarrFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var outboxEvent = await db.IntegrationOutboxEvents.SingleAsync(
-            x => x.EventKind == IntegrationOutboxEventKinds.PartyComplianceDocumentApproved
+            x => x.EventKind == IntegrationOutboxEventKinds.SupplierComplianceDocumentApproved
                 && x.RelatedEntityId == document.DocumentId);
         var publisher = scope.ServiceProvider.GetRequiredService<ComplianceCoreFactPublisherService>();
         await publisher.TryPublishFromOutboxAsync(outboxEvent);
 
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorDocumentStatus
-                && x.StringValue == PartyComplianceDocumentReviewStatuses.Expired
-                && x.SourceEventKind == IntegrationOutboxEventKinds.PartyComplianceDocumentApproved);
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.SupplierDocumentStatus
+                && x.StringValue == SupplierComplianceDocumentReviewStatuses.Expired
+                && x.SourceEventKind == IntegrationOutboxEventKinds.SupplierComplianceDocumentApproved);
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorDocumentAttached
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.SupplierDocumentAttached
                 && x.BooleanValue == true
-                && x.ScopeKey == $"vendor_document:{document.DocumentId:D}".ToLowerInvariant());
+                && x.ScopeKey == $"supplier_document:{document.DocumentId:D}".ToLowerInvariant());
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.VendorDocumentExpired
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.SupplierDocumentExpired
                 && x.BooleanValue == true);
     }
 
@@ -3307,16 +3476,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"ep-fact-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{keyPrefix}-vendor",
-            "Emergency Fact Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{keyPrefix}-supplier",
+            null,
+            null,
+            "Emergency Fact Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -3333,13 +3511,18 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
         var createEmergencyRequest = Authorized(HttpMethod.Post, "/api/emergency-purchases", token);
-        createEmergencyRequest.Content = JsonContent.Create(new CreateEmergencyPurchaseRequest(
-            $"{keyPrefix}-req",
-            "Emergency procurement",
-            "Vehicle down for safety-critical service.",
-            vendor.PartyId,
-            string.Empty,
-            [new CreatePurchaseRequestLineRequest(part.PartId, 1m, "Emergency replacement")]));
+        createEmergencyRequest.Content = JsonContent.Create(new
+        {
+            RequestKey = $"{keyPrefix}-req",
+            Title = "Emergency procurement",
+            EmergencyReason = "Vehicle down for safety-critical service.",
+            SupplierId = supplier.SupplierId,
+            Notes = string.Empty,
+            Lines = new[]
+            {
+                new CreatePurchaseRequestLineRequest(part.PartId, 1m, "Emergency replacement")
+            }
+        });
         var createEmergencyResponse = await _supplyarrClient.SendAsync(createEmergencyRequest);
         createEmergencyResponse.EnsureSuccessStatusCode();
         var emergency = (await createEmergencyResponse.Content.ReadFromJsonAsync<EmergencyPurchaseResponse>())!;
@@ -3357,7 +3540,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"/api/emergency-purchases/{emergency.PurchaseRequestId}/manager-override-approve",
             token);
         approveRequest.Content = JsonContent.Create(
-            new ManagerOverrideApproveEmergencyPurchaseRequest("Safety downtime requires immediate vendor use."));
+            new ManagerOverrideApproveEmergencyPurchaseRequest("Safety downtime requires immediate supplier use."));
         var approveResponse = await _supplyarrClient.SendAsync(approveRequest);
         approveResponse.EnsureSuccessStatusCode();
 
@@ -3390,9 +3573,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var vendorResponse = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/reports/vendors/summary", token));
-        vendorResponse.EnsureSuccessStatusCode();
+        var supplierResponse = await _supplyarrClient.SendAsync(
+            Authorized(HttpMethod.Get, "/api/v1/reports/suppliers/summary", token));
+        supplierResponse.EnsureSuccessStatusCode();
 
         var partsResponse = await _supplyarrClient.SendAsync(
             Authorized(HttpMethod.Get, "/api/v1/reports/parts-inventory/summary", token));
@@ -3502,16 +3685,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "pr-vendor-001",
-            "PR Vendor",
-            "PR Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "pr-supplier-001",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "PR Supplier",
+            "PR Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -3532,16 +3724,14 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "pr-2026-001",
             "Shop restock",
             "Filters for PM week",
-            vendor.PartyId,
-            [
-                new CreatePurchaseRequestLineRequest(part.PartId, 6m, "Oil filters")
-            ]));
+            supplier.SupplierId,
+            [new CreatePurchaseRequestLineRequest(part.PartId, 6m, "Oil filters")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
         var purchaseRequest = (await createPrResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
         Assert.Equal("draft", purchaseRequest.Status);
         Assert.Single(purchaseRequest.Lines);
-        Assert.Equal(vendor.PartyKey, purchaseRequest.VendorPartyKey);
+        Assert.Equal(supplier.SupplierKey, purchaseRequest.SupplierKey);
 
         var submitRequest = Authorized(
             HttpMethod.Post,
@@ -3740,16 +3930,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "po-vendor-001",
-            "PO Vendor",
-            "PO Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "po-supplier-001",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "PO Supplier",
+            "PO Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -3770,7 +3969,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "pr-po-2026-001",
             "PO source request",
             "For PO workflow test",
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 4m, "Brake pads")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -3799,7 +3998,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var purchaseOrder = (await createPoResponse.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
         Assert.Equal("draft", purchaseOrder.Status);
         Assert.Equal(purchaseRequest.PurchaseRequestId, purchaseOrder.PurchaseRequestId);
-        Assert.Equal(vendor.PartyId, purchaseOrder.VendorPartyId);
+        Assert.Equal(supplier.SupplierId, purchaseOrder.SupplierId);
         Assert.Single(purchaseOrder.Lines);
         Assert.Equal(4m, purchaseOrder.Lines[0].QuantityOrdered);
 
@@ -3831,21 +4030,30 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Purchase_order_issue_checks_compliancecore_vendor_use_gate()
+    public async Task Purchase_order_issue_checks_compliancecore_supplier_use_gate()
     {
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"po-gate-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{keyPrefix}-vendor",
-            "PO Gate Vendor",
-            "PO Gate Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{keyPrefix}-supplier",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "PO Gate Supplier",
+            "PO Gate Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -3865,8 +4073,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
             $"{keyPrefix}-pr",
             "PO gate source request",
-            "For Compliance Core vendor gate test",
-            vendor.PartyId,
+            "For Compliance Core supplier gate test",
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 4m, "Gate-controlled part")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -3901,8 +4109,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         (await _supplyarrClient.SendAsync(approvePoRequest)).EnsureSuccessStatusCode();
 
         _complianceCoreHandler.NextOutcome = "missing-evidence";
-        _complianceCoreHandler.NextReasonCode = "vendor_documents_expired";
-        _complianceCoreHandler.NextMessage = "Required vendor compliance documents are expired.";
+        _complianceCoreHandler.NextReasonCode = "supplier_documents_expired";
+        _complianceCoreHandler.NextMessage = "Required supplier compliance documents are expired.";
 
         var blockedIssueRequest = Authorized(
             HttpMethod.Post,
@@ -3916,23 +4124,23 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.Null(blockedPo.IssuedAt);
 
         var blockedGateRequest = Assert.Single(_complianceCoreHandler.GateRequests);
-        Assert.Equal("/api/v1/gates/can-use-vendor", blockedGateRequest.Path);
+        Assert.Equal("/api/v1/gates/can-use-supplier", blockedGateRequest.Path);
         Assert.Equal("Bearer", blockedGateRequest.AuthorizationScheme);
         Assert.Equal("supplyarr-to-compliancecore-token", blockedGateRequest.AuthorizationParameter);
         Assert.Equal(PlatformSeeder.DemoTenantId, blockedGateRequest.TenantId);
         Assert.Equal("purchase_order_issue", blockedGateRequest.ActivityContextKey);
-        Assert.Equal("can_use_vendor", blockedGateRequest.WorkflowKey);
+        Assert.Equal("can_use_supplier", blockedGateRequest.WorkflowKey);
         Assert.Contains(blockedGateRequest.Subjects, subject =>
-            subject.SubjectType == "vendor"
-            && subject.SubjectReference == vendor.PartyId.ToString("D")
+            subject.SubjectType == "supplier"
+            && subject.SubjectReference == supplier.SupplierId.ToString("D")
             && subject.SourceProduct == "supplyarr");
         Assert.Equal(purchaseOrder.PurchaseOrderId.ToString("D"), blockedGateRequest.RuleContext["purchase_order_id"]);
-        Assert.Equal(vendor.PartyId.ToString("D"), blockedGateRequest.RuleContext["vendor_party_id"]);
+        Assert.Equal(supplier.SupplierId.ToString("D"), blockedGateRequest.RuleContext["supplier_id"]);
         Assert.Equal(part.PartId.ToString("D"), blockedGateRequest.RuleContext["part_ids"]);
 
         _complianceCoreHandler.NextOutcome = "allow";
-        _complianceCoreHandler.NextReasonCode = "vendor_compliance_clear";
-        _complianceCoreHandler.NextMessage = "Vendor satisfies Compliance Core requirements.";
+        _complianceCoreHandler.NextReasonCode = "supplier_compliance_clear";
+        _complianceCoreHandler.NextMessage = "Supplier satisfies Compliance Core requirements.";
 
         var allowedIssueRequest = Authorized(
             HttpMethod.Post,
@@ -3946,29 +4154,38 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Purchase_order_issue_publishes_approved_vendor_source_facts_to_compliancecore()
+    public async Task Purchase_order_issue_publishes_approved_supplier_source_facts_to_compliancecore()
     {
         var token = await RedeemSupplyArrTokenAsync();
         var keyPrefix = $"po-src-{Guid.NewGuid():N}"[..18];
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{keyPrefix}-vendor",
-            "Approved Source Vendor",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{keyPrefix}-supplier",
+            null,
+            null,
+            "Approved Source Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
-        var approveVendorRequest = Authorized(
+        var approveSupplierRequest = Authorized(
             HttpMethod.Patch,
-            $"/api/vendors/{vendor.PartyId}/approval-status",
+            $"/api/suppliers/{supplier.SupplierId}/approval-status",
             token);
-        approveVendorRequest.Content = JsonContent.Create(new UpdateExternalPartyApprovalStatusRequest("approved"));
-        var approveVendorResponse = await _supplyarrClient.SendAsync(approveVendorRequest);
-        approveVendorResponse.EnsureSuccessStatusCode();
+        approveSupplierRequest.Content = JsonContent.Create(new UpdateSupplierApprovalStatusRequest("approved"));
+        var approveSupplierResponse = await _supplyarrClient.SendAsync(approveSupplierRequest);
+        approveSupplierResponse.EnsureSuccessStatusCode();
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -3989,7 +4206,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             $"{keyPrefix}-pr",
             "Approved source PR",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 2m, "Approved source part")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -4036,12 +4253,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var lineId = Assert.Single(issued.Lines).LineId;
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.PurchaseOrderLineVendorApprovalStatus
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.PurchaseOrderLineSupplierApprovalStatus
                 && x.StringValue == "approved"
                 && x.ScopeKey == $"purchase_order_line:{lineId:D}".ToLowerInvariant());
         Assert.Contains(
             _complianceCoreHandler.Facts,
-            x => x.FactKey == SupplyArrComplianceCoreFactKeys.PartSourcedFromApprovedVendor
+            x => x.FactKey == SupplyArrComplianceCoreFactKeys.PartSourcedFromApprovedSupplier
                 && x.BooleanValue == true
                 && x.SourceEventKind == IntegrationOutboxEventKinds.PurchaseOrderIssued);
     }
@@ -4051,16 +4268,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "po-v1-vendor-001",
-            "PO v1 Vendor",
-            "PO v1 Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "po-v1-supplier-001",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "PO v1 Supplier",
+            "PO v1 Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -4081,7 +4307,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "pr-po-v1-2026-001",
             "PO v1 source request",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 2m, "v1 po line")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -4155,16 +4381,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var managerToken = await RedeemSupplyArrTokenAsync();
 
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", managerToken);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "po-vendor-buyer",
-            "Buyer PO Vendor",
-            "Buyer PO Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", managerToken);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            "po-supplier-buyer",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            "Buyer PO Supplier",
+            "Buyer PO Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", managerToken);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -4185,7 +4420,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "pr-po-buyer",
             "Buyer PO test",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, 1m, string.Empty)]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -4226,100 +4461,16 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     public async Task Receiving_against_issued_po_posts_stock_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
-
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            "rcv-vendor-001",
-            "Receiving Vendor",
-            "Receiving Vendor LLC",
-            null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-
-        var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
-        createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
-            "rcv-part-001",
-            null,
-            "Receiving Test Part",
-            string.Empty,
-            "general",
-            "each",
-            string.Empty,
-            string.Empty));
-        var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
-        createPartResponse.EnsureSuccessStatusCode();
-        var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
-
-        var createLocationRequest = Authorized(HttpMethod.Post, "/api/inventory/locations", token);
-        createLocationRequest.Content = JsonContent.Create(new CreateInventoryLocationRequest(
-            "rcv-wh",
-            "Receiving Warehouse",
-            "warehouse",
-            "200 Dock St",
-            _staffarrSiteOrgUnitId));
-        var createLocationResponse = await _supplyarrClient.SendAsync(createLocationRequest);
-        createLocationResponse.EnsureSuccessStatusCode();
-        var location = (await createLocationResponse.Content.ReadFromJsonAsync<InventoryLocationResponse>())!;
-
-        var createBinRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/inventory/locations/{location.LocationId}/bins",
-            token);
-        createBinRequest.Content = JsonContent.Create(new CreateInventoryBinRequest("rcv-01", "Receiving Bin 01"));
-        var createBinResponse = await _supplyarrClient.SendAsync(createBinRequest);
-        createBinResponse.EnsureSuccessStatusCode();
-        var bin = (await createBinResponse.Content.ReadFromJsonAsync<InventoryBinResponse>())!;
-
-        var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", token);
-        createPrRequest.Content = JsonContent.Create(new CreatePurchaseRequestRequest(
+        var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+            token,
             "pr-rcv-2026-001",
-            "Receiving source request",
-            string.Empty,
-            vendor.PartyId,
-            [new CreatePurchaseRequestLineRequest(part.PartId, 5m, string.Empty)]));
-        var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
-        createPrResponse.EnsureSuccessStatusCode();
-        var purchaseRequest = (await createPrResponse.Content.ReadFromJsonAsync<PurchaseRequestResponse>())!;
-
-        var submitRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/purchase-requests/{purchaseRequest.PurchaseRequestId}/submit",
-            token);
-        (await _supplyarrClient.SendAsync(submitRequest)).EnsureSuccessStatusCode();
-
-        var approvePrRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/purchase-requests/{purchaseRequest.PurchaseRequestId}/approve",
-            token);
-        (await _supplyarrClient.SendAsync(approvePrRequest)).EnsureSuccessStatusCode();
-
-        var createPoRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/purchase-orders/from-purchase-request/{purchaseRequest.PurchaseRequestId}",
-            token);
-        createPoRequest.Content = JsonContent.Create(
-            new CreatePurchaseOrderFromPurchaseRequestRequest("po-rcv-2026-001", null, null));
-        var createPoResponse = await _supplyarrClient.SendAsync(createPoRequest);
-        createPoResponse.EnsureSuccessStatusCode();
-        var purchaseOrder = (await createPoResponse.Content.ReadFromJsonAsync<PurchaseOrderResponse>())!;
-
-        var approvePoRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/purchase-orders/{purchaseOrder.PurchaseOrderId}/approve",
-            token);
-        (await _supplyarrClient.SendAsync(approvePoRequest)).EnsureSuccessStatusCode();
-
-        var issueRequest = Authorized(
-            HttpMethod.Post,
-            $"/api/purchase-orders/{purchaseOrder.PurchaseOrderId}/issue",
-            token);
-        (await _supplyarrClient.SendAsync(issueRequest)).EnsureSuccessStatusCode();
+            "po-rcv-2026-001",
+            "rcv",
+            5m);
 
         var createReceiptRequest = Authorized(
             HttpMethod.Post,
-            $"/api/receiving/from-purchase-order/{purchaseOrder.PurchaseOrderId}",
+            $"/api/v1/receiving/from-purchase-order/{purchaseOrder.PurchaseOrderId}",
             token);
         createReceiptRequest.Content = JsonContent.Create(
             new CreateReceivingReceiptFromPurchaseOrderRequest(
@@ -4337,7 +4488,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var postReceiptRequest = Authorized(
             HttpMethod.Post,
-            $"/api/receiving/{receipt.ReceivingReceiptId}/post",
+            $"/api/v1/receiving/{receipt.ReceivingReceiptId}/post",
             token);
         var postReceiptResponse = await _supplyarrClient.SendAsync(postReceiptRequest);
         postReceiptResponse.EnsureSuccessStatusCode();
@@ -5838,10 +5989,10 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         var poLineId = purchaseOrder.Lines[0].LineId;
         var createReturnRequest = Authorized(
             HttpMethod.Post,
-            $"/api/returns/from-purchase-order-line/{poLineId}",
+            $"/api/v1/returns/from-purchase-order-line/{poLineId}",
             token);
         createReturnRequest.Content = JsonContent.Create(
-            new CreateVendorReturnFromPurchaseOrderLineRequest(
+            new CreateSupplierReturnFromPurchaseOrderLineRequest(
                 "ret-po-001",
                 bin.BinId,
                 2m,
@@ -5849,7 +6000,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                 "Defective batch"));
         var createReturnResponse = await _supplyarrClient.SendAsync(createReturnRequest);
         createReturnResponse.EnsureSuccessStatusCode();
-        var created = (await createReturnResponse.Content.ReadFromJsonAsync<VendorReturnResponse>())!;
+        var created = (await createReturnResponse.Content.ReadFromJsonAsync<SupplierReturnResponse>())!;
 
         Assert.Equal("draft", created.Status);
         Assert.Equal("purchase_order_line", created.SourceType);
@@ -5859,11 +6010,11 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var postReturnRequest = Authorized(
             HttpMethod.Post,
-            $"/api/returns/{created.ReturnId}/post",
+            $"/api/v1/returns/{created.ReturnId}/post",
             token);
         (await _supplyarrClient.SendAsync(postReturnRequest)).EnsureSuccessStatusCode();
 
-        var posted = await GetVendorReturnAsync(token, created.ReturnId);
+        var posted = await GetSupplierReturnAsync(token, created.ReturnId);
         Assert.Equal("posted", posted.Status);
 
         var stockAfter = await ListStockAsync(token, part.PartId, bin.BinId);
@@ -5888,18 +6039,19 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var purchaseOrderDetail = await GetPurchaseOrderAsync(token, purchaseOrder.PurchaseOrderId);
 
-        var createReturnRequest = Authorized(HttpMethod.Post, "/api/returns/from-stock", token);
+        var createReturnRequest = Authorized(HttpMethod.Post, "/api/v1/returns/from-stock", token);
         createReturnRequest.Content = JsonContent.Create(
-            new CreateVendorReturnFromStockRequest(
+            new CreateSupplierReturnFromStockRequest(
                 "ret-stk-001",
-                purchaseOrderDetail.VendorPartyId,
+                null,
+                purchaseOrderDetail.SupplierId,
                 bin.BinId,
                 "RMA-STK-2001",
                 "Overstock return",
-                [new CreateVendorReturnFromStockLineRequest(part.PartId, 3m, null)]));
+                [new CreateSupplierReturnFromStockLineRequest(part.PartId, 3m, null)]));
         var createReturnResponse = await _supplyarrClient.SendAsync(createReturnRequest);
         createReturnResponse.EnsureSuccessStatusCode();
-        var created = (await createReturnResponse.Content.ReadFromJsonAsync<VendorReturnResponse>())!;
+        var created = (await createReturnResponse.Content.ReadFromJsonAsync<SupplierReturnResponse>())!;
 
         Assert.Equal("stock", created.SourceType);
         Assert.Equal("RMA-STK-2001", created.RmaNumber);
@@ -5908,7 +6060,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var postReturnRequest = Authorized(
             HttpMethod.Post,
-            $"/api/returns/{created.ReturnId}/post",
+            $"/api/v1/returns/{created.ReturnId}/post",
             token);
         (await _supplyarrClient.SendAsync(postReturnRequest)).EnsureSuccessStatusCode();
 
@@ -5934,30 +6086,31 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var purchaseOrderDetail = await GetPurchaseOrderAsync(token, purchaseOrder.PurchaseOrderId);
 
-        var createReturnRequest = Authorized(HttpMethod.Post, "/api/returns/from-stock", token);
+        var createReturnRequest = Authorized(HttpMethod.Post, "/api/v1/returns/from-stock", token);
         createReturnRequest.Content = JsonContent.Create(
-            new CreateVendorReturnFromStockRequest(
+            new CreateSupplierReturnFromStockRequest(
                 "ret-can-001",
-                purchaseOrderDetail.VendorPartyId,
+                null,
+                purchaseOrderDetail.SupplierId,
                 bin.BinId,
                 null,
                 null,
-                [new CreateVendorReturnFromStockLineRequest(part.PartId, 1m, null)]));
+                [new CreateSupplierReturnFromStockLineRequest(part.PartId, 1m, null)]));
         var createReturnResponse = await _supplyarrClient.SendAsync(createReturnRequest);
         createReturnResponse.EnsureSuccessStatusCode();
-        var created = (await createReturnResponse.Content.ReadFromJsonAsync<VendorReturnResponse>())!;
+        var created = (await createReturnResponse.Content.ReadFromJsonAsync<SupplierReturnResponse>())!;
 
         var cancelRequest = Authorized(
             HttpMethod.Post,
-            $"/api/returns/{created.ReturnId}/cancel",
+            $"/api/v1/returns/{created.ReturnId}/cancel",
             token);
-        cancelRequest.Content = JsonContent.Create(new CancelVendorReturnRequest("Vendor declined RMA"));
+        cancelRequest.Content = JsonContent.Create(new CancelSupplierReturnRequest("Supplier declined RMA"));
         var cancelResponse = await _supplyarrClient.SendAsync(cancelRequest);
         cancelResponse.EnsureSuccessStatusCode();
-        var cancelled = (await cancelResponse.Content.ReadFromJsonAsync<VendorReturnResponse>())!;
+        var cancelled = (await cancelResponse.Content.ReadFromJsonAsync<SupplierReturnResponse>())!;
 
         Assert.Equal("cancelled", cancelled.Status);
-        Assert.Equal("Vendor declined RMA", cancelled.CancellationReason);
+        Assert.Equal("Supplier declined RMA", cancelled.CancellationReason);
 
         var stockAfter = await ListStockAsync(token, part.PartId, bin.BinId);
         Assert.Equal(2m, stockAfter[0].QuantityOnHand);
@@ -5967,7 +6120,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     public async Task Pricing_and_lead_time_snapshots_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
-        var link = await CreatePartWithVendorLinkAsync(token, "snap-vendor", "snap-part", "SNAP-V-001");
+        var link = await CreatePartWithSupplierLinkAsync(token, "snap-supplier", "snap-part", "SNAP-V-001");
 
         var createPricingRequest = Authorized(HttpMethod.Post, "/api/pricing-snapshots", token);
         createPricingRequest.Content = JsonContent.Create(new CreatePricingSnapshotRequest(
@@ -5993,7 +6146,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             10,
             null,
             "quote",
-            "Vendor quote May 2026"));
+            "Supplier quote May 2026"));
         var createLeadTimeResponse = await _supplyarrClient.SendAsync(createLeadTimeRequest);
         createLeadTimeResponse.EnsureSuccessStatusCode();
         var leadTime = (await createLeadTimeResponse.Content.ReadFromJsonAsync<LeadTimeSnapshotResponse>())!;
@@ -6002,7 +6155,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var listPricingRequest = Authorized(
             HttpMethod.Get,
-            $"/api/pricing-snapshots?partVendorLinkId={link.LinkId}&asOf={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}",
+            $"/api/pricing-snapshots?partSupplierLinkId={link.LinkId}&asOf={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}",
             token);
         var listPricingResponse = await _supplyarrClient.SendAsync(listPricingRequest);
         listPricingResponse.EnsureSuccessStatusCode();
@@ -6024,7 +6177,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var allPricingRequest = Authorized(
             HttpMethod.Get,
-            $"/api/pricing-snapshots?partVendorLinkId={link.LinkId}",
+            $"/api/pricing-snapshots?partSupplierLinkId={link.LinkId}",
             token);
         var allPricingResponse = await _supplyarrClient.SendAsync(allPricingRequest);
         allPricingResponse.EnsureSuccessStatusCode();
@@ -6039,7 +6192,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
         var adminToken = token;
-        var link = await CreatePartWithVendorLinkAsync(adminToken, "snap-deny-v", "snap-deny-p", "SNAP-D-001");
+        var link = await CreatePartWithSupplierLinkAsync(adminToken, "snap-deny-s", "snap-deny-p", "SNAP-D-001");
 
         var clerkToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_clerk");
         var request = Authorized(HttpMethod.Post, "/api/pricing-snapshots", clerkToken);
@@ -6061,7 +6214,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     public async Task Availability_snapshots_happy_path()
     {
         var token = await RedeemSupplyArrTokenAsync();
-        var link = await CreatePartWithVendorLinkAsync(token, "avail-vendor", "avail-part", "AVAIL-V-001");
+        var link = await CreatePartWithSupplierLinkAsync(token, "avail-supplier", "avail-part", "AVAIL-V-001");
 
         var createRequest = Authorized(HttpMethod.Post, "/api/availability-snapshots", token);
         createRequest.Content = JsonContent.Create(new CreateAvailabilitySnapshotRequest(
@@ -6070,8 +6223,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             120m,
             "in_stock",
             null,
-            "vendor_feed",
-            "Vendor portal May 2026"));
+            "supplier_feed",
+            "Supplier portal May 2026"));
         var createResponse = await _supplyarrClient.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
         var snapshot = (await createResponse.Content.ReadFromJsonAsync<AvailabilitySnapshotResponse>())!;
@@ -6082,7 +6235,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var listRequest = Authorized(
             HttpMethod.Get,
-            $"/api/availability-snapshots?partVendorLinkId={link.LinkId}&asOf={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}",
+            $"/api/availability-snapshots?partSupplierLinkId={link.LinkId}&asOf={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}",
             token);
         var listResponse = await _supplyarrClient.SendAsync(listRequest);
         listResponse.EnsureSuccessStatusCode();
@@ -6103,7 +6256,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         var allRequest = Authorized(
             HttpMethod.Get,
-            $"/api/availability-snapshots?partVendorLinkId={link.LinkId}",
+            $"/api/availability-snapshots?partSupplierLinkId={link.LinkId}",
             token);
         var allResponse = await _supplyarrClient.SendAsync(allRequest);
         allResponse.EnsureSuccessStatusCode();
@@ -6118,7 +6271,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     {
         var token = await RedeemSupplyArrTokenAsync();
         var adminToken = token;
-        var link = await CreatePartWithVendorLinkAsync(adminToken, "avail-deny-v", "avail-deny-p", "AVAIL-D-001");
+        var link = await CreatePartWithSupplierLinkAsync(adminToken, "avail-deny-s", "avail-deny-p", "AVAIL-D-001");
 
         var clerkToken = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_clerk");
         var request = Authorized(HttpMethod.Post, "/api/availability-snapshots", clerkToken);
@@ -6324,22 +6477,31 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         Assert.DoesNotContain("compliancecore", me.LaunchableProductKeys);
     }
 
-    private async Task<PartVendorLinkResponse> CreatePartWithVendorLinkAsync(
+    private async Task<PartSupplierLinkResponse> CreatePartWithSupplierLinkAsync(
         string token,
-        string vendorKey,
+        string supplierKey,
         string partKey,
-        string vendorPartNumber)
+        string supplierPartNumber)
     {
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            vendorKey,
-            $"{vendorKey} Vendor",
-            $"{vendorKey} Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            supplierKey,
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            $"{supplierKey} Supplier",
+            $"{supplierKey} Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -6355,14 +6517,15 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;
 
-        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/vendor-links", token);
-        linkRequest.Content = JsonContent.Create(new CreatePartVendorLinkRequest(
-            vendor.PartyId,
-            vendorPartNumber,
+        var linkRequest = Authorized(HttpMethod.Post, $"/api/parts/{part.PartId}/supplier-links", token);
+        linkRequest.Content = JsonContent.Create(new CreatePartSupplierLinkRequest(
+            null,
+            supplier.SupplierId,
+            supplierPartNumber,
             true));
         var linkResponse = await _supplyarrClient.SendAsync(linkRequest);
         linkResponse.EnsureSuccessStatusCode();
-        return (await linkResponse.Content.ReadFromJsonAsync<PartVendorLinkResponse>())!;
+        return (await linkResponse.Content.ReadFromJsonAsync<PartSupplierLinkResponse>())!;
     }
 
     private async Task<(PartResponse Part, InventoryBinResponse Bin, PurchaseOrderResponse PurchaseOrder)>
@@ -6374,16 +6537,25 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             decimal orderQuantity,
             bool requiresSerialLotTracking = false)
     {
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"{locationKeyPrefix}-vendor",
-            $"{locationKeyPrefix} Vendor",
-            $"{locationKeyPrefix} Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"{locationKeyPrefix}-supplier",
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+            null,
+            $"{locationKeyPrefix} Supplier",
+            $"{locationKeyPrefix} Supplier LLC",
+            string.Empty,
+            null,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
 
         var createPartRequest = Authorized(HttpMethod.Post, "/api/parts", token);
         createPartRequest.Content = JsonContent.Create(new CreatePartRequest(
@@ -6426,7 +6598,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             purchaseRequestKey,
             $"{locationKeyPrefix} request",
             string.Empty,
-            vendor.PartyId,
+            supplier.SupplierId,
             [new CreatePurchaseRequestLineRequest(part.PartId, orderQuantity, string.Empty)]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -6533,12 +6705,12 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
         return (await listResponse.Content.ReadFromJsonAsync<List<BackorderResponse>>())!;
     }
 
-    private async Task<VendorReturnResponse> GetVendorReturnAsync(string token, Guid returnId)
+    private async Task<SupplierReturnResponse> GetSupplierReturnAsync(string token, Guid returnId)
     {
-        var getRequest = Authorized(HttpMethod.Get, $"/api/returns/{returnId}", token);
+        var getRequest = Authorized(HttpMethod.Get, $"/api/v1/returns/{returnId}", token);
         var getResponse = await _supplyarrClient.SendAsync(getRequest);
         getResponse.EnsureSuccessStatusCode();
-        return (await getResponse.Content.ReadFromJsonAsync<VendorReturnResponse>())!;
+        return (await getResponse.Content.ReadFromJsonAsync<SupplierReturnResponse>())!;
     }
 
     private async Task<string> RedeemSupplyArrTokenAsync()
@@ -6780,9 +6952,9 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
 
         public string NextOutcome { get; set; } = "allow";
 
-        public string NextReasonCode { get; set; } = "vendor_compliance_clear";
+        public string NextReasonCode { get; set; } = "supplier_compliance_clear";
 
-        public string NextMessage { get; set; } = "Vendor satisfies Compliance Core requirements.";
+        public string NextMessage { get; set; } = "Supplier satisfies Compliance Core requirements.";
 
         protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -6888,8 +7060,8 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
                     workflowKey = root.TryGetProperty("workflowKey", out var responseWorkflowKey)
                         && responseWorkflowKey.ValueKind != JsonValueKind.Null
                             ? responseWorkflowKey.GetString()
-                            : "can_use_vendor",
-                    actionKey = "can_use_vendor",
+                            : "can_use_supplier",
+                    actionKey = "can_use_supplier",
                     activityContextKey = root.GetProperty("activityContextKey").GetString(),
                     subjectReferences = Array.Empty<object>(),
                     checkResultId = traceId,

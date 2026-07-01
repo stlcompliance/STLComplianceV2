@@ -80,7 +80,19 @@ public sealed record ApprovalReminderSummaryResponse(
     string DocumentKey,
     string Title,
     string DocumentStatus,
-    Guid? VendorPartyId,
+    Guid? SupplierId,
+
+    string? SupplierKey,
+
+    string? SupplierDisplayName,
+
+    Guid? ParentSupplierId,
+
+    string? ParentSupplierDisplayName,
+
+    string? SupplierUnitKind,
+
+    IReadOnlyList<string> SupplierServiceTypes,
     DateTimeOffset PendingSince,
     DateTimeOffset? LastReminderSentAt,
     int ReminderCount,
@@ -91,4 +103,4 @@ public sealed record ApprovalRemindersDashboardResponse(
     int OverdueCount,
     int PendingCount,
     IReadOnlyList<ApprovalReminderSummaryResponse> Items);
-
+

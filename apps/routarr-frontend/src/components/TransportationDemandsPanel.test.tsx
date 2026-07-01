@@ -101,7 +101,7 @@ const baseDemand = {
   handlingRequirements: ['temperature_control'],
   customerRefs: ['customarr:customer:alpha'],
   orderRefs: ['ordarr:order:ORD-1001'],
-  vendorRefs: ['supplyarr:carrier:carrier-a'],
+  supplierRefs: ['supplyarr:carrier:carrier-a'],
   requirementRefs: ['compliancecore:requirement:temperature'],
   planningStatus: 'scenario_created',
   tenderStatus: 'tendered',

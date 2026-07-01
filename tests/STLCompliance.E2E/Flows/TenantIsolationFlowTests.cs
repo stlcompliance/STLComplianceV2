@@ -297,14 +297,14 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task SupplyArr_tenant_B_cannot_read_tenant_A_vendor()
+    public async Task SupplyArr_tenant_B_cannot_read_tenant_A_supplier()
     {
         var tenantAToken = E2EAccessTokenHelper.SupplyArr(
             _supplyarrFactory.Services,
             E2ETenants.TenantAId,
             PlatformSeeder.DemoAdminUserId,
             ["supplyarr"]);
-        var vendorId = await CreateSupplyArrVendorAsync(tenantAToken, "Tenant A Vendor");
+        var supplierId = await CreateSupplyArrSupplierAsync(tenantAToken, "Tenant A Supplier");
 
         var tenantBToken = E2EAccessTokenHelper.SupplyArr(
             _supplyarrFactory.Services,
@@ -312,35 +312,35 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
             E2ETenants.TenantBUserId,
             ["supplyarr"]);
         var response = await _supplyarrClient.SendAsync(
-            HttpTestClient.Authorized(HttpMethod.Get, $"/api/vendors/{vendorId}", tenantBToken));
+            HttpTestClient.Authorized(HttpMethod.Get, $"/api/suppliers/{supplierId}", tenantBToken));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task SupplyArr_tenant_A_list_excludes_tenant_B_vendors()
+    public async Task SupplyArr_tenant_A_list_excludes_tenant_B_suppliers()
     {
         var tenantAToken = E2EAccessTokenHelper.SupplyArr(
             _supplyarrFactory.Services,
             E2ETenants.TenantAId,
             PlatformSeeder.DemoAdminUserId,
             ["supplyarr"]);
-        await CreateSupplyArrVendorAsync(tenantAToken, "Tenant A Listed Vendor");
+        await CreateSupplyArrSupplierAsync(tenantAToken, "Tenant A Listed Supplier");
 
         var tenantBToken = E2EAccessTokenHelper.SupplyArr(
             _supplyarrFactory.Services,
             E2ETenants.TenantBId,
             E2ETenants.TenantBUserId,
             ["supplyarr"]);
-        await CreateSupplyArrVendorAsync(tenantBToken, "Tenant B Hidden Vendor");
+        await CreateSupplyArrSupplierAsync(tenantBToken, "Tenant B Hidden Supplier");
 
         var response = await _supplyarrClient.SendAsync(
-            HttpTestClient.Authorized(HttpMethod.Get, "/api/vendors", tenantAToken));
+            HttpTestClient.Authorized(HttpMethod.Get, "/api/suppliers", tenantAToken));
         response.EnsureSuccessStatusCode();
-        var vendors = (await response.Content.ReadFromJsonAsync<IReadOnlyList<ExternalPartyResponse>>())!;
+        var suppliers = (await response.Content.ReadFromJsonAsync<IReadOnlyList<SupplierResponse>>())!;
 
-        Assert.Contains(vendors, v => v.DisplayName == "Tenant A Listed Vendor");
-        Assert.DoesNotContain(vendors, v => v.DisplayName == "Tenant B Hidden Vendor");
+        Assert.Contains(suppliers, v => v.DisplayName == "Tenant A Listed Supplier");
+        Assert.DoesNotContain(suppliers, v => v.DisplayName == "Tenant B Hidden Supplier");
     }
 
     [Fact]
@@ -373,18 +373,27 @@ public sealed class TenantIsolationFlowTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private async Task<Guid> CreateSupplyArrVendorAsync(string token, string displayName)
+    private async Task<Guid> CreateSupplyArrSupplierAsync(string token, string displayName)
     {
-        var createRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/vendors", token);
-        createRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createRequest = HttpTestClient.Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createRequest.Content = JsonContent.Create(new CreateSupplierRequest(
             $"iso-{Guid.NewGuid():N}".Substring(0, 12),
+            null,
+            null,
             displayName,
             $"{displayName} LLC",
             null,
-            "Tenant isolation vendor"));
-        var vendor = (await (await _supplyarrClient.SendAsync(createRequest)).Content
-            .ReadFromJsonAsync<ExternalPartyResponse>())!;
-        return vendor.PartyId;
+            "Tenant isolation supplier",
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var supplier = (await (await _supplyarrClient.SendAsync(createRequest)).Content
+            .ReadFromJsonAsync<SupplierResponse>())!;
+        return supplier.SupplierId;
     }
 
     private async Task<Guid> SeedStaffPersonAsync(Guid tenantId, string displayName, string email)

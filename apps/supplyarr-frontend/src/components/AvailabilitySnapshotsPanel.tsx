@@ -62,14 +62,14 @@ export function AvailabilitySnapshotsPanel({
   const supplierSourceLinkOptions = useMemo<PickerOption[]>(
     () =>
       parts.flatMap((part) =>
-        part.vendorLinks.map((link) => ({
+        part.supplierLinks.map((link) => ({
           value: link.linkId,
           label: `${part.partKey} · ${formatSupplierIdentitySummary({
             supplierDisplayName: link.supplierDisplayName,
             supplierKey: link.supplierKey,
             parentSupplierDisplayName: link.parentSupplierDisplayName,
             supplierUnitKind: link.supplierUnitKind,
-          })} · ${link.vendorPartNumber}`,
+          })} · ${link.supplierPartNumber}`,
         })),
       ),
     [parts],
@@ -79,7 +79,7 @@ export function AvailabilitySnapshotsPanel({
     [selectedSourceLinkId, supplierSourceLinkOptions],
   )
   const selectedSourceLink = useMemo(
-    () => parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === selectedSourceLinkId),
+    () => parts.flatMap((part) => part.supplierLinks).find((link) => link.linkId === selectedSourceLinkId),
     [parts, selectedSourceLinkId],
   )
   const selectedSourceLinkLabel = selectedSourceLinkOption?.label ?? ''
@@ -145,16 +145,16 @@ export function AvailabilitySnapshotsPanel({
               {formatSupplierOperationalContext({
                 supplierServiceTypes: row.supplierServiceTypes ?? [],
                 addressLine1:
-                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                  parts.flatMap((part) => part.supplierLinks).find((link) => link.linkId === row.partSupplierLinkId)
                     ?.supplierAddressLine1 ?? null,
                 locality:
-                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                  parts.flatMap((part) => part.supplierLinks).find((link) => link.linkId === row.partSupplierLinkId)
                     ?.supplierLocality ?? null,
                 regionCode:
-                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                  parts.flatMap((part) => part.supplierLinks).find((link) => link.linkId === row.partSupplierLinkId)
                     ?.supplierRegionCode ?? null,
                 postalCode:
-                  parts.flatMap((part) => part.vendorLinks).find((link) => link.linkId === row.partVendorLinkId)
+                  parts.flatMap((part) => part.supplierLinks).find((link) => link.linkId === row.partSupplierLinkId)
                     ?.supplierPostalCode ?? null,
               })}
             </p>

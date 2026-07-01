@@ -162,7 +162,7 @@ public sealed class SupplyArrProcurementCoordinationWorkerTests : IAsyncLifetime
     private async Task<Guid> SeedSubmittedPurchaseRequestAsync()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], "supplyarr_admin");
-        var vendorId = await SeedVendorAsync(token);
+        var supplierId = await SeedSupplierAsync(token);
         var partId = await SeedPartAsync(token);
 
         var createPrRequest = Authorized(HttpMethod.Post, "/api/purchase-requests", token);
@@ -170,7 +170,7 @@ public sealed class SupplyArrProcurementCoordinationWorkerTests : IAsyncLifetime
             $"pr-{Guid.NewGuid():N}"[..16],
             "Coordination test PR",
             "Submitted for coordination worker",
-            vendorId,
+            supplierId,
             [new CreatePurchaseRequestLineRequest(partId, 4m, "Test line")]));
         var createPrResponse = await _supplyarrClient.SendAsync(createPrRequest);
         createPrResponse.EnsureSuccessStatusCode();
@@ -186,19 +186,28 @@ public sealed class SupplyArrProcurementCoordinationWorkerTests : IAsyncLifetime
         return purchaseRequest.PurchaseRequestId;
     }
 
-    private async Task<Guid> SeedVendorAsync(string token)
+    private async Task<Guid> SeedSupplierAsync(string token)
     {
-        var createVendorRequest = Authorized(HttpMethod.Post, "/api/vendors", token);
-        createVendorRequest.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
-            $"vendor-{Guid.NewGuid():N}"[..16],
-            "Coordination Vendor",
-            "Coordination Vendor LLC",
+        var createSupplierRequest = Authorized(HttpMethod.Post, "/api/suppliers", token);
+        createSupplierRequest.Content = JsonContent.Create(new CreateSupplierRequest(
+            $"supplier-{Guid.NewGuid():N}"[..16],
             null,
-            string.Empty));
-        var createVendorResponse = await _supplyarrClient.SendAsync(createVendorRequest);
-        createVendorResponse.EnsureSuccessStatusCode();
-        var vendor = (await createVendorResponse.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
-        return vendor.PartyId;
+            null,
+            "Coordination Supplier",
+            "Coordination Supplier LLC",
+            null,
+            string.Empty,
+            ["parts"],
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var createSupplierResponse = await _supplyarrClient.SendAsync(createSupplierRequest);
+        createSupplierResponse.EnsureSuccessStatusCode();
+        var supplier = (await createSupplierResponse.Content.ReadFromJsonAsync<SupplierResponse>())!;
+        return supplier.SupplierId;
     }
 
     private async Task<Guid> SeedPartAsync(string token)

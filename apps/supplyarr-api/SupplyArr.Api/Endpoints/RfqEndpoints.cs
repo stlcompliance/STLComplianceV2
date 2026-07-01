@@ -128,21 +128,6 @@ public static class RfqEndpoints
         })
         .WithName($"InviteRfqSuppliers{nameSuffix}");
 
-        group.MapPost("/{rfqId:guid}/invite-vendors", async (
-            Guid rfqId,
-            InviteRfqVendorsRequest request,
-            HttpContext context,
-            SupplyArrAuthorizationService authorization,
-            RfqService service,
-            CancellationToken cancellationToken) =>
-        {
-            authorization.RequireRfqManage(context.User);
-            var tenantId = context.User.GetTenantId();
-            var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.InviteVendorsAsync(tenantId, actorUserId, rfqId, request, cancellationToken));
-        })
-        .WithName($"InviteRfqVendors{nameSuffix}");
-
         group.MapPost("/{rfqId:guid}/quotes", async (
             Guid rfqId,
             CreateSupplierQuoteRequest request,
@@ -155,14 +140,14 @@ public static class RfqEndpoints
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
             var created = await service.CreateSupplierQuoteAsync(tenantId, actorUserId, rfqId, request, cancellationToken);
-            return Results.Created($"/api/rfqs/{rfqId}/quotes/{created.VendorQuoteId}", created);
+            return Results.Created($"/api/rfqs/{rfqId}/quotes/{created.SupplierQuoteId}", created);
         })
-        .WithName($"CreateVendorQuote{nameSuffix}");
+        .WithName($"CreateSupplierQuote{nameSuffix}");
 
-        group.MapPut("/{rfqId:guid}/quotes/{vendorQuoteId:guid}/lines", async (
+        group.MapPut("/{rfqId:guid}/quotes/{supplierQuoteId:guid}/lines", async (
             Guid rfqId,
-            Guid vendorQuoteId,
-            UpsertVendorQuoteLineRequest request,
+            Guid supplierQuoteId,
+            UpsertSupplierQuoteLineRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             RfqService service,
@@ -175,15 +160,15 @@ public static class RfqEndpoints
                 tenantId,
                 actorUserId,
                 rfqId,
-                vendorQuoteId,
+                supplierQuoteId,
                 request,
                 cancellationToken));
         })
-        .WithName($"UpsertVendorQuoteLine{nameSuffix}");
+        .WithName($"UpsertSupplierQuoteLine{nameSuffix}");
 
-        group.MapPost("/{rfqId:guid}/quotes/{vendorQuoteId:guid}/submit", async (
+        group.MapPost("/{rfqId:guid}/quotes/{supplierQuoteId:guid}/submit", async (
             Guid rfqId,
-            Guid vendorQuoteId,
+            Guid supplierQuoteId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             RfqService service,
@@ -192,14 +177,14 @@ public static class RfqEndpoints
             authorization.RequireRfqManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            return Results.Ok(await service.SubmitVendorQuoteAsync(
+            return Results.Ok(await service.SubmitSupplierQuoteAsync(
                 tenantId,
                 actorUserId,
                 rfqId,
-                vendorQuoteId,
+                supplierQuoteId,
                 cancellationToken));
         })
-        .WithName($"SubmitVendorQuote{nameSuffix}");
+        .WithName($"SubmitSupplierQuote{nameSuffix}");
 
         group.MapGet("/{rfqId:guid}/quote-comparison", async (
             Guid rfqId,
@@ -232,7 +217,7 @@ public static class RfqEndpoints
                 request,
                 cancellationToken));
         })
-        .WithName($"SelectRfqVendorQuote{nameSuffix}");
+        .WithName($"SelectRfqSupplierQuote{nameSuffix}");
 
         group.MapPost("/{rfqId:guid}/create-purchase-request", async (
             Guid rfqId,

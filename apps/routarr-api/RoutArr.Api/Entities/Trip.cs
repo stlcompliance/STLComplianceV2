@@ -20,21 +20,21 @@ public sealed class Trip : IHasTenant
 
     public string? VehicleRefKey { get; set; }
 
-    public Guid? VendorOrderId { get; set; }
+    public Guid? SupplierOrderId { get; set; }
 
     public Guid? BrokerOrderId { get; set; }
 
     public string? DispatchBlockReason { get; set; }
 
-    public string? VendorReadinessStatusSnapshot { get; set; }
+    public string? SupplierReadinessStatusSnapshot { get; set; }
 
-    public decimal? VendorQuantityReadySnapshot { get; set; }
+    public decimal? SupplierQuantityReadySnapshot { get; set; }
 
-    public decimal? VendorOrderedQuantitySnapshot { get; set; }
+    public decimal? SupplierOrderedQuantitySnapshot { get; set; }
 
-    public DateTimeOffset? VendorExpectedReadyAtSnapshot { get; set; }
+    public DateTimeOffset? SupplierExpectedReadyAtSnapshot { get; set; }
 
-    public DateTimeOffset? VendorConfirmedReadyAtSnapshot { get; set; }
+    public DateTimeOffset? SupplierConfirmedReadyAtSnapshot { get; set; }
 
     public DateTimeOffset? ReleasedForDispatchAt { get; set; }
 

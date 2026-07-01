@@ -35,6 +35,11 @@ function humanize(value: string | null | undefined): string {
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
+function describeSupplierUnitKind(unitKind: string | null | undefined): string {
+  if (!unitKind) return 'Not recorded'
+  return unitKind === 'sub_unit' ? 'Supplier sub-unit' : humanize(unitKind)
+}
+
 function formatAddress(supplier: SupplierResponse | null): string {
   if (!supplier) return 'Not recorded'
   const parts = [
@@ -152,10 +157,10 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
   const serviceTypeOptions = (metadataQuery.data?.serviceTypeOptions ?? fallbackServiceTypeOptions)
     .map<PickerOption>((option) => ({ value: option.value, label: option.label }))
   const selectedSupplierContracts = (s.contractsQuery.data ?? []).filter(
-    (contract) => (contract.supplierId ?? contract.vendorPartyId) === selectedSupplier?.supplierId,
+    (contract) => contract.supplierId === selectedSupplier?.supplierId,
   )
   const linkedItems = (s.partsQuery.data ?? []).flatMap((part) =>
-    part.vendorLinks
+    part.supplierLinks
       .filter((link) => link.supplierId === selectedSupplier?.supplierId)
       .map((link) => ({ part, link })),
   )
@@ -176,13 +181,13 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
         <div>
           <h1 className="text-2xl font-semibold text-[var(--color-text-primary)]">Supplier directory</h1>
           <p className="mt-1 max-w-3xl text-sm text-[var(--color-text-secondary)]">
-            Manage supplier identities and their sub-units in one hierarchy. Service coverage and supplier-location context live on each supplier identity or sub-unit so sourcing, maintenance, and purchasing can work from the same supplier record, while internal site truth stays in StaffArr.
+            Manage parent supplier identities and supplier sub-units in one hierarchy. Service coverage stays on each identity or sub-unit so sourcing, maintenance, and purchasing can choose the right dealer location, branch, or service counter while internal site truth stays in StaffArr.
           </p>
         </div>
         <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
           {suppliers.filter((supplier) => !supplier.parentSupplierId).length} supplier identities
           {' · '}
-          {suppliers.filter((supplier) => supplier.parentSupplierId).length} sub-units
+          {suppliers.filter((supplier) => supplier.parentSupplierId).length} supplier sub-units
         </div>
       </header>
 
@@ -211,7 +216,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               <div className="mt-4">
                 <EmptyPanel
                   title="No suppliers yet"
-                  description="Create a supplier identity first, then add sub-units for location-specific sourcing, maintenance, or service coverage."
+                  description="Create a supplier identity first, then add supplier sub-units for dealer-location, branch, counter, or service-specific sourcing coverage."
                 />
               </div>
             ) : null}
@@ -258,20 +263,20 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               {mode === 'create' ? 'Create supplier identity or sub-unit' : 'Add supplier or sub-unit'}
             </h2>
             <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-              Start with a supplier identity, then create sub-units for regional branches, service locations, maintenance shops, or other site-specific sourcing nodes.
+              Start with a supplier identity, then create supplier sub-units for regional branches, dealer locations, service counters, maintenance shops, or other site-specific sourcing nodes.
             </p>
 
             <div className="mt-4 grid gap-3">
               <ControlledSelect
-                label="Supplier level"
+                label="Supplier identity kind"
                 value={s.supplierUnitKind}
                 onChange={s.setSupplierUnitKind}
                 options={unitKindOptions}
-                emptyLabel="Select supplier level"
+                emptyLabel="Select identity or sub-unit"
               />
               {s.supplierUnitKind === 'sub_unit' ? (
                 <ControlledSelect
-                  label="Parent supplier identity"
+                  label="Parent supplier"
                   value={s.supplierParentUnitId}
                   onChange={s.setSupplierParentUnitId}
                   options={rootSupplierOptions}
@@ -293,7 +298,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                   className="mt-1 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                   value={s.supplierName}
                   onChange={(event) => s.setSupplierName(event.target.value)}
-                  placeholder={s.supplierUnitKind === 'sub_unit' ? 'Midwest Fleet - Kansas City' : 'Midwest Fleet'}
+                  placeholder={s.supplierUnitKind === 'sub_unit' ? 'Midwest Fleet - Kansas City Counter' : 'Midwest Fleet'}
                 />
               </label>
               <label className="text-sm font-medium text-[var(--color-text-primary)]">
@@ -387,7 +392,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                   className="mt-1 min-h-24 w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
                   value={s.supplierNotes}
                   onChange={(event) => s.setSupplierNotes(event.target.value)}
-                  placeholder="Use notes for sourcing context or unit-specific operating details."
+                  placeholder="Use notes for sourcing context, delivery constraints, or location-specific operating details."
                 />
               </label>
               <button
@@ -401,7 +406,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                 }
                 onClick={() => s.createSupplierMutation.mutate()}
               >
-                {s.createSupplierMutation.isPending ? 'Saving supplier…' : s.supplierUnitKind === 'sub_unit' ? 'Create sub-unit' : 'Create supplier identity'}
+                {s.createSupplierMutation.isPending ? 'Saving supplier…' : s.supplierUnitKind === 'sub_unit' ? 'Create supplier sub-unit' : 'Create supplier identity'}
               </button>
               {s.createSupplierMutation.isError ? (
                 <ApiErrorCallout
@@ -422,7 +427,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                 </h2>
                 <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
                   {selectedSupplier
-                    ? `${humanize(selectedSupplier.unitKind)} · ${formatServiceCoverage(selectedSupplier.serviceTypes)}`
+                    ? `${describeSupplierUnitKind(selectedSupplier.unitKind)} · ${formatServiceCoverage(selectedSupplier.serviceTypes)}`
                     : 'Choose a supplier identity or sub-unit from the directory.'}
                 </p>
               </div>
@@ -469,8 +474,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                 <DetailCard label="Legal name" value={selectedSupplier.legalName || selectedSupplier.displayName} />
                 <DetailCard label="Parent supplier" value={selectedSupplier.parentSupplierDisplayName || 'Root supplier identity'} />
                 <DetailCard label="Service coverage" value={formatServiceCoverage(selectedSupplier.serviceTypes)} />
-                <DetailCard label="Supplier location" value={formatAddress(selectedSupplier)} />
-                <DetailCard label="Sub-units" value={String(selectedSupplier.childUnitCount ?? childUnits.length)} />
+                <DetailCard label="Supplier address" value={formatAddress(selectedSupplier)} />
+                <DetailCard label="Supplier sub-units" value={String(selectedSupplier.childUnitCount ?? childUnits.length)} />
                 <DetailCard label="Approval state" value={humanize(selectedSupplier.approvalStatus)} />
                 <DetailCard label="Lifecycle status" value={humanize(selectedSupplier.status)} />
                 <DetailCard label="Updated" value={formatTimestamp(selectedSupplier.updatedAt)} />
@@ -481,9 +486,9 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
           {selectedSupplier ? (
             <div className="grid gap-4 xl:grid-cols-2">
                 <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
-                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sub-units</h3>
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Supplier sub-units</h3>
                   <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                    Location-specific supplier nodes for sourcing, service, or maintenance coverage.
+                    Location-specific supplier nodes for sourcing, service, maintenance, and closest-capable fulfillment decisions.
                 </p>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
                   Internal tenant sites are selected later from StaffArr when a workflow needs a company-owned origin, destination, or receiving location.
@@ -508,8 +513,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     </div>
                   )) : (
                     <EmptyPanel
-                      title="No sub-units yet"
-                      description="Add regional branches or site-level supplier nodes so sourcing can prefer the closest capable location."
+                      title="No supplier sub-units yet"
+                      description="Add regional branches or dealer-location sub-units so sourcing can prefer the closest capable supplier node."
                     />
                   )}
                 </div>
@@ -518,7 +523,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
                 <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Sourcing readiness</h3>
                 <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                  Use supplier identities as umbrella records and sub-units as the location-aware sourcing nodes for parts, maintenance, and service routing.
+                  Use supplier identities as umbrella records and supplier sub-units as the location-aware sourcing nodes for parts, maintenance, and service routing.
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <DetailCard label="Best fit" value={describeSupplierUseCase(selectedSupplier.serviceTypes)} />
@@ -526,8 +531,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     label="Location strategy"
                     value={
                       selectedSupplier.parentSupplierId
-                        ? 'Use this sub-unit when the closest capable supplier location matters.'
-                        : 'Use this identity when sourcing can route across multiple supplier locations.'
+                        ? 'Use this sub-unit when the closest capable supplier branch, dealer location, or counter matters.'
+                        : 'Use this identity when sourcing can route across multiple supplier sub-units.'
                     }
                   />
                   <DetailCard label="Linked items in scope" value={String(linkedItems.length)} />
@@ -536,8 +541,8 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     label="Nearby supplier nodes"
                     value={
                       selectedSupplier.parentSupplierId
-                        ? `${siblingUnits.length} sibling sub-units under ${selectedSupplier.parentSupplierDisplayName ?? 'the parent supplier'}`
-                        : `${childUnits.length} direct sub-units available for location-specific routing`
+                        ? `${siblingUnits.length} sibling supplier sub-units under ${selectedSupplier.parentSupplierDisplayName ?? 'the parent supplier'}`
+                        : `${childUnits.length} direct supplier sub-units available for location-specific routing`
                     }
                   />
                   <DetailCard
@@ -574,7 +579,7 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
                     <div key={link.linkId} className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
                       <p className="font-semibold text-[var(--color-text-primary)]">{part.displayName}</p>
                       <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                        {link.vendorPartNumber || 'Supplier part not recorded'} · {link.catalogLeadTimeDays ?? 'Untracked'} day lead time
+                        {link.supplierPartNumber || 'Supplier part not recorded'} · {link.catalogLeadTimeDays ?? 'Untracked'} day lead time
                       </p>
                     </div>
                   )) : (

@@ -96,7 +96,7 @@ public static class ProcurementExceptionRules
         var hours = category switch
         {
             ProcurementExceptionCategories.ApprovalDelay => 48,
-            ProcurementExceptionCategories.VendorIssue => 72,
+            ProcurementExceptionCategories.SupplierIssue => 72,
             ProcurementExceptionCategories.BudgetOverride => 24,
             ProcurementExceptionCategories.PolicyViolation => 24,
             ProcurementExceptionCategories.PricingVariance => 48,

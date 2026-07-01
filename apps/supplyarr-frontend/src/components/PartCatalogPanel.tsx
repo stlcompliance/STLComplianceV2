@@ -27,7 +27,7 @@ const PART_SOURCE_TYPE_OPTIONS = [
   { value: 'transfer', label: 'Transfer' },
   { value: 'kit_assembly', label: 'Kit assembly' },
   { value: 'manufacturer', label: 'Manufacturer direct' },
-  { value: 'vendor', label: 'Supplier source' },
+  { value: 'supplier', label: 'Supplier source' },
 ]
 
 interface PartCatalogPanelProps {
@@ -254,13 +254,13 @@ export function PartCatalogPanel({
                       ))}
                     </div>
                   ) : null}
-                  {part.vendorLinks.length > 0 ? (
+                  {part.supplierLinks.length > 0 ? (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                         Supplier sources
                       </p>
                       <ul className="space-y-2">
-                        {part.vendorLinks.map((link) => (
+                        {part.supplierLinks.map((link) => (
                           <li
                             key={link.linkId}
                             className={`rounded-md border px-3 py-2 text-sm ${
@@ -280,7 +280,7 @@ export function PartCatalogPanel({
                                   })}
                                 </div>
                                 <div className="mt-1 text-xs text-[var(--color-text-muted)]">
-                                  {humanizeSupplierUnitKind(link.supplierUnitKind)} · {link.vendorPartNumber}
+                                  {humanizeSupplierUnitKind(link.supplierUnitKind)} · {link.supplierPartNumber}
                                 </div>
                               </div>
                               {link.isPreferred ? (
@@ -297,7 +297,7 @@ export function PartCatalogPanel({
                       </ul>
                     </div>
                   ) : null}
-                  {(!part.sources || part.sources.length === 0) && part.vendorLinks.length === 0 ? (
+                  {(!part.sources || part.sources.length === 0) && part.supplierLinks.length === 0 ? (
                     <p className="mt-2 text-slate-400">No sources configured.</p>
                   ) : null}
                 </li>
@@ -498,24 +498,24 @@ export function PartCatalogPanel({
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-slate-300">Add supplier source</h3>
             <StaticSearchPicker
-              id="vendor-link-part"
+              id="supplier-link-part"
               label="Part to link"
               value={selectedPartId}
               onChange={onSelectedPartIdChange}
               options={partOptions}
               selectedOption={selectedPartOption}
               placeholder="Select part"
-              testId="vendor-link-part-picker"
+              testId="supplier-link-part-picker"
             />
             <StaticSearchPicker
-              id="vendor-link-supplier-unit"
+              id="supplier-link-supplier-unit"
               label="Supplier identity or sub-unit"
               value={selectedSupplierUnitId}
               onChange={onSelectedSupplierUnitIdChange}
               options={supplierOptions}
               selectedOption={selectedSupplierUnitOption}
               placeholder="Select supplier identity or sub-unit"
-              testId="vendor-link-supplier-unit-picker"
+              testId="supplier-link-supplier-unit-picker"
             />
             {selectedSupplierUnit ? (
               <p className="text-xs text-[var(--color-text-muted)]">
@@ -528,10 +528,10 @@ export function PartCatalogPanel({
                 · {humanizeSupplierUnitKind(selectedSupplierUnit.unitKind)}
               </p>
             ) : null}
-            <label htmlFor="vendor-part-number" className="block text-sm text-slate-400">
+            <label htmlFor="supplier-part-number" className="block text-sm text-slate-400">
               Supplier part number
               <input
-                id="vendor-part-number"
+                id="supplier-part-number"
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100"
                 placeholder="Supplier part number"
                 value={supplierPartNumber}

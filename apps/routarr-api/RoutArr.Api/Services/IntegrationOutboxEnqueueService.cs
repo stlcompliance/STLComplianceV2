@@ -231,7 +231,7 @@ public sealed class IntegrationOutboxEnqueueService(
         var suffix = Guid.NewGuid().ToString("N");
         var payload = BuildTripPayload(trip, $"Dispatch override performed: {reason}") with
         {
-            OverrideTargetType = "vendor_readiness",
+            OverrideTargetType = "supplier_readiness",
             OverrideKinds = [reason],
         };
 

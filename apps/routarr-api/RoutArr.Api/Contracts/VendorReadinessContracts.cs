@@ -13,21 +13,21 @@ public sealed record DispatchBlockResponse(
     string? ResolvedByPersonId,
     string? OverrideReason);
 
-public sealed record TripVendorReadinessOverrideRequest(
+public sealed record TripSupplierReadinessOverrideRequest(
     string Reason);
 
-public sealed record IngestSupplyArrVendorOrderEventRequest(
+public sealed record IngestSupplyArrSupplierOrderEventRequest(
     Guid EventId,
     string EventType,
     DateTimeOffset OccurredAt,
     Guid TenantId,
-    Guid VendorOrderId,
+    Guid SupplierOrderId,
     Guid? BrokerOrderId,
     string? BrokerOrderNumberSnapshot,
     string? PreviousStatus,
     string? NewStatus,
-    Guid VendorId,
-    string VendorNameSnapshot,
+    Guid SupplierId,
+    string SupplierNameSnapshot,
     string? PickupLocationNameSnapshot,
     string PickupAddressSnapshot,
     string? DeliveryLocationNameSnapshot,
@@ -44,10 +44,10 @@ public sealed record IngestSupplyArrVendorOrderEventRequest(
     string? Source,
     Guid? SelectedTripId,
     decimal? AuthorizedQuantity,
-    Guid? ReadyChildVendorOrderId,
-    Guid? RemainingChildVendorOrderId);
+    Guid? ReadyChildSupplierOrderId,
+    Guid? RemainingChildSupplierOrderId);
 
-public sealed record IngestSupplyArrVendorOrderEventResponse(
+public sealed record IngestSupplyArrSupplierOrderEventResponse(
     Guid EventId,
     bool WasReplay,
     int MatchedTripCount);

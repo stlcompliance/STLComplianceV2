@@ -6,12 +6,12 @@ using STLCompliance.Shared.Contracts;
 
 namespace RoutArr.Api.Services;
 
-public sealed record SupplyArrVendorOrderReadResponse(
-    Guid VendorOrderId,
+public sealed record SupplyArrSupplierOrderReadResponse(
+    Guid SupplierOrderId,
     Guid? BrokerOrderId,
     string? BrokerOrderNumberSnapshot,
-    Guid VendorId,
-    string VendorNameSnapshot,
+    Guid SupplierId,
+    string SupplierNameSnapshot,
     string? PickupLocationNameSnapshot,
     string PickupAddressSnapshot,
     string? DeliveryLocationNameSnapshot,
@@ -29,25 +29,25 @@ public sealed record SupplyArrVendorOrderReadResponse(
     string Status,
     DateTimeOffset UpdatedAt);
 
-public sealed class SupplyArrVendorOrderClient(
+public sealed class SupplyArrSupplierOrderClient(
     HttpClient httpClient,
     IOptions<SupplyArrClientOptions> options)
 {
-    public async Task<SupplyArrVendorOrderReadResponse> GetVendorOrderAsync(
+    public async Task<SupplyArrSupplierOrderReadResponse> GetSupplierOrderAsync(
         Guid tenantId,
-        Guid vendorOrderId,
+        Guid supplierOrderId,
         CancellationToken cancellationToken = default)
     {
         var serviceToken = options.Value.ServiceToken;
         if (string.IsNullOrWhiteSpace(serviceToken))
         {
             throw new StlApiException(
-                "supplyarr.vendor_order_service_token_missing",
-                "RoutArr SupplyArr vendor-order service token is not configured.",
+                "supplyarr.supplier_order_service_token_missing",
+                "RoutArr SupplyArr supplier-order service token is not configured.",
                 500);
         }
 
-        var url = $"api/v1/integrations/vendor-orders/{vendorOrderId}?tenantId={tenantId:D}";
+        var url = $"api/v1/integrations/supplier-orders/{supplierOrderId}?tenantId={tenantId:D}";
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", serviceToken);
 
@@ -56,11 +56,11 @@ public sealed class SupplyArrVendorOrderClient(
         {
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             throw new StlApiException(
-                "supplyarr.vendor_order_read_failed",
-                $"SupplyArr vendor-order read failed ({(int)response.StatusCode}): {body}",
+                "supplyarr.supplier_order_read_failed",
+                $"SupplyArr supplier-order read failed ({(int)response.StatusCode}): {body}",
                 (int)response.StatusCode);
         }
 
-        return (await response.Content.ReadFromJsonAsync<SupplyArrVendorOrderReadResponse>(cancellationToken))!;
+        return (await response.Content.ReadFromJsonAsync<SupplyArrSupplierOrderReadResponse>(cancellationToken))!;
     }
 }

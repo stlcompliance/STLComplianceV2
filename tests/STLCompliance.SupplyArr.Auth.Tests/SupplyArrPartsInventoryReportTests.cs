@@ -101,7 +101,7 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
         var part = summary.Parts.Single(x => x.PartId == _partId);
         Assert.True(part.BelowReorderPoint);
         Assert.Equal(8m, part.QuantityOnHand);
-        Assert.Equal(1, part.VendorLinkCount);
+        Assert.Equal(1, part.SupplierLinkCount);
         Assert.True(summary.Totals.BelowReorderPointCount >= 1);
     }
 
@@ -116,7 +116,12 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
         Assert.NotNull(detail);
         Assert.Equal(_partId, detail!.Summary.PartId);
         Assert.NotEmpty(detail.StockByBin);
-        Assert.NotEmpty(detail.VendorLinks);
+        Assert.NotEmpty(detail.SupplierLinks);
+        var supplierLink = Assert.Single(detail.SupplierLinks);
+        Assert.Equal("Inventory Supplier", supplierLink.SupplierDisplayName);
+        Assert.Equal("identity", supplierLink.SupplierUnitKind);
+        Assert.Equal("VPN-INV", supplierLink.SupplierPartNumber);
+        Assert.True(supplierLink.IsPreferred);
     }
 
     [Fact]
@@ -185,14 +190,14 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var vendor = new ExternalParty
+        var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            PartyKey = "V-INV",
-            PartyType = "vendor",
-            DisplayName = "Inventory Vendor",
-            LegalName = "Inventory Vendor",
+            SupplierKey = "V-INV",
+            
+            DisplayName = "Inventory Supplier",
+            LegalName = "Inventory Supplier",
             ApprovalStatus = "approved",
             Status = "active",
             CreatedAt = now,
@@ -215,13 +220,13 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
             UpdatedAt = now,
         };
 
-        var link = new PartVendorLink
+        var link = new PartSupplierLink
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             PartId = part.Id,
-            ExternalPartyId = vendor.Id,
-            VendorPartNumber = "VPN-INV",
+            SupplierId = supplier.Id,
+            SupplierPartNumber = "VPN-INV",
             IsPreferred = true,
             CreatedAt = now,
             UpdatedAt = now,
@@ -241,9 +246,9 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
 
         db.InventoryLocations.Add(location);
         db.InventoryBins.Add(bin);
-        db.ExternalParties.Add(vendor);
+        db.Suppliers.Add(supplier);
         db.Parts.Add(part);
-        db.PartVendorLinks.Add(link);
+        db.PartSupplierLinks.Add(link);
         db.PartStockLevels.Add(stock);
         await db.SaveChangesAsync();
         return (part.Id, location.Id);
@@ -333,3 +338,5 @@ public sealed class SupplyArrPartsInventoryReportTests : IAsyncLifetime
         }
     }
 }
+
+

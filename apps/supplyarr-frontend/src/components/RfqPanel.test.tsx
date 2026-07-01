@@ -55,9 +55,7 @@ const mockData = vi.hoisted(() => ({
     submittedAt: '2026-05-01T00:00:00Z',
     awardedSupplierId: null,
     awardedSupplierDisplayName: null,
-    awardedVendorPartyId: null,
-    awardedVendorDisplayName: null,
-    selectedVendorQuoteId: null,
+    selectedSupplierQuoteId: null,
     purchaseRequestId: null,
     awardedAt: null,
     lines: [
@@ -77,7 +75,7 @@ const mockData = vi.hoisted(() => ({
     invitations: [
       {
         invitationId: 'inv-1',
-        supplierId: 'vendor-1',
+        supplierId: 'supplier-unit-1',
         supplierKey: 'ACME',
         supplierDisplayName: 'North Yard Counter',
         parentSupplierDisplayName: 'Acme Supply',
@@ -88,11 +86,11 @@ const mockData = vi.hoisted(() => ({
         portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
         portalAccessExpiresAt: '2026-05-15T00:00:00Z',
         portalAccessCode: 'portal-code-1',
-        portalUrl: '/vendor-portal?rfqId=rfq-1&accessCode=portal-code-1',
+        portalUrl: '/supplier-quote-portal?rfqId=rfq-1&accessCode=portal-code-1',
       },
       {
         invitationId: 'inv-2',
-        supplierId: 'vendor-2',
+        supplierId: 'supplier-unit-2',
         supplierKey: 'BETA',
         supplierDisplayName: 'South Branch',
         parentSupplierDisplayName: 'Beta Parts',
@@ -103,14 +101,14 @@ const mockData = vi.hoisted(() => ({
         portalAccessCodeIssuedAt: '2026-05-01T00:00:00Z',
         portalAccessExpiresAt: '2026-05-15T00:00:00Z',
         portalAccessCode: 'portal-code-2',
-        portalUrl: '/vendor-portal?rfqId=rfq-1&accessCode=portal-code-2',
+        portalUrl: '/supplier-quote-portal?rfqId=rfq-1&accessCode=portal-code-2',
       },
     ],
     quotes: [
       {
-        vendorQuoteId: 'vq-1',
+        supplierQuoteId: 'vq-1',
         rfqId: 'rfq-1',
-        supplierId: 'vendor-1',
+        supplierId: 'supplier-unit-1',
         supplierKey: 'ACME',
         supplierDisplayName: 'North Yard Counter',
         parentSupplierDisplayName: 'Acme Supply',
@@ -128,9 +126,9 @@ const mockData = vi.hoisted(() => ({
         updatedAt: '2026-05-03T00:00:00Z',
       },
       {
-        vendorQuoteId: 'vq-2',
+        supplierQuoteId: 'vq-2',
         rfqId: 'rfq-1',
-        supplierId: 'vendor-2',
+        supplierId: 'supplier-unit-2',
         supplierKey: 'BETA',
         supplierDisplayName: 'South Branch',
         parentSupplierDisplayName: 'Beta Parts',
@@ -162,8 +160,8 @@ vi.mock('../api/client', () => ({
     status: 'submitted',
     quoteSummaries: [
       {
-        vendorQuoteId: 'vq-1',
-        supplierId: 'vendor-1',
+        supplierQuoteId: 'vq-1',
+        supplierId: 'supplier-unit-1',
         supplierKey: 'ACME',
         supplierDisplayName: 'North Yard Counter',
         parentSupplierDisplayName: 'Acme Supply',
@@ -176,8 +174,8 @@ vi.mock('../api/client', () => ({
         isSelected: false,
       },
       {
-        vendorQuoteId: 'vq-2',
-        supplierId: 'vendor-2',
+        supplierQuoteId: 'vq-2',
+        supplierId: 'supplier-unit-2',
         supplierKey: 'BETA',
         supplierDisplayName: 'South Branch',
         parentSupplierDisplayName: 'Beta Parts',
@@ -200,8 +198,8 @@ vi.mock('../api/client', () => ({
         quantityRequested: 10,
         quotes: [
           {
-            vendorQuoteId: 'vq-1',
-            supplierId: 'vendor-1',
+            supplierQuoteId: 'vq-1',
+            supplierId: 'supplier-unit-1',
             supplierKey: 'ACME',
             supplierDisplayName: 'North Yard Counter',
             parentSupplierDisplayName: 'Acme Supply',
@@ -215,8 +213,8 @@ vi.mock('../api/client', () => ({
             isFastestLeadTime: false,
           },
           {
-            vendorQuoteId: 'vq-2',
-            supplierId: 'vendor-2',
+            supplierQuoteId: 'vq-2',
+            supplierId: 'supplier-unit-2',
             supplierKey: 'BETA',
             supplierDisplayName: 'South Branch',
             parentSupplierDisplayName: 'Beta Parts',
@@ -235,11 +233,11 @@ vi.mock('../api/client', () => ({
   }),
   createRfq: vi.fn(),
   submitRfq: vi.fn(),
-  inviteRfqVendors: vi.fn(),
-  createVendorQuote: vi.fn(),
-  upsertVendorQuoteLine: vi.fn(),
-  submitVendorQuote: vi.fn(),
-  selectRfqVendorQuote: vi.fn(),
+  inviteRfqSuppliers: vi.fn(),
+  createSupplierQuote: vi.fn(),
+  upsertSupplierQuoteLine: vi.fn(),
+  submitSupplierQuote: vi.fn(),
+  selectRfqSupplierQuote: vi.fn(),
   createPurchaseRequestFromRfq: vi.fn(),
 }))
 
@@ -255,16 +253,14 @@ describe('RfqPanel', () => {
         parts={[]}
         suppliers={[
           {
-            supplierId: 'vendor-1',
-            partyId: 'vendor-1',
+            supplierId: 'supplier-unit-1',
             displayName: 'North Yard Counter',
             supplierKey: 'ACME',
             parentSupplierDisplayName: 'Acme Supply',
             unitKind: 'sub_unit',
           },
           {
-            supplierId: 'vendor-2',
-            partyId: 'vendor-2',
+            supplierId: 'supplier-unit-2',
             displayName: 'South Branch',
             supplierKey: 'BETA',
             parentSupplierDisplayName: 'Beta Parts',
@@ -273,8 +269,7 @@ describe('RfqPanel', () => {
         ]}
         supplierDirectory={[
           {
-            supplierId: 'vendor-1',
-            partyId: 'vendor-1',
+            supplierId: 'supplier-unit-1',
             displayName: 'North Yard Counter',
             supplierKey: 'ACME',
             parentSupplierDisplayName: 'Acme Supply',
@@ -283,8 +278,7 @@ describe('RfqPanel', () => {
             status: 'active',
           },
           {
-            supplierId: 'vendor-2',
-            partyId: 'vendor-2',
+            supplierId: 'supplier-unit-2',
             displayName: 'South Branch',
             supplierKey: 'BETA',
             parentSupplierDisplayName: 'Beta Parts',
@@ -303,13 +297,13 @@ describe('RfqPanel', () => {
 
     fireEvent.change(screen.getByTestId('rfq-picker'), { target: { value: 'rfq-1' } })
     expect(await screen.findByText(/Quote analytics/i)).toBeInTheDocument()
-    const inviteVendorSelect = screen.getByLabelText(/Invite supplier identity or sub-unit/i)
-    expect(within(inviteVendorSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(ACME\)/i })).not.toBeDisabled()
-    expect(within(inviteVendorSelect).getByRole('option', { name: /Beta Parts · South Branch \(BETA\) \(inactive\)/i })).toBeDisabled()
+    const inviteSupplierSelect = screen.getByLabelText(/Invite supplier identity or sub-unit/i)
+    expect(within(inviteSupplierSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(ACME\)/i })).not.toBeDisabled()
+    expect(within(inviteSupplierSelect).getByRole('option', { name: /Beta Parts · South Branch \(BETA\) \(inactive\)/i })).toBeDisabled()
 
-    const quoteVendorSelect = screen.getByLabelText(/Quote supplier identity or sub-unit/i)
-    expect(within(quoteVendorSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(approved · active\)/i })).not.toBeDisabled()
-    expect(within(quoteVendorSelect).getByRole('option', { name: /Beta Parts · South Branch \(restricted · active\) \(inactive\)/i })).toBeDisabled()
+    const quoteSupplierSelect = screen.getByLabelText(/Quote supplier identity or sub-unit/i)
+    expect(within(quoteSupplierSelect).getByRole('option', { name: /Acme Supply · North Yard Counter \(approved · active\)/i })).not.toBeDisabled()
+    expect(within(quoteSupplierSelect).getByRole('option', { name: /Beta Parts · South Branch \(restricted · active\) \(inactive\)/i })).toBeDisabled()
     expect(screen.getByText(/Quote Q-ACME-1/i)).toBeInTheDocument()
     expect(screen.getByText(/Response time 2 days/i)).toBeInTheDocument()
     expect(screen.getByText(/Best price/i)).toBeInTheDocument()

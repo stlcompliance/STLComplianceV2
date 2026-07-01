@@ -35,7 +35,7 @@ public sealed class ProcurementNotificationDispatchService(
                 x.Id,
                 x.TenantId,
                 x.EventKind,
-                x.VendorPartyId,
+                x.SupplierId,
                 x.CreatedAt)).ToList());
     }
 
@@ -97,19 +97,37 @@ public sealed class ProcurementNotificationDispatchService(
             .Take(take)
             .ToListAsync(cancellationToken);
 
+        var supplierIds = rows
+            .Where(x => x.SupplierId.HasValue)
+            .Select(x => x.SupplierId!.Value)
+            .Distinct()
+            .ToList();
+        var suppliers = supplierIds.Count == 0
+            ? new Dictionary<Guid, Supplier>()
+            : await db.Suppliers
+                .AsNoTracking()
+                .Where(x => x.TenantId == tenantId && supplierIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id, cancellationToken);
+
         var items = rows
-            .Select(x => new ProcurementNotificationDispatchItem(
-                x.Id,
-                x.EventKind,
-                x.DispatchStatus,
-                x.VendorPartyId,
-                x.RelatedEntityType,
-                x.RelatedEntityId,
-                x.WebhookHost,
-                x.HttpStatusCode,
-                x.ErrorMessage,
-                x.CreatedAt,
-                x.DispatchedAt))
+            .Select(x =>
+            {
+                suppliers.TryGetValue(x.SupplierId ?? Guid.Empty, out var supplier);
+                return new ProcurementNotificationDispatchItem(
+                    x.Id,
+                    x.EventKind,
+                    x.DispatchStatus,
+                    x.SupplierId,
+                    supplier?.SupplierKey,
+                    supplier?.DisplayName,
+                    x.RelatedEntityType,
+                    x.RelatedEntityId,
+                    x.WebhookHost,
+                    x.HttpStatusCode,
+                    x.ErrorMessage,
+                    x.CreatedAt,
+                    x.DispatchedAt);
+            })
             .ToList();
 
         return new ProcurementNotificationDispatchesResponse(items);
@@ -205,42 +223,42 @@ public sealed class ProcurementNotificationDispatchService(
             {
                 @event = "supplyarr.purchase_request.submitted",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 purchaseRequestId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.PurchaseRequestApproved => new
             {
                 @event = "supplyarr.purchase_request.approved",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 purchaseRequestId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.PurchaseOrderIssued => new
             {
                 @event = "supplyarr.purchase_order.issued",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 purchaseOrderId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.ReceivingReceiptPosted => new
             {
                 @event = "supplyarr.receiving_receipt.posted",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 receivingReceiptId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.PurchaseRequestApprovalReminder => new
             {
                 @event = "supplyarr.purchase_request.approval_reminder",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 purchaseRequestId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.PurchaseOrderApprovalReminder => new
             {
                 @event = "supplyarr.purchase_order.approval_reminder",
                 tenantId = item.TenantId,
-                vendorPartyId = item.VendorPartyId,
+                supplierId = item.SupplierId,
                 purchaseOrderId = item.RelatedEntityId,
             },
             ProcurementNotificationEventKinds.MaintainArrDemandPrDrafted => new
@@ -296,3 +314,4 @@ public sealed class ProcurementNotificationDispatchService(
     private static string Truncate(string value, int maxLength) =>
         value.Length <= maxLength ? value : value[..maxLength];
 }
+

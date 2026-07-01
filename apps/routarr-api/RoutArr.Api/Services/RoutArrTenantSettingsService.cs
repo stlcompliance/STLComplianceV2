@@ -1128,7 +1128,7 @@ public sealed class RoutArrTenantSettingsService(
             case "carrier":
                 if (source != "supplyarr")
                 {
-                    issues.Add(Error("scope.sourceProduct", "Carrier overrides must reference SupplyArr carrier/vendor identity."));
+                    issues.Add(Error("scope.sourceProduct", "Carrier overrides must reference SupplyArr carrier or supplier identity."));
                 }
 
                 break;

@@ -49,9 +49,9 @@ vi.mock('../api/client', () => ({
       {
         id: 'audit-1',
         actorUserId: 'user-1',
-        action: 'supplyarr.parties.create',
-        targetType: 'external_party',
-        targetId: 'party-1',
+        action: 'supplier.create',
+        targetType: 'supplier',
+        targetId: 'supplier-1',
         result: 'success',
         reasonCode: null,
         correlationId: 'corr-1',
@@ -75,7 +75,7 @@ describe('AuditHistoryPanel', () => {
     expect(await screen.findByTestId('audit-history-panel')).toBeInTheDocument()
     expect(screen.getByLabelText('Target type')).toBeInTheDocument()
     expect(screen.getByLabelText('Target id')).toBeInTheDocument()
-    expect(await screen.findByText('supplyarr.parties.create')).toBeInTheDocument()
+    expect(await screen.findByText('supplier.create')).toBeInTheDocument()
   })
 
   it('returns null when user cannot read audit history', () => {

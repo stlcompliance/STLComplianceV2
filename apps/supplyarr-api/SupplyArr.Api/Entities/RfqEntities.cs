@@ -22,9 +22,9 @@ public sealed class Rfq : IHasTenant
 
     public Guid? SubmittedByUserId { get; set; }
 
-    public Guid? AwardedVendorPartyId { get; set; }
+    public Guid? AwardedSupplierId { get; set; }
 
-    public Guid? SelectedVendorQuoteId { get; set; }
+    public Guid? SelectedSupplierQuoteId { get; set; }
 
     public Guid? PurchaseRequestId { get; set; }
 
@@ -36,13 +36,13 @@ public sealed class Rfq : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public ExternalParty? AwardedVendorParty { get; set; }
+    public Supplier? AwardedSupplier { get; set; }
 
     public ICollection<RfqLine> Lines { get; set; } = new List<RfqLine>();
 
-    public ICollection<RfqVendorInvitation> VendorInvitations { get; set; } = new List<RfqVendorInvitation>();
+    public ICollection<RfqSupplierInvitation> SupplierInvitations { get; set; } = new List<RfqSupplierInvitation>();
 
-    public ICollection<VendorQuote> VendorQuotes { get; set; } = new List<VendorQuote>();
+    public ICollection<SupplierQuote> SupplierQuotes { get; set; } = new List<SupplierQuote>();
 }
 
 public sealed class RfqLine : IHasTenant
@@ -72,7 +72,7 @@ public sealed class RfqLine : IHasTenant
     public Part Part { get; set; } = null!;
 }
 
-public sealed class RfqVendorInvitation : IHasTenant
+public sealed class RfqSupplierInvitation : IHasTenant
 {
     public Guid Id { get; set; }
 
@@ -80,7 +80,7 @@ public sealed class RfqVendorInvitation : IHasTenant
 
     public Guid RfqId { get; set; }
 
-    public Guid VendorPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public string Status { get; set; } = RfqInvitationStatuses.Invited;
 
@@ -96,10 +96,10 @@ public sealed class RfqVendorInvitation : IHasTenant
 
     public Rfq Rfq { get; set; } = null!;
 
-    public ExternalParty VendorParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 }
 
-public sealed class VendorQuote : IHasTenant
+public sealed class SupplierQuote : IHasTenant
 {
     public Guid Id { get; set; }
 
@@ -107,11 +107,11 @@ public sealed class VendorQuote : IHasTenant
 
     public Guid RfqId { get; set; }
 
-    public Guid VendorPartyId { get; set; }
+    public Guid SupplierId { get; set; }
 
     public string QuoteKey { get; set; } = string.Empty;
 
-    public string Status { get; set; } = VendorQuoteStatuses.Draft;
+    public string Status { get; set; } = SupplierQuoteStatuses.Draft;
 
     public string CurrencyCode { get; set; } = "USD";
 
@@ -129,18 +129,18 @@ public sealed class VendorQuote : IHasTenant
 
     public Rfq Rfq { get; set; } = null!;
 
-    public ExternalParty VendorParty { get; set; } = null!;
+    public Supplier Supplier { get; set; } = null!;
 
-    public ICollection<VendorQuoteLine> Lines { get; set; } = new List<VendorQuoteLine>();
+    public ICollection<SupplierQuoteLine> Lines { get; set; } = new List<SupplierQuoteLine>();
 }
 
-public sealed class VendorQuoteLine : IHasTenant
+public sealed class SupplierQuoteLine : IHasTenant
 {
     public Guid Id { get; set; }
 
     public Guid TenantId { get; set; }
 
-    public Guid VendorQuoteId { get; set; }
+    public Guid SupplierQuoteId { get; set; }
 
     public Guid RfqLineId { get; set; }
 
@@ -156,7 +156,7 @@ public sealed class VendorQuoteLine : IHasTenant
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public VendorQuote VendorQuote { get; set; } = null!;
+    public SupplierQuote SupplierQuote { get; set; } = null!;
 
     public RfqLine RfqLine { get; set; } = null!;
 }
@@ -191,7 +191,7 @@ public static class RfqInvitationStatuses
     public const string Responded = "responded";
 }
 
-public static class VendorQuoteStatuses
+public static class SupplierQuoteStatuses
 {
     public const string Draft = "draft";
 
@@ -208,3 +208,4 @@ public static class VendorQuoteStatuses
         Draft,
     };
 }
+

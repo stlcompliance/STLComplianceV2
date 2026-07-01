@@ -22,8 +22,8 @@ public sealed class WarrantyClaimService(
     {
         var query = db.WarrantyClaims
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -36,7 +36,7 @@ public sealed class WarrantyClaimService(
 
         if (supplierId is not null)
         {
-            query = query.Where(x => x.VendorPartyId == supplierId);
+            query = query.Where(x => x.SupplierId == supplierId);
         }
 
         if (partId is not null)
@@ -72,7 +72,7 @@ public sealed class WarrantyClaimService(
         CreateSupplierWarrantyClaimRequest request,
         CancellationToken cancellationToken = default)
     {
-        var supplierId = request.SupplierUnitId ?? request.SupplierId ?? request.VendorPartyId
+        var supplierId = request.SupplierUnitId ?? request.SupplierId
             ?? throw new StlApiException(
                 "warranty_claims.supplier_required",
                 "Supplier is required.",
@@ -102,7 +102,7 @@ public sealed class WarrantyClaimService(
             ClaimKey = claimKey,
             Status = WarrantyClaimStatuses.Draft,
             ClaimType = WarrantyClaimRules.NormalizeClaimType(request.ClaimType),
-            VendorPartyId = supplierId,
+            SupplierId = supplierId,
             PartId = request.PartId,
             PurchaseOrderId = request.PurchaseOrderId,
             PurchaseOrderLineId = request.PurchaseOrderLineId,
@@ -110,7 +110,7 @@ public sealed class WarrantyClaimService(
             ReceivingReceiptLineId = request.ReceivingReceiptLineId,
             QuantityClaimed = WarrantyClaimRules.NormalizeQuantity(request.QuantityClaimed),
             ProblemDescription = WarrantyClaimRules.NormalizeProblemDescription(request.ProblemDescription),
-            VendorRmaNumber = WarrantyClaimRules.NormalizeOptionalText(request.VendorRmaNumber, 128, "Vendor RMA number"),
+            SupplierRmaNumber = WarrantyClaimRules.NormalizeOptionalText(request.SupplierRmaNumber, 128, "Supplier RMA number"),
             CreatedByUserId = actorUserId,
             CreatedAt = now,
             UpdatedAt = now,
@@ -143,7 +143,7 @@ public sealed class WarrantyClaimService(
 
         await ValidateRelatedEntitiesAsync(
             tenantId,
-            entity.VendorPartyId,
+            entity.SupplierId,
             entity.PartId,
             request.PurchaseOrderId,
             request.PurchaseOrderLineId,
@@ -158,7 +158,7 @@ public sealed class WarrantyClaimService(
         entity.PurchaseOrderLineId = request.PurchaseOrderLineId;
         entity.ReceivingReceiptId = request.ReceivingReceiptId;
         entity.ReceivingReceiptLineId = request.ReceivingReceiptLineId;
-        entity.VendorRmaNumber = WarrantyClaimRules.NormalizeOptionalText(request.VendorRmaNumber, 128, "Vendor RMA number");
+        entity.SupplierRmaNumber = WarrantyClaimRules.NormalizeOptionalText(request.SupplierRmaNumber, 128, "Supplier RMA number");
         entity.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -205,52 +205,52 @@ public sealed class WarrantyClaimService(
             tenantId,
             actorUserId,
             entity,
-            $"Warranty claim submitted to vendor: {entity.ClaimKey}",
+            $"Warranty claim submitted to supplier: {entity.ClaimKey}",
             cancellationToken);
 
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
     }
 
-    public async Task<WarrantyClaimResponse> RecordVendorResponseAsync(
+    public async Task<WarrantyClaimResponse> RecordSupplierResponseAsync(
         Guid tenantId,
         Guid actorUserId,
         Guid warrantyClaimId,
-        RecordWarrantyClaimVendorResponseRequest request,
+        RecordWarrantyClaimSupplierResponseRequest request,
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, warrantyClaimId, cancellationToken);
         WarrantyClaimRules.EnsureStatus(entity, WarrantyClaimStatuses.Submitted);
 
-        var disposition = WarrantyClaimRules.NormalizeVendorDisposition(request.VendorDisposition);
+        var disposition = WarrantyClaimRules.NormalizeSupplierDisposition(request.SupplierDisposition);
         var now = DateTimeOffset.UtcNow;
 
-        WarrantyClaimRules.Transition(entity, WarrantyClaimStatuses.VendorResponded);
-        entity.VendorDisposition = disposition;
-        entity.VendorResponseNotes = WarrantyClaimRules.NormalizeOptionalText(
-            request.VendorResponseNotes,
+        WarrantyClaimRules.Transition(entity, WarrantyClaimStatuses.SupplierResponded);
+        entity.SupplierDisposition = disposition;
+        entity.SupplierResponseNotes = WarrantyClaimRules.NormalizeOptionalText(
+            request.SupplierResponseNotes,
             2048,
-            "Vendor response notes");
-        if (!string.IsNullOrWhiteSpace(request.VendorRmaNumber))
+            "Supplier response notes");
+        if (!string.IsNullOrWhiteSpace(request.SupplierRmaNumber))
         {
-            entity.VendorRmaNumber = WarrantyClaimRules.NormalizeOptionalText(
-                request.VendorRmaNumber,
+            entity.SupplierRmaNumber = WarrantyClaimRules.NormalizeOptionalText(
+                request.SupplierRmaNumber,
                 128,
-                "Vendor RMA number");
+                "Supplier RMA number");
         }
 
-        entity.VendorRespondedByUserId = actorUserId;
-        entity.VendorRespondedAt = now;
+        entity.SupplierRespondedByUserId = actorUserId;
+        entity.SupplierRespondedAt = now;
         entity.UpdatedAt = now;
 
         await db.SaveChangesAsync(cancellationToken);
 
         await WriteAuditAndOutboxAsync(
-            "warranty_claim.vendor_response",
-            IntegrationOutboxEventKinds.WarrantyClaimVendorResponded,
+            "warranty_claim.supplier_response",
+            IntegrationOutboxEventKinds.WarrantyClaimSupplierResponded,
             tenantId,
             actorUserId,
             entity,
-            $"Vendor response recorded for warranty claim {entity.ClaimKey}: {disposition}",
+            $"Supplier response recorded for warranty claim {entity.ClaimKey}: {disposition}",
             cancellationToken);
 
         return Map(await LoadAsync(tenantId, entity.Id, cancellationToken));
@@ -264,13 +264,13 @@ public sealed class WarrantyClaimService(
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, warrantyClaimId, cancellationToken);
-        WarrantyClaimRules.EnsureStatus(entity, WarrantyClaimStatuses.VendorResponded);
+        WarrantyClaimRules.EnsureStatus(entity, WarrantyClaimStatuses.SupplierResponded);
 
-        if (string.Equals(entity.VendorDisposition, WarrantyClaimVendorDispositions.Denied, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(entity.SupplierDisposition, WarrantyClaimSupplierDispositions.Denied, StringComparison.OrdinalIgnoreCase))
         {
             throw new StlApiException(
-                "warranty_claims.vendor_denied",
-                "Use deny when the vendor disposition is denied.",
+                "warranty_claims.supplier_denied",
+                "Use deny when the supplier disposition is denied.",
                 409);
         }
 
@@ -311,11 +311,11 @@ public sealed class WarrantyClaimService(
         CancellationToken cancellationToken = default)
     {
         var entity = await LoadTrackedAsync(tenantId, warrantyClaimId, cancellationToken);
-        if (entity.Status is not WarrantyClaimStatuses.Submitted and not WarrantyClaimStatuses.VendorResponded)
+        if (entity.Status is not WarrantyClaimStatuses.Submitted and not WarrantyClaimStatuses.SupplierResponded)
         {
             throw new StlApiException(
                 "warranty_claims.invalid_status",
-                "Warranty claim can only be denied while submitted or after vendor response.",
+                "Warranty claim can only be denied while submitted or after supplier response.",
                 409);
         }
 
@@ -421,7 +421,7 @@ public sealed class WarrantyClaimService(
                 .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == poId, cancellationToken)
                 ?? throw new StlApiException("warranty_claims.purchase_order_not_found", "Purchase order was not found.", 404);
 
-            if (po.VendorPartyId != supplierId)
+            if (po.SupplierId != supplierId)
             {
                 throw new StlApiException(
                     "warranty_claims.purchase_order_supplier_mismatch",
@@ -494,18 +494,11 @@ public sealed class WarrantyClaimService(
         Guid supplierId,
         CancellationToken cancellationToken)
     {
-        var party = await db.ExternalParties
+        var supplier = await db.Suppliers
             .AsNoTracking()
             .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == supplierId, cancellationToken)
             ?? throw new StlApiException("warranty_claims.supplier_not_found", "Supplier was not found.", 404);
 
-        if (!VendorRestrictionPartyTypes.Allowed.Contains(party.PartyType))
-        {
-            throw new StlApiException(
-                "warranty_claims.supplier_type_not_allowed",
-                "Warranty claims apply only to supplier records.",
-                400);
-        }
     }
 
     private async Task EnsurePartAsync(Guid tenantId, Guid partId, CancellationToken cancellationToken)
@@ -539,7 +532,7 @@ public sealed class WarrantyClaimService(
             outboxKind,
             "warranty_claim",
             entity.Id,
-            new IntegrationOutboxPayload(tenantId, summary, entity.VendorPartyId),
+            new IntegrationOutboxPayload(tenantId, summary, entity.SupplierId),
             cancellationToken: cancellationToken);
     }
 
@@ -549,8 +542,8 @@ public sealed class WarrantyClaimService(
         CancellationToken cancellationToken) =>
         await db.WarrantyClaims
             .AsNoTracking()
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -562,8 +555,8 @@ public sealed class WarrantyClaimService(
         Guid warrantyClaimId,
         CancellationToken cancellationToken) =>
         await db.WarrantyClaims
-            .Include(x => x.VendorParty)
-                .ThenInclude(x => x!.ParentExternalParty)
+            .Include(x => x.Supplier)
+                .ThenInclude(x => x!.ParentSupplier)
             .Include(x => x.Part)
             .Include(x => x.PurchaseOrder)
             .Include(x => x.ReceivingReceipt)
@@ -576,16 +569,13 @@ public sealed class WarrantyClaimService(
             entity.ClaimKey,
             entity.Status,
             entity.ClaimType,
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
-            entity.VendorParty.ParentExternalPartyId,
-            entity.VendorParty.ParentExternalParty?.DisplayName,
-            entity.VendorParty.UnitKind,
-            ParseServiceTypes(entity.VendorParty.ServiceTypesJson),
-            entity.VendorPartyId,
-            entity.VendorParty.PartyKey,
-            entity.VendorParty.DisplayName,
+            entity.SupplierId,
+            entity.Supplier.SupplierKey,
+            entity.Supplier.DisplayName,
+            entity.Supplier.ParentSupplierId,
+            entity.Supplier.ParentSupplier?.DisplayName,
+            entity.Supplier.UnitKind,
+            ParseServiceTypes(entity.Supplier.ServiceTypesJson),
             entity.PartId,
             entity.Part.PartKey,
             entity.Part.DisplayName,
@@ -597,16 +587,16 @@ public sealed class WarrantyClaimService(
             entity.ReceivingReceiptLineId,
             entity.QuantityClaimed,
             entity.ProblemDescription,
-            entity.VendorRmaNumber,
-            entity.VendorDisposition,
-            entity.VendorResponseNotes,
+            entity.SupplierRmaNumber,
+            entity.SupplierDisposition,
+            entity.SupplierResponseNotes,
             entity.ClosureNotes,
             entity.DenialReason,
             entity.CreatedByUserId,
             entity.SubmittedByUserId,
             entity.SubmittedAt,
-            entity.VendorRespondedByUserId,
-            entity.VendorRespondedAt,
+            entity.SupplierRespondedByUserId,
+            entity.SupplierRespondedAt,
             entity.ClosedByUserId,
             entity.ClosedAt,
             entity.DeniedByUserId,
@@ -634,3 +624,5 @@ public sealed class WarrantyClaimService(
         }
     }
 }
+
+

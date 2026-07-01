@@ -10,7 +10,7 @@ public static class PartAliasEndpoints
     {
         MapItemCategoryRoutes(app.MapGroup("/api/v1/item-categories").WithTags("PartCatalog").RequireAuthorization());
         MapManufacturerRoutes(app.MapGroup("/api/v1/manufacturers").WithTags("PartCatalog").RequireAuthorization());
-        MapVendorItemRoutes(app.MapGroup("/api/v1/vendor-items").WithTags("PartCatalog").RequireAuthorization());
+        MapSupplierItemRoutes(app.MapGroup("/api/v1/supplier-items").WithTags("PartCatalog").RequireAuthorization());
     }
 
     private static void MapItemCategoryRoutes(RouteGroupBuilder group)
@@ -56,10 +56,10 @@ public static class PartAliasEndpoints
         .WithName("ListManufacturersV1");
     }
 
-    private static void MapVendorItemRoutes(RouteGroupBuilder group)
+    private static void MapSupplierItemRoutes(RouteGroupBuilder group)
     {
         group.MapGet("/", async (
-            Guid? partyId,
+            Guid? supplierId,
             Guid? partId,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
@@ -69,18 +69,18 @@ public static class PartAliasEndpoints
             authorization.RequirePartsRead(context.User);
             var tenantId = context.User.GetTenantId();
             var items = await service.ListAsync(tenantId, null, cancellationToken);
-            var vendorItems = items
+            var supplierItems = items
                 .Where(p => !partId.HasValue || p.PartId == partId.Value)
-                .SelectMany(p => p.VendorLinks.Select(v => new VendorItemResponse(
+                .SelectMany(p => p.SupplierLinks.Select(v => new SupplierItemResponse(
                     v.LinkId,
                     p.PartId,
                     p.PartKey,
                     p.DisplayName,
                     p.CategoryKey,
-                    v.PartyId,
-                    v.PartyKey,
-                    v.PartyDisplayName,
-                    v.VendorPartNumber,
+                    v.SupplierId,
+                    v.SupplierKey,
+                    v.SupplierDisplayName,
+                    v.SupplierPartNumber,
                     v.IsPreferred,
                     v.CatalogUnitPrice,
                     v.CatalogCurrencyCode,
@@ -89,15 +89,15 @@ public static class PartAliasEndpoints
                     v.CatalogQuantityAvailable,
                     v.CatalogAvailabilityStatus,
                     v.CreatedAt)))
-                .Where(x => !partyId.HasValue || x.PartyId == partyId.Value)
+                .Where(x => !supplierId.HasValue || x.SupplierId == supplierId.Value)
                 .OrderBy(x => x.PartKey)
                 .ToList();
-            return Results.Ok(vendorItems);
+            return Results.Ok(supplierItems);
         })
-        .WithName("ListVendorItemsV1");
+        .WithName("ListSupplierItemsV1");
 
         group.MapPost("/", async (
-            CreateVendorItemRequest request,
+            CreateSupplierItemRequest request,
             HttpContext context,
             SupplyArrAuthorizationService authorization,
             PartRegistryService service,
@@ -106,19 +106,18 @@ public static class PartAliasEndpoints
             authorization.RequirePartsManage(context.User);
             var tenantId = context.User.GetTenantId();
             var actorUserId = context.User.GetUserId();
-            var created = await service.AddVendorLinkAsync(
+            var created = await service.AddSupplierLinkAsync(
                 tenantId,
                 actorUserId,
                 request.PartId,
-                new CreatePartVendorLinkRequest(
-                    request.PartyId,
-                    request.PartyId,
-                    request.PartyId,
-                    request.VendorPartNumber,
+                new CreatePartSupplierLinkRequest(
+                    null,
+                    request.SupplierId,
+                    request.SupplierPartNumber,
                     request.IsPreferred),
                 cancellationToken);
-            return Results.Created($"/api/v1/vendor-items/{created.LinkId}", created);
+            return Results.Created($"/api/v1/supplier-items/{created.LinkId}", created);
         })
-        .WithName("CreateVendorItemV1");
+        .WithName("CreateSupplierItemV1");
     }
 }

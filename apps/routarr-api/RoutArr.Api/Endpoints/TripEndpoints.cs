@@ -12,7 +12,7 @@ public static class TripEndpoints
 
         group.MapGet("/", async (
             string? dispatchStatus,
-            Guid? vendorOrderId,
+            Guid? supplierOrderId,
             Guid? brokerOrderId,
             HttpContext context,
             RoutArrAuthorizationService authorization,
@@ -30,7 +30,7 @@ public static class TripEndpoints
                 actorUserId,
                 actorPersonId,
                 dispatchStatus,
-                vendorOrderId,
+                supplierOrderId,
                 brokerOrderId,
                 cancellationToken));
         })
@@ -168,17 +168,17 @@ public static class TripEndpoints
         })
         .WithName("UpdateTripDispatchStatus");
 
-        group.MapPost("/{tripId:guid}/vendor-readiness-override", async (
+        group.MapPost("/{tripId:guid}/supplier-readiness-override", async (
             Guid tripId,
-            TripVendorReadinessOverrideRequest request,
+            TripSupplierReadinessOverrideRequest request,
             HttpContext context,
             RoutArrAuthorizationService authorization,
             TripService service,
             CancellationToken cancellationToken) =>
         {
-            authorization.RequireVendorReadinessOverride(context.User);
+            authorization.RequireSupplierReadinessOverride(context.User);
             var tenantId = context.User.GetTenantId();
-            return Results.Ok(await service.OverrideVendorReadinessAsync(
+            return Results.Ok(await service.OverrideSupplierReadinessAsync(
                 tenantId,
                 context.User.GetUserId(),
                 context.User.GetPersonId().ToString(),
@@ -186,6 +186,6 @@ public static class TripEndpoints
                 request.Reason,
                 cancellationToken));
         })
-        .WithName("OverrideTripVendorReadiness");
+        .WithName("OverrideTripSupplierReadiness");
     }
 }

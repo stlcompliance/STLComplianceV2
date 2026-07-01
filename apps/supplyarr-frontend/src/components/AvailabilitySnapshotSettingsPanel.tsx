@@ -146,7 +146,7 @@ export function AvailabilitySnapshotSettingsPanel({
         {pendingQuery.data && pendingQuery.data.items.length > 0 && (
           <ul className="mt-2 divide-y divide-slate-800 rounded-md border border-slate-800 text-sm">
             {pendingQuery.data.items.map((item) => (
-              <li key={item.partVendorLinkId} className="px-3 py-2 text-slate-300">
+              <li key={item.partSupplierLinkId} className="px-3 py-2 text-slate-300">
                 <div className="font-medium text-slate-100">
                   {item.partKey} · {formatSupplierSummary(item)}
                 </div>

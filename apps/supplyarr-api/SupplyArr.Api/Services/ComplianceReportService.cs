@@ -14,56 +14,6 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
     private static readonly TimeSpan ExpiringSoonWindow = TimeSpan.FromDays(30);
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<ComplianceReportSummaryResponse> GetSummaryAsync(
-        Guid tenantId,
-        bool? attentionOnly,
-        string? partyType,
-        Guid? externalPartyId,
-        string? reviewStatus,
-        CancellationToken cancellationToken = default)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var documents = await LoadDocumentsAsync(tenantId, partyType, externalPartyId, cancellationToken);
-        var mapped = documents
-            .Select(x => MapDocumentSummary(x, now))
-            .ToList();
-
-        if (!string.IsNullOrWhiteSpace(reviewStatus))
-        {
-            var normalized = reviewStatus.Trim().ToLowerInvariant();
-            mapped = mapped
-                .Where(x => string.Equals(x.EffectiveStatus, normalized, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        if (attentionOnly == true)
-        {
-            mapped = mapped
-                .Where(x => x.IsExpired || x.IsExpiringSoon
-                    || string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-        }
-
-        var partySummaries = BuildPartySummaries(documents, mapped);
-        var totals = new ComplianceReportTotalsResponse(
-            partySummaries.Count,
-            mapped.Count,
-            mapped.Count(x => x.IsExpired),
-            mapped.Count(x => x.IsExpiringSoon),
-            mapped.Count(x => string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase)),
-            mapped.Count(x => string.Equals(x.EffectiveStatus, PartyComplianceDocumentReviewStatuses.Approved, StringComparison.OrdinalIgnoreCase)),
-            mapped.Count(x => string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Rejected, StringComparison.OrdinalIgnoreCase)));
-
-        return new ComplianceReportSummaryResponse(
-            now,
-            totals,
-            partySummaries,
-            mapped.OrderByDescending(x => x.IsExpired)
-                .ThenByDescending(x => x.IsExpiringSoon)
-                .ThenByDescending(x => x.UpdatedAt)
-                .ToList());
-    }
-
     public async Task<SupplierComplianceReportSummaryResponse> GetSupplierSummaryAsync(
         Guid tenantId,
         bool? attentionOnly,
@@ -89,7 +39,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
         {
             mapped = mapped
                 .Where(x => x.IsExpired || x.IsExpiringSoon
-                    || string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
+                    || string.Equals(x.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
 
@@ -102,57 +52,14 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
                 mapped.Count,
                 mapped.Count(x => x.IsExpired),
                 mapped.Count(x => x.IsExpiringSoon),
-                mapped.Count(x => string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase)),
-                mapped.Count(x => string.Equals(x.EffectiveStatus, PartyComplianceDocumentReviewStatuses.Approved, StringComparison.OrdinalIgnoreCase)),
-                mapped.Count(x => string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Rejected, StringComparison.OrdinalIgnoreCase))),
+                mapped.Count(x => string.Equals(x.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase)),
+                mapped.Count(x => string.Equals(x.EffectiveStatus, SupplierComplianceDocumentReviewStatuses.Approved, StringComparison.OrdinalIgnoreCase)),
+                mapped.Count(x => string.Equals(x.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Rejected, StringComparison.OrdinalIgnoreCase))),
             supplierSummaries,
             mapped.OrderByDescending(x => x.IsExpired)
                 .ThenByDescending(x => x.IsExpiringSoon)
                 .ThenByDescending(x => x.UpdatedAt)
                 .ToList());
-    }
-
-    public async Task<CompliancePartyDetailResponse> GetPartyDetailAsync(
-        Guid tenantId,
-        Guid externalPartyId,
-        CancellationToken cancellationToken = default)
-    {
-        var now = DateTimeOffset.UtcNow;
-        var documents = await LoadDocumentsAsync(tenantId, null, externalPartyId, cancellationToken);
-        if (documents.Count == 0)
-        {
-            var party = await db.ExternalParties
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == externalPartyId, cancellationToken);
-            if (party is null)
-            {
-                throw new StlApiException("parties.not_found", "External party was not found.", 404);
-            }
-
-            var emptySummary = new CompliancePartySummaryItemResponse(
-                party.Id,
-                party.PartyKey,
-                party.DisplayName,
-                party.PartyType,
-                party.ApprovalStatus,
-                "none",
-                0,
-                0,
-                0,
-                0);
-            return new CompliancePartyDetailResponse(emptySummary, []);
-        }
-
-        var mapped = documents.Select(x => MapDocumentSummary(x, now)).ToList();
-        var partySummary = BuildPartySummaries(documents, mapped).First();
-        var detailDocuments = documents
-            .OrderByDescending(x => x.ExpiresAt ?? DateTimeOffset.MinValue)
-            .ThenByDescending(x => x.UpdatedAt)
-            .Take(DetailListLimit)
-            .Select(x => MapDocumentDetail(x, now))
-            .ToList();
-
-        return new CompliancePartyDetailResponse(partySummary, detailDocuments);
     }
 
     public async Task<SupplierComplianceDetailResponse> GetSupplierDetailAsync(
@@ -164,10 +71,12 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
         var documents = await LoadSupplierDocumentsAsync(tenantId, supplierId, cancellationToken);
         if (documents.Count == 0)
         {
-            var supplier = await db.ExternalParties
+            var supplier = await db.Suppliers
                 .AsNoTracking()
                 .FirstOrDefaultAsync(
-                    x => x.TenantId == tenantId && x.Id == supplierId && x.PartyType == "supplier",
+                    x => x.TenantId == tenantId
+                        && x.Id == supplierId
+                       ,
                     cancellationToken);
             if (supplier is null)
             {
@@ -176,10 +85,10 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
 
             var emptySummary = new SupplierComplianceSummaryItemResponse(
                 supplier.Id,
-                supplier.PartyKey,
+                supplier.SupplierKey,
                 supplier.DisplayName,
-                supplier.ParentExternalPartyId,
-                supplier.ParentExternalParty?.DisplayName,
+                supplier.ParentSupplierId,
+                supplier.ParentSupplier?.DisplayName,
                 supplier.UnitKind,
                 ParseServiceTypes(supplier.ServiceTypesJson),
                 supplier.ApprovalStatus,
@@ -201,59 +110,6 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             .ToList();
 
         return new SupplierComplianceDetailResponse(supplierSummary, detailDocuments);
-    }
-
-    public async Task<(byte[] Content, string ContentType, string FileName)> ExportSummaryCsvAsync(
-        Guid tenantId,
-        bool? attentionOnly,
-        string? partyType,
-        Guid? externalPartyId,
-        string? reviewStatus,
-        CancellationToken cancellationToken = default)
-    {
-        var summary = await GetSummaryAsync(
-            tenantId,
-            attentionOnly,
-            partyType,
-            externalPartyId,
-            reviewStatus,
-            cancellationToken);
-
-        var builder = new StringBuilder();
-        builder.AppendLine(
-            "supplierKey,supplierDisplayName,supplierType,documentKey,documentTypeKey,title,version,reviewStatus,effectiveStatus,isExpired,isExpiringSoon,expiresAt,updatedAt");
-
-        foreach (var doc in summary.Documents)
-        {
-            builder.Append(CsvEscape(doc.PartyKey));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.PartyDisplayName));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.PartyType));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.DocumentKey));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.DocumentTypeKey));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.Title));
-            builder.Append(',');
-            builder.Append(doc.Version);
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.ReviewStatus));
-            builder.Append(',');
-            builder.Append(CsvEscape(doc.EffectiveStatus));
-            builder.Append(',');
-            builder.Append(doc.IsExpired ? "true" : "false");
-            builder.Append(',');
-            builder.Append(doc.IsExpiringSoon ? "true" : "false");
-            builder.Append(',');
-            builder.Append(doc.ExpiresAt?.ToString("O") ?? string.Empty);
-            builder.Append(',');
-            builder.AppendLine(doc.UpdatedAt.ToString("O"));
-        }
-
-        var fileName = $"supplyarr-compliance-{DateTime.UtcNow:yyyy-MM-dd}.csv";
-        return (Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", fileName);
     }
 
     public async Task<(byte[] Content, string ContentType, string FileName)> ExportSupplierSummaryCsvAsync(
@@ -313,21 +169,21 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
         var alerts = new List<ComplianceReportAlertResponse>();
 
         var requiredDocumentTypeKeys = await LoadRequiredDocumentTypeKeysAsync(tenantId, cancellationToken);
-        var vendorParties = await db.ExternalParties
+        var suppliers = await db.Suppliers
             .AsNoTracking()
             .Where(x => x.TenantId == tenantId
-                && (x.PartyType == "vendor" || x.PartyType == "supplier")
+               
                 && x.Status == "active")
             .OrderBy(x => x.DisplayName)
             .ToListAsync(cancellationToken);
 
-        foreach (var party in vendorParties)
+        foreach (var supplier in suppliers)
         {
-            var approvedTypeKeys = await db.PartyComplianceDocuments
+            var approvedTypeKeys = await db.SupplierComplianceDocuments
                 .AsNoTracking()
                 .Where(x => x.TenantId == tenantId
-                    && x.ExternalPartyId == party.Id
-                    && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                    && x.SupplierId == supplier.Id
+                    && x.ReviewStatus == SupplierComplianceDocumentReviewStatuses.Approved
                     && (x.ExpiresAt == null || x.ExpiresAt > now))
                 .Select(x => x.DocumentTypeKey)
                 .Distinct()
@@ -342,21 +198,21 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
                 alerts.Add(new ComplianceReportAlertResponse(
                     "missing_required_documents",
                     "high",
-                    party.Id,
-                    party.PartyKey,
+                    supplier.Id,
+                    supplier.SupplierKey,
                     null,
                     null,
                     null,
                     $"Missing required documents: {string.Join(", ", missing)}.",
-                    party.UpdatedAt));
+                    supplier.UpdatedAt));
             }
         }
 
-        var expiringDocuments = await db.PartyComplianceDocuments
+        var expiringDocuments = await db.SupplierComplianceDocuments
             .AsNoTracking()
-            .Include(x => x.ExternalParty)
+            .Include(x => x.Supplier)
             .Where(x => x.TenantId == tenantId
-                && x.ReviewStatus == PartyComplianceDocumentReviewStatuses.Approved
+                && x.ReviewStatus == SupplierComplianceDocumentReviewStatuses.Approved
                 && x.ExpiresAt != null
                 && x.ExpiresAt >= now
                 && x.ExpiresAt <= now.Add(ExpiringSoonWindow))
@@ -368,8 +224,8 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             alerts.Add(new ComplianceReportAlertResponse(
                 "expiring_compliance_document",
                 "medium",
-                document.ExternalPartyId,
-                document.ExternalParty.PartyKey,
+                document.SupplierId,
+                document.Supplier.SupplierKey,
                 null,
                 null,
                 null,
@@ -391,7 +247,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             alerts.Add(new ComplianceReportAlertResponse(
                 "purchase_approval_missing_evidence",
                 "high",
-                request.VendorPartyId,
+                request.SupplierId,
                 null,
                 request.Id,
                 request.RequestKey,
@@ -417,7 +273,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             alerts.Add(new ComplianceReportAlertResponse(
                 "emergency_purchase_exception",
                 "high",
-                row.request.VendorPartyId,
+                row.request.SupplierId,
                 null,
                 row.request.Id,
                 row.request.RequestKey,
@@ -432,74 +288,29 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             .ToList();
     }
 
-    private async Task<List<PartyComplianceDocument>> LoadDocumentsAsync(
-        Guid tenantId,
-        string? partyType,
-        Guid? externalPartyId,
-        CancellationToken cancellationToken)
-    {
-        var query = db.PartyComplianceDocuments
-            .AsNoTracking()
-            .Include(x => x.ExternalParty)
-            .Where(x => x.TenantId == tenantId);
-
-        if (externalPartyId is not null)
-        {
-            query = query.Where(x => x.ExternalPartyId == externalPartyId.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(partyType))
-        {
-            var normalized = partyType.Trim().ToLowerInvariant();
-            query = query.Where(x => x.ExternalParty.PartyType == normalized);
-        }
-
-        return await query.ToListAsync(cancellationToken);
-    }
-
-    private Task<List<PartyComplianceDocument>> LoadSupplierDocumentsAsync(
+    private Task<List<SupplierComplianceDocument>> LoadSupplierDocumentsAsync(
         Guid tenantId,
         Guid? supplierId,
-        CancellationToken cancellationToken) =>
-        LoadDocumentsAsync(tenantId, "supplier", supplierId, cancellationToken);
-
-    private static List<CompliancePartySummaryItemResponse> BuildPartySummaries(
-        IReadOnlyList<PartyComplianceDocument> sourceDocuments,
-        IReadOnlyList<ComplianceDocumentSummaryItemResponse> documents)
+        CancellationToken cancellationToken)
     {
-        return documents
-            .GroupBy(x => x.ExternalPartyId)
-            .Select(group =>
-            {
-                var first = group.First();
-                var party = sourceDocuments.First(x => x.ExternalPartyId == first.ExternalPartyId).ExternalParty;
-                var expired = group.Count(x => x.IsExpired);
-                var expiringSoon = group.Count(x => x.IsExpiringSoon);
-                var reviewPending = group.Count(x =>
-                    string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase));
-                return new CompliancePartySummaryItemResponse(
-                    first.ExternalPartyId,
-                    first.PartyKey,
-                    first.PartyDisplayName,
-                    first.PartyType,
-                    party.ApprovalStatus,
-                    ResolveCompliancePosture(expired, expiringSoon, reviewPending),
-                    group.Count(),
-                    expired,
-                    expiringSoon,
-                    reviewPending);
-            })
-            .OrderByDescending(x => x.ExpiredCount)
-            .ThenByDescending(x => x.ExpiringSoonCount)
-            .ThenBy(x => x.DisplayName)
-            .ToList();
+        var query = db.SupplierComplianceDocuments
+            .AsNoTracking()
+            .Include(x => x.Supplier)
+            .Where(x => x.TenantId == tenantId);
+
+        if (supplierId is not null)
+        {
+            query = query.Where(x => x.SupplierId == supplierId.Value);
+        }
+
+        return query.ToListAsync(cancellationToken);
     }
 
     private static string ResolveCompliancePosture(int expired, int expiringSoon, int reviewPending)
     {
         if (expired > 0)
         {
-            return PartyComplianceDocumentReviewStatuses.Expired;
+            return SupplierComplianceDocumentReviewStatuses.Expired;
         }
 
         if (expiringSoon > 0)
@@ -509,40 +320,14 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
 
         if (reviewPending > 0)
         {
-            return PartyComplianceDocumentReviewStatuses.Pending;
+            return SupplierComplianceDocumentReviewStatuses.Pending;
         }
 
-        return PartyComplianceDocumentReviewStatuses.Approved;
-    }
-
-    private static ComplianceDocumentSummaryItemResponse MapDocumentSummary(
-        PartyComplianceDocument document,
-        DateTimeOffset now)
-    {
-        var isExpired = IsExpired(document.ExpiresAt, now);
-        var isExpiringSoon = !isExpired && IsExpiringSoon(document.ExpiresAt, now);
-        var effectiveStatus = ResolveEffectiveStatus(document.ReviewStatus, isExpired);
-
-        return new ComplianceDocumentSummaryItemResponse(
-            document.Id,
-            document.ExternalPartyId,
-            document.ExternalParty.PartyKey,
-            document.ExternalParty.DisplayName,
-            document.ExternalParty.PartyType,
-            document.DocumentKey,
-            document.DocumentTypeKey,
-            document.Title,
-            document.Version,
-            document.ReviewStatus,
-            effectiveStatus,
-            isExpired,
-            isExpiringSoon,
-            document.ExpiresAt,
-            document.UpdatedAt);
+        return SupplierComplianceDocumentReviewStatuses.Approved;
     }
 
     private static ComplianceDocumentDetailItemResponse MapDocumentDetail(
-        PartyComplianceDocument document,
+        SupplierComplianceDocument document,
         DateTimeOffset now)
     {
         var isExpired = IsExpired(document.ExpiresAt, now);
@@ -570,41 +355,8 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             document.UpdatedAt);
     }
 
-    private static SupplierComplianceSummaryItemResponse MapSupplierSummary(CompliancePartySummaryItemResponse party) =>
-        new(
-            party.ExternalPartyId,
-            party.PartyKey,
-            party.DisplayName,
-            null,
-            null,
-            "identity",
-            [],
-            party.ApprovalStatus,
-            party.CompliancePosture,
-            party.DocumentCount,
-            party.ExpiredCount,
-            party.ExpiringSoonCount,
-            party.ReviewPendingCount);
-
-    private static SupplierComplianceDocumentSummaryItemResponse MapSupplierDocumentSummary(ComplianceDocumentSummaryItemResponse document) =>
-        new(
-            document.DocumentId,
-            document.ExternalPartyId,
-            document.PartyKey,
-            document.PartyDisplayName,
-            document.DocumentKey,
-            document.DocumentTypeKey,
-            document.Title,
-            document.Version,
-            document.ReviewStatus,
-            document.EffectiveStatus,
-            document.IsExpired,
-            document.IsExpiringSoon,
-            document.ExpiresAt,
-            document.UpdatedAt);
-
     private static SupplierComplianceDocumentSummaryItemResponse MapSupplierDocumentSummary(
-        PartyComplianceDocument document,
+        SupplierComplianceDocument document,
         DateTimeOffset now)
     {
         var isExpired = IsExpired(document.ExpiresAt, now);
@@ -613,9 +365,9 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
 
         return new SupplierComplianceDocumentSummaryItemResponse(
             document.Id,
-            document.ExternalPartyId,
-            document.ExternalParty.PartyKey,
-            document.ExternalParty.DisplayName,
+            document.SupplierId,
+            document.Supplier.SupplierKey,
+            document.Supplier.DisplayName,
             document.DocumentKey,
             document.DocumentTypeKey,
             document.Title,
@@ -629,7 +381,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
     }
 
     private static List<SupplierComplianceSummaryItemResponse> BuildSupplierSummaries(
-        IReadOnlyList<PartyComplianceDocument> sourceDocuments,
+        IReadOnlyList<SupplierComplianceDocument> sourceDocuments,
         IReadOnlyList<SupplierComplianceDocumentSummaryItemResponse> documents)
     {
         return documents
@@ -637,20 +389,20 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
             .Select(group =>
             {
                 var first = group.First();
-                var party = sourceDocuments.First(x => x.ExternalPartyId == first.SupplierId).ExternalParty;
+                var supplier = sourceDocuments.First(x => x.SupplierId == first.SupplierId).Supplier;
                 var expired = group.Count(x => x.IsExpired);
                 var expiringSoon = group.Count(x => x.IsExpiringSoon);
                 var reviewPending = group.Count(x =>
-                    string.Equals(x.ReviewStatus, PartyComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase));
+                    string.Equals(x.ReviewStatus, SupplierComplianceDocumentReviewStatuses.Pending, StringComparison.OrdinalIgnoreCase));
                 return new SupplierComplianceSummaryItemResponse(
                     first.SupplierId,
                     first.SupplierKey,
                     first.SupplierDisplayName,
-                    party.ParentExternalPartyId,
-                    party.ParentExternalParty?.DisplayName,
-                    party.UnitKind,
-                    ParseServiceTypes(party.ServiceTypesJson),
-                    party.ApprovalStatus,
+                    supplier.ParentSupplierId,
+                    supplier.ParentSupplier?.DisplayName,
+                    supplier.UnitKind,
+                    ParseServiceTypes(supplier.ServiceTypesJson),
+                    supplier.ApprovalStatus,
                     ResolveCompliancePosture(expired, expiringSoon, reviewPending),
                     group.Count(),
                     expired,
@@ -664,7 +416,7 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
     }
 
     private static string ResolveEffectiveStatus(string reviewStatus, bool isExpired) =>
-        isExpired ? PartyComplianceDocumentReviewStatuses.Expired : reviewStatus.Trim().ToLowerInvariant();
+        isExpired ? SupplierComplianceDocumentReviewStatuses.Expired : reviewStatus.Trim().ToLowerInvariant();
 
     private static bool IsExpired(DateTimeOffset? expiresAt, DateTimeOffset now) =>
         expiresAt is not null && expiresAt.Value < now;
@@ -732,3 +484,5 @@ public sealed class ComplianceReportService(SupplyArrDbContext db)
         }
     }
 }
+
+

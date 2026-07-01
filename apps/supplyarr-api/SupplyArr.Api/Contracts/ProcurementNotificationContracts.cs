@@ -21,7 +21,9 @@ public sealed record ProcurementNotificationDispatchItem(
     Guid NotificationId,
     string EventKind,
     string DispatchStatus,
-    Guid? VendorPartyId,
+    Guid? SupplierId,
+    string? SupplierKey,
+    string? SupplierDisplayName,
     string RelatedEntityType,
     Guid RelatedEntityId,
     string? WebhookHost,
@@ -37,7 +39,7 @@ public sealed record PendingProcurementNotificationItem(
     Guid NotificationId,
     Guid TenantId,
     string EventKind,
-    Guid? VendorPartyId,
+    Guid? SupplierId,
     DateTimeOffset CreatedAt);
 
 public sealed record PendingProcurementNotificationsResponse(

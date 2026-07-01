@@ -61,14 +61,14 @@ public static class WarrantyClaimRules
         return normalized;
     }
 
-    public static string NormalizeVendorDisposition(string disposition)
+    public static string NormalizeSupplierDisposition(string disposition)
     {
         var normalized = (disposition ?? string.Empty).Trim().ToLowerInvariant();
-        if (!WarrantyClaimVendorDispositions.All.Contains(normalized))
+        if (!WarrantyClaimSupplierDispositions.All.Contains(normalized))
         {
             throw new StlApiException(
                 "warranty_claims.invalid_disposition",
-                "Vendor disposition is not supported.",
+                "Supplier disposition is not supported.",
                 400);
         }
 

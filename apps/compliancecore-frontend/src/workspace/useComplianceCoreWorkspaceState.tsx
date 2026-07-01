@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useEffect, useState } from 'react'
 
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Navigate, useLocation, useSearchParams } from 'react-router-dom'
 
 import {
 
@@ -71,6 +71,7 @@ export function useComplianceCoreWorkspaceState() {
 
 
   const [searchParams] = useSearchParams()
+  const location = useLocation()
 
   const handoff = searchParams.get('handoff')
   const handoffRedirect = handoff
@@ -80,6 +81,12 @@ export function useComplianceCoreWorkspaceState() {
   const session = loadSession()
   const accessToken = session?.accessToken ?? ''
   const [apiError] = useState<string | null>(null)
+  const shouldLoadRulePackDetailQueries =
+    location.pathname.startsWith('/registry')
+    || location.pathname.startsWith('/findings')
+    || location.pathname.startsWith('/evaluation')
+    || location.pathname.startsWith('/rulepacks')
+    || location.pathname.startsWith('/requirements')
 
   const queryClient = useQueryClient()
 
@@ -304,7 +311,11 @@ export function useComplianceCoreWorkspaceState() {
 
     queryFn: () => getRulePackContent(session!.accessToken, selectedRulePackId),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && Boolean(selectedRulePackId),
+    enabled:
+      Boolean(session?.accessToken)
+      && meQuery.isSuccess
+      && Boolean(selectedRulePackId)
+      && shouldLoadRulePackDetailQueries,
 
   })
 
@@ -316,7 +327,11 @@ export function useComplianceCoreWorkspaceState() {
 
     queryFn: () => getRuleEvaluations(session!.accessToken, selectedRulePackId || undefined),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && Boolean(selectedRulePackId),
+    enabled:
+      Boolean(session?.accessToken)
+      && meQuery.isSuccess
+      && Boolean(selectedRulePackId)
+      && shouldLoadRulePackDetailQueries,
 
   })
 
@@ -338,7 +353,7 @@ export function useComplianceCoreWorkspaceState() {
 
     queryFn: () => getFindings(session!.accessToken, selectedRulePackId || undefined),
 
-    enabled: Boolean(session?.accessToken) && meQuery.isSuccess,
+    enabled: Boolean(session?.accessToken) && meQuery.isSuccess && shouldLoadRulePackDetailQueries,
 
   })
 
@@ -519,13 +534,13 @@ export function useComplianceCoreWorkspaceState() {
 
   useEffect(() => {
 
-    if (rulePacksQuery.data?.length && !selectedRulePackId) {
+    if (shouldLoadRulePackDetailQueries && rulePacksQuery.data?.length && !selectedRulePackId) {
 
       setSelectedRulePackId(rulePacksQuery.data[0].rulePackId)
 
     }
 
-  }, [rulePacksQuery.data, selectedRulePackId])
+  }, [rulePacksQuery.data, selectedRulePackId, shouldLoadRulePackDetailQueries])
 
   const ready = Boolean(session && meQuery.data)
   const me = meQuery.data!

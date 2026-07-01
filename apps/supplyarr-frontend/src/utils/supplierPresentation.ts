@@ -1,13 +1,8 @@
 export interface SupplierPresentationLike {
   supplierId?: string | null
-  vendorPartyId?: string | null
-  partyId?: string | null
   supplierDisplayName?: string | null
-  vendorDisplayName?: string | null
   displayName?: string | null
   supplierKey?: string | null
-  vendorPartyKey?: string | null
-  partyKey?: string | null
   parentSupplierDisplayName?: string | null
   supplierUnitKind?: string | null
   supplierServiceTypes?: string[] | null
@@ -24,18 +19,17 @@ export interface SupplierPresentationLike {
 export function resolveSupplierDisplayName(value: SupplierPresentationLike): string {
   return (
     value.supplierDisplayName
-    ?? value.vendorDisplayName
     ?? value.displayName
     ?? 'Unknown supplier'
   )
 }
 
 export function resolveSupplierId(value: SupplierPresentationLike): string | null {
-  return value.supplierId ?? value.vendorPartyId ?? value.partyId ?? null
+  return value.supplierId ?? null
 }
 
 export function resolveSupplierKey(value: SupplierPresentationLike): string | null {
-  return value.supplierKey ?? value.vendorPartyKey ?? value.partyKey ?? null
+  return value.supplierKey ?? null
 }
 
 export function formatSupplierSummary(value: SupplierPresentationLike): string {

@@ -12,10 +12,10 @@ public sealed record SubstitutionItemResponse(
 
 public sealed record SupplyDocumentItemResponse(
     Guid DocumentId,
-    Guid PartyId,
-    string PartyKey,
-    string PartyDisplayName,
-    string PartyType,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
+    string SupplierUnitKind,
     string DocumentKey,
     string DocumentTypeKey,
     string Title,
@@ -28,7 +28,7 @@ public sealed record SupplyDocumentItemResponse(
     DateTimeOffset UpdatedAt);
 
 public sealed record CreateSupplyDocumentRequest(
-    Guid PartyId,
+    Guid SupplierId,
     string DocumentKey,
     string DocumentTypeKey,
     string Title,
@@ -45,9 +45,9 @@ public sealed record ContractSnapshotItemResponse(
     Guid PartId,
     string PartKey,
     string PartDisplayName,
-    Guid PartyId,
-    string PartyKey,
-    string PartyDisplayName,
+    Guid SupplierId,
+    string SupplierKey,
+    string SupplierDisplayName,
     string SnapshotKey,
     DateTimeOffset EffectiveFrom,
     DateTimeOffset? EffectiveTo,
@@ -114,43 +114,43 @@ public sealed record PartCatalogCsvImportResponse(
     int PartsCreated,
     IReadOnlyList<PartCatalogCsvImportIssue> Issues);
 
-public sealed record VendorCatalogCsvImportRequest(
+public sealed record SupplierCatalogCsvImportRequest(
     string Csv,
     bool DryRun = true,
     string? FileName = null);
 
-public sealed record VendorCatalogCsvImportIssue(
+public sealed record SupplierCatalogCsvImportIssue(
     int LineNumber,
     string Code,
     string Message);
 
-public sealed record VendorCatalogCsvImportResponse(
+public sealed record SupplierCatalogCsvImportResponse(
     string ImportType,
     bool DryRun,
     bool Succeeded,
     int RowsRead,
     int LinksAccepted,
     int LinksCreated,
-    IReadOnlyList<VendorCatalogCsvImportIssue> Issues);
+    IReadOnlyList<SupplierCatalogCsvImportIssue> Issues);
 
-public sealed record VendorDocumentsCsvImportRequest(
+public sealed record SupplierDocumentsCsvImportRequest(
     string Csv,
     bool DryRun = true,
     string? FileName = null);
 
-public sealed record VendorDocumentsCsvImportIssue(
+public sealed record SupplierDocumentsCsvImportIssue(
     int LineNumber,
     string Code,
     string Message);
 
-public sealed record VendorDocumentsCsvImportResponse(
+public sealed record SupplierDocumentsCsvImportResponse(
     string ImportType,
     bool DryRun,
     bool Succeeded,
     int RowsRead,
     int DocumentsAccepted,
     int DocumentsCreated,
-    IReadOnlyList<VendorDocumentsCsvImportIssue> Issues);
+    IReadOnlyList<SupplierDocumentsCsvImportIssue> Issues);
 
 public sealed record InventoryCountsCsvImportRequest(
     string Csv,
@@ -247,24 +247,24 @@ public sealed record ContractsCsvImportResponse(
     int ContractsCreated,
     IReadOnlyList<ContractsCsvImportIssue> Issues);
 
-public sealed record ExternalPartiesCsvImportRequest(
+public sealed record SuppliersCsvImportRequest(
     string Csv,
     bool DryRun = true,
     string? FileName = null);
 
-public sealed record ExternalPartiesCsvImportIssue(
+public sealed record SuppliersCsvImportIssue(
     int LineNumber,
     string Code,
     string Message);
 
-public sealed record ExternalPartiesCsvImportResponse(
+public sealed record SuppliersCsvImportResponse(
     string ImportType,
     bool DryRun,
     bool Succeeded,
     int RowsRead,
-    int PartiesAccepted,
-    int PartiesCreated,
-    IReadOnlyList<ExternalPartiesCsvImportIssue> Issues);
+    int SuppliersAccepted,
+    int SuppliersCreated,
+    IReadOnlyList<SuppliersCsvImportIssue> Issues);
 
 public sealed record ContactsCsvImportRequest(
     string Csv,

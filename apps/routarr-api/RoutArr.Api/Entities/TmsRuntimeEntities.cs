@@ -34,7 +34,7 @@ public sealed class TransportationDemand : IHasTenant
     public string HandlingRequirementsJson { get; set; } = "[]";
     public string CustomerRefsJson { get; set; } = "[]";
     public string OrderRefsJson { get; set; } = "[]";
-    public string VendorRefsJson { get; set; } = "[]";
+    public string SupplierRefsJson { get; set; } = "[]";
     public string RequirementRefsJson { get; set; } = "[]";
     public string PlanningStatus { get; set; } = "not_started";
     public string TenderStatus { get; set; } = "not_required";

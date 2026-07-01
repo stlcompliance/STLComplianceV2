@@ -11,7 +11,7 @@ namespace SupplyArr.Api.Services;
 
 public sealed class ReceivingService(
     SupplyArrDbContext db,
-    VendorProcurementGuardService vendorProcurementGuard,
+    SupplierProcurementGuardService supplierProcurementGuard,
     PartStockService stock,
     BackorderService backorders,
     SupplyArrDemandStatusCallbackCoordinator demandStatusCallbacks,
@@ -231,10 +231,10 @@ public sealed class ReceivingService(
                 409);
         }
 
-        await vendorProcurementGuard.EnsureVendorAllowedForScopeAsync(
+        await supplierProcurementGuard.EnsureSupplierAllowedForScopeAsync(
             tenantId,
-            purchaseOrder.VendorPartyId,
-            VendorRestrictionScopes.Receiving,
+            purchaseOrder.SupplierId,
+            SupplierRestrictionScopes.Receiving,
             cancellationToken);
 
         var bin = await db.InventoryBins
@@ -545,7 +545,7 @@ public sealed class ReceivingService(
         await notificationEnqueue.TryEnqueueAsync(
             tenantId,
             ProcurementNotificationEventKinds.ReceivingReceiptPosted,
-            entity.PurchaseOrder?.VendorPartyId,
+            entity.PurchaseOrder?.SupplierId,
             "receiving_receipt",
             entity.Id,
             cancellationToken);
@@ -558,7 +558,7 @@ public sealed class ReceivingService(
             new IntegrationOutboxPayload(
                 tenantId,
                 $"Receiving receipt posted: {entity.ReceiptKey}",
-                entity.PurchaseOrder?.VendorPartyId),
+                entity.PurchaseOrder?.SupplierId),
             cancellationToken: cancellationToken);
 
         return await GetAsync(tenantId, entity.Id, cancellationToken);
@@ -911,7 +911,7 @@ public sealed class ReceivingService(
             .Include(x => x.PurchaseOrder)
                 .ThenInclude(x => x.PurchaseRequest)
             .Include(x => x.PurchaseOrder)
-                .ThenInclude(x => x.VendorParty)
+                .ThenInclude(x => x.Supplier)
             .Include(x => x.InventoryBin)
                 .ThenInclude(x => x.InventoryLocation)
             .Include(x => x.Lines)
@@ -927,7 +927,7 @@ public sealed class ReceivingService(
                 404);
 
         var builder = new StringBuilder();
-        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,vendorPartyKey,vendorDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt,invoiceReference,invoiceFileName");
+        builder.AppendLine("receiptKey,receiptStatus,postedAt,orderKey,orderStatus,requestKey,supplierKey,supplierDisplayName,locationKey,binKey,lineNumber,partKey,partDisplayName,quantityReceived,unitOfMeasure,unitPrice,receivedAmount,receiptNotes,orderIssuedAt,invoiceReference,invoiceFileName");
 
         foreach (var line in entity.Lines.OrderBy(x => x.LineNumber))
         {
@@ -939,8 +939,8 @@ public sealed class ReceivingService(
                 entity.PurchaseOrder.OrderKey,
                 entity.PurchaseOrder.Status,
                 entity.PurchaseOrder.PurchaseRequest?.RequestKey ?? string.Empty,
-                entity.PurchaseOrder.VendorParty?.PartyKey ?? string.Empty,
-                entity.PurchaseOrder.VendorParty?.DisplayName ?? string.Empty,
+                entity.PurchaseOrder.Supplier?.SupplierKey ?? string.Empty,
+                entity.PurchaseOrder.Supplier?.DisplayName ?? string.Empty,
                 entity.InventoryBin.InventoryLocation?.LocationKey ?? string.Empty,
                 entity.InventoryBin.BinKey,
                 line.LineNumber.ToString(CultureInfo.InvariantCulture),
@@ -1469,3 +1469,4 @@ public sealed class ReceivingService(
             409);
     }
 }
+

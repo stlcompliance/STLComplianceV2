@@ -13,8 +13,8 @@ using SupplyArr.Api.Contracts;
 using SupplyArr.Api.Data;
 using SupplyArr.Api.Entities;
 using STLCompliance.Shared.Integration;
-using CreateTypedExternalPartyRequest = SupplyArr.Api.Contracts.CreateTypedExternalPartyRequest;
-using ExternalPartyResponse = SupplyArr.Api.Contracts.ExternalPartyResponse;
+using CreateSupplierRequest = SupplyArr.Api.Contracts.CreateSupplierRequest;
+using SupplierResponse = SupplyArr.Api.Contracts.SupplierResponse;
 using SupplyArrRedeemHandoffRequest = SupplyArr.Api.Contracts.RedeemHandoffRequest;
 using SupplyArrHandoffSessionResponse = SupplyArr.Api.Contracts.HandoffSessionResponse;
 
@@ -86,16 +86,17 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Warranty_claim_submit_vendor_response_close_workflow()
+    public async Task Warranty_claim_submit_supplier_response_close_workflow()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/warranty-claims", _userToken);
-        createRequest.Content = JsonContent.Create(new CreateWarrantyClaimRequest(
+        createRequest.Content = JsonContent.Create(new CreateSupplierWarrantyClaimRequest(
             "WC-FULL-001",
             WarrantyClaimTypes.Defective,
-            vendor.PartyId,
+            supplier.SupplierId,
+            supplier.SupplierId,
             part.PartId,
             2m,
             "Motor failed within 30 days of install.",
@@ -119,19 +120,19 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
         var submitted = (await submitResponse.Content.ReadFromJsonAsync<WarrantyClaimResponse>())!;
         Assert.Equal(WarrantyClaimStatuses.Submitted, submitted.Status);
 
-        var vendorResponseRequest = Authorized(
+        var supplierResponseRequest = Authorized(
             HttpMethod.Post,
-            $"/api/warranty-claims/{claim.WarrantyClaimId}/record-vendor-response",
+            $"/api/warranty-claims/{claim.WarrantyClaimId}/record-supplier-response",
             _userToken);
-        vendorResponseRequest.Content = JsonContent.Create(new RecordWarrantyClaimVendorResponseRequest(
-            WarrantyClaimVendorDispositions.Approved,
-            "Vendor approved replacement shipment.",
+        supplierResponseRequest.Content = JsonContent.Create(new RecordWarrantyClaimSupplierResponseRequest(
+            WarrantyClaimSupplierDispositions.Approved,
+            "Supplier approved replacement shipment.",
             "RMA-9001"));
-        var vendorResponse = await _supplyarrClient.SendAsync(vendorResponseRequest);
-        vendorResponse.EnsureSuccessStatusCode();
-        var responded = (await vendorResponse.Content.ReadFromJsonAsync<WarrantyClaimResponse>())!;
-        Assert.Equal(WarrantyClaimStatuses.VendorResponded, responded.Status);
-        Assert.Equal(WarrantyClaimVendorDispositions.Approved, responded.VendorDisposition);
+        var supplierResponse = await _supplyarrClient.SendAsync(supplierResponseRequest);
+        supplierResponse.EnsureSuccessStatusCode();
+        var responded = (await supplierResponse.Content.ReadFromJsonAsync<WarrantyClaimResponse>())!;
+        Assert.Equal(WarrantyClaimStatuses.SupplierResponded, responded.Status);
+        Assert.Equal(WarrantyClaimSupplierDispositions.Approved, responded.SupplierDisposition);
 
         var closeRequest = Authorized(
             HttpMethod.Post,
@@ -147,14 +148,15 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
     [Fact]
     public async Task Warranty_claim_can_be_denied_from_submitted()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/warranty-claims", _userToken);
-        createRequest.Content = JsonContent.Create(new CreateWarrantyClaimRequest(
+        createRequest.Content = JsonContent.Create(new CreateSupplierWarrantyClaimRequest(
             "WC-DENY-001",
             WarrantyClaimTypes.Doa,
-            vendor.PartyId,
+            supplier.SupplierId,
+            supplier.SupplierId,
             part.PartId,
             1m,
             "Dead on arrival.",
@@ -178,7 +180,7 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
             HttpMethod.Post,
             $"/api/warranty-claims/{claim.WarrantyClaimId}/deny",
             _userToken);
-        denyRequest.Content = JsonContent.Create(new DenyWarrantyClaimRequest("Outside warranty period per vendor policy."));
+        denyRequest.Content = JsonContent.Create(new DenyWarrantyClaimRequest("Outside warranty period per supplier policy."));
         var denyResponse = await _supplyarrClient.SendAsync(denyRequest);
         denyResponse.EnsureSuccessStatusCode();
         var denied = (await denyResponse.Content.ReadFromJsonAsync<WarrantyClaimResponse>())!;
@@ -188,14 +190,15 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
     [Fact]
     public async Task Create_warranty_claim_enqueues_outbox_event()
     {
-        var vendor = await CreateVendorAsync();
+        var supplier = await CreateSupplierAsync();
         var part = await CreatePartAsync();
 
         var createRequest = Authorized(HttpMethod.Post, "/api/warranty-claims", _userToken);
-        createRequest.Content = JsonContent.Create(new CreateWarrantyClaimRequest(
+        createRequest.Content = JsonContent.Create(new CreateSupplierWarrantyClaimRequest(
             "WC-OUT-001",
             WarrantyClaimTypes.Other,
-            vendor.PartyId,
+            supplier.SupplierId,
+            supplier.SupplierId,
             part.PartId,
             1m,
             "Cosmetic defect on housing.",
@@ -214,18 +217,27 @@ public sealed class SupplyArrWarrantyClaimTests : IAsyncLifetime
         Assert.NotEmpty(outbox);
     }
 
-    private async Task<ExternalPartyResponse> CreateVendorAsync()
+    private async Task<SupplierResponse> CreateSupplierAsync()
     {
-        var createVendor = Authorized(HttpMethod.Post, "/api/vendors", _userToken);
-        createVendor.Content = JsonContent.Create(new CreateTypedExternalPartyRequest(
+        var createSupplier = Authorized(HttpMethod.Post, "/api/suppliers", _userToken);
+        createSupplier.Content = JsonContent.Create(new CreateSupplierRequest(
             $"v-wc-{Guid.NewGuid():N}"[..12],
-            "Warranty Vendor",
+            null,
+            null,
+            "Warranty Supplier",
+            string.Empty,
             string.Empty,
             null,
-            string.Empty));
-        var response = await _supplyarrClient.SendAsync(createVendor);
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null));
+        var response = await _supplyarrClient.SendAsync(createSupplier);
         response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<ExternalPartyResponse>())!;
+        return (await response.Content.ReadFromJsonAsync<SupplierResponse>())!;
     }
 
     private async Task<PartResponse> CreatePartAsync()

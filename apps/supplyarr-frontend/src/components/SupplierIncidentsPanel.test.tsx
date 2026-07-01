@@ -48,7 +48,7 @@ vi.mock('../api/client', () => ({
   listSupplierIncidentsForSupplier: vi.fn().mockResolvedValue([
     {
       incidentId: 'inc-open',
-      supplierId: 'party-1',
+      supplierId: 'supplier-1',
       supplierKey: 'V-1',
       supplierDisplayName: 'Acme Supply',
       incidentKey: 'SI-OPEN',
@@ -81,7 +81,7 @@ vi.mock('../api/client', () => ({
     },
     {
       incidentId: 'inc-cancelled',
-      supplierId: 'party-1',
+      supplierId: 'supplier-1',
       supplierKey: 'V-1',
       supplierDisplayName: 'Acme Supply',
       incidentKey: 'SI-CANCEL',
@@ -136,9 +136,8 @@ describe('SupplierIncidentsPanel', () => {
           canManage
           supplierUnits={[
             {
-              supplierId: 'party-1',
+              supplierId: 'supplier-1',
               supplierKey: 'acme-hq',
-              supplierType: 'supplier',
               parentSupplierId: 'parent-1',
               parentSupplierDisplayName: 'Acme Supply',
               displayName: 'HQ Counter',
@@ -163,7 +162,7 @@ describe('SupplierIncidentsPanel', () => {
     )
 
     fireEvent.change(screen.getByLabelText(/Supplier identity or sub-unit/i), {
-      target: { value: 'party-1' },
+      target: { value: 'supplier-1' },
     })
 
     expect(await screen.findByTestId('supplier-incidents-panel')).toBeInTheDocument()
@@ -183,9 +182,8 @@ describe('SupplierIncidentsPanel', () => {
           canManage
           supplierUnits={[
             {
-              supplierId: 'party-1',
+              supplierId: 'supplier-1',
               supplierKey: 'acme-hq',
-              supplierType: 'supplier',
               parentSupplierId: 'parent-1',
               parentSupplierDisplayName: 'Acme Supply',
               displayName: 'HQ Counter',
@@ -205,9 +203,8 @@ describe('SupplierIncidentsPanel', () => {
               updatedAt: '',
             },
             {
-              supplierId: 'party-2',
+              supplierId: 'supplier-2',
               supplierKey: 'bravo-west',
-              supplierType: 'supplier',
               parentSupplierId: 'parent-2',
               parentSupplierDisplayName: 'Bravo Supply',
               displayName: 'West Service Desk',
@@ -240,7 +237,7 @@ describe('SupplierIncidentsPanel', () => {
     )
 
     fireEvent.change(screen.getByTestId('supplier-incident-supplier-picker'), {
-      target: { value: 'party-2' },
+      target: { value: 'supplier-2' },
     })
 
     expect(screen.getByLabelText(/Incident title/i)).toBeInTheDocument()

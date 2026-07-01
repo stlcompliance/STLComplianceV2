@@ -1,7 +1,7 @@
 import { ApprovalRemindersPanel } from '../../components/ApprovalRemindersPanel'
 import { SupplierOnboardingPanel } from '../../components/SupplierOnboardingPanel'
 import { SupplyReadinessCheckPanel } from '../../components/SupplyReadinessCheckPanel'
-import { SupplierRestrictionsPanel } from '../../components/VendorRestrictionsPanel'
+import { SupplierRestrictionsPanel } from '../../components/SupplierRestrictionsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
 type Props = { state: SupplyArrWorkspaceState }

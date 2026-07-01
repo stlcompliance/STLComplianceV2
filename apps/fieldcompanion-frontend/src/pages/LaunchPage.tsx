@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   ApiErrorCallout,
@@ -7,6 +7,7 @@ import {
   saveThemePreferenceFromSession,
 } from '@stl/shared-ui'
 import { redeemHandoff } from '../api/client'
+import type { HandoffSessionResponse } from '../api/types'
 import { FieldCompanionPlainReason } from '../lib/FieldCompanionPlainReason'
 import { saveSession, toStoredSession } from '../auth/sessionStorage'
 import { DegradedOperationPanel } from '../components/DegradedOperationPanel'
@@ -21,6 +22,7 @@ export function LaunchPage() {
   const navigate = useNavigate()
   const [error, setError] = useState<string | null>(null)
   const [errorTitle, setErrorTitle] = useState('Launch failed')
+  const redeemRequestRef = useRef<{ handoff: string; promise: Promise<HandoffSessionResponse> } | null>(null)
   const releaseSafety = readCurrentFieldCompanionReleaseSafetySnapshot()
   const deviceSnapshot = useMemo(() => buildDeviceCapabilitySnapshot(), [])
   const degradedOperation = buildFieldCompanionOperationalFallbackSnapshot({
@@ -43,12 +45,19 @@ export function LaunchPage() {
       setError('Missing handoff code. Launch the Field Companion app from the suite.')
       return
     }
+    const redeemPromise =
+      redeemRequestRef.current?.handoff === handoff
+        ? redeemRequestRef.current.promise
+        : redeemHandoff(handoff)
+    if (redeemRequestRef.current?.handoff !== handoff) {
+      redeemRequestRef.current = { handoff, promise: redeemPromise }
+    }
 
     let cancelled = false
 
     ;(async () => {
       try {
-        const session = await redeemHandoff(handoff)
+        const session = await redeemPromise
         if (cancelled) {
           return
         }

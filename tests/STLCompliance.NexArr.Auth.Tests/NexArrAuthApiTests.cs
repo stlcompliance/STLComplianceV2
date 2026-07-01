@@ -179,6 +179,229 @@ public class NexArrAuthApiTests : IClassFixture<WebApplicationFactory<global::Ne
     }
 
     [Fact]
+    public async Task Local_dev_bypass_login_succeeds_for_loopback_request_with_valid_machine_key()
+    {
+        var previousMachineKey = Environment.GetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey);
+        Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, "abcdefghijklmnopqrstuvwxyz123456");
+        try
+        {
+            var bypassFactory = _baseFactory.WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Testing");
+                builder.UseSetting("ConnectionStrings:Database", string.Empty);
+                builder.UseSetting("DATABASE_URL", string.Empty);
+                builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+                builder.UseSetting(LocalDevAuthBypassPolicy.EnabledConfigKey, "true");
+                builder.UseSetting(LocalDevAuthBypassPolicy.NodeEnvConfigKey, "development");
+                builder.UseSetting(LocalDevAuthBypassPolicy.StlEnvConfigKey, "development");
+                builder.ConfigureServices(services =>
+                {
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                            || d.ServiceType == typeof(NexArrDbContext))
+                        .ToList();
+                    foreach (var descriptor in descriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<NexArrDbContext>(options =>
+                        options.UseInMemoryDatabase("NexArrAuthTests-LocalDevBypass-Success"));
+                });
+            });
+
+            await SeedDatabaseAsync(bypassFactory);
+            var client = bypassFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/local-dev-bypass");
+            request.Headers.TryAddWithoutValidation("Origin", "http://localhost:5174");
+            request.Content = JsonContent.Create(
+                new LocalDevBypassLoginRequest(PlatformSeeder.DemoTenantAdminEmail, PlatformSeeder.DemoTenantId));
+
+            var response = await client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var payload = await response.Content.ReadFromJsonAsync<AuthTokenResponse>();
+            Assert.NotNull(payload);
+            Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, payload.UserId);
+
+            using var scope = bypassFactory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var auditEvent = await db.AuditEvents
+                .AsNoTracking()
+                .OrderByDescending(x => x.OccurredAt)
+                .FirstAsync(x => x.Action == "local-dev-auth" && x.Result == "Success");
+
+            Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, auditEvent.ActorUserId);
+            Assert.Equal(PlatformSeeder.DemoTenantId, auditEvent.TenantId);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, previousMachineKey);
+        }
+    }
+
+    [Fact]
+    public async Task Local_dev_bypass_login_denies_missing_origin_header()
+    {
+        var previousMachineKey = Environment.GetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey);
+        Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, "abcdefghijklmnopqrstuvwxyz123456");
+        try
+        {
+            var bypassFactory = _baseFactory.WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Testing");
+                builder.UseSetting("ConnectionStrings:Database", string.Empty);
+                builder.UseSetting("DATABASE_URL", string.Empty);
+                builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+                builder.UseSetting(LocalDevAuthBypassPolicy.EnabledConfigKey, "true");
+                builder.UseSetting(LocalDevAuthBypassPolicy.NodeEnvConfigKey, "development");
+                builder.UseSetting(LocalDevAuthBypassPolicy.StlEnvConfigKey, "development");
+                builder.ConfigureServices(services =>
+                {
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                            || d.ServiceType == typeof(NexArrDbContext))
+                        .ToList();
+                    foreach (var descriptor in descriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<NexArrDbContext>(options =>
+                        options.UseInMemoryDatabase("NexArrAuthTests-LocalDevBypass-MissingOrigin"));
+                });
+            });
+
+            await SeedDatabaseAsync(bypassFactory);
+            var client = bypassFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/local-dev-bypass");
+            request.Content = JsonContent.Create(
+                new LocalDevBypassLoginRequest(PlatformSeeder.DemoTenantAdminEmail, PlatformSeeder.DemoTenantId));
+
+            var response = await client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, previousMachineKey);
+        }
+    }
+
+    [Fact]
+    public async Task Local_dev_bypass_login_denies_platform_admins()
+    {
+        var previousMachineKey = Environment.GetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey);
+        Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, "abcdefghijklmnopqrstuvwxyz123456");
+        try
+        {
+            var bypassFactory = _baseFactory.WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Testing");
+                builder.UseSetting("ConnectionStrings:Database", string.Empty);
+                builder.UseSetting("DATABASE_URL", string.Empty);
+                builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+                builder.UseSetting(LocalDevAuthBypassPolicy.EnabledConfigKey, "true");
+                builder.UseSetting(LocalDevAuthBypassPolicy.NodeEnvConfigKey, "development");
+                builder.UseSetting(LocalDevAuthBypassPolicy.StlEnvConfigKey, "development");
+                builder.ConfigureServices(services =>
+                {
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                            || d.ServiceType == typeof(NexArrDbContext))
+                        .ToList();
+                    foreach (var descriptor in descriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<NexArrDbContext>(options =>
+                        options.UseInMemoryDatabase("NexArrAuthTests-LocalDevBypass-PlatformAdmin"));
+                });
+            });
+
+            await SeedDatabaseAsync(bypassFactory);
+            var client = bypassFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/local-dev-bypass");
+            request.Headers.TryAddWithoutValidation("Origin", "http://127.0.0.1:5174");
+            request.Content = JsonContent.Create(
+                new LocalDevBypassLoginRequest(PlatformSeeder.DemoAdminEmail, PlatformSeeder.DemoTenantId));
+
+            var response = await client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+
+            using var scope = bypassFactory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
+            var auditEvent = await db.AuditEvents
+                .AsNoTracking()
+                .OrderByDescending(x => x.OccurredAt)
+                .FirstAsync(x => x.Action == "local-dev-auth" && x.Result == "Denied");
+
+            Assert.Equal("platform_admin_forbidden", auditEvent.ReasonCode);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, previousMachineKey);
+        }
+    }
+
+    [Fact]
+    public async Task Cookie_session_renew_auto_bootstraps_local_dev_session_without_login_form_input()
+    {
+        var previousMachineKey = Environment.GetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey);
+        Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, "abcdefghijklmnopqrstuvwxyz123456");
+        try
+        {
+            var bypassFactory = _baseFactory.WithWebHostBuilder(builder =>
+            {
+                builder.UseEnvironment("Testing");
+                builder.UseSetting("ConnectionStrings:Database", string.Empty);
+                builder.UseSetting("DATABASE_URL", string.Empty);
+                builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+                builder.UseSetting(LocalDevAuthBypassPolicy.EnabledConfigKey, "true");
+                builder.UseSetting(LocalDevAuthBypassPolicy.NodeEnvConfigKey, "development");
+                builder.UseSetting(LocalDevAuthBypassPolicy.StlEnvConfigKey, "development");
+                builder.ConfigureServices(services =>
+                {
+                    var descriptors = services
+                        .Where(d => d.ServiceType == typeof(DbContextOptions<NexArrDbContext>)
+                            || d.ServiceType == typeof(NexArrDbContext))
+                        .ToList();
+                    foreach (var descriptor in descriptors)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<NexArrDbContext>(options =>
+                        options.UseInMemoryDatabase("NexArrAuthTests-LocalDevBypass-AutoRenew"));
+                });
+            });
+
+            await SeedDatabaseAsync(bypassFactory);
+            var client = bypassFactory.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/renew");
+            request.Headers.TryAddWithoutValidation("Origin", "http://localhost:5174");
+            request.Headers.TryAddWithoutValidation("X-Stl-Cookie-Session", "true");
+            request.Content = JsonContent.Create(new { });
+
+            var response = await client.SendAsync(request);
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var payload = await response.Content.ReadFromJsonAsync<AuthTokenResponse>();
+            Assert.NotNull(payload);
+            Assert.Equal(PlatformSeeder.DemoTenantAdminUserId, payload.UserId);
+            Assert.True(string.IsNullOrWhiteSpace(payload.RefreshToken));
+            Assert.True(response.Headers.TryGetValues("Set-Cookie", out var setCookieHeaders));
+            Assert.Contains(setCookieHeaders, value => value.Contains("stl.refresh_token=", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable(LocalDevAuthBypassPolicy.MachineKeyConfigKey, previousMachineKey);
+        }
+    }
+
+    [Fact]
     public async Task Login_requests_are_rate_limited_by_ip()
     {
         var limitedFactory = _factory.WithWebHostBuilder(builder =>

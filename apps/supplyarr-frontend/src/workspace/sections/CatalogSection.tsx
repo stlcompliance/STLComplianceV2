@@ -1,6 +1,6 @@
 import { PartCatalogPanel } from '../../components/PartCatalogPanel'
 import { PartSubstitutionsPanel } from '../../components/PartSubstitutionsPanel'
-import { VendorCatalogApiPanel } from '../../components/VendorCatalogApiPanel'
+import { SupplierCatalogApiPanel } from '../../components/SupplierCatalogApiPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 import type { SupplierUnitPickerSource } from '../../forms/controlledFormHelpers'
 
@@ -79,7 +79,7 @@ export function CatalogSection({ state: s }: Props) {
         onSelectedPartIdChange={s.setSubstitutionPartId}
       />
 
-      <VendorCatalogApiPanel
+      <SupplierCatalogApiPanel
         accessToken={s.accessToken}
         canManage={s.canManageCatalog}
         parts={s.partsQuery.data ?? []}

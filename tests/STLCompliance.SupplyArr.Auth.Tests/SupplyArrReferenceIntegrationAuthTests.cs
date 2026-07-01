@@ -67,7 +67,7 @@ public sealed class SupplyArrReferenceIntegrationAuthTests : IAsyncLifetime
         var payload = await response.Content.ReadFromJsonAsync<ReferenceTypeDescriptor[]>();
         Assert.NotNull(payload);
         Assert.Contains(payload!, item => item.ReferenceType == "part");
-        Assert.Contains(payload!, item => item.ReferenceType == "vendor");
+        Assert.Contains(payload!, item => item.ReferenceType == "supplier");
     }
 
     [Fact]
@@ -93,12 +93,12 @@ public sealed class SupplyArrReferenceIntegrationAuthTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Party_quick_create_schema_disables_platform_admin_without_supplyarr_role()
+    public async Task Supplier_quick_create_schema_disables_platform_admin_without_supplyarr_role()
     {
         var token = CreateSupplyArrAccessToken(["supplyarr"], "routarr_driver", isPlatformAdmin: true);
 
         var response = await _supplyarrClient.SendAsync(
-            Authorized(HttpMethod.Get, "/api/v1/integrations/references/vendor/quick-create-schema", token));
+            Authorized(HttpMethod.Get, "/api/v1/integrations/references/supplier/quick-create-schema", token));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }

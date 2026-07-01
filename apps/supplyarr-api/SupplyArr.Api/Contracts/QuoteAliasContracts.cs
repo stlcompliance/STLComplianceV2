@@ -5,8 +5,7 @@ public sealed record CreateQuoteRequest(
     Guid SupplierId,
     string QuoteKey,
     string CurrencyCode,
-    string Notes,
-    Guid? VendorPartyId = null);
+    string Notes);
 
 public sealed record UpsertQuoteLineRequest(
     Guid RfqId,

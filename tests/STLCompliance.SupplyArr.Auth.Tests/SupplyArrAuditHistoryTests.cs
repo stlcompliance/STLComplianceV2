@@ -28,7 +28,7 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
     private HttpClient _supplyarrClient = null!;
     private string _serviceToken = null!;
     private string _userToken = null!;
-    private Guid _partyTargetId;
+    private Guid _supplierTargetId;
 
     public async Task InitializeAsync()
     {
@@ -76,7 +76,7 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
 
         _supplyarrClient = _supplyarrFactory.CreateClient();
         _userToken = await RedeemHandoffAsync(handoffCode);
-        _partyTargetId = await SeedAuditEventsAsync();
+        _supplierTargetId = await SeedAuditEventsAsync();
     }
 
     public async Task DisposeAsync()
@@ -93,13 +93,13 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
         var response = await _supplyarrClient.SendAsync(
             Authorized(
                 HttpMethod.Get,
-                $"/api/audit-history?action=parties.create&targetType=external_party&targetId={_partyTargetId}",
+                $"/api/audit-history?action=supplier.create&targetType=supplier&targetId={_supplierTargetId}",
                 _userToken));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var payload = await response.Content.ReadFromJsonAsync<AuditHistoryListResponse>();
         Assert.NotNull(payload);
-        Assert.Contains(payload!.Items, x => x.Action == "supplyarr.parties.create");
+        Assert.Contains(payload!.Items, x => x.Action == "supplier.create");
         Assert.DoesNotContain(payload.Items, x => x.Action == "supplyarr.parts.create");
     }
 
@@ -153,7 +153,7 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var tenantId = PlatformSeeder.DemoTenantId;
         var now = DateTimeOffset.UtcNow;
-        var partyId = Guid.NewGuid();
+        var supplierId = Guid.NewGuid();
 
         db.AuditEvents.AddRange(
             new SupplyArrAuditEvent
@@ -161,9 +161,9 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 ActorUserId = PlatformSeeder.DemoAdminUserId,
-                Action = "supplyarr.parties.create",
-                TargetType = "external_party",
-                TargetId = partyId.ToString(),
+                Action = "supplier.create",
+                TargetType = "supplier",
+                TargetId = supplierId.ToString(),
                 Result = "success",
                 CorrelationId = Guid.NewGuid(),
                 OccurredAt = now.AddMinutes(-2),
@@ -185,8 +185,8 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
                 Id = Guid.NewGuid(),
                 TenantId = tenantId,
                 ActorUserId = PlatformSeeder.DemoAdminUserId,
-                Action = "supplyarr.reports.vendor.summary",
-                TargetType = "vendor_report",
+                Action = "supplyarr.reports.supplier.summary",
+                TargetType = "supplier_report",
                 TargetId = null,
                 Result = "success",
                 CorrelationId = Guid.NewGuid(),
@@ -194,7 +194,7 @@ public sealed class SupplyArrAuditHistoryTests : IAsyncLifetime
             });
 
         await db.SaveChangesAsync();
-        return partyId;
+        return supplierId;
     }
 
     private async Task SeedNexArrAsync()

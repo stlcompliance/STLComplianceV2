@@ -14,7 +14,7 @@ public sealed class TripService(
     DispatchNotificationEnqueueService notificationEnqueueService,
     IntegrationOutboxEnqueueService integrationOutboxEnqueueService,
     StaffarrPersonRefService staffarrPersonRefService,
-    TripVendorReadinessService readinessService)
+    TripSupplierReadinessService readinessService)
 {
     public async Task<IReadOnlyList<TripSummaryResponse>> ListAsync(
         Guid tenantId,
@@ -22,7 +22,7 @@ public sealed class TripService(
         Guid? actorUserId,
         string? actorPersonId,
         string? dispatchStatus = null,
-        Guid? vendorOrderId = null,
+        Guid? supplierOrderId = null,
         Guid? brokerOrderId = null,
         CancellationToken cancellationToken = default)
     {
@@ -48,9 +48,9 @@ public sealed class TripService(
             query = query.Where(x => x.DispatchStatus == dispatchStatus);
         }
 
-        if (vendorOrderId.HasValue)
+        if (supplierOrderId.HasValue)
         {
-            query = query.Where(x => x.VendorOrderId == vendorOrderId.Value);
+            query = query.Where(x => x.SupplierOrderId == supplierOrderId.Value);
         }
 
         if (brokerOrderId.HasValue)
@@ -120,7 +120,7 @@ public sealed class TripService(
             Description = request.Description?.Trim() ?? string.Empty,
             DispatchStatus = TripDispatchStatuses.Planned,
             VehicleRefKey = NormalizeOptionalKey(request.VehicleRefKey),
-            VendorOrderId = request.VendorOrderId,
+            SupplierOrderId = request.SupplierOrderId,
             BrokerOrderId = request.BrokerOrderId,
             ScheduledStartAt = request.ScheduledStartAt,
             ScheduledEndAt = request.ScheduledEndAt,
@@ -137,7 +137,7 @@ public sealed class TripService(
             }
         }
 
-        await readinessService.ApplyInitialVendorOrderLinkAsync(entity, cancellationToken);
+        await readinessService.ApplyInitialSupplierOrderLinkAsync(entity, cancellationToken);
 
         db.Trips.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
@@ -565,7 +565,7 @@ public sealed class TripService(
         return MapDetail(trip);
     }
 
-    public async Task<TripDetailResponse> OverrideVendorReadinessAsync(
+    public async Task<TripDetailResponse> OverrideSupplierReadinessAsync(
         Guid tenantId,
         Guid actorUserId,
         string actorPersonId,
@@ -584,11 +584,11 @@ public sealed class TripService(
             throw new StlApiException("trip.not_found", "Trip was not found.", 404);
         }
 
-        readinessService.ApplyVendorReadinessOverride(trip, reason, actorPersonId, DateTimeOffset.UtcNow);
+        readinessService.ApplySupplierReadinessOverride(trip, reason, actorPersonId, DateTimeOffset.UtcNow);
         await db.SaveChangesAsync(cancellationToken);
 
         await audit.WriteAsync(
-            "trip.vendor_readiness_override",
+            "trip.supplier_readiness_override",
             tenantId,
             actorUserId,
             "trip",
@@ -776,17 +776,17 @@ public sealed class TripService(
             trip.CompletedAt,
             trip.ClosedAt,
             trip.CancelledAt,
-            trip.VendorOrderId,
+            trip.SupplierOrderId,
             trip.BrokerOrderId,
             trip.DispatchBlockReason,
-            trip.VendorReadinessStatusSnapshot,
-            trip.VendorQuantityReadySnapshot,
-            trip.VendorOrderedQuantitySnapshot,
-            trip.VendorExpectedReadyAtSnapshot,
-            trip.VendorConfirmedReadyAtSnapshot,
+            trip.SupplierReadinessStatusSnapshot,
+            trip.SupplierQuantityReadySnapshot,
+            trip.SupplierOrderedQuantitySnapshot,
+            trip.SupplierExpectedReadyAtSnapshot,
+            trip.SupplierConfirmedReadyAtSnapshot,
             trip.DispatchOverrideAt,
             trip.DispatchOverrideReason,
-            TripVendorReadinessService.MapBlocks(trip));
+            TripSupplierReadinessService.MapBlocks(trip));
 
     public async Task<TripDetailResponse> AcknowledgeDriverCloseAsync(
         Guid tenantId,

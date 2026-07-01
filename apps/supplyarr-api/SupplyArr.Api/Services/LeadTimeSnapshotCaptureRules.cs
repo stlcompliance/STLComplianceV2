@@ -39,8 +39,8 @@ public static class LeadTimeSnapshotCaptureRules
         return catalogLeadTimeDays.Value != currentLeadTimeDays.Value;
     }
 
-    public static string BuildWorkerSnapshotKey(Guid partVendorLinkId, DateTimeOffset effectiveFrom) =>
-        $"worker-lt-{partVendorLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
+    public static string BuildWorkerSnapshotKey(Guid partSupplierLinkId, DateTimeOffset effectiveFrom) =>
+        $"worker-lt-{partSupplierLinkId:N}-{effectiveFrom:yyyyMMddHHmmss}";
 
     public static int NormalizeLeadTimeDays(int leadTimeDays)
     {

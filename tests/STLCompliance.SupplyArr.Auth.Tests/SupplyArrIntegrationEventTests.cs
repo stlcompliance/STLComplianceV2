@@ -136,16 +136,16 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
         var entityId = Guid.NewGuid();
         var first = await enqueue.TryEnqueueAsync(
             PlatformSeeder.DemoTenantId,
-            IntegrationOutboxEventKinds.PartyCreated,
-            "external_party",
+            IntegrationOutboxEventKinds.SupplierCreated,
+            "supplier",
             entityId,
-            new IntegrationOutboxPayload(PlatformSeeder.DemoTenantId, "Test party"));
+            new IntegrationOutboxPayload(PlatformSeeder.DemoTenantId, "Test supplier"));
         var second = await enqueue.TryEnqueueAsync(
             PlatformSeeder.DemoTenantId,
-            IntegrationOutboxEventKinds.PartyCreated,
-            "external_party",
+            IntegrationOutboxEventKinds.SupplierCreated,
+            "supplier",
             entityId,
-            new IntegrationOutboxPayload(PlatformSeeder.DemoTenantId, "Test party"));
+            new IntegrationOutboxPayload(PlatformSeeder.DemoTenantId, "Test supplier"));
 
         Assert.NotNull(first);
         Assert.Null(second);
@@ -240,52 +240,58 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
         await EnableIntegrationSettingsAsync();
 
         using var scope = _supplyarrFactory.Services.CreateScope();
-        var parties = scope.ServiceProvider.GetRequiredService<ExternalPartyService>();
+        var parties = scope.ServiceProvider.GetRequiredService<SupplierDirectoryService>();
         var parts = scope.ServiceProvider.GetRequiredService<PartRegistryService>();
         var reservations = scope.ServiceProvider.GetRequiredService<StockReservationService>();
         var db = scope.ServiceProvider.GetRequiredService<SupplyArrDbContext>();
         var actorUserId = PlatformSeeder.DemoAdminUserId;
 
-        var vendor = await parties.CreateTypedAsync(
+        var supplier = await parties.CreateSupplierAsync(
             PlatformSeeder.DemoTenantId,
             actorUserId,
-            "vendor",
-            new CreateTypedExternalPartyRequest(
-                $"vendor-{Guid.NewGuid():N}"[..16],
-                "Qualified Event Vendor",
-                "Qualified Event Vendor LLC",
+            new CreateSupplierRequest(
+                $"supplier-{Guid.NewGuid():N}"[..16],
                 null,
-                string.Empty));
-        await parties.UpdateAsync(
-            PlatformSeeder.DemoTenantId,
-            actorUserId,
-            vendor.PartyId,
-            new UpdateExternalPartyRequest(
-                "Qualified Event Vendor Updated",
-                "Qualified Event Vendor LLC",
                 null,
-                "updated"));
-        await parties.UpdateApprovalStatusAsync(
-            PlatformSeeder.DemoTenantId,
-            actorUserId,
-            vendor.PartyId,
-            new UpdateExternalPartyApprovalStatusRequest("approved"));
-        await parties.UpdateApprovalStatusAsync(
-            PlatformSeeder.DemoTenantId,
-            actorUserId,
-            vendor.PartyId,
-            new UpdateExternalPartyApprovalStatusRequest("restricted"));
-
-        var customer = await parties.CreateTypedAsync(
-            PlatformSeeder.DemoTenantId,
-            actorUserId,
-            "customer",
-            new CreateTypedExternalPartyRequest(
-                $"customer-{Guid.NewGuid():N}"[..16],
-                "Qualified Event Customer",
-                "Qualified Event Customer LLC",
+                "Qualified Event Supplier",
+                "Qualified Event Supplier LLC",
                 null,
-                string.Empty));
+                string.Empty,
+                ["parts"],
+                null,
+                null,
+                null,
+                null,
+                null,
+                null));
+        await parties.UpdateSupplierAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            supplier.SupplierId,
+            new UpdateSupplierRequest(
+                null,
+                null,
+                "Qualified Event Supplier Updated",
+                "Qualified Event Supplier LLC",
+                null,
+                "updated",
+                ["parts"],
+                null,
+                null,
+                null,
+                null,
+                null,
+                null));
+        await parties.UpdateSupplierApprovalStatusAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            supplier.SupplierId,
+            new UpdateSupplierApprovalStatusRequest("approved"));
+        await parties.UpdateSupplierApprovalStatusAsync(
+            PlatformSeeder.DemoTenantId,
+            actorUserId,
+            supplier.SupplierId,
+            new UpdateSupplierApprovalStatusRequest("restricted"));
 
         var part = await parts.CreateAsync(
             PlatformSeeder.DemoTenantId,
@@ -329,16 +335,14 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
             .Where(x => x.TenantId == PlatformSeeder.DemoTenantId)
             .ToListAsync();
 
-        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorCreated
-            && x.RelatedEntityId == vendor.PartyId);
-        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorUpdated
-            && x.RelatedEntityId == vendor.PartyId);
-        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorApproved
-            && x.RelatedEntityId == vendor.PartyId);
-        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrVendorBlocked
-            && x.RelatedEntityId == vendor.PartyId);
-        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrCustomerCreated
-            && x.RelatedEntityId == customer.PartyId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrSupplierCreated
+            && x.RelatedEntityId == supplier.SupplierId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrSupplierUpdated
+            && x.RelatedEntityId == supplier.SupplierId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrSupplierApproved
+            && x.RelatedEntityId == supplier.SupplierId);
+        Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrSupplierBlocked
+            && x.RelatedEntityId == supplier.SupplierId);
         Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrItemCreated
             && x.RelatedEntityId == part.PartId);
         Assert.Contains(outbox, x => x.EventKind == IntegrationOutboxEventKinds.SupplyArrItemUpdated
@@ -540,3 +544,4 @@ public sealed class SupplyArrIntegrationEventTests : IAsyncLifetime
             Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
     }
 }
+

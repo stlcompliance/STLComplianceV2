@@ -282,13 +282,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
         }
 
         var partIds = purchaseRequest.Lines.Select(x => x.PartId).Distinct().ToList();
-        var vendorId = purchaseRequest.VendorPartyId;
-        if (vendorId is null)
+        var supplierId = purchaseRequest.SupplierId;
+        if (supplierId is null)
         {
             return 0m;
         }
 
-        var priceByPart = await ResolveLatestUnitPricesAsync(tenantId, vendorId.Value, partIds, cancellationToken);
+        var priceByPart = await ResolveLatestUnitPricesAsync(tenantId, supplierId.Value, partIds, cancellationToken);
         return purchaseRequest.Lines.Sum(line =>
         {
             priceByPart.TryGetValue(line.PartId, out var unitPrice);
@@ -307,13 +307,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
         }
 
         var partIds = purchaseOrder.Lines.Select(x => x.PartId).Distinct().ToList();
-        var vendorId = purchaseOrder.VendorPartyId;
-        if (vendorId == Guid.Empty)
+        var supplierId = purchaseOrder.SupplierId;
+        if (supplierId == Guid.Empty)
         {
             return 0m;
         }
 
-        var priceByPart = await ResolveLatestUnitPricesAsync(tenantId, vendorId, partIds, cancellationToken);
+        var priceByPart = await ResolveLatestUnitPricesAsync(tenantId, supplierId, partIds, cancellationToken);
         return purchaseOrder.Lines.Sum(line =>
         {
             priceByPart.TryGetValue(line.PartId, out var unitPrice);
@@ -323,12 +323,12 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
 
     private async Task<Dictionary<Guid, decimal>> ResolveLatestUnitPricesAsync(
         Guid tenantId,
-        Guid vendorPartyId,
+        Guid supplierId,
         IReadOnlyList<Guid> partIds,
         CancellationToken cancellationToken)
     {
-        var links = await db.PartVendorLinks.AsNoTracking()
-            .Where(x => x.TenantId == tenantId && x.ExternalPartyId == vendorPartyId && partIds.Contains(x.PartId))
+        var links = await db.PartSupplierLinks.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.SupplierId == supplierId && partIds.Contains(x.PartId))
             .Select(x => new { x.Id, x.PartId, x.CatalogUnitPrice })
             .ToListAsync(cancellationToken);
 
@@ -338,13 +338,13 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
         }
 
         var linkIds = links.Select(x => x.Id).ToList();
-        var snapshots = await db.PartVendorPricingSnapshots.AsNoTracking()
-            .Where(x => x.TenantId == tenantId && linkIds.Contains(x.PartVendorLinkId))
+        var snapshots = await db.PartSupplierPricingSnapshots.AsNoTracking()
+            .Where(x => x.TenantId == tenantId && linkIds.Contains(x.PartSupplierLinkId))
             .OrderByDescending(x => x.EffectiveFrom)
             .ToListAsync(cancellationToken);
 
         var snapshotByLink = snapshots
-            .GroupBy(x => x.PartVendorLinkId)
+            .GroupBy(x => x.PartSupplierLinkId)
             .ToDictionary(g => g.Key, g => g.First().UnitPrice);
 
         var result = new Dictionary<Guid, decimal>();
@@ -386,3 +386,4 @@ public sealed class StaffarrProcurementApprovalAuthorityService(
             authoritySource);
     }
 }
+

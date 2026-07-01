@@ -3,7 +3,7 @@ namespace SupplyArr.Api.Contracts;
 public sealed record PricingSnapshotResponse(
     Guid PricingSnapshotId,
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     Guid PartId,
     string PartKey,
     string PartDisplayName,
@@ -14,7 +14,7 @@ public sealed record PricingSnapshotResponse(
     string? ParentSupplierDisplayName,
     string SupplierUnitKind,
     IReadOnlyList<string> SupplierServiceTypes,
-    string VendorPartNumber,
+    string SupplierPartNumber,
     decimal UnitPrice,
     string CurrencyCode,
     decimal? MinimumOrderQuantity,
@@ -29,7 +29,7 @@ public sealed record PricingSnapshotResponse(
 
 public sealed record CreatePricingSnapshotRequest(
     string SnapshotKey,
-    Guid PartVendorLinkId,
+    Guid PartSupplierLinkId,
     decimal UnitPrice,
     string? CurrencyCode,
     decimal? MinimumOrderQuantity,

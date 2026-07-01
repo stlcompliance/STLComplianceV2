@@ -73,33 +73,6 @@ public static class ComplianceReportEndpoints
             })
             .WithName($"ExportSupplyArrComplianceReportSummary{nameSuffix}");
 
-            group.MapGet("/parties/{externalPartyId:guid}", async (
-                Guid externalPartyId,
-                SupplyArrAuthorizationService authorization,
-                ComplianceReportService reportService,
-                ISupplyArrAuditService audit,
-                HttpContext context,
-                CancellationToken cancellationToken) =>
-            {
-                authorization.RequireComplianceReportRead(context.User);
-                var tenantId = context.User.GetTenantId();
-                var actorUserId = context.User.GetUserId();
-                var detail = await reportService.GetPartyDetailAsync(
-                    tenantId,
-                    externalPartyId,
-                    cancellationToken);
-                await audit.WriteAsync(
-                    "supplyarr.reports.compliance.party_detail",
-                    tenantId,
-                    actorUserId,
-                    "compliance_report",
-                    externalPartyId.ToString(),
-                    "success",
-                    cancellationToken: cancellationToken);
-                return Results.Ok(detail);
-            })
-            .WithName($"GetSupplyArrCompliancePartyDetail{nameSuffix}");
-
             group.MapGet("/suppliers/{supplierId:guid}", async (
                 Guid supplierId,
                 SupplyArrAuthorizationService authorization,
