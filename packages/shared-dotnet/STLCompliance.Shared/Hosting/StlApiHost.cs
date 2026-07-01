@@ -46,6 +46,13 @@ public static class StlApiHost
             builder.Host.UseSerilog();
 
             var connectionString = StlDatabaseConnection.Resolve(builder.Configuration);
+            var useInMemoryTestingDatabase =
+                builder.Environment.IsEnvironment("Testing")
+                && string.IsNullOrWhiteSpace(connectionString);
+            var inMemoryDatabaseName = useInMemoryTestingDatabase
+                ? builder.Configuration["Testing:InMemoryDatabaseName"]
+                    ?? $"{product.ProductKey}-testing-{Guid.NewGuid():N}"
+                : null;
 
             builder.Services.AddSingleton(product);
             builder.Services.AddDbContext<TContext>(options =>
@@ -53,6 +60,12 @@ public static class StlApiHost
                 if (!string.IsNullOrWhiteSpace(connectionString))
                 {
                     options.UseNpgsql(connectionString);
+                    return;
+                }
+
+                if (useInMemoryTestingDatabase)
+                {
+                    options.UseInMemoryDatabase(inMemoryDatabaseName!);
                 }
             });
             builder.Services.AddScoped<PlatformDbContext>(sp => sp.GetRequiredService<TContext>());

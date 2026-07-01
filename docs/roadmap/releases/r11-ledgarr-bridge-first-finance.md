@@ -60,6 +60,7 @@ Tests run:
 - `npm run test:theme` in `apps/ledgarr-frontend` — no theme audit violations.
 - `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~LedgArr" --logger "console;verbosity=minimal"` — no tests matched the LedgArr filter; build completed with existing warnings.
 - `rg` scan over LedgArr API/tests/docs confirmed no live LedgArr API `501`/`NotImplementedFinanceWorkflow` placeholders remain.
+- Current repo-state reruns also passed: the focused LedgArr auth/settings/R11-placeholder-replacement backend cluster passed 11 tests, and the LedgArr frontend app/session slice passed 2 files / 6 tests.
 
 Deferred blockers:
 

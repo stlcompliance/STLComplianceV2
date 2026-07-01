@@ -114,6 +114,9 @@ Tests run:
 - `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --filter "FullyQualifiedName~RoutArrTmsRuntimeTests|FullyQualifiedName~RoutArrSupplyArrPartsDemandTests|FullyQualifiedName~RoutArrDispatchBoardTests|FullyQualifiedName~RoutArrDispatchCloseoutTests|FullyQualifiedName~RoutArrDispatchExceptionQueueTests" --logger "console;verbosity=minimal"` — passed 27 tests.
 - `npm test` from `apps/routarr-frontend` — passed 40 files / 134 tests.
 - `npm run test:theme` from `apps/routarr-frontend` — passed with no theme audit violations.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~RoutArrHandoffApiTests" --logger "console;verbosity=minimal"` — passed 6 tests in 22s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~RoutArrDispatchWorkflowGateTests|FullyQualifiedName~RoutArrDispatchAssignmentTests|FullyQualifiedName~RoutArrAssetDispatchabilityTests|FullyQualifiedName~RoutArrDriverEligibilityTests" --logger "console;verbosity=minimal"` — passed 14 tests in 49s.
+- Current repo-state rerun: `npm test -- --run ProductWorkspaceLayout.test.tsx sessionStorage.test.ts` from `apps/routarr-frontend` — passed 2 files / 6 tests in 1.64s.
 
 Known warnings:
 

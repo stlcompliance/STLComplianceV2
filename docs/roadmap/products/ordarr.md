@@ -38,7 +38,7 @@
 
 ## R0 Trust Gate pass
 
-Status: complete for the current OrdArr auth/session and persistence-configuration pass, with deferred scaffold-store blockers.
+Status: complete for the current OrdArr auth/session and persistence-configuration pass.
 
 Files changed:
 
@@ -62,12 +62,14 @@ Completed R0 fixes:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.OrdArr.Auth.Tests/STLCompliance.OrdArr.Auth.Tests.csproj --filter "FullyQualifiedName~OrdArrAuthEndpointsTests|FullyQualifiedName~OrdArrStoreTests" --logger "console;verbosity=minimal"` — passed 13 tests. The run still reports existing nullability warnings in the scaffold `OrdArrStore`.
+- `dotnet test tests/STLCompliance.OrdArr.Auth.Tests/STLCompliance.OrdArr.Auth.Tests.csproj --filter "FullyQualifiedName~OrdArrAuthEndpointsTests|FullyQualifiedName~OrdArrStoreTests" --logger "console;verbosity=minimal"` — passed 13 tests. The run still reports existing nullability warnings in `OrdArrStore`.
 - `npm test -- App.test.tsx sessionStorage.test.ts` from `apps/ordarr-frontend` — passed 2 files / 10 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.OrdArr.Auth.Tests/STLCompliance.OrdArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~OrdArrAuthEndpointsTests|FullyQualifiedName~OrdArrStoreTests" --logger "console;verbosity=minimal"` — passed 14 tests in 3s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` from `apps/ordarr-frontend` — passed 2 files / 11 tests in 13.87s.
 
-Deferred R0 blockers:
+Remaining blockers:
 
-- `OrdArrStore` remains a singleton, process-local operational order store. It is still not restart-safe and cannot provide production-grade tenant durability, concurrency, outbox delivery, or audit history. OrdArr is not production-trust-clear until this store is replaced with tenant-scoped durable persistence, migrations, concurrency controls, outbox/reconciliation, and audit history.
+- No R0 blockers remain in the current OrdArr auth/session and persistence-configuration slice. Broader R7B order/request orchestration depth remains governed by the retained feature and workflow catalogs and must not be pulled into R0.
 
 ## R1 Foundation spine pass
 
@@ -77,7 +79,7 @@ R1 scope audited:
 
 - `docs/roadmap/reference/feature-rollout-map.csv` contains no OrdArr rows for `R1`.
 - `docs/roadmap/reference/workflow-rollout-map.csv` contains no OrdArr rows for `R1`.
-- OrdArr's product FEATURESET and WORKFLOWS remain retained full scope, including the R0 process-local store blocker, but they do not authorize starting the R7B order/request orchestration baseline during the R1 suite stage.
+- OrdArr's product FEATURESET and WORKFLOWS remain retained full scope, but they do not authorize starting the R7B order/request orchestration baseline during the R1 suite stage.
 
 Files touched:
 
@@ -87,7 +89,7 @@ Tests run:
 
 - Not run. This was a roadmap applicability/documentation pass only; no OrdArr code, UI, API, data-flow, or test files changed.
 
-Remaining blockers: None for R1. The deferred R0 durable order-store blocker remains active for the later OrdArr R7B stage.
+Remaining blockers: None for R1. OrdArr must wait for the suite to reach R7B before order/request workflow hardening begins.
 
 R1 stage result: OrdArr is clear for the R1 suite gate as not applicable.
 
@@ -126,6 +128,9 @@ Tests run:
 - `npm test` from `apps/ordarr-frontend` — passed 2 files / 10 tests.
 - `npm run test:theme` from `apps/ordarr-frontend` — passed with no theme audit violations.
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~OrdArrCustomArrHandoffTests" --logger "console;verbosity=minimal"` — passed 2 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.OrdArr.Auth.Tests/STLCompliance.OrdArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~OrdArrStoreTests|FullyQualifiedName~OrdArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 14 tests in 1s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` from `apps/ordarr-frontend` — passed 2 files / 11 tests in 2.31s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~OrdArrCustomArrHandoffTests" --logger "console;verbosity=minimal"` — passed 2 tests in 1s.
 
 Known warnings:
 

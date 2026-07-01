@@ -57,10 +57,10 @@ Shared fixes:
 
 Tests run:
 
-- SupplyArr backend: focused R5/auth/report/support clusters passed 39, 28, 33, 6, and 65 tests.
-- SupplyArr frontend: `npm test` passed 54 files / 151 tests.
-- LoadArr backend: exact receiving trace test passed 1 test; full `STLCompliance.LoadArr.Auth.Tests` passed 111 tests.
-- LoadArr frontend: `npm test` passed 7 files / 60 tests.
+- SupplyArr backend: focused R5/auth/report/support clusters passed 39, 28, 33, 6, and 65 tests; current repo-state reruns also passed a 3-test support/boundary cluster and a 66-test broader support/boundary cluster.
+- SupplyArr frontend: `npm test` passed 54 files / 151 tests, and the current repo-state client/layout/session slice passed 3 files / 53 tests.
+- LoadArr backend: exact receiving trace test passed 1 test; full `STLCompliance.LoadArr.Auth.Tests` passed 111 tests; current repo-state reruns also passed a 5-test receiving/idempotency/history truth cluster.
+- LoadArr frontend: `npm test` passed 7 files / 60 tests, and the current repo-state client/mutation/app slice passed 3 files / 51 tests.
 
 ## Related roadmap files
 

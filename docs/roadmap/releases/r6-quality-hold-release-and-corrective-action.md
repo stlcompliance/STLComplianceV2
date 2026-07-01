@@ -54,8 +54,8 @@ Shared fixes: none outside AssurArr.
 Tests run:
 
 - AssurArr backend exact tenant-scope regression passed 1 test.
-- AssurArr backend full `STLCompliance.AssurArr.Api.Tests` passed 34 tests.
-- AssurArr frontend `npm test` passed 3 files / 7 tests.
+- AssurArr backend full `STLCompliance.AssurArr.Api.Tests` passed 34 tests, and the current repo-state `AssurArrApiTests|AssurArrAuthorizationTests` rerun passed 26 tests.
+- AssurArr frontend `npm test` passed 3 files / 7 tests, and the current repo-state client/app/session rerun passed 3 files / 8 tests.
 
 ## Related roadmap files
 

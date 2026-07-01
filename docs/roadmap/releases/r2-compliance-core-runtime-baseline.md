@@ -48,7 +48,7 @@ Shared fixes completed in this stage:
 
 Deferred blockers carried forward:
 
-- RecordArr durable retained-evidence persistence remains unresolved from the prior stage. Compliance Core R2 may provide regulatory interpretation, evidence requirements, missing-evidence warnings, audit package metadata, and runtime guidance, but retained evidence files remain a RecordArr-owned truth and must not be represented as production-authoritative until RecordArr closes that blocker.
+- RecordArr's remaining provider-grade evidence-vault hardening remains unresolved from the prior stage. Compliance Core R2 may provide regulatory interpretation, evidence requirements, missing-evidence warnings, audit package metadata, and runtime guidance, but retained evidence files, retained outputs, and final provider-backed evidence execution remain RecordArr-owned truth and must not be represented as fully production-authoritative until RecordArr closes that blocker.
 
 Tests run:
 
@@ -61,11 +61,12 @@ Tests run:
 - `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.ComplianceCore.Auth.Tests.ComplianceCoreReportTests.Title49_citation_coverage_report_summary_enumerates_legal_states" --logger "console;verbosity=minimal"` - passed 1 test after report scoping repair.
 - `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --filter "FullyQualifiedName~ComplianceCoreRuleChangeMonitoringTests|FullyQualifiedName~ComplianceCoreControlEffectivenessTests|FullyQualifiedName~ComplianceCoreOperatorDashboardTests|FullyQualifiedName~ComplianceCoreReportTests|FullyQualifiedName~ComplianceCoreScheduledEvaluationWorkerTests" --logger "console;verbosity=minimal"` - passed 39 tests.
 - `dotnet test tests/STLCompliance.ComplianceCore.Auth.Tests/STLCompliance.ComplianceCore.Auth.Tests.csproj --logger "console;verbosity=minimal"` - timed out before completion; split R2 backend clusters passed as listed above.
+- Current repo-state reruns for the same frontend and split backend clusters also passed: 11 frontend tests; backend clusters passed 53, 24, 37, 37, 31, 1, and 39 tests, respectively.
 
 Stage advancement decision:
 
 - The suite may advance to R3.
-- The RecordArr durable evidence-store blocker remains carried and must not be treated as closed by later stages.
+- The RecordArr provider-grade evidence-vault blocker remains carried and must not be treated as closed by later stages.
 
 ## Related roadmap files
 

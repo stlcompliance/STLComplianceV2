@@ -60,6 +60,7 @@ Tests run:
 - `npm test` in `apps/reportarr-frontend` — passed 3 files / 8 tests.
 - `npm run test:theme` in `apps/reportarr-frontend` — no violations.
 - `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~ReportArr" --logger "console;verbosity=minimal"` — passed 48 tests.
+- Current repo-state reruns also passed: `ReportArrAuthEndpointsTests` passed 7 tests, the ReportArr frontend app/session slice passed 2 files / 6 tests, and the focused ReportArr OpenAPI suite passed 48 tests.
 
 Deferred blockers:
 

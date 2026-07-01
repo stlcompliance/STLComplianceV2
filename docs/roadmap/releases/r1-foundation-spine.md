@@ -41,7 +41,7 @@ Completed products:
 
 - NexArr: R1 pass complete with no remaining blockers in the audited identity, launch, navigation, service-token, tenant-integration, Smart Import, platform lifecycle, and reference-data slice.
 - StaffArr: R1 pass complete with no remaining blockers in the audited people, roles, org/location, self-service, export, worker/admin, incident, onboarding, handoff, and field-inbox slice.
-- RecordArr: R1 pass complete with deferred blockers. The foundation evidence-layer rows remain represented by partial/scaffold behavior and cannot be treated as production-trust-clear until durable DMS metadata, object-storage metadata, immutable audit, version/hash integrity, retention/legal-hold enforcement, tenant scope, and action permission checks replace the process-local store.
+- RecordArr: R1 pass complete with deferred blockers. The old singleton-store R0 blocker is no longer active in the audited current slice, but RecordArr still cannot be treated as the suite's fully production-authoritative evidence vault until the remaining provider-grade DMS hardening closes around immutable audit/notarization, audit-anchor/governance evidence, object-storage control-plane operations, lifecycle verification, backup/restore orchestration, and managed trust-service/redaction-provider execution.
 
 Not applicable for R1:
 
@@ -60,7 +60,7 @@ Not applicable for R1:
 
 Deferred blockers carried forward:
 
-- RecordArr durable evidence-store and tenant-scope blockers remain active and must be resolved before any downstream product relies on RecordArr as authoritative evidence persistence.
+- RecordArr's remaining provider-grade evidence-vault hardening blockers remain active and must be resolved before any downstream product relies on RecordArr as fully production-authoritative evidence persistence, retained-output authority, or final external share/signature/redaction execution truth.
 - R0 deferred blockers from non-R1 products remain tracked in their product roadmap files and are not cleared by this R1 pass.
 
 Shared fixes completed in R1:
@@ -71,14 +71,14 @@ Shared fixes completed in R1:
 
 Tests run for R1:
 
-- NexArr focused auth/navigation/platform/reference-data/lifecycle/service-token/tenant-integration/Smart Import tests: passed 29, 42, and 73 tests across the documented split runs.
+- NexArr focused auth/navigation/platform/reference-data/lifecycle/service-token/tenant-integration/Smart Import tests: current repo-state reruns passed 33, 42, and 74 tests across the documented split runs.
 - StaffArr focused R1 test clusters: passed 18, 21, 35, 13, 3, and 21 tests across the documented split runs. One larger combined run timed out and was replaced by these split completion runs.
-- RecordArr focused backend and frontend checks: passed 3 backend tests and 10 frontend tests.
+- RecordArr focused backend and frontend checks: current repo-state reruns passed 4 auth tests, 93 store/integration/print-provider tests, and 12 frontend tests.
 - R1 not-applicable products had documentation-only passes; no code, UI, API, data-flow, or test files changed for those product-stage notes.
 
 Stage advancement decision:
 
-- The suite may advance to R2 with RecordArr's durable evidence-store blocker explicitly carried forward. R2 work must not treat RecordArr as production-authoritative evidence persistence until that blocker is closed or explicitly handled inside the current R2 product-stage slice.
+- The suite may advance to R2 with RecordArr's remaining provider-grade evidence-vault blockers explicitly carried forward. R2 work must not treat RecordArr as fully production-authoritative evidence persistence until those blockers are closed or explicitly handled inside the current R2 product-stage slice.
 
 ## Related roadmap files
 

@@ -59,8 +59,10 @@ Tests run:
 - `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --filter "FullyQualifiedName~RoutArrDispatchWorkflowGateTests|FullyQualifiedName~RoutArrDispatchAssignmentTests|FullyQualifiedName~RoutArrAssetDispatchabilityTests|FullyQualifiedName~RoutArrDriverEligibilityTests" --logger "console;verbosity=minimal"` — passed 14 tests.
 - `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --filter "FullyQualifiedName~RoutArrTripTests|FullyQualifiedName~RoutArrTripExecutionCaptureTests|FullyQualifiedName~RoutArrTripProofDvirTests|FullyQualifiedName~RoutArrTripCompletionRollupWorkerTests" --logger "console;verbosity=minimal"` — passed 21 tests.
 - `dotnet test tests/STLCompliance.RoutArr.Auth.Tests/STLCompliance.RoutArr.Auth.Tests.csproj --filter "FullyQualifiedName~RoutArrTmsRuntimeTests|FullyQualifiedName~RoutArrSupplyArrPartsDemandTests|FullyQualifiedName~RoutArrDispatchBoardTests|FullyQualifiedName~RoutArrDispatchCloseoutTests|FullyQualifiedName~RoutArrDispatchExceptionQueueTests" --logger "console;verbosity=minimal"` — passed 27 tests.
+- Current repo-state reruns also passed: `RoutArrHandoffApiTests` passed 6 tests, and the dispatch gate/assignment/dispatchability/eligibility cluster passed 14 tests.
 - `npm test` from `apps/routarr-frontend` — passed 40 files / 134 tests.
 - `npm run test:theme` from `apps/routarr-frontend` — passed with no theme audit violations.
+- Current repo-state rerun: the RoutArr frontend workspace/session slice passed 2 files / 6 tests.
 
 Deferred blockers:
 

@@ -86,7 +86,7 @@ Tests run:
 
 - Product frontend unit tests and theme audits were run for the R12 slices touched in NexArr, StaffArr, Compliance Core, MaintainArr, TrainArr, SupplyArr, LoadArr, AssurArr, CustomArr, OrdArr, RoutArr, ReportArr, Field Companion, and LedgArr.
 - Product backend/auth tests were run for the R12 slices that touched server-side behavior, including Compliance Core, MaintainArr, TrainArr, SupplyArr, LoadArr, AssurArr, CustomArr, OrdArr, RoutArr, ReportArr, Field Companion-related NexArr auth coverage, and LedgArr.
-- RecordArr's R12 pass used existing smoke/theme coverage and carried its durable-store blocker explicitly rather than masking it with new advanced-DMS work.
+- RecordArr's R12 pass reran focused auth, OpenAPI, and frontend regression coverage while carrying the same durable DMS blocker explicitly rather than masking it with new advanced-DMS work.
 
 Deferred blockers:
 

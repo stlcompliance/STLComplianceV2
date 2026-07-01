@@ -122,6 +122,9 @@ Tests run:
 - `npm test` from `apps/customarr-frontend` — passed 2 files / 5 tests.
 - `npm run test:theme` from `apps/customarr-frontend` — passed with no theme audit violations.
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.MaintainArr.Auth.Tests.OrdArrCustomArrHandoffTests.CustomArr_portal_submission_hands_customer_reference_to_OrdArr_order" --logger "console;verbosity=minimal"` — passed 1 test.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.CustomArr.Api.Tests/STLCompliance.CustomArr.Api.Tests.csproj --no-build --filter "FullyQualifiedName~CustomArrCrmWorkspaceServiceTests|FullyQualifiedName~CustomArrTenantSettingsServiceTests|FullyQualifiedName~CustomArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 18 tests in 2s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` from `apps/customarr-frontend` — passed 2 files / 5 tests in 2.00s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName=STLCompliance.MaintainArr.Auth.Tests.OrdArrCustomArrHandoffTests.CustomArr_portal_submission_hands_customer_reference_to_OrdArr_order" --logger "console;verbosity=minimal"` — passed 1 test in 2s.
 
 Known warnings:
 

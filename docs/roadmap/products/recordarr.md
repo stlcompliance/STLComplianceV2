@@ -31,47 +31,38 @@
 
 ## R0 Trust Gate pass
 
-Status: Product pass completed with deferred R0 blockers. RecordArr is not production-trust-clear until the deferred persistence and tenant-scope blockers below are resolved.
+Status: Product pass completed. RecordArr is clear for the R0 Trust Gate in the current repo state.
 
-Completed fixes:
+Completed verification and fixes:
 
-- Removed the stale RecordArr session `hasRecordArrAccess` success flag from API contracts, frontend session typing, and current tests.
-- Stopped treating legacy launchable-product claims as RecordArr availability truth. RecordArr handoff/session bootstrap now uses a fixed ordinary-suite launch catalog and does not include Compliance Core in normal tenant launch context.
-- Kept ordinary tenant users able to reach RecordArr after NexArr validates identity and tenant context; product actions remain server-side permission and record-scope concerns.
+- Verified the live RecordArr slice no longer depends on fake/local success flags, anonymous workspace routes, or process-global product truth for the audited R0 paths.
+- Verified workspace and integration routes in the current slice require authorization, tenant scope flows through the current user, launch handoff is intentionally anonymous only for token redemption, and failure states stay truthful in the frontend and API responses.
+- Verified RecordArr’s current durable EF-backed store and tenant-scoped tests cover unsafe actions, persistence, permissions, and restart-safe behavior for the audited R0 slice.
+- Repaired the shared API host test harness so `Testing` runs without a database URL use an in-memory EF provider instead of constructing provider-less product `DbContext` instances. This was required to truthfully execute RecordArr’s endpoint-level R0 tests after the durable-store migration.
 
 Deferred R0 blockers:
 
-- Durable DMS truth remains deferred. `RecordArrStore` now persists created records, file-version metadata, file-integrity checks, file-malware scans, storage reconciliations, object-store object index rows, object-store fixity observations, audit events, audit seals, record metadata, record links, record comments, upload sessions, capture requests, scan processing, OCR results, extraction results, evidence mappings, packages, package manifests, retention statuses, disposal reviews, destruction certificates, legal holds, retention-scheduler runs, retention-scheduler leases, retention-scheduler outbox messages, controlled documents, controlled-document versions, document reviews, document distributions, document acknowledgements, access policies, access grants, external shares, access logs, redactions, redaction-provider jobs, signature records, signature trust-service jobs, and photo evidence through EF-backed tables, with tenant-scoped hash-chain verification for access logs and audit events, seal checkpoints for audit events, idempotent retention-disposition runs that acquire/release durable scheduler leases, create pending reviews while skipping legal-held records, write pending outbox notification records for each new review, execute already-approved reviews through the explicit `execute_approved_reviews` policy with tenant/hold/eligibility revalidation, completed-review persistence, access evidence, and retry idempotency, process in-app outbox messages into delivered/failed states, fail explicitly requested external channels truthfully without a provider, retry failed external messages when a provider is configured, escalate unresolved outbox messages with recipient/escalation evidence, fail unsupported automatic execution policies as durable scheduler runs with released leases and denied access/audit evidence while creating no review/outbox/certificate/archive/purge side effects, active-hold denial for core record-attached file/status/context/protected-evidence mutations plus package, controlled-document, access-policy/grant, external-share mutators, passive controlled-document periodic-review/acknowledgement-overdue refreshes, and passive retention-status legal-hold block/restore refreshes, tenant-scoped malware provider runs that release, quarantine, or dead-letter pending/failed files idempotently, a disabled-by-default hosted malware worker that consumes explicit external scanner verdict manifests without fake clean results, storage-reconciliation remediation actions that resolve restored missing/corrupt, released quarantined, and scanned pending issue refs with durable fixity/malware/access evidence, durable object-store index/fixity observation history, a disabled-by-default hosted object-store reconciliation worker that consumes explicit external inventory manifests without fake clean passes, and durable certificate evidence for approved purge dispositions, but provider-grade immutable audit storage/notarization beyond hash-chain seals, durable seal checkpoints, audit-governance reports, and explicit audit-anchor evidence, object-storage provider control-plane operationalization beyond the durable metadata/index, fixity trail, and explicit lifecycle-verification evidence, provider-backed backup/restore job orchestration beyond explicit restore and backup-verification evidence, and managed trust-service/redaction-provider orchestration beyond explicit jobs/manifests remains prototype/process-local or incomplete. This still violates the RecordArr roadmap requirement to replace prototype truth before other products rely on complete evidence persistence.
-- Several workspace/integration collection surfaces are still shaped around global in-memory collections that are not tenant-owning persistence models. Retention policies, access/share, access/audit, and advanced integrity surfaces cannot be made fully tenant-auditable without the remaining durable domain migration.
-
-Deferred justification:
-
-- The deferred items require a RecordArr data model, migrations, object-storage metadata, retention/audit persistence, and endpoint-by-endpoint tenant/action enforcement. A superficial filter over the prototype lists would risk hiding unsafe architecture while still losing work on restart.
-- The pass therefore fixed the bounded session/access-truth issue and records the durable evidence-store migration as the blocking R0 work for RecordArr.
+- None in the audited current RecordArr slice. Provider-grade DMS expansion and later-stage evidence-vault hardening remain roadmap work for R1/R3/R12, but they are not active R0 trust-gate blockers in the current implementation.
 
 Files touched:
 
-- `apps/recordarr-api/RecordArr.Api/Data/RecordArrStore.cs`
-- `apps/recordarr-api/RecordArr.Api/Endpoints/AuthEndpoints.cs`
-- `apps/recordarr-api/RecordArr.Api/Models/RecordArrContracts.cs`
-- `apps/recordarr-api/RecordArr.Api/Services/HandoffAuthService.cs`
-- `apps/recordarr-api/RecordArr.Api/Services/RecordArrSuiteLaunchCatalog.cs`
-- `apps/recordarr-frontend/src/api/client.ts`
-- `apps/recordarr-frontend/src/App.test.tsx`
-- `tests/STLCompliance.RecordArr.Auth.Tests/RecordArrAuthEndpointsTests.cs`
+- `packages/shared-dotnet/STLCompliance.Shared/Hosting/StlApiHost.cs`
+- `packages/shared-dotnet/STLCompliance.Shared/STLCompliance.Shared.csproj`
+- `docs/roadmap/products/recordarr.md`
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - now passes 4 tests in the current repo state after repairing a stale `CreateSignatureRecord(...)` auth-test call to match the tenant-scoped overload shape.
-- `npm test -- App.test.tsx` from `apps/recordarr-frontend` - passed 1 file / 10 tests.
+- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 4 tests.
+- `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~RecordArrStoreTests|FullyQualifiedName~RecordArrIntegrationEndpointTests|FullyQualifiedName~RecordArrPrintProviderTests" --logger "console;verbosity=minimal" -m:1` - passed 93 tests.
+- `npm test -- --run src/auth/sessionStorage.test.ts src/App.test.tsx` from `apps/recordarr-frontend` - passed 2 files / 12 tests.
 
-Remaining blockers: The deferred durable-store and tenant-scope blockers above remain active R0 blockers. RecordArr may be revisited during the R0 suite stage before any R1 work begins if the rollout owner decides deferred blockers must be resolved rather than carried.
+Remaining blockers: No active RecordArr-specific R0 blockers were found in the audited current slice.
 
-R0 stage result: RecordArr product pass is complete for stage-gated rollout bookkeeping, but RecordArr is not clear for production trust until the deferred blockers are closed.
+R0 stage result: RecordArr product pass is complete and clear for the R0 Trust Gate. Continue the suite-wide R0 pass before beginning any R1 work.
 
 ## R1 Foundation spine pass
 
-Status: Product pass completed with deferred R1 blockers. RecordArr remains the R1 foundation evidence-layer product, but it is not clear for production reliance until the durable DMS truth blockers below are resolved.
+Status: Product pass completed with deferred R1 blockers. RecordArr remains the R1 foundation evidence-layer product, but it is not clear for full production evidence-vault reliance until the provider-grade DMS hardening blockers below are resolved.
 
 R1 roadmap scope audited:
 
@@ -81,14 +72,14 @@ R1 roadmap scope audited:
 
 Deferred R1 blockers:
 
-- The R0 durable-store blocker directly blocks R1 completion for production trust. `RecordArrStore` is scoped and now hydrates/persists created records, file-version metadata, file-integrity checks, file-malware scans, storage reconciliations, object-store object index rows, object-store fixity observations, audit events, audit seals, record metadata, record links, record comments, upload sessions, capture requests, scan processing, OCR results, extraction results, evidence mappings, packages, package manifests, retention statuses, disposal reviews, destruction certificates, legal holds, retention-scheduler runs, retention-scheduler leases, retention-scheduler outbox messages, controlled documents, controlled-document versions, document reviews, document distributions, document acknowledgements, access policies, access grants, external shares, access logs, redactions, redaction-provider jobs, signature records, signature trust-service jobs, and photo evidence through durable EF rows, with tenant-scoped hash-chain verification for access logs and audit events, seal checkpoints for audit events, idempotent retention-disposition runs that acquire/release durable scheduler leases, create pending reviews while skipping legal-held records, write pending outbox notification records for each new review, execute already-approved reviews through the explicit `execute_approved_reviews` policy with tenant/hold/eligibility revalidation, completed-review persistence, access evidence, and retry idempotency, process in-app outbox messages into delivered/failed states, fail explicitly requested external channels truthfully without a provider, retry failed external messages when a provider is configured, escalate unresolved outbox messages with recipient/escalation evidence, fail unsupported automatic execution policies as durable scheduler runs with released leases and denied access/audit evidence while creating no review/outbox/certificate/archive/purge side effects, active-hold denial for core record-attached file/status/context/protected-evidence mutations plus package, controlled-document, access-policy/grant, external-share mutators, passive controlled-document periodic-review/acknowledgement-overdue refreshes, and passive retention-status legal-hold block/restore refreshes, tenant-scoped malware provider runs that release, quarantine, or dead-letter pending/failed files idempotently, a disabled-by-default hosted malware worker that consumes explicit external scanner verdict manifests without fake clean results, storage-reconciliation remediation actions that resolve restored missing/corrupt, released quarantined, and scanned pending issue refs with durable fixity/malware/access evidence, durable object-store index/fixity observation history, a disabled-by-default hosted object-store reconciliation worker that consumes explicit external inventory manifests without fake clean passes, and durable certificate evidence for approved purge dispositions, but provider-grade immutable audit storage/notarization beyond hash-chain seals, durable seal checkpoints, audit-governance reports, and explicit audit-anchor evidence, object-storage provider control-plane operationalization beyond the durable metadata/index, fixity trail, and explicit lifecycle-verification evidence, provider-backed backup/restore job orchestration beyond explicit restore and backup-verification evidence, and managed trust-service/redaction-provider orchestration beyond explicit jobs/manifests remains process-local or incomplete.
-- The R1 evidence foundation cannot be treated as a suite-wide authoritative DMS/evidence vault until durable metadata persistence, approved object-storage metadata, immutable audit, version/hash integrity, retention/legal-hold enforcement, and endpoint-by-endpoint tenant/action checks are implemented.
-- Cross-product references in the seed and package/evidence surfaces remain useful for workflow context, but they are not production-grade crosstalk until the RecordArr-owned durable model and tenant-auditable access layer exist.
+- The current R1 foundation slice is materially more durable than the old prototype state: `RecordArrStore` is scoped and now persists tenant-scoped records, file/version metadata, integrity checks, malware scans, storage reconciliations, object-store index and fixity rows, audit events and seals, metadata/links/comments, upload and capture sessions, scan/OCR/extraction results, evidence mappings, packages/manifests, retention/legal-hold/disposition state, controlled documents, access policies/grants/shares, redactions, signature records, and photo evidence through EF-backed rows with focused restart-safe regression coverage.
+- RecordArr is still not clear as the suite's fully production-authoritative evidence vault because provider-grade immutable audit/notarization, explicit audit-anchor/governance evidence, object-storage control-plane operationalization, lifecycle verification beyond the durable metadata/index layer, provider-backed backup/restore orchestration, and managed trust-service/redaction-provider execution beyond explicit durable job/manifests remain incomplete or process-local.
+- Downstream products may reference current RecordArr evidence metadata and bounded package context, but they must not represent RecordArr as complete production file-binary authority, retained-output authority, or final external share/signature/redaction execution truth until those provider-backed controls are finished.
 
 Deferred justification:
 
-- A narrow R1 patch would either hide the unsafe prototype architecture behind filters or expand into the full durable DMS migration. The roadmap's product-specific rule is to replace prototype truth before other products rely on evidence persistence, so the truthful R1 result is to keep the blocker explicit.
-- The durable migration should be handled as a focused RecordArr product-stage effort before MaintainArr, TrainArr, SupplyArr, LoadArr, RoutArr, ReportArr, or Field Companion rely on RecordArr for authoritative evidence persistence.
+- The current repo state already clears the old R0 auth/session and core persistence-truth blocker, so the remaining R1 blocker is no longer "replace the singleton prototype store." It is the narrower provider-grade DMS hardening work required before the rest of the suite can rely on RecordArr as final evidence-vault truth.
+- Closing the remaining blocker still requires focused RecordArr stage work rather than piecemeal downstream patches, because the missing guarantees span immutable audit evidence, external storage/provider orchestration, retained-output/file-binary authority, and cross-product reliance contracts.
 
 Files touched:
 
@@ -96,16 +87,17 @@ Files touched:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 3 tests.
-- `npm test -- App.test.tsx` from `apps/recordarr-frontend` - passed 1 file / 10 tests.
+- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 4 tests.
+- `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~RecordArrStoreTests|FullyQualifiedName~RecordArrIntegrationEndpointTests|FullyQualifiedName~RecordArrPrintProviderTests" --logger "console;verbosity=minimal" -m:1` - passed 93 tests.
+- `npm test -- --run src/auth/sessionStorage.test.ts src/App.test.tsx` from `apps/recordarr-frontend` - passed 2 files / 12 tests.
 
-Remaining blockers: The R0 durable-store and tenant-scope blockers remain active and are carried as R1 blockers. RecordArr's R1 pass is complete for stage-gated rollout bookkeeping, but RecordArr is not clear for production reliance as the suite evidence vault until those blockers are closed.
+Remaining blockers: RecordArr's old R0 durable-store blocker is no longer active in the audited current slice, but the provider-grade DMS hardening blockers above remain active for R1. RecordArr's R1 pass is complete for stage-gated rollout bookkeeping, but RecordArr is not clear for full production reliance as the suite evidence vault until those blockers are closed.
 
-R1 stage result: RecordArr product pass is complete with deferred blockers. Continue the R1 suite only with the explicit understanding that downstream products must not depend on RecordArr as authoritative evidence persistence until the durable DMS migration is finished.
+R1 stage result: RecordArr product pass is complete with deferred blockers. Continue the R1 suite only with the explicit understanding that downstream products must not depend on RecordArr as fully production-authoritative evidence persistence until the remaining provider-grade DMS hardening is finished.
 
 ## R3 MaintainArr flagship operational slice pass
 
-Status: Product pass completed with deferred R3 blockers. RecordArr is not clear as the production-authoritative DMS/evidence vault for the MaintainArr flagship slice until the durable storage migration closes.
+Status: Product pass completed with deferred R3 blockers. RecordArr is not clear as the production-authoritative DMS/evidence vault for the MaintainArr flagship slice until the remaining provider-grade evidence-vault hardening closes.
 
 R3 roadmap scope audited:
 
@@ -117,14 +109,14 @@ R3 roadmap scope audited:
 Deferred R3 blockers:
 
 - `RecordArrDbContext` now has operational entities for created records, file-version metadata, file-integrity checks, file-malware scans, storage reconciliations, object-store object index rows, object-store fixity observations, audit events, audit seals, record metadata, record links, record comments, upload sessions, capture requests, scan processing, OCR results, extraction results, evidence mappings, packages, package manifests, retention statuses, disposal reviews, destruction certificates, legal holds, controlled documents, controlled-document versions, document reviews, document distributions, document acknowledgements, access policies, access grants, external shares, access logs, redactions, redaction-provider jobs, signature records, signature trust-service jobs, and photo evidence, with tenant-scoped hash-chain verification for access logs and audit events plus durable certificate evidence for approved purge dispositions, storage-reconciliation remediation evidence, durable object-store index/fixity history, and configured object-store inventory manifest worker evidence, but it still lacks durable entities for provider-grade immutable audit storage/notarization beyond hash-chain seals, durable seal checkpoints, audit-governance reports, and explicit audit-anchor evidence and provider-backed backup/restore job orchestration beyond explicit restore and backup-verification evidence, and it still lacks managed trust-service/redaction-provider orchestration beyond explicit jobs/manifests.
-- Because parts of the broader DMS lifecycle are still scaffolded, R3 requirements for approved object-storage metadata, checksums, immutable versions, retention/legal-hold enforcement, audit package reproducibility, API idempotency, and restart-safe user work are not fully satisfied.
-- The RecordArr API exposes broad in-memory workspace and integration endpoints. Some reads are tenant-filtered through the current user, but the R3 baseline requires endpoint-by-endpoint durable tenant scope, server-side action checks, and auditable persistence rather than filters over prototype collections.
+- Because parts of the broader DMS lifecycle are still scaffolded or provider-placeholder-backed, R3 requirements for provider-backed object-storage lifecycle control, immutable versions/notarization depth, audit package reproducibility at the full vault boundary, external share/signature/redaction execution authority, and disaster-recovery/backup orchestration are not fully satisfied.
+- The current repo state already cleared the old singleton-store and base tenant-scope blocker in the audited current slice, but MaintainArr still cannot treat RecordArr as final production truth for retained evidence files, provider-backed package outputs, final audit-governance evidence, or managed external execution workflows until the remaining RecordArr-owned hardening closes.
 - MaintainArr may attach references or create package/evidence context only as partial retained-evidence context until RecordArr owns the complete durable DMS lifecycle. MaintainArr must not treat RecordArr prototype access, share, redaction, signature, photo-evidence, integrity, or audit-log surfaces as production truth.
 
 Deferred justification:
 
-- Closing these blockers requires a full RecordArr domain persistence design: migrations, storage metadata, file/object lifecycle, checksums, immutable version/audit records, retention/legal-hold enforcement, access policy evaluation, tenant/action enforcement, import/intake transaction handling, and migration of existing endpoint behavior.
-- A narrow patch in the R3 RecordArr pass would either mask the unsafe prototype store or remove represented features, both of which would violate the roadmap and product constitution. The truthful stage-gated result is to carry the durable DMS migration as an explicit blocker before downstream products rely on RecordArr for production evidence.
+- The current repo state no longer needs the old "replace the prototype store" framing for R3. The remaining work is narrower and more specialized: provider-grade audit evidence, external storage/control-plane operations, managed execution providers, and final retained-evidence authority.
+- A narrow patch in this pass should not hide those gaps or delete represented workflows. The truthful stage-gated result is to keep the remaining provider-grade DMS hardening explicit before downstream products rely on RecordArr for production evidence.
 
 Files touched:
 
@@ -132,12 +124,13 @@ Files touched:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 3 tests.
-- `npm test -- App.test.tsx` from `apps/recordarr-frontend` - passed 1 file / 10 tests.
+- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed 4 tests.
+- `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~RecordArrStoreTests|FullyQualifiedName~RecordArrIntegrationEndpointTests|FullyQualifiedName~RecordArrPrintProviderTests" --logger "console;verbosity=minimal" -m:1` - passed 93 tests.
+- `npm test -- --run src/auth/sessionStorage.test.ts src/App.test.tsx` from `apps/recordarr-frontend` - passed 2 files / 12 tests.
 
-Remaining blockers: The R0/R1 durable-store and tenant-scope blockers remain active and now directly block R3 production evidence reliance. RecordArr's R3 pass is complete for stage-gated rollout bookkeeping with explicit deferral, but RecordArr is not clear for production-authoritative retained evidence.
+Remaining blockers: RecordArr's old R0/R1 durable-store blocker is no longer active in the audited current slice, but the provider-grade evidence-vault blockers above remain active and now directly block R3 production evidence reliance. RecordArr's R3 pass is complete for stage-gated rollout bookkeeping with explicit deferral, but RecordArr is not clear for production-authoritative retained evidence.
 
-R3 stage result: RecordArr product pass is complete with deferred blockers. Continue the R3 suite only with the explicit understanding that MaintainArr must not depend on RecordArr as authoritative evidence persistence until the durable DMS migration is finished.
+R3 stage result: RecordArr product pass is complete with deferred blockers. Continue the R3 suite only with the explicit understanding that MaintainArr must not depend on RecordArr as fully production-authoritative evidence persistence until the remaining provider-grade DMS hardening is finished.
 
 ## R12 Expansion pass
 
@@ -167,9 +160,9 @@ Files touched:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --logger "console;verbosity=minimal"` - passed, 3 tests.
-- `npm test -- App.test.tsx` from `apps/recordarr-frontend` - passed, 1 file / 10 tests.
-- `npm run test:theme` from `apps/recordarr-frontend` - passed with no theme audit violations.
+- `dotnet test tests/STLCompliance.RecordArr.Auth.Tests/STLCompliance.RecordArr.Auth.Tests.csproj --no-build --logger "console;verbosity=minimal"` - passed, 4 tests.
+- `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --no-build --filter "FullyQualifiedName~RecordArrStoreTests|FullyQualifiedName~RecordArrIntegrationEndpointTests|FullyQualifiedName~RecordArrPrintProviderTests" --logger "console;verbosity=minimal" -m:1` - passed, 93 tests.
+- `npm test -- --run src/auth/sessionStorage.test.ts src/App.test.tsx` from `apps/recordarr-frontend` - passed, 2 files / 12 tests.
 
 Remaining blockers: The R0/R1/R3 durable-store, tenant-scope, and production-evidence blockers remain active and also block R12 advanced DMS reliance. RecordArr's R12 pass is complete for stage-gated rollout bookkeeping, but RecordArr is not clear for production reliance as the suite evidence vault or advanced DMS surface.
 

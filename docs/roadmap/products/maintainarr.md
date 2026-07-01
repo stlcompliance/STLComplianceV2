@@ -103,7 +103,7 @@ R3 roadmap scope audited:
 Completed fixes:
 
 - Updated the cross-product handoff test fixture in `OrdArrCustomArrHandoffTests` to construct `CustomArrStore` with its current durable `CustomArrDbContext`, unblocking MaintainArr backend test compilation without reverting CustomArr's persistence boundary.
-- Changed MaintainArr tenant defaults so RecordArr packet handoff is off by default (`SendCompletedPacketsToRecordArr = false`, `EnableRecordArrDocumentPackets = false`). The settings remain configurable, but the product no longer defaults to implying completed packet delivery to a RecordArr vault that is still blocked by its durable-store migration.
+- Changed MaintainArr tenant defaults so RecordArr packet handoff is off by default (`SendCompletedPacketsToRecordArr = false`, `EnableRecordArrDocumentPackets = false`). The settings remain configurable, but the product no longer defaults to implying completed packet delivery to a RecordArr vault that is still blocked by its remaining provider-grade evidence-vault hardening.
 
 Cross-product notes:
 
@@ -111,7 +111,7 @@ Cross-product notes:
 - SupplyArr remains the owner of inventory/procurement truth. MaintainArr parts demand and supply-readiness tests verify request/status coordination rather than inventory ownership transfer.
 - StaffArr remains the owner of people and internal locations. MaintainArr technician/site references stay as references or snapshots, not StaffArr source truth.
 - Compliance Core remains the owner of regulatory meaning and readiness guidance. MaintainArr consumes gates and mirrors regulatory keys without owning rule interpretation.
-- RecordArr remains the owner of retained documents and production evidence vault truth, but its durable DMS blocker remains unresolved. MaintainArr local evidence storage and work-order/defect/inspection evidence records are operational maintenance attachments, not production-authoritative RecordArr retained evidence.
+- RecordArr remains the owner of retained documents and production evidence vault truth, but its remaining provider-grade DMS/evidence-vault blocker remains unresolved. MaintainArr local evidence storage and work-order/defect/inspection evidence records are operational maintenance attachments, not production-authoritative RecordArr retained evidence.
 
 Files touched:
 
@@ -141,14 +141,20 @@ Tests run:
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~AssetReservation|FullyQualifiedName~VendorWork|FullyQualifiedName~MaintenancePartsKit" --logger "console;verbosity=minimal"` - no direct backend tests matched those filters.
 - `npm test` from `apps/maintainarr-frontend` - passed 52 files / 145 tests.
 - `npm test -- SettingsSection.test.tsx` from `apps/maintainarr-frontend` - passed 1 file / 4 tests after the RecordArr default repair.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrHandoffApiTests" --logger "console;verbosity=minimal"` - passed 10 tests in 1m 14s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrAssetReadinessTests|FullyQualifiedName~MaintainArrNotificationTests|FullyQualifiedName~MaintainArrAssetBulkImportTests" --logger "console;verbosity=minimal"` - passed 28 tests in 1m 57s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~WorkOrderStatusRulesTests|FullyQualifiedName~MaintainArrWorkOrderLaborEvidenceTests" --logger "console;verbosity=minimal"` - passed 15 tests in 50s.
+- Current repo-state rerun: representative `MaintainArrWorkOrderTests` slices passed 6 tests in 18s + 18s across manual lifecycle, defect-to-closeout, technician completion, integration work-order, TrainArr qualification-check, and vendor-work status coverage.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrWorkOrderTests|FullyQualifiedName~WorkOrderStatusRulesTests|FullyQualifiedName~MaintainArrWorkOrderLaborEvidenceTests" --logger "console;verbosity=minimal"` timed out in the current repo state, so the narrower reruns above are the reliable completion evidence for this pass.
+- Current repo-state rerun: `npm test -- --run SettingsSection.test.tsx` from `apps/maintainarr-frontend` - passed 1 file / 4 tests in 18.57s.
 
 Remaining blockers:
 
 - No unresolved MaintainArr-owned R3 blockers were identified in this pass.
-- External carried blocker: RecordArr's durable retained-evidence persistence remains unresolved. MaintainArr is clear for operational R3 maintenance execution, but any workflow that requires production-authoritative retained evidence must continue to treat RecordArr packet handoff as pending until RecordArr closes its DMS blocker.
+- External carried blocker: RecordArr's remaining provider-grade retained-evidence and evidence-vault hardening remains unresolved. MaintainArr is clear for operational R3 maintenance execution, but any workflow that requires production-authoritative retained evidence must continue to treat RecordArr packet handoff as pending until RecordArr closes that blocker.
 - Test gap: reservation, vendor-work, and parts-kit surfaces have frontend and service coverage through the existing suite, but no direct backend tests matched the explicit `AssetReservation`, `VendorWork`, or `MaintenancePartsKit` filters in this test project.
 
-R3 stage result: MaintainArr is clear for R3, with the external RecordArr durable evidence-vault blocker carried forward and RecordArr packet handoff disabled by default.
+R3 stage result: MaintainArr is clear for R3, with the external RecordArr provider-grade evidence-vault blocker carried forward and RecordArr packet handoff disabled by default.
 
 ## R12 Expansion pass
 
@@ -172,8 +178,7 @@ Files touched:
 
 Tests run:
 
-- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~MaintainArrTechnicianRefTests|FullyQualifiedName~MaintainArrTenantSettingsRulesTests" --logger "console;verbosity=minimal"` - passed, 10 tests.
-- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~MaintainArrAssetDowntimeTests" --logger "console;verbosity=minimal"` - passed, 10 tests.
+- `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~MaintainArrTechnicianRefTests|FullyQualifiedName~MaintainArrTenantSettingsRulesTests|FullyQualifiedName~MaintainArrAssetDowntimeTests" --logger "console;verbosity=minimal"` - passed, 20 tests.
 - `npm test -- --run src/inspections/voiceGuidance.test.ts src/components/InspectionRunnerPanel.test.tsx src/pages/defects/DefectCreatePage.test.tsx src/pages/parts-kits/PartsKitCreatePage.test.tsx src/pages/pm-programs/PmProgramCreatePage.test.tsx src/pages/vendor-portal/VendorPortalPage.test.tsx src/components/WorkOrderVendorWorkPanel.test.tsx src/pages/settings/SettingsSection.test.tsx` from `apps/maintainarr-frontend` - passed, 7 files / 14 tests.
 - `npm run test:theme` from `apps/maintainarr-frontend` - passed with no theme audit violations.
 

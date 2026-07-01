@@ -38,7 +38,7 @@
 
 ## R0 Trust Gate pass
 
-Status: Clear for the current auth/session, durable-database guard, and placeholder-success slice; remaining production trust depends on completion of the documented finance workflows.
+Status: Clear for the current auth/session, durable-database guard, and formerly placeholder-success slice.
 
 Completed in this pass:
 
@@ -64,10 +64,12 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.LedgArr.Tests/STLCompliance.LedgArr.Tests.csproj --filter "FullyQualifiedName~LedgArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 6 tests. Existing NuGet pruning and EF Core version-conflict warnings remain.
 - `npm test -- App.test.tsx sessionStorage.test.ts` in `apps/ledgarr-frontend` — passed 2 files / 4 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.LedgArr.Tests/STLCompliance.LedgArr.Tests.csproj --no-build --filter "FullyQualifiedName~LedgArrAuthEndpointsTests|FullyQualifiedName~LedgArrTenantSettingsServiceTests|FullyQualifiedName~LedgArrStoreTests.R11_ap_ar_and_inventory_workflows_replace_placeholder_success_paths" --logger "console;verbosity=minimal"` — passed 11 tests in 5s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` in `apps/ledgarr-frontend` — passed 2 files / 6 tests in 14.81s.
 
 Remaining R0 blockers:
 
-- The R0 pass did not complete every durable LedgArr finance workflow end to end. The converted `501` endpoints remain explicit blockers for dimension mappings, posting-rule management, financial-packet rejection, integration account mapping resolution, AP disputes, AR credit memos/statements, and inventory valuation item/movement listing until they are implemented against durable models with finance authorization, audit, correction, and reporting behavior.
+- No R0 blockers remain in the current LedgArr auth/session, durable-database guard, and formerly placeholder-success slice. Broader R11 finance workflow hardening remains governed by the retained feature and workflow catalogs and must not be pulled into R0.
 - No R1/R11 feature expansion was started in this R0 pass.
 
 ## R1 Foundation spine pass
@@ -78,7 +80,7 @@ R1 scope audited:
 
 - `docs/roadmap/reference/feature-rollout-map.csv` contains no LedgArr rows for `R1`.
 - `docs/roadmap/reference/workflow-rollout-map.csv` contains no LedgArr rows for `R1`.
-- LedgArr's product FEATURESET and WORKFLOWS remain retained full scope, including the explicit `501` finance workflow blockers from R0, but they do not authorize starting the R11 bridge-first finance stage during the R1 suite stage.
+- LedgArr's product FEATURESET and WORKFLOWS remain retained full scope, but they do not authorize starting the R11 bridge-first finance stage during the R1 suite stage.
 
 Files touched:
 
@@ -88,7 +90,7 @@ Tests run:
 
 - Not run. This was a roadmap applicability/documentation pass only; no LedgArr code, UI, API, data-flow, or test files changed.
 
-Remaining blockers: None for R1. The deferred R0 finance workflow blockers remain active for the later LedgArr R11 stage.
+Remaining blockers: None for R1. LedgArr must wait for the suite to reach R11 before finance workflow hardening begins.
 
 R1 stage result: LedgArr is clear for the R1 suite gate as not applicable.
 
@@ -124,6 +126,8 @@ Tests run:
 - `npm run test:theme` in `apps/ledgarr-frontend` — no theme audit violations.
 - `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~LedgArr" --logger "console;verbosity=minimal"` — no tests matched the LedgArr filter; build completed with the same existing warnings.
 - `rg` scan over LedgArr API/tests/docs confirmed no live LedgArr API `501`/`NotImplementedFinanceWorkflow` placeholders remain; only historical R0 roadmap notes mention the former blocker state.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.LedgArr.Tests/STLCompliance.LedgArr.Tests.csproj --no-build --filter "FullyQualifiedName~LedgArrAuthEndpointsTests|FullyQualifiedName~LedgArrTenantSettingsServiceTests|FullyQualifiedName~LedgArrStoreTests.R11_ap_ar_and_inventory_workflows_replace_placeholder_success_paths" --logger "console;verbosity=minimal"` — passed 11 tests in 3s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` in `apps/ledgarr-frontend` — passed 2 files / 6 tests in 2.96s.
 
 Remaining blockers:
 

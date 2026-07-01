@@ -137,6 +137,8 @@ Tests run:
 - `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --filter "FullyQualifiedName=STLCompliance.AssurArr.Api.Tests.AssurArrApiTests.Quality_hold_reads_are_tenant_scoped" --logger "console;verbosity=minimal"` - passed 1 test.
 - `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --logger "console;verbosity=minimal"` - passed 34 tests.
 - `npm test` from `apps/assurarr-frontend` - passed 3 files / 7 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --no-build --filter "FullyQualifiedName~AssurArrApiTests|FullyQualifiedName~AssurArrAuthorizationTests" --logger "console;verbosity=minimal"` - passed 26 tests in 20s.
+- Current repo-state rerun: `npm test -- --run client.test.ts App.test.tsx sessionStorage.test.ts` from `apps/assurarr-frontend` - passed 3 files / 8 tests in 2.19s.
 
 R6 stage result: AssurArr is clear for the R6 suite gate with the deferred blockers above documented.
 
@@ -177,6 +179,6 @@ Tests run:
 - `rg -n "GET /|POST /|Local preview port|API port|Frontend base URL|event\\.subjectType} \\{event\\.subjectId|subjectType} \\{event\\.subjectId" apps/assurarr-frontend/src/App.tsx -S` - no matches.
 - `npm test -- App.test.tsx api/client.test.ts sessionStorage.test.ts` from `apps/assurarr-frontend` - passed 3 files / 8 tests.
 - `npm run test:theme` from `apps/assurarr-frontend` - passed with no violations.
-- `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --logger "console;verbosity=minimal"` - passed 34 tests.
+- `dotnet test tests/STLCompliance.AssurArr.Api.Tests/STLCompliance.AssurArr.Api.Tests.csproj --no-build --filter "FullyQualifiedName~AssurArrApiTests|FullyQualifiedName~AssurArrAuthorizationTests" --logger "console;verbosity=minimal"` - passed 26 tests.
 
 R12 stage result: AssurArr is clear for the R12 suite gate with the deferred blockers above documented. The next R12 product pass is CustomArr.

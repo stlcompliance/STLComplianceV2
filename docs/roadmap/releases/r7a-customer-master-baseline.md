@@ -61,6 +61,7 @@ Tests run:
 - `npm test` from `apps/customarr-frontend` — passed 2 files / 5 tests.
 - `npm run test:theme` from `apps/customarr-frontend` — passed with no theme audit violations.
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName=STLCompliance.MaintainArr.Auth.Tests.OrdArrCustomArrHandoffTests.CustomArr_portal_submission_hands_customer_reference_to_OrdArr_order" --logger "console;verbosity=minimal"` — passed 1 test.
+- Current repo-state reruns also passed: the focused CustomArr auth/workspace/settings backend cluster passed 18 tests, the CustomArr frontend app/session slice passed 2 files / 5 tests, and the OrdArr/CustomArr cross-suite handoff smoke passed 1 test.
 
 Deferred blockers:
 

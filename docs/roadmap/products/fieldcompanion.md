@@ -127,6 +127,8 @@ Tests run:
 - `npm test -- ProfilePage.test.tsx HomePage.test.tsx FieldScanPanel.test.tsx OfflineQueuePanel.test.tsx SharedDeviceProtectionOverlay.test.tsx ProductWorkspaceLayout.test.tsx` in `apps/fieldcompanion-frontend` — passed 6 files / 15 tests.
 - `npm test` in `apps/fieldcompanion-frontend` — passed 54 files / 152 tests.
 - `npm run test:theme` in `apps/fieldcompanion-frontend` — no violations.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~NexArrFieldCompanionFieldInboxTests|FullyQualifiedName~NexArrFieldCompanionLoadArrReceivingTests|FullyQualifiedName~NexArrFieldCompanionMaintainArrWorkOrderTests|FullyQualifiedName~NexArrFieldCompanionTrainArrSignoffTests" --logger "console;verbosity=minimal"` — passed 10 tests in 39s.
+- Current repo-state rerun: `npm test -- --run src/api/client.test.ts src/auth/sessionStorage.test.ts src/hooks/useFieldCompanionWorkspace.test.tsx src/hooks/useOfflineQueue.test.tsx src/components/OfflineQueuePanel.test.tsx src/lib/submissionState.test.ts` in `apps/fieldcompanion-frontend` — passed 6 files / 19 tests in 1.91s.
 
 Remaining blockers:
 

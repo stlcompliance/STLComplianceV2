@@ -53,14 +53,14 @@ Deferred blockers:
 - TrainArr `TR-WF-007` instructor-led session scheduling and attendance remains retained target scope. Current instructor/manual assignment surfaces are not a complete session, capacity, waitlist, calendar, and attendance owner workflow.
 - TrainArr `TR-WF-011` external credential review and equivalency remains retained target scope. Current evidence and qualification flows do not yet provide full issuer verification, equivalency mapping, appeal, and re-verification.
 - Broader TrainArr target/common category rows such as standards interoperability, surveys/feedback, saved views, bulk operations, import mapping, and professional report layout breadth remain retained scope and were not expanded during this pass.
-- RecordArr durable retained-file storage is still not production-authoritative for training certificate/evidence binaries. R4 verifies TrainArr evidence metadata/workflow behavior, not final RecordArr-backed file retention.
+- RecordArr retained-file authority is still not fully production-authoritative for training certificate/evidence binaries. R4 verifies TrainArr evidence metadata/workflow behavior, not final RecordArr-backed file retention while the remaining provider-grade evidence-vault blocker is still open.
 
 Tests run:
 
-- StaffArr backend R4 clusters: 41, 25, 1, 21, and 9 tests passed across person/onboarding/incidents/settings, StaffArr-to-TrainArr acknowledgement and blocker workflows, and TrainArr tenant settings.
+- StaffArr backend R4 clusters: 41, 25, 1, 21, and 9 tests passed in the original product pass, and current repo-state reruns passed 24 TrainArr-consumer tests plus 9 TrainArr tenant-settings tests and the acknowledgement regression. A broader mixed current rerun timed out, so the narrower reruns remain the reliable current completion evidence.
 - StaffArr frontend R4 slice: `npm test -- TrainingAcknowledgementsPanel.test.tsx WorkforceOnboardingJourneyPanel.test.tsx ReadinessPanel.test.tsx ReadinessRollupSupervisorPanel.test.tsx ReadinessReportsPanel.test.tsx StaffArrTenantSettingsPanel.test.tsx IncidentsPanel.test.tsx MyTeamPanel.test.tsx CertificationPanel.test.tsx PeopleSection.test.tsx` passed, 10 files / 52 tests.
-- TrainArr backend R4 clusters: exact member self-upload regression passed, then 35, 21, 35, 13, 27, 35, and 53 tests passed across authoring/evidence, StaffArr consumption, qualifications/certificates, workers, rulepacks/integrations, notifications/retention/field inbox/material demand, reports/audit/settings/handoff/load-test seed.
-- TrainArr frontend: `npm test` passed, 50 files / 110 tests.
+- TrainArr backend R4 clusters: exact member self-upload regression passed, then 35, 21, 35, 13, 27, 35, and 53 tests passed across authoring/evidence, StaffArr consumption, qualifications/certificates, workers, rulepacks/integrations, notifications/retention/field inbox/material demand, reports/audit/settings/handoff/load-test seed. Current repo-state reruns also passed a 28-test TrainArr-consumer/handoff cluster.
+- TrainArr frontend: `npm test` passed, 50 files / 110 tests. Current repo-state reruns also passed the TrainArr frontend client/layout slice with 6 tests.
 
 Stage decision:
 

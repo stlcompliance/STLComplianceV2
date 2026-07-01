@@ -80,6 +80,9 @@ Tests run:
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "FullyQualifiedName~NexArrAuthApiTests" --logger "console;verbosity=minimal"` — passed, 29 tests.
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "FullyQualifiedName~NexArrPlatformAdminApiTests" --logger "console;verbosity=minimal"` — passed, 42 tests.
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "FullyQualifiedName~NexArrPlatformLifecycleOverviewTests|FullyQualifiedName~NexArrLaunchApiTests|FullyQualifiedName~NexArrServiceTokenTrustTests|FullyQualifiedName~NexArrTenantIntegrationTests|FullyQualifiedName~AiSmartImportGuardrailTests" --logger "console;verbosity=minimal"` — passed, 73 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~NexArrAuthApiTests" --logger "console;verbosity=minimal"` — passed 33 tests in 1m 23s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~NexArrPlatformAdminApiTests" --logger "console;verbosity=minimal"` — passed 42 tests in 1m 37s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~NexArrPlatformLifecycleOverviewTests|FullyQualifiedName~NexArrLaunchApiTests|FullyQualifiedName~NexArrServiceTokenTrustTests|FullyQualifiedName~NexArrTenantIntegrationTests|FullyQualifiedName~AiSmartImportGuardrailTests" --logger "console;verbosity=minimal"` — passed 74 tests in 1m 25s.
 
 Remaining blockers:
 
@@ -111,6 +114,7 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "FullyQualifiedName~NexArrTenantIntegrationTests" --logger "console;verbosity=minimal"` — passed 11 tests.
 - `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --filter "FullyQualifiedName~NexArrAuthApiTests|FullyQualifiedName~NexArrLaunchApiTests|FullyQualifiedName~NexArrTenantIntegrationTests|FullyQualifiedName~NexArrPlatformIdentityIntegrationTests|FullyQualifiedName~NexArrPlatformIdentitySecurityTests" --logger "console;verbosity=minimal"` — passed 84 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.NexArr.Auth.Tests/STLCompliance.NexArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~NexArrTenantIntegrationTests|FullyQualifiedName~NexArrPlatformLifecycleOverviewTests|FullyQualifiedName~NexArrLaunchApiTests|FullyQualifiedName~NexArrServiceTokenTrustTests" --logger "console;verbosity=minimal"` — passed 52 tests in 1m 21s.
 
 Remaining blockers:
 

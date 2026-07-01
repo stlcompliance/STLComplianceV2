@@ -61,6 +61,7 @@ Tests run:
 - `npm test -- ProfilePage.test.tsx HomePage.test.tsx FieldScanPanel.test.tsx OfflineQueuePanel.test.tsx SharedDeviceProtectionOverlay.test.tsx ProductWorkspaceLayout.test.tsx` in `apps/fieldcompanion-frontend` — passed 6 files / 15 tests.
 - `npm test` in `apps/fieldcompanion-frontend` — passed 54 files / 152 tests.
 - `npm run test:theme` in `apps/fieldcompanion-frontend` — no violations.
+- Current repo-state reruns also passed: the focused NexArr-backed Field Companion server cluster passed 10 tests, and the frontend client/session/offline/workspace/submission slice passed 6 files / 19 tests.
 
 Deferred blockers:
 

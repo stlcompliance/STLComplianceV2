@@ -38,7 +38,7 @@
 
 ## R0 Trust Gate pass
 
-Status: Auth/session slice fixed; production trust remains blocked by the scaffold BI store and source-product access model.
+Status: Auth/session slice fixed; production trust remains blocked by the scaffold BI store and the remaining durable BI security/output model.
 
 Completed in this pass:
 
@@ -63,11 +63,13 @@ Tests run:
 
 - `dotnet test tests/STLCompliance.ReportArr.Auth.Tests/STLCompliance.ReportArr.Auth.Tests.csproj --filter "FullyQualifiedName~ReportArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 6 tests. Existing NuGet pruning and EF Core version-conflict warnings remain.
 - `npm test -- App.test.tsx sessionStorage.test.ts` in `apps/reportarr-frontend` — passed 2 files / 4 tests.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.ReportArr.Auth.Tests/STLCompliance.ReportArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~ReportArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 7 tests in 5s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` in `apps/reportarr-frontend` — passed 2 files / 6 tests in 3.13s.
 
 Deferred R0 blockers:
 
 - `ReportArrStore` remains a singleton process-local scaffold for datasets, read models, dashboards, report definitions, runs, schedules, exports, metrics, alerts, audit packages, and refresh jobs. It is not durable, replayable, or production-trust-clear for BI definitions, runs, lineage, schedules, outputs, or report evidence.
-- The scaffold still uses launchable product keys inside source-product access checks for BI rows, read models, metrics, KPIs, alerts, and audit packages. Under the ownership and UI constitutions, ReportArr must replace this with durable row/column/report security, source lineage, StaffArr/NexArr-backed action permissions, export security, and RecordArr-backed retained outputs before production trust clearance.
+- Source-product visibility is no longer unlocked by fixed-suite launchable product keys, but ReportArr still lacks durable row/column/report security, source lineage, StaffArr/NexArr-backed delegated action permissions, export security, and RecordArr-backed retained outputs required for production trust clearance.
 - No R1/R10 feature expansion was started in this R0 pass.
 
 ## R1 Foundation spine pass
@@ -78,7 +80,7 @@ R1 scope audited:
 
 - `docs/roadmap/reference/feature-rollout-map.csv` contains no ReportArr rows for `R1`.
 - `docs/roadmap/reference/workflow-rollout-map.csv` contains no ReportArr rows for `R1`.
-- ReportArr's product FEATURESET and WORKFLOWS remain retained full scope, including the scaffold BI store and source-product access blockers, but they do not authorize starting the R10 operational reporting stage during the R1 suite stage.
+- ReportArr's product FEATURESET and WORKFLOWS remain retained full scope, including the scaffold BI store and durable BI security/output blockers, but they do not authorize starting the R10 operational reporting stage during the R1 suite stage.
 
 Files touched:
 
@@ -122,6 +124,9 @@ Tests run:
 - `npm test` in `apps/reportarr-frontend` — passed 3 files / 8 tests.
 - `npm run test:theme` in `apps/reportarr-frontend` — no violations.
 - `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --filter "FullyQualifiedName~ReportArr" --logger "console;verbosity=minimal"` — passed 48 tests. Existing NuGet pruning and EF Core version-conflict warnings remain.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.ReportArr.Auth.Tests/STLCompliance.ReportArr.Auth.Tests.csproj --no-build --filter "FullyQualifiedName~ReportArrAuthEndpointsTests" --logger "console;verbosity=minimal"` — passed 7 tests in 2s.
+- Current repo-state rerun: `npm test -- --run App.test.tsx sessionStorage.test.ts` in `apps/reportarr-frontend` — passed 2 files / 6 tests in 2.11s.
+- Current repo-state rerun: `dotnet test tests/STLCompliance.OpenApi.Tests/STLCompliance.OpenApi.Tests.csproj --no-build --filter "FullyQualifiedName~ReportArr" --logger "console;verbosity=minimal"` — passed 48 tests in 1s.
 
 Deferred blockers:
 

@@ -61,6 +61,7 @@ Tests run:
 - `npm test` from `apps/ordarr-frontend` — passed 2 files / 10 tests.
 - `npm run test:theme` from `apps/ordarr-frontend` — passed with no theme audit violations.
 - `dotnet test tests/STLCompliance.MaintainArr.Auth.Tests/STLCompliance.MaintainArr.Auth.Tests.csproj --filter "FullyQualifiedName~OrdArrCustomArrHandoffTests" --logger "console;verbosity=minimal"` — passed 2 tests.
+- Current repo-state reruns also passed: the focused OrdArr auth/store backend cluster passed 14 tests, the OrdArr frontend app/session slice passed 2 files / 11 tests, and the OrdArr/CustomArr handoff smoke passed 2 tests.
 
 Deferred blockers:
 
