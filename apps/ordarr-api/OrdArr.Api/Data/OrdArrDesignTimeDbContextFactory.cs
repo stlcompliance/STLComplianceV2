@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using STLCompliance.Shared.Data;
 
 namespace OrdArr.Api.Data;
 
@@ -7,9 +8,7 @@ public sealed class OrdArrDesignTimeDbContextFactory : IDesignTimeDbContextFacto
 {
     public OrdArrDbContext CreateDbContext(string[] args)
     {
-        var connectionString =
-            Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+        var connectionString = StlDatabaseConnection.ResolveFromEnvironment()
             ?? "Host=localhost;Database=ordarr_design;Username=postgres;Password=postgres";
 
         var options = new DbContextOptionsBuilder<OrdArrDbContext>()

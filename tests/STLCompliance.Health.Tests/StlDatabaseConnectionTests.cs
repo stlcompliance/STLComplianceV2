@@ -1,3 +1,4 @@
+using AssurArr.Api.Data;
 using Npgsql;
 using STLCompliance.Shared.Data;
 
@@ -34,5 +35,29 @@ public class StlDatabaseConnectionTests
     {
         Assert.Null(StlDatabaseConnection.Normalize(null));
         Assert.Null(StlDatabaseConnection.Normalize("   "));
+    }
+
+    [Fact]
+    public void AssurArrDesignTimeFactory_CreatesDbContextFromConnectionStringEnvironmentVariable()
+    {
+        var original = Environment.GetEnvironmentVariable("ConnectionStrings__Database");
+        var originalDatabaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+        try
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", "Host=localhost;Database=assurarr_design;Username=postgres;Password=postgres");
+            Environment.SetEnvironmentVariable("DATABASE_URL", null);
+
+            var factory = new AssurArrDesignTimeDbContextFactory();
+            using var context = factory.CreateDbContext(Array.Empty<string>());
+
+            Assert.NotNull(context);
+            Assert.IsType<AssurArrDbContext>(context);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("ConnectionStrings__Database", original);
+            Environment.SetEnvironmentVariable("DATABASE_URL", originalDatabaseUrl);
+        }
     }
 }

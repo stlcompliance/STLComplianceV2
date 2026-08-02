@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using STLCompliance.Shared.Data;
 
 namespace RecordArr.Api.Data;
 
@@ -7,9 +8,7 @@ public sealed class RecordArrDesignTimeDbContextFactory : IDesignTimeDbContextFa
 {
     public RecordArrDbContext CreateDbContext(string[] args)
     {
-        var connectionString =
-            Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+        var connectionString = StlDatabaseConnection.ResolveFromEnvironment()
             ?? "Host=localhost;Database=recordarr_design;Username=postgres;Password=postgres";
 
         var options = new DbContextOptionsBuilder<RecordArrDbContext>()

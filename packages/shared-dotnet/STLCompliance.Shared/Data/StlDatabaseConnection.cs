@@ -11,6 +11,18 @@ public static class StlDatabaseConnection
     public static string? Resolve(IConfiguration configuration) =>
         Normalize(configuration["DATABASE_URL"] ?? configuration.GetConnectionString("Database"));
 
+    public static string? ResolveFromEnvironment()
+    {
+        var values = new[]
+        {
+            Environment.GetEnvironmentVariable("DATABASE_URL"),
+            Environment.GetEnvironmentVariable("ConnectionStrings__Database"),
+            Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+        };
+
+        return Normalize(values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)));
+    }
+
     public static string? Normalize(string? raw)
     {
         if (string.IsNullOrWhiteSpace(raw))
