@@ -1,21 +1,60 @@
-# cloudbuild.yaml
 steps:
-  # Step 1: Merge the compose files using the standard Docker image
-  - name: 'docker'
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - 'docker compose -f docker-compose.yml -f compose.override.yml config > docker-compose.prod.yml'
-
-  # Step 2: Install compose plugin and deploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        apt-get update && apt-get install -y google-cloud-cli-run-compose
+        gcloud config set run/region us-central1
         
-        gcloud run compose up docker-compose.prod.yml \
-          --region us-central1 \
+        # 1. Set your master connection details here
+        DB_HOST="=stl-compliance:us-central1:stl-compliance-v1"
+        DB_PASS="WesRay060622!"
+        REDIS_URL="10.66.185.43:6379"
+        BOOTSTRAP_SECRET="stl-production-bootstrap-secret"
+
+        # 2. Define APIs
+        APIS=("nexarr-api" "staffarr-api" "trainarr-api" "maintainarr-api" "routarr-api" "supplyarr-api" "customarr-api" "ordarr-api" "ledgarr-api" "reportarr-api" "compliancecore-api" "recordarr-api" "assurarr-api" "loadarr-api")
+        
+        # 3. Deploy APIs
+        for API in "${APIS[@]}"; do
+          echo "Deploying $API..."
+          
+          # Extract the prefix (removes '-api' to get 'nexarr', 'staffarr', etc.)
+          DB_NAME="${API%-api}"
+          
+          # Construct the exact database string for this specific service
+          DB_URL="Host=$DB_HOST;Port=5432;Database=$DB_NAME;Username=stl;Password=$DB_PASS"
+
+          # Deploy and inject variables
+          gcloud run deploy $API \
+            --source . \
+            --allow-unauthenticated \
+            --update-env-vars="ASPNETCORE_ENVIRONMENT=Production" \
+            --update-env-vars="STL_SERVICE_NAME=$API" \
+            --update-env-vars="DATABASE_URL=$DB_URL" \
+            --update-env-vars="REDIS_URL=$REDIS_URL" \
+            --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
+            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=$BOOTSTRAP_SECRET"
+        done
+
+        # 4. Define Workers
+        WORKERS=("nexarr-worker" "staffarr-worker" "trainarr-worker" "maintainarr-worker" "routarr-worker" "supplyarr-worker" "ledgarr-worker" "compliancecore-worker" "shared-worker")
+
+        # 5. Deploy Workers
+        for WORKER in "${WORKERS[@]}"; do
+          echo "Deploying $WORKER..."
+          
+          # Extract prefix (removes '-worker')
+          DB_NAME="${WORKER%-worker}"
+          DB_URL="Host=$DB_HOST;Port=5432;Database=$DB_NAME;Username=stl;Password=$DB_PASS"
+
+          gcloud run deploy $WORKER \
+            --source . \
+            --no-allow-unauthenticated \
+            --no-cpu-throttling \
+            --update-env-vars="DOTNET_ENVIRONMENT=Production" \
+            --update-env-vars="DATABASE_URL=$DB_URL" \
+            --update-env-vars="REDIS_URL=$REDIS_URL"
+        done
 options:
   logging: CLOUD_LOGGING_ONLY
