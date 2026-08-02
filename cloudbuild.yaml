@@ -116,7 +116,7 @@ steps:
       - '-c'
       - |
         set -e
-        CLOUDSQL_INSTANCE_NAME="${_CLOUDSQL_INSTANCE##*:}"
+        CLOUDSQL_INSTANCE_NAME=$(echo "${_CLOUDSQL_INSTANCE}" | awk -F':' '{print $NF}')
 
         echo "Ensuring Cloud SQL user 'stl' exists..."
         if gcloud sql users list --project="$PROJECT_ID" --instance="$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "stl"; then
