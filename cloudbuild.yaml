@@ -16,45 +16,45 @@ steps:
         APIS=("nexarr-api" "staffarr-api" "trainarr-api" "maintainarr-api" "routarr-api" "supplyarr-api" "customarr-api" "ordarr-api" "ledgarr-api" "reportarr-api" "compliancecore-api" "recordarr-api" "assurarr-api" "loadarr-api")
         
         # 3. Deploy APIs
-        for API in "${APIS[@]}"; do
-          echo "Deploying $API..."
+        for API in "$${APIS[@]}"; do
+          echo "Deploying $$API..."
           
           # Extract the prefix (removes '-api' to get 'nexarr', 'staffarr', etc.)
-          DB_NAME="${API%-api}"
+          DB_NAME="$${API%-api}"
           
           # Construct the exact database string for this specific service
-          DB_URL="Host=$DB_HOST;Port=5432;Database=$DB_NAME;Username=stl;Password=$DB_PASS"
+          DB_URL="Host=$$DB_HOST;Port=5432;Database=$$DB_NAME;Username=stl;Password=$$DB_PASS"
 
           # Deploy and inject variables
-          gcloud run deploy $API \
+          gcloud run deploy $$API \
             --source . \
             --allow-unauthenticated \
             --update-env-vars="ASPNETCORE_ENVIRONMENT=Production" \
-            --update-env-vars="STL_SERVICE_NAME=$API" \
-            --update-env-vars="DATABASE_URL=$DB_URL" \
-            --update-env-vars="REDIS_URL=$REDIS_URL" \
+            --update-env-vars="STL_SERVICE_NAME=$$API" \
+            --update-env-vars="DATABASE_URL=$$DB_URL" \
+            --update-env-vars="REDIS_URL=$$REDIS_URL" \
             --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
-            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=$BOOTSTRAP_SECRET"
+            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=$$BOOTSTRAP_SECRET"
         done
 
         # 4. Define Workers
         WORKERS=("nexarr-worker" "staffarr-worker" "trainarr-worker" "maintainarr-worker" "routarr-worker" "supplyarr-worker" "ledgarr-worker" "compliancecore-worker" "shared-worker")
 
         # 5. Deploy Workers
-        for WORKER in "${WORKERS[@]}"; do
-          echo "Deploying $WORKER..."
+        for WORKER in "$${WORKERS[@]}"; do
+          echo "Deploying $$WORKER..."
           
           # Extract prefix (removes '-worker')
-          DB_NAME="${WORKER%-worker}"
-          DB_URL="Host=$DB_HOST;Port=5432;Database=$DB_NAME;Username=stl;Password=$DB_PASS"
+          DB_NAME="$${WORKER%-worker}"
+          DB_URL="Host=$$DB_HOST;Port=5432;Database=$$DB_NAME;Username=stl;Password=$$DB_PASS"
 
-          gcloud run deploy $WORKER \
+          gcloud run deploy $$WORKER \
             --source . \
             --no-allow-unauthenticated \
             --no-cpu-throttling \
             --update-env-vars="DOTNET_ENVIRONMENT=Production" \
-            --update-env-vars="DATABASE_URL=$DB_URL" \
-            --update-env-vars="REDIS_URL=$REDIS_URL"
+            --update-env-vars="DATABASE_URL=$$DB_URL" \
+            --update-env-vars="REDIS_URL=$$REDIS_URL"
         done
 options:
   logging: CLOUD_LOGGING_ONLY
