@@ -76,7 +76,8 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Assert.Contains(_staffArrProvisioning.Requests, call =>
             call.TenantId == PlatformSeeder.DemoTenantId
             && call.ExternalUserId == created.Identity.PersonId
-            && call.Email == "new.worker@example.com");
+            && call.Email == "new.worker@example.com"
+            && call.RoleKey == "driver");
         Assert.Contains(created.Identity.TenantMemberships, m =>
             m.TenantId == PlatformSeeder.DemoTenantId && m.RoleKey == "driver" && m.IsActive);
 
@@ -217,7 +218,8 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Assert.Contains(_staffArrProvisioning.Requests, call =>
             call.TenantId == PlatformSeeder.DemoTenantId
             && call.ExternalUserId == PlatformSeeder.DemoTenantAdminUserId
-            && call.DisplayName == "Updated Tenant Admin");
+            && call.DisplayName == "Updated Tenant Admin"
+            && call.RoleKey == "driver");
         Assert.True(identity.LaunchEligible);
         Assert.Contains(identity.TenantMemberships, x =>
             x.TenantId == PlatformSeeder.DemoTenantId
@@ -324,10 +326,11 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
             Guid externalUserId,
             string email,
             string displayName,
+            string? roleKey,
             Guid? requestedByUserId,
             CancellationToken cancellationToken = default)
         {
-            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, requestedByUserId));
+            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, roleKey, requestedByUserId));
             return Task.CompletedTask;
         }
     }
@@ -337,5 +340,6 @@ public class NexArrPlatformIdentityIntegrationTests : IClassFixture<WebApplicati
         Guid ExternalUserId,
         string Email,
         string DisplayName,
+        string? RoleKey,
         Guid? RequestedByUserId);
 }

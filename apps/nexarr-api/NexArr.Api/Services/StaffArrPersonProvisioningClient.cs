@@ -23,6 +23,7 @@ public sealed class StaffArrPersonProvisioningClient(
         Guid externalUserId,
         string email,
         string displayName,
+        string? roleKey,
         Guid? requestedByUserId,
         CancellationToken cancellationToken = default)
     {
@@ -45,6 +46,7 @@ public sealed class StaffArrPersonProvisioningClient(
             externalUserId,
             email,
             displayName,
+            roleKey,
             requestedByUserId
         });
 

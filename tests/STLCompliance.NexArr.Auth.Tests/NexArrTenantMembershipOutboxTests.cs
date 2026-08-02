@@ -70,7 +70,8 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
         addResponse.EnsureSuccessStatusCode();
         Assert.Contains(_staffArrProvisioning.Requests, call =>
             call.TenantId == tenant.TenantId
-            && call.ExternalUserId == PlatformSeeder.DemoTenantAdminUserId);
+            && call.ExternalUserId == PlatformSeeder.DemoTenantAdminUserId
+            && call.RoleKey == "tenant_user");
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<NexArrDbContext>();
@@ -174,10 +175,11 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
             Guid externalUserId,
             string email,
             string displayName,
+            string? roleKey,
             Guid? requestedByUserId,
             CancellationToken cancellationToken = default)
         {
-            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, requestedByUserId));
+            Requests.Add(new ProvisioningCall(tenantId, externalUserId, email, displayName, roleKey, requestedByUserId));
             return Task.CompletedTask;
         }
     }
@@ -187,5 +189,6 @@ public class NexArrTenantMembershipOutboxTests : IClassFixture<WebApplicationFac
         Guid ExternalUserId,
         string Email,
         string DisplayName,
+        string? RoleKey,
         Guid? RequestedByUserId);
 }

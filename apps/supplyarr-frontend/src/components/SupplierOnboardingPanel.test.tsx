@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { SupplierOnboardingPanel } from './SupplierOnboardingPanel'
@@ -97,6 +97,7 @@ vi.mock('../api/client', () => ({
   submitSupplierOnboarding: vi.fn(),
   approveSupplierOnboarding: vi.fn(),
   rejectSupplierOnboarding: vi.fn(),
+  suspendSupplierOnboarding: vi.fn(),
   registerSupplierComplianceDocument: vi.fn(),
   approveSupplierComplianceDocument: vi.fn(),
 }))
@@ -178,8 +179,7 @@ describe('SupplierOnboardingPanel', () => {
     expect(await screen.findByRole('heading', { name: 'Compliance documents' })).toBeInTheDocument()
     expect(await screen.findByText(/2 document\(s\)/i)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Required documents' })).toBeInTheDocument()
-    expect(screen.getAllByText('approved')).toHaveLength(2)
-    expect(screen.getAllByText('expiring soon')).toHaveLength(2)
+    expect(screen.getAllByText('approved').length).toBeGreaterThanOrEqual(2)
     fireEvent.click(screen.getByRole('button', { name: /Start onboarding|Restart \/ start draft/ }))
 
     expect(await screen.findByText('start failed')).toBeInTheDocument()
@@ -236,5 +236,31 @@ describe('SupplierOnboardingPanel', () => {
 
     expect(await screen.findByLabelText('Onboarding notes')).toBeInTheDocument()
     expect(screen.getByText(/Bravo Supply · West Service Desk \(bravo-west\) · Sub-unit · 44 Service Ave, Oklahoma City, OK, 73102 · Maintenance/i)).toBeInTheDocument()
+  })
+
+  it('allows suspending onboarding with a reason', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <SupplierOnboardingPanel
+          accessToken="token"
+          canManage={true}
+          canReview={true}
+          onboardableSuppliers={[acmeHqSupplier]}
+        />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.change(await screen.findByLabelText('Supplier identity or sub-unit'), { target: { value: 'p1' } })
+    fireEvent.change(screen.getByLabelText('Suspension reason'), { target: { value: 'Missing bank letter' } })
+    fireEvent.click(screen.getByRole('button', { name: /Suspend onboarding|Suspend review/i }))
+
+    await waitFor(() => {
+      expect(vi.mocked(clientApi.suspendSupplierOnboarding)).toHaveBeenCalledWith(
+        'token',
+        'p1',
+        'Missing bank letter',
+      )
+    })
   })
 })

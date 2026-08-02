@@ -2136,6 +2136,10 @@ export interface SupplierOnboardingDocumentRequirementsResponse {
   requirements: OnboardingDocumentRequirementDefinition[]
 }
 
+export interface UpsertSupplierOnboardingDocumentRequirementsRequest {
+  requiredDocumentTypeKeys: string[]
+}
+
 export interface SupplierComplianceDocumentResponse {
   documentId: string
   supplierId: string

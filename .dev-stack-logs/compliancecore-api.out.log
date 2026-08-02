@@ -1,45 +1,2222 @@
   Determining projects to restore...
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(518,36): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(518,52): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(549,21): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(568,21): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
   ComplianceCore.Api -> F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\bin\Debug\net10.0\ComplianceCore.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(518,36): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(518,52): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(549,21): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Services\RulePackService.cs(568,21): warning CS8602: Dereference of a possibly null reference. [F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\ComplianceCore.Api.csproj]
+    8 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:02.65
+Time Elapsed 00:00:36.82
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer compliancecore-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for compliancecore-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 2/40 failed for compliancecore-api; retrying in 5s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 2 integration token(s) for compliancecore-api from NexArr.
-[22:29:49 INF] Applying EF migrations for ComplianceCoreDbContext (attempt 1/8)
-[22:30:01 INF] Executed DbCommand (33ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:18 INF] Applying EF migrations for ComplianceCoreDbContext (attempt 1/8)
+[00:15:20 ERR] Failed executing DbCommand (32ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:02 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT 1
-[22:30:03 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:21 INF] Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
     "MigrationId" character varying(150) NOT NULL,
     "ProductVersion" character varying(32) NOT NULL,
     CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
 );
-[22:30:03 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:03 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:21 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:03 INF] No migrations were applied. The database is already up to date.
-[22:30:03 INF] Executed DbCommand (86ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:21 INF] Applying migration '20260609060205_CurrentSchemaBaseline'.
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_asset_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_asset_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_audit_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorUserId" uuid,
+    "Action" character varying(128) NOT NULL,
+    "TargetType" character varying(64) NOT NULL,
+    "TargetId" character varying(128),
+    "Result" character varying(32) NOT NULL,
+    "ReasonCode" character varying(64),
+    "CorrelationId" uuid NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_audit_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_audit_package_generation_jobs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequestedByUserId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Format" character varying(16) NOT NULL,
+    "FromUtc" timestamp with time zone,
+    "ToUtc" timestamp with time zone,
+    "PackageId" uuid,
+    "ArtifactZip" bytea,
+    "ArtifactJson" text,
+    "ErrorMessage" character varying(2000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_compliancecore_audit_package_generation_jobs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_audit_traces (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AuditTraceId" character varying(128) NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(64) NOT NULL,
+    "SubjectKind" character varying(64) NOT NULL,
+    "SubjectId" character varying(128) NOT NULL,
+    "EvaluatedValue" character varying(1024) NOT NULL,
+    "ExpectedValue" character varying(1024) NOT NULL,
+    "Operator" character varying(32) NOT NULL,
+    "Result" character varying(32) NOT NULL,
+    "FailureSeverity" character varying(32) NOT NULL,
+    "AutomaticFailureFlag" boolean NOT NULL,
+    "OverrideUsed" boolean NOT NULL,
+    "OverridePersonId" uuid,
+    "OverrideReason" character varying(1024) NOT NULL,
+    "RemediationRequired" boolean NOT NULL,
+    "ClaimedExceptionExemptionKey" character varying(128) NOT NULL,
+    "ClaimedExceptionExemptionType" character varying(64) NOT NULL,
+    "ExceptionExemptionLegalBasis" character varying(512) NOT NULL,
+    "ExceptionExemptionProofKey" character varying(256) NOT NULL,
+    "ExceptionExemptionScopeResult" character varying(64) NOT NULL,
+    "ExceptionExemptionEffectiveResult" character varying(64) NOT NULL,
+    "ResultBeforeException" character varying(64) NOT NULL,
+    "ResultAfterException" character varying(64) NOT NULL,
+    "FinalComplianceResult" character varying(64) NOT NULL,
+    "ExceptionExemptionApplied" boolean NOT NULL,
+    "ExceptionExemptionProofRequired" boolean NOT NULL,
+    "ExceptionExemptionProofValid" boolean NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_audit_traces" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_compliance_keys (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_compliance_keys" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_control_effectiveness_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "ActorUserId" uuid,
+    "PacksEvaluatedCount" integer NOT NULL,
+    "LowestEffectivenessScore" integer NOT NULL,
+    "LowestEffectivenessLevel" character varying(32) NOT NULL,
+    "AverageEffectivenessScore" integer NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_control_effectiveness_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_document_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_document_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_evidence_option_groups (
+    "EvidenceOptionGroupId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequirementKey" character varying(128) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "PackKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(128) NOT NULL,
+    "LogicType" character varying(32) NOT NULL,
+    "ApplicabilityKey" character varying(128) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_evidence_option_groups" PRIMARY KEY ("EvidenceOptionGroupId")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_evidence_references (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EvidenceId" character varying(128) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "SourceProduct" character varying(32) NOT NULL,
+    "SourceEntity" character varying(128) NOT NULL,
+    "SourceRecordId" character varying(128) NOT NULL,
+    "SourceField" character varying(128) NOT NULL,
+    "DocumentType" character varying(128) NOT NULL,
+    "DocumentUrl" character varying(1024) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "FileHash" character varying(128) NOT NULL,
+    "CapturedAt" timestamp with time zone NOT NULL,
+    "EffectiveAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "CreatedByPersonId" uuid,
+    "ReviewedByPersonId" uuid,
+    "ReviewStatus" character varying(32) NOT NULL,
+    "Notes" character varying(1024) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_evidence_references" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_external_object_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_external_object_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_fact_definitions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FactKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "ValueType" character varying(32) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_fact_definitions" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_governing_bodies (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BodyKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_governing_bodies" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_hazcom_references (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "HazComKey" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "LinkedSdsKey" character varying(64),
+    "StaffarrSiteOrgUnitId" uuid,
+    "StaffarrSiteNameSnapshot" character varying(256) NOT NULL DEFAULT '',
+    "LocationRef" character varying(256) NOT NULL,
+    "DocumentUrl" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_hazcom_references" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_sessions (
+    "ImportSessionId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "UploadedByPersonId" uuid,
+    "SourceFilename" character varying(512) NOT NULL,
+    "SourceHash" character varying(128) NOT NULL,
+    "ImportType" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "MappingStatus" character varying(32) NOT NULL,
+    "CommitStatus" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ValidatedAt" timestamp with time zone,
+    "MappedAt" timestamp with time zone,
+    "CommittedAt" timestamp with time zone,
+    "RejectedAt" timestamp with time zone,
+    "Notes" character varying(2000) NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_sessions" PRIMARY KEY ("ImportSessionId")
+);
+[00:15:22 INF] Executed DbCommand (31ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_m12_analytics_batch_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "IntervalHours" integer NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "RiskScoringRan" boolean NOT NULL,
+    "MissingEvidenceRan" boolean NOT NULL,
+    "ControlEffectivenessRan" boolean NOT NULL,
+    "ReadinessForecastRan" boolean NOT NULL,
+    "AuditDeliveryQueued" boolean NOT NULL,
+    "RiskScoreRunId" uuid,
+    "MissingEvidenceWarningRunId" uuid,
+    "ControlEffectivenessRunId" uuid,
+    "ReadinessForecastRunId" uuid,
+    "AuditPackageJobId" uuid,
+    "ErrorMessage" character varying(2000),
+    CONSTRAINT "PK_compliancecore_m12_analytics_batch_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_material_keys (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_material_keys" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_material_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_material_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_missing_evidence_warning_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "ActorUserId" uuid,
+    "PacksAnalyzedCount" integer NOT NULL,
+    "WarningsEmittedCount" integer NOT NULL,
+    "HighestSeverity" character varying(16) NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_missing_evidence_warning_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_part_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_part_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:22 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_product_fact_mirrors (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(32) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "ValueType" character varying(32) NOT NULL,
+    "StringValue" character varying(512),
+    "BooleanValue" boolean,
+    "NumberValue" numeric,
+    "DateValue" date,
+    "SourceEntityType" character varying(64) NOT NULL,
+    "SourceEntityId" uuid,
+    "SourceEventKind" character varying(128) NOT NULL,
+    "SourcePublicationId" uuid NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PublishedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_product_fact_mirrors" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_readiness_forecast_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "ActorUserId" uuid,
+    "PacksForecastCount" integer NOT NULL,
+    "ReadinessScore" integer NOT NULL,
+    "ReadinessLevel" character varying(16) NOT NULL,
+    "LowestReadinessScore" integer NOT NULL,
+    "AverageReadinessScore" integer NOT NULL,
+    "HighestRiskScore" integer NOT NULL,
+    "MissingEvidenceWarningCount" integer NOT NULL,
+    "AverageEffectivenessScore" integer NOT NULL,
+    "RiskScoreRunId" uuid NOT NULL,
+    "MissingEvidenceWarningRunId" uuid NOT NULL,
+    "ControlEffectivenessRunId" uuid NOT NULL,
+    "ForecastedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_readiness_forecast_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_risk_score_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "ActorUserId" uuid,
+    "PacksEvaluatedCount" integer NOT NULL,
+    "HighestRiskScore" integer NOT NULL,
+    "HighestRiskLevel" character varying(16) NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_risk_score_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_change_scan_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "Status" character varying(16) NOT NULL,
+    "PacksScannedCount" integer NOT NULL,
+    "ChangesDetectedCount" integer NOT NULL,
+    "ErrorMessage" character varying(1024),
+    CONSTRAINT "PK_compliancecore_rule_change_scan_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_pack_monitor_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ContentHash" character varying(64),
+    "CapturedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_rule_pack_monitor_snapshots" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_scheduled_rule_evaluation_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "IntervalHours" integer NOT NULL,
+    "PacksDueCount" integer NOT NULL,
+    "PacksProcessedCount" integer NOT NULL,
+    "EvaluatedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "AllowCount" integer NOT NULL,
+    "WarnCount" integer NOT NULL,
+    "BlockCount" integer NOT NULL,
+    "ErrorMessage" character varying(1024),
+    CONSTRAINT "PK_compliancecore_scheduled_rule_evaluation_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_source_ingestion_batches (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IngestionType" character varying(32) NOT NULL,
+    "Phase" character varying(16) NOT NULL,
+    "DryRun" boolean NOT NULL,
+    "Status" character varying(16) NOT NULL,
+    "TotalJobs" integer NOT NULL,
+    "SuccessCount" integer NOT NULL,
+    "ErrorCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "CreatedByUserId" uuid,
+    "SourceProduct" character varying(32),
+    "PublicationId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_compliancecore_source_ingestion_batches" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_system_references (
+    "ReferenceId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "ObjectKind" character varying(128) NOT NULL,
+    "ExternalRecordId" character varying(256) NOT NULL,
+    "StableKey" character varying(256) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Active" boolean NOT NULL,
+    "LastSeenAt" timestamp with time zone,
+    "MetadataJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_system_references" PRIMARY KEY ("ReferenceId")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_tenant_fact_source_sync_worker_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "DefaultScopeKey" character varying(256) NOT NULL,
+    "IntervalMinutes" integer NOT NULL,
+    "LastBatchRunAt" timestamp with time zone,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_tenant_fact_source_sync_worker_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_tenant_m12_analytics_worker_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "DefaultScopeKey" character varying(256) NOT NULL,
+    "IntervalHours" integer NOT NULL,
+    "RiskScoringEnabled" boolean NOT NULL,
+    "MissingEvidenceEnabled" boolean NOT NULL,
+    "ControlEffectivenessEnabled" boolean NOT NULL,
+    "ReadinessForecastEnabled" boolean NOT NULL,
+    "AuditDeliveryEnabled" boolean NOT NULL,
+    "LastBatchRunAt" timestamp with time zone,
+    "LastRiskScoringRunAt" timestamp with time zone,
+    "LastMissingEvidenceRunAt" timestamp with time zone,
+    "LastControlEffectivenessRunAt" timestamp with time zone,
+    "LastReadinessForecastRunAt" timestamp with time zone,
+    "LastAuditDeliveryRunAt" timestamp with time zone,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_tenant_m12_analytics_worker_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situations (
+    "SituationId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "SituationKind" character varying(128) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "EvaluationMode" character varying(32) NOT NULL,
+    "SavedAsTemplate" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situations" PRIMARY KEY ("SituationId")
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_vocabulary_terms (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TermKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "VocabularyTypeKey" character varying(64) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_vocabulary_terms" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_vocabulary_types (
+    "Id" uuid NOT NULL,
+    "TypeKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_vocabulary_types" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_control_effectiveness_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RunId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "EffectivenessScore" integer NOT NULL,
+    "EffectivenessLevel" character varying(32) NOT NULL,
+    "ControlStatus" character varying(16) NOT NULL,
+    "RuleOutcome" character varying(16) NOT NULL,
+    "EvaluationResult" character varying(16) NOT NULL,
+    "TotalRuleCount" integer NOT NULL,
+    "PassedRuleCount" integer NOT NULL,
+    "FailedRuleCount" integer NOT NULL,
+    "UnresolvedFactCount" integer NOT NULL,
+    "ResolvedFactCount" integer NOT NULL,
+    "Summary" character varying(512) NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_control_effectiveness_records" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_control_effectiveness_records_compliancecore~" FOREIGN KEY ("RunId") REFERENCES compliancecore_control_effectiveness_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliance_exception_exemption (
+    "ExceptionExemptionId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Type" character varying(64) NOT NULL,
+    "GoverningBody" character varying(128) NOT NULL,
+    "ProgramKey" character varying(128) NOT NULL,
+    "PackKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(128) NOT NULL,
+    "ApplicabilityKey" character varying(128) NOT NULL,
+    "AppliesToSubjectKind" character varying(128) NOT NULL,
+    "AppliesToSourceProduct" character varying(128) NOT NULL,
+    "AppliesToSourceEntity" character varying(256) NOT NULL,
+    "EffectType" character varying(64) NOT NULL,
+    "ConditionLogicJson" jsonb NOT NULL,
+    "RequiredEvidenceOptionGroupId" uuid,
+    "IssuingAuthority" character varying(256) NOT NULL,
+    "AuthorizationNumber" character varying(128) NOT NULL,
+    "EffectiveAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "Active" boolean NOT NULL,
+    "Description" character varying(2000) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliance_exception_exemption" PRIMARY KEY ("ExceptionExemptionId"),
+    CONSTRAINT "FK_compliance_exception_exemption_compliancecore_evidence_opti~" FOREIGN KEY ("RequiredEvidenceOptionGroupId") REFERENCES compliancecore_evidence_option_groups ("EvidenceOptionGroupId") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_evidence_options (
+    "EvidenceOptionId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EvidenceOptionGroupId" uuid NOT NULL,
+    "OptionKey" character varying(256) NOT NULL,
+    "OptionLabel" character varying(256) NOT NULL,
+    "EvidenceKind" character varying(64) NOT NULL,
+    "TargetKind" character varying(64) NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "SourceEntity" character varying(256) NOT NULL,
+    "SourceFieldOrRecordType" character varying(256) NOT NULL,
+    "DocumentTypeKey" character varying(128) NOT NULL,
+    "MaterialKey" character varying(128) NOT NULL,
+    "PartKey" character varying(128) NOT NULL,
+    "SystemKey" character varying(128) NOT NULL,
+    "AssetKind" character varying(128) NOT NULL,
+    "ExternalRegistryKey" character varying(128) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "Required" boolean NOT NULL,
+    "Priority" integer NOT NULL,
+    "ConfidenceHint" numeric(5,3),
+    "Active" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_evidence_options" PRIMARY KEY ("EvidenceOptionId"),
+    CONSTRAINT "FK_compliancecore_evidence_options_compliancecore_evidence_opt~" FOREIGN KEY ("EvidenceOptionGroupId") REFERENCES compliancecore_evidence_option_groups ("EvidenceOptionGroupId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_fact_assertions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "SubjectKind" character varying(64) NOT NULL,
+    "SubjectId" character varying(128) NOT NULL,
+    "Value" character varying(1024) NOT NULL,
+    "ValueType" character varying(32) NOT NULL,
+    "SourceProduct" character varying(32) NOT NULL,
+    "SourceRecordId" character varying(128) NOT NULL,
+    "EvidenceReferenceId" uuid,
+    "EvidenceId" character varying(128),
+    "AssertedAt" timestamp with time zone NOT NULL,
+    "EffectiveAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_fact_assertions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_fact_assertions_compliancecore_evidence_refe~" FOREIGN KEY ("EvidenceReferenceId") REFERENCES compliancecore_evidence_references ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_fact_sources (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FactDefinitionId" uuid NOT NULL,
+    "SourceKey" character varying(64) NOT NULL,
+    "SourceType" character varying(32) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "ProductKey" character varying(32),
+    "ProductReference" character varying(256),
+    "ConfigJson" jsonb NOT NULL,
+    "Priority" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_fact_sources" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_fact_sources_compliancecore_fact_definitions~" FOREIGN KEY ("FactDefinitionId") REFERENCES compliancecore_fact_definitions ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_jurisdictions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "GoverningBodyId" uuid NOT NULL,
+    "JurisdictionKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_jurisdictions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_jurisdictions_compliancecore_governing_bodie~" FOREIGN KEY ("GoverningBodyId") REFERENCES compliancecore_governing_bodies ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_session_source_files (
+    "ImportSessionSourceFileId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "OriginalFilename" character varying(512) NOT NULL,
+    "Content" text NOT NULL,
+    "FileHash" character varying(128) NOT NULL,
+    "ByteLength" bigint NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_session_source_files" PRIMARY KEY ("ImportSessionSourceFileId"),
+    CONSTRAINT "FK_compliancecore_import_session_source_files_compliancecore_i~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_compliance_keys (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_compliance_keys" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_compliance_keys_compliancecore~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_controlled_vocabulary (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_controlled_vocabulary" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_controlled_vocabulary_complian~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_evidence_references (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_evidence_references" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_evidence_references_compliance~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_exception_exemptions (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_exception_exemptions" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_exception_exemptions_complianc~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_fact_requirements (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_fact_requirements" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_fact_requirements_complianceco~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_mapping_candidates (
+    "MappingCandidateId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "StagedRowId" uuid NOT NULL,
+    "StagedSourceFile" character varying(256) NOT NULL,
+    "StagedRowNumber" integer NOT NULL,
+    "SourceKey" character varying(256) NOT NULL,
+    "SourceLabel" character varying(512) NOT NULL,
+    "EvidenceOptionId" uuid,
+    "EvidenceOptionKey" character varying(256) NOT NULL,
+    "EvidenceOptionLabel" character varying(512) NOT NULL,
+    "OptionLogicGroup" character varying(32) NOT NULL,
+    "TargetKind" character varying(64) NOT NULL,
+    "TargetId" character varying(256) NOT NULL,
+    "TargetKey" character varying(256) NOT NULL,
+    "TargetLabel" character varying(512) NOT NULL,
+    "ConfidenceScore" numeric(5,3) NOT NULL,
+    "ConfidenceBand" character varying(32) NOT NULL,
+    "MatchReasonsJson" jsonb NOT NULL,
+    "RiskFlagsJson" jsonb NOT NULL,
+    "ProposedAction" character varying(64) NOT NULL,
+    "SatisfiesRequirementIfConfirmed" boolean NOT NULL,
+    "RequiresAdditionalSupportingEvidence" boolean NOT NULL,
+    "RequiresConfirmation" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_mapping_candidates" PRIMARY KEY ("MappingCandidateId"),
+    CONSTRAINT "FK_compliancecore_import_staged_mapping_candidates_compliancec~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_material_keys (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_material_keys" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_material_keys_compliancecore_i~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_regulatory_mappings (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_regulatory_mappings" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_regulatory_mappings_compliance~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_rule_packs (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_rule_packs" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_rule_packs_compliancecore_impo~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_rule_requirements (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_rule_requirements" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_rule_requirements_complianceco~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_sds_references (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_sds_references" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_sds_references_compliancecore_~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_vocabulary_aliases (
+    "StagedRowId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "SourceFile" character varying(256) NOT NULL,
+    "RowNumber" integer NOT NULL,
+    "RawRowJson" jsonb NOT NULL,
+    "NormalizedRowJson" jsonb NOT NULL,
+    "RowHash" character varying(128) NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    "ValidationErrorsJson" jsonb NOT NULL,
+    "CanonicalKeyCandidate" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_vocabulary_aliases" PRIMARY KEY ("StagedRowId"),
+    CONSTRAINT "FK_compliancecore_import_staged_vocabulary_aliases_compliancec~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_sds_references (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SdsKey" character varying(64) NOT NULL,
+    "MaterialKeyId" uuid,
+    "ProductName" character varying(256) NOT NULL,
+    "Manufacturer" character varying(256) NOT NULL,
+    "DocumentUrl" character varying(1024) NOT NULL,
+    "RevisionDate" date,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_sds_references" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_sds_references_compliancecore_material_keys_~" FOREIGN KEY ("MaterialKeyId") REFERENCES compliancecore_material_keys ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_missing_evidence_warnings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RunId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "FactDefinitionId" uuid,
+    "WarningType" character varying(32) NOT NULL,
+    "Severity" character varying(16) NOT NULL,
+    "ReasonCode" character varying(32) NOT NULL,
+    "HasMirrorAtScope" boolean NOT NULL,
+    "IsRequiredInRule" boolean NOT NULL,
+    "IsRequiredInCatalog" boolean NOT NULL,
+    "Summary" character varying(512) NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_missing_evidence_warnings" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_missing_evidence_warnings_compliancecore_mis~" FOREIGN KEY ("RunId") REFERENCES compliancecore_missing_evidence_warning_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_readiness_forecasts (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RunId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "ReadinessScore" integer NOT NULL,
+    "ReadinessLevel" character varying(16) NOT NULL,
+    "RiskScore" integer NOT NULL,
+    "RiskLevel" character varying(16) NOT NULL,
+    "EffectivenessScore" integer NOT NULL,
+    "EffectivenessLevel" character varying(32) NOT NULL,
+    "MissingEvidenceWarningCount" integer NOT NULL,
+    "HighestMissingEvidenceSeverity" character varying(16) NOT NULL,
+    "Summary" character varying(512) NOT NULL,
+    "ForecastedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_readiness_forecasts" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_readiness_forecasts_compliancecore_readiness~" FOREIGN KEY ("RunId") REFERENCES compliancecore_readiness_forecast_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_risk_scores (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RunId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "RiskScoreValue" integer NOT NULL,
+    "RiskLevel" character varying(16) NOT NULL,
+    "RuleOutcome" character varying(16) NOT NULL,
+    "EvaluationResult" character varying(16) NOT NULL,
+    "UnresolvedFactCount" integer NOT NULL,
+    "FailedRuleCount" integer NOT NULL,
+    "ResolvedFactCount" integer NOT NULL,
+    "MirrorFactCount" integer NOT NULL,
+    "Summary" character varying(512) NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_risk_scores" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_risk_scores_compliancecore_risk_score_runs_R~" FOREIGN KEY ("RunId") REFERENCES compliancecore_risk_score_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_change_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "ProgramKey" character varying(64) NOT NULL,
+    "ChangeType" character varying(32) NOT NULL,
+    "Summary" character varying(512) NOT NULL,
+    "FromStatus" character varying(32),
+    "ToStatus" character varying(32),
+    "FromVersion" integer,
+    "ToVersion" integer,
+    "PreviousContentHash" character varying(64),
+    "NewContentHash" character varying(64),
+    "Source" character varying(16) NOT NULL,
+    "ActorUserId" uuid,
+    "ScanRunId" uuid,
+    "DetectedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_rule_change_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_rule_change_events_compliancecore_rule_chang~" FOREIGN KEY ("ScanRunId") REFERENCES compliancecore_rule_change_scan_runs ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_source_ingestion_jobs (
+    "Id" uuid NOT NULL,
+    "BatchId" uuid NOT NULL,
+    "RowIndex" integer NOT NULL,
+    "JobKey" character varying(128) NOT NULL,
+    "Status" character varying(16) NOT NULL,
+    "EntityType" character varying(64),
+    "EntityId" uuid,
+    "ErrorCode" character varying(64),
+    "Message" character varying(512),
+    CONSTRAINT "PK_compliancecore_source_ingestion_jobs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_source_ingestion_jobs_compliancecore_source_~" FOREIGN KEY ("BatchId") REFERENCES compliancecore_source_ingestion_batches ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_applicability_results (
+    "ApplicabilityResultId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SituationId" uuid NOT NULL,
+    "ProgramKey" character varying(128) NOT NULL,
+    "PackKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(128) NOT NULL,
+    "ApplicabilityScore" numeric(5,3) NOT NULL,
+    "ApplicabilityBand" character varying(32) NOT NULL,
+    "MatchReasonsJson" jsonb NOT NULL,
+    "MissingContextJson" jsonb NOT NULL,
+    "ExclusionReasonsJson" jsonb NOT NULL,
+    "EdgeCase" boolean NOT NULL,
+    "EdgeCaseReason" character varying(512) NOT NULL,
+    "UserVisiblePriority" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_applicability_results" PRIMARY KEY ("ApplicabilityResultId"),
+    CONSTRAINT "FK_compliancecore_theoretical_applicability_results_compliance~" FOREIGN KEY ("SituationId") REFERENCES compliancecore_theoretical_situations ("SituationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situation_contexts (
+    "ContextId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SituationId" uuid NOT NULL,
+    "ContextKey" character varying(128) NOT NULL,
+    "ContextLabel" character varying(256) NOT NULL,
+    "ContextValueKey" character varying(128) NOT NULL,
+    "ContextValueLabel" character varying(256) NOT NULL,
+    "ControlledVocabularyType" character varying(128) NOT NULL,
+    "Confidence" numeric(5,3) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situation_contexts" PRIMARY KEY ("ContextId"),
+    CONSTRAINT "FK_compliancecore_theoretical_situation_contexts_compliancecor~" FOREIGN KEY ("SituationId") REFERENCES compliancecore_theoretical_situations ("SituationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situation_evaluations (
+    "EvaluationId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SituationId" uuid NOT NULL,
+    "EvaluatedAt" timestamp with time zone NOT NULL,
+    "EvaluatedByPersonId" uuid NOT NULL,
+    "Result" character varying(64) NOT NULL,
+    "Summary" character varying(1024) NOT NULL,
+    "PrimaryProgramsJson" jsonb NOT NULL,
+    "LikelyProgramsJson" jsonb NOT NULL,
+    "EdgeCasesJson" jsonb NOT NULL,
+    "PassCount" integer NOT NULL,
+    "FailCount" integer NOT NULL,
+    "WarningCount" integer NOT NULL,
+    "BlockedCount" integer NOT NULL,
+    "NotApplicableCount" integer NOT NULL,
+    "UnknownCount" integer NOT NULL,
+    "OverrideAvailableCount" integer NOT NULL,
+    "OverrideBlockedCount" integer NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situation_evaluations" PRIMARY KEY ("EvaluationId"),
+    CONSTRAINT "FK_compliancecore_theoretical_situation_evaluations_compliance~" FOREIGN KEY ("SituationId") REFERENCES compliancecore_theoretical_situations ("SituationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situation_facts (
+    "SituationFactId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SituationId" uuid NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "RequirementKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(128) NOT NULL,
+    "PackKey" character varying(128) NOT NULL,
+    "SimulatedValue" character varying(1024) NOT NULL,
+    "ValueType" character varying(32) NOT NULL,
+    "SimulatedState" character varying(64) NOT NULL,
+    "EvidenceOptionKey" character varying(128) NOT NULL,
+    "EvidenceKind" character varying(64) NOT NULL,
+    "TargetKind" character varying(64) NOT NULL,
+    "Active" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situation_facts" PRIMARY KEY ("SituationFactId"),
+    CONSTRAINT "FK_compliancecore_theoretical_situation_facts_compliancecore_t~" FOREIGN KEY ("SituationId") REFERENCES compliancecore_theoretical_situations ("SituationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situation_incidents (
+    "SituationIncidentId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SituationId" uuid NOT NULL,
+    "IncidentTypeKey" character varying(128) NOT NULL,
+    "SeverityKey" character varying(64) NOT NULL,
+    "InvolvedSubjectKind" character varying(64) NOT NULL,
+    "InvolvedSubjectState" character varying(64) NOT NULL,
+    "TriggerKey" character varying(128) NOT NULL,
+    "TriggerValue" character varying(128) NOT NULL,
+    "ReportabilityState" character varying(64) NOT NULL,
+    "RemediationState" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situation_incidents" PRIMARY KEY ("SituationIncidentId"),
+    CONSTRAINT "FK_compliancecore_theoretical_situation_incidents_complianceco~" FOREIGN KEY ("SituationId") REFERENCES compliancecore_theoretical_situations ("SituationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_vocabulary_aliases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VocabularyTermId" uuid NOT NULL,
+    "AliasText" character varying(128) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_vocabulary_aliases" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_vocabulary_aliases_compliancecore_vocabulary~" FOREIGN KEY ("VocabularyTermId") REFERENCES compliancecore_vocabulary_terms ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_fact_source_sync_statuses (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FactSourceId" uuid NOT NULL,
+    "ScopeKey" character varying(256) NOT NULL,
+    "HealthStatus" character varying(32) NOT NULL,
+    "LastAttemptAt" timestamp with time zone,
+    "LastSuccessAt" timestamp with time zone,
+    "LastFailureAt" timestamp with time zone,
+    "LastErrorMessage" character varying(2000),
+    "ConsecutiveFailureCount" integer NOT NULL,
+    "LastMirrorId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_fact_source_sync_statuses" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_fact_source_sync_statuses_compliancecore_fac~" FOREIGN KEY ("FactSourceId") REFERENCES compliancecore_fact_sources ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_regulatory_programs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JurisdictionId" uuid NOT NULL,
+    "ProgramKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_regulatory_programs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_regulatory_programs_compliancecore_jurisdict~" FOREIGN KEY ("JurisdictionId") REFERENCES compliancecore_jurisdictions ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_import_staged_mapping_decisions (
+    "MappingDecisionId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportSessionId" uuid NOT NULL,
+    "MappingCandidateId" uuid,
+    "StagedRowId" uuid NOT NULL,
+    "Decision" character varying(64) NOT NULL,
+    "SelectedEvidenceOptionId" uuid,
+    "SelectedEvidenceOptionKey" character varying(256) NOT NULL,
+    "SelectedTargetKind" character varying(64) NOT NULL,
+    "SelectedTargetId" character varying(256) NOT NULL,
+    "SelectedTargetKey" character varying(256) NOT NULL,
+    "CreateNewPayloadJson" jsonb NOT NULL,
+    "EvidenceMappingPurpose" character varying(64) NOT NULL,
+    "ExceptionExemptionKey" character varying(128) NOT NULL,
+    "ResidualRequirementsJson" jsonb NOT NULL DEFAULT '[]',
+    "OverrideUsed" boolean NOT NULL,
+    "OverrideReason" character varying(2000) NOT NULL,
+    "DecidedByPersonId" uuid NOT NULL,
+    "DecidedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_import_staged_mapping_decisions" PRIMARY KEY ("MappingDecisionId"),
+    CONSTRAINT "FK_compliancecore_import_staged_mapping_decisions_complianceco~" FOREIGN KEY ("ImportSessionId") REFERENCES compliancecore_import_sessions ("ImportSessionId") ON DELETE CASCADE,
+    CONSTRAINT "FK_compliancecore_import_staged_mapping_decisions_compliancec~1" FOREIGN KEY ("MappingCandidateId") REFERENCES compliancecore_import_staged_mapping_candidates ("MappingCandidateId") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_theoretical_situation_evaluation_details (
+    "DetailId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EvaluationId" uuid NOT NULL,
+    "RequirementKey" character varying(128) NOT NULL,
+    "FactKey" character varying(128) NOT NULL,
+    "CitationKey" character varying(128) NOT NULL,
+    "PackKey" character varying(128) NOT NULL,
+    "AuditQuestion" character varying(512) NOT NULL,
+    "SimulatedState" character varying(64) NOT NULL,
+    "ExpectedValue" character varying(1024) NOT NULL,
+    "ActualValue" character varying(1024) NOT NULL,
+    "Operator" character varying(32) NOT NULL,
+    "Result" character varying(64) NOT NULL,
+    "FailureSeverity" character varying(32) NOT NULL,
+    "AutomaticFailureFlag" boolean NOT NULL,
+    "OverrideAllowed" boolean NOT NULL,
+    "OverridePermission" character varying(128) NOT NULL,
+    "RemediationRequired" boolean NOT NULL,
+    "NormalRuleResult" character varying(64) NOT NULL,
+    "ExceptionExemptionKey" character varying(128) NOT NULL,
+    "ExceptionExemptionType" character varying(64) NOT NULL,
+    "ExceptionExemptionLabel" character varying(256) NOT NULL,
+    "ExceptionExemptionConsidered" boolean NOT NULL,
+    "ExceptionExemptionApplies" boolean NOT NULL,
+    "ExceptionExemptionProofRequired" boolean NOT NULL,
+    "ExceptionExemptionProofValid" boolean NOT NULL,
+    "ResultBeforeException" character varying(64) NOT NULL,
+    "ResultAfterException" character varying(64) NOT NULL,
+    "FinalComplianceResult" character varying(64) NOT NULL,
+    "Explanation" character varying(1024) NOT NULL,
+    "SuggestedNextAction" character varying(1024) NOT NULL,
+    "VisiblePriority" integer NOT NULL,
+    CONSTRAINT "PK_compliancecore_theoretical_situation_evaluation_details" PRIMARY KEY ("DetailId"),
+    CONSTRAINT "FK_compliancecore_theoretical_situation_evaluation_details_com~" FOREIGN KEY ("EvaluationId") REFERENCES compliancecore_theoretical_situation_evaluations ("EvaluationId") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_packs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RegulatoryProgramId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "RuleContentJson" jsonb,
+    "LastScheduledEvaluationAt" timestamp with time zone,
+    CONSTRAINT "PK_compliancecore_rule_packs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_rule_packs_compliancecore_regulatory_program~" FOREIGN KEY ("RegulatoryProgramId") REFERENCES compliancecore_regulatory_programs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_regulatory_citations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RegulatoryProgramId" uuid NOT NULL,
+    "RulePackId" uuid,
+    "CitationKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "SourceReference" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "SupersedesCitationId" uuid,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_regulatory_citations" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_regulatory_citations_program" FOREIGN KEY ("RegulatoryProgramId") REFERENCES compliancecore_regulatory_programs ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_citations_rule_pack" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_citations_supersedes" FOREIGN KEY ("SupersedesCitationId") REFERENCES compliancecore_regulatory_citations ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_evaluation_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "ActorUserId" uuid,
+    "Status" character varying(32) NOT NULL,
+    "OverallResult" character varying(16) NOT NULL,
+    "FactInputsJson" jsonb NOT NULL,
+    "RuleResultsJson" jsonb NOT NULL,
+    "AppliedWaiverId" uuid,
+    "AppliedWaiverKey" character varying(64),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_rule_evaluation_runs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_rule_evaluation_runs_compliancecore_rule_pac~" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_rule_test_cases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "RuleKey" character varying(64) NOT NULL,
+    "TestKey" character varying(64) NOT NULL,
+    "Label" character varying(160) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "ExpectedResult" character varying(16) NOT NULL,
+    "FactsJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_rule_test_cases" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_rule_test_cases_compliancecore_rule_packs_Ru~" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_waivers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WaiverKey" character varying(64) NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "PackKey" character varying(64) NOT NULL,
+    "RuleKey" character varying(128),
+    "GateKey" character varying(128),
+    "SubjectScopeKey" character varying(256) NOT NULL,
+    "ReasonCode" character varying(64) NOT NULL,
+    "Explanation" character varying(2000) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "EffectiveAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "CreatedByUserId" uuid,
+    "ApprovedByUserId" uuid,
+    "ApprovedAt" timestamp with time zone,
+    "RevokedByUserId" uuid,
+    "RevokedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_waivers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_waivers_compliancecore_rule_packs_RulePackId" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_workflow_gate_definitions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "GateKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_workflow_gate_definitions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_workflow_gate_definitions_compliancecore_rul~" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_fact_requirements (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FactDefinitionId" uuid NOT NULL,
+    "RulePackId" uuid,
+    "CitationId" uuid,
+    "RequirementKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "ApplicabilityKey" character varying(128) NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "SourceEntity" character varying(256) NOT NULL,
+    "SourceFieldOrRecordType" character varying(128) NOT NULL,
+    "ValueType" character varying(32) NOT NULL,
+    "Operator" character varying(32) NOT NULL,
+    "ExpectedValue" character varying(1024) NOT NULL,
+    "EvidenceKind" character varying(32) NOT NULL,
+    "RequiredDocumentType" character varying(128) NOT NULL,
+    "RetentionPeriod" character varying(128) NOT NULL,
+    "AuditQuestion" character varying(512) NOT NULL,
+    "FailureSeverity" character varying(32) NOT NULL,
+    "AutomaticFailureFlag" boolean NOT NULL,
+    "OverrideAllowed" boolean NOT NULL,
+    "OverridePermission" character varying(128) NOT NULL,
+    "RemediationRequired" boolean NOT NULL,
+    "ExternallyAssertable" boolean NOT NULL,
+    "IsRequired" boolean NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_fact_requirements" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_fact_requirements_compliancecore_fact_defini~" FOREIGN KEY ("FactDefinitionId") REFERENCES compliancecore_fact_definitions ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_fact_requirements_compliancecore_regulatory_~" FOREIGN KEY ("CitationId") REFERENCES compliancecore_regulatory_citations ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_fact_requirements_compliancecore_rule_packs_~" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_regulatory_mappings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "MappingKey" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "TargetKind" character varying(32) NOT NULL,
+    "RegulatoryProgramId" uuid NOT NULL,
+    "RulePackId" uuid,
+    "CitationId" uuid,
+    "FactDefinitionId" uuid,
+    "ComplianceKeyId" uuid,
+    "MaterialKeyId" uuid,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_regulatory_mappings" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_citation" FOREIGN KEY ("CitationId") REFERENCES compliancecore_regulatory_citations ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_compliance_key" FOREIGN KEY ("ComplianceKeyId") REFERENCES compliancecore_compliance_keys ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_fact_definition" FOREIGN KEY ("FactDefinitionId") REFERENCES compliancecore_fact_definitions ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_material_key" FOREIGN KEY ("MaterialKeyId") REFERENCES compliancecore_material_keys ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_program" FOREIGN KEY ("RegulatoryProgramId") REFERENCES compliancecore_regulatory_programs ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_compliancecore_regulatory_mappings_rule_pack" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_findings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RulePackId" uuid NOT NULL,
+    "RuleEvaluationRunId" uuid,
+    "FindingKey" character varying(128) NOT NULL,
+    "Severity" character varying(16) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "RuleKey" character varying(64),
+    "FactKey" character varying(64),
+    "Title" character varying(256) NOT NULL,
+    "Message" character varying(1024) NOT NULL,
+    "ReasonCode" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_findings" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_findings_compliancecore_rule_evaluation_runs~" FOREIGN KEY ("RuleEvaluationRunId") REFERENCES compliancecore_rule_evaluation_runs ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_compliancecore_findings_compliancecore_rule_packs_RulePackId" FOREIGN KEY ("RulePackId") REFERENCES compliancecore_rule_packs ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_workflow_gate_check_results (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkflowGateDefinitionId" uuid NOT NULL,
+    "RuleEvaluationRunId" uuid,
+    "GateKey" character varying(64) NOT NULL,
+    "Outcome" character varying(16) NOT NULL,
+    "ReasonCode" character varying(64) NOT NULL,
+    "Message" character varying(1024) NOT NULL,
+    "ReasonsJson" jsonb NOT NULL,
+    "ContextJson" jsonb NOT NULL,
+    "AppliedWaiverId" uuid,
+    "AppliedWaiverKey" character varying(64),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_workflow_gate_check_results" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_workflow_gate_check_results_compliancecore_r~" FOREIGN KEY ("RuleEvaluationRunId") REFERENCES compliancecore_rule_evaluation_runs ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_compliancecore_workflow_gate_check_results_compliancecore_w~" FOREIGN KEY ("WorkflowGateDefinitionId") REFERENCES compliancecore_workflow_gate_definitions ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_product_gate_responses (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkflowGateCheckResultId" uuid NOT NULL,
+    "SourceProduct" character varying(32) NOT NULL,
+    "ResponseOutcome" character varying(32) NOT NULL,
+    "ResponseCode" character varying(64),
+    "ResponseMessage" character varying(1024),
+    "ResponsePayloadJson" jsonb NOT NULL,
+    "RespondedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_compliancecore_product_gate_responses" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_compliancecore_product_gate_responses_compliancecore_workfl~" FOREIGN KEY ("WorkflowGateCheckResultId") REFERENCES compliancecore_workflow_gate_check_results ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliance_exception_exemption_RequiredEvidenceOptionGroupId" ON compliance_exception_exemption ("RequiredEvidenceOptionGroupId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliance_exception_exemption_TenantId" ON compliance_exception_exemption ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliance_exception_exemption_TenantId_Active_ExpiresAt" ON compliance_exception_exemption ("TenantId", "Active", "ExpiresAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliance_exception_exemption_TenantId_Key" ON compliance_exception_exemption ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliance_exception_exemption_TenantId_ProgramKey_PackKey_~" ON compliance_exception_exemption ("TenantId", "ProgramKey", "PackKey", "CitationKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliance_exception_exemption_TenantId_Type" ON compliance_exception_exemption ("TenantId", "Type");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_asset_references_TenantId" ON compliancecore_asset_references ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_asset_references_TenantId_SourceProduct_Exte~" ON compliancecore_asset_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_asset_references_TenantId_SourceProduct_Obje~" ON compliancecore_asset_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_asset_references_TenantId_StableKey" ON compliancecore_asset_references ("TenantId", "StableKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_events_OccurredAt" ON compliancecore_audit_events ("OccurredAt");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_events_TenantId" ON compliancecore_audit_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_package_generation_jobs_CreatedAt" ON compliancecore_audit_package_generation_jobs ("CreatedAt");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_package_generation_jobs_TenantId_Statu~" ON compliancecore_audit_package_generation_jobs ("TenantId", "Status", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_traces_TenantId" ON compliancecore_audit_traces ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_audit_traces_TenantId_AuditTraceId" ON compliancecore_audit_traces ("TenantId", "AuditTraceId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_traces_TenantId_CitationKey" ON compliancecore_audit_traces ("TenantId", "CitationKey");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_traces_TenantId_ClaimedExceptionExempt~" ON compliancecore_audit_traces ("TenantId", "ClaimedExceptionExemptionKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_traces_TenantId_FactKey" ON compliancecore_audit_traces ("TenantId", "FactKey");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_audit_traces_TenantId_PackKey" ON compliancecore_audit_traces ("TenantId", "PackKey");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_compliance_keys_TenantId" ON compliancecore_compliance_keys ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_compliance_keys_TenantId_Key" ON compliancecore_compliance_keys ("TenantId", "Key");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_control_effectiveness_records_RunId" ON compliancecore_control_effectiveness_records ("RunId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_control_effectiveness_records_TenantId" ON compliancecore_control_effectiveness_records ("TenantId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_control_effectiveness_records_TenantId_Scope~" ON compliancecore_control_effectiveness_records ("TenantId", "ScopeKey", "PackKey", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_control_effectiveness_runs_TenantId" ON compliancecore_control_effectiveness_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_control_effectiveness_runs_TenantId_Evaluate~" ON compliancecore_control_effectiveness_runs ("TenantId", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_document_references_TenantId" ON compliancecore_document_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_document_references_TenantId_SourceProduct_E~" ON compliancecore_document_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_document_references_TenantId_SourceProduct_O~" ON compliancecore_document_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_document_references_TenantId_StableKey" ON compliancecore_document_references ("TenantId", "StableKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_option_groups_TenantId" ON compliancecore_evidence_option_groups ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_option_groups_TenantId_CitationKey" ON compliancecore_evidence_option_groups ("TenantId", "CitationKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_option_groups_TenantId_PackKey" ON compliancecore_evidence_option_groups ("TenantId", "PackKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_evidence_option_groups_TenantId_RequirementK~" ON compliancecore_evidence_option_groups ("TenantId", "RequirementKey", "FactKey");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_options_EvidenceOptionGroupId" ON compliancecore_evidence_options ("EvidenceOptionGroupId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_options_TenantId" ON compliancecore_evidence_options ("TenantId");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_evidence_options_TenantId_OptionKey" ON compliancecore_evidence_options ("TenantId", "OptionKey");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_references_TenantId" ON compliancecore_evidence_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_evidence_references_TenantId_EvidenceId" ON compliancecore_evidence_references ("TenantId", "EvidenceId");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_references_TenantId_FactKey" ON compliancecore_evidence_references ("TenantId", "FactKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_evidence_references_TenantId_SourceProduct_S~" ON compliancecore_evidence_references ("TenantId", "SourceProduct", "SourceEntity");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_external_object_references_TenantId" ON compliancecore_external_object_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_external_object_references_TenantId_SourceP~1" ON compliancecore_external_object_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_external_object_references_TenantId_SourcePr~" ON compliancecore_external_object_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_external_object_references_TenantId_StableKey" ON compliancecore_external_object_references ("TenantId", "StableKey");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_assertions_EvidenceReferenceId" ON compliancecore_fact_assertions ("EvidenceReferenceId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_assertions_TenantId" ON compliancecore_fact_assertions ("TenantId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_assertions_TenantId_FactKey_SubjectKind~" ON compliancecore_fact_assertions ("TenantId", "FactKey", "SubjectKind", "SubjectId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_assertions_TenantId_SourceProduct" ON compliancecore_fact_assertions ("TenantId", "SourceProduct");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_definitions_TenantId" ON compliancecore_fact_definitions ("TenantId");
+[00:15:23 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_fact_definitions_TenantId_FactKey" ON compliancecore_fact_definitions ("TenantId", "FactKey");
+[00:15:23 INF] Executed DbCommand (35ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_CitationId" ON compliancecore_fact_requirements ("CitationId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_FactDefinitionId" ON compliancecore_fact_requirements ("FactDefinitionId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_RulePackId" ON compliancecore_fact_requirements ("RulePackId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_TenantId" ON compliancecore_fact_requirements ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_fact_requirements_TenantId_RequirementKey" ON compliancecore_fact_requirements ("TenantId", "RequirementKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_TenantId_SourceEntity" ON compliancecore_fact_requirements ("TenantId", "SourceEntity");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_requirements_TenantId_SourceProduct" ON compliancecore_fact_requirements ("TenantId", "SourceProduct");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_fact_source_sync_statuses_FactSourceId" ON compliancecore_fact_source_sync_statuses ("FactSourceId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_source_sync_statuses_TenantId" ON compliancecore_fact_source_sync_statuses ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_sources_FactDefinitionId" ON compliancecore_fact_sources ("FactDefinitionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_fact_sources_TenantId" ON compliancecore_fact_sources ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_fact_sources_TenantId_SourceKey" ON compliancecore_fact_sources ("TenantId", "SourceKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_findings_CreatedAt" ON compliancecore_findings ("CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_findings_RuleEvaluationRunId" ON compliancecore_findings ("RuleEvaluationRunId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_findings_RulePackId" ON compliancecore_findings ("RulePackId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_findings_TenantId" ON compliancecore_findings ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_findings_TenantId_FindingKey" ON compliancecore_findings ("TenantId", "FindingKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_governing_bodies_TenantId" ON compliancecore_governing_bodies ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_governing_bodies_TenantId_BodyKey" ON compliancecore_governing_bodies ("TenantId", "BodyKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_hazcom_references_TenantId" ON compliancecore_hazcom_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_hazcom_references_TenantId_HazComKey" ON compliancecore_hazcom_references ("TenantId", "HazComKey");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_hazcom_references_TenantId_StaffarrSiteOrgUn~" ON compliancecore_hazcom_references ("TenantId", "StaffarrSiteOrgUnitId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_session_source_files_ImportSessionId" ON compliancecore_import_session_source_files ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_import_session_source_files_ImportSessionId_~" ON compliancecore_import_session_source_files ("ImportSessionId", "SourceFile");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_session_source_files_TenantId" ON compliancecore_import_session_source_files ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_sessions_TenantId" ON compliancecore_import_sessions ("TenantId");
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_sessions_TenantId_SourceHash" ON compliancecore_import_sessions ("TenantId", "SourceHash");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_sessions_TenantId_Status_CreatedAt" ON compliancecore_import_sessions ("TenantId", "Status", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_compliance_keys_ImportSession~1" ON compliancecore_import_staged_compliance_keys ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_compliance_keys_ImportSessionI~" ON compliancecore_import_staged_compliance_keys ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_compliance_keys_ImportSessionId" ON compliancecore_import_staged_compliance_keys ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_compliance_keys_TenantId" ON compliancecore_import_staged_compliance_keys ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_controlled_vocabulary_ImportS~1" ON compliancecore_import_staged_controlled_vocabulary ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_controlled_vocabulary_ImportS~2" ON compliancecore_import_staged_controlled_vocabulary ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_controlled_vocabulary_ImportSe~" ON compliancecore_import_staged_controlled_vocabulary ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_controlled_vocabulary_TenantId" ON compliancecore_import_staged_controlled_vocabulary ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_evidence_references_ImportSes~1" ON compliancecore_import_staged_evidence_references ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_evidence_references_ImportSes~2" ON compliancecore_import_staged_evidence_references ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_evidence_references_ImportSess~" ON compliancecore_import_staged_evidence_references ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_evidence_references_TenantId" ON compliancecore_import_staged_evidence_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_exception_exemptions_ImportSe~1" ON compliancecore_import_staged_exception_exemptions ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_exception_exemptions_ImportSe~2" ON compliancecore_import_staged_exception_exemptions ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_exception_exemptions_ImportSes~" ON compliancecore_import_staged_exception_exemptions ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_exception_exemptions_TenantId" ON compliancecore_import_staged_exception_exemptions ("TenantId");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_fact_requirements_ImportSessi~1" ON compliancecore_import_staged_fact_requirements ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_fact_requirements_ImportSessi~2" ON compliancecore_import_staged_fact_requirements ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_fact_requirements_ImportSessio~" ON compliancecore_import_staged_fact_requirements ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_fact_requirements_TenantId" ON compliancecore_import_staged_fact_requirements ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_candidates_ImportSess~1" ON compliancecore_import_staged_mapping_candidates ("ImportSessionId", "ConfidenceBand");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_candidates_ImportSessi~" ON compliancecore_import_staged_mapping_candidates ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_candidates_StagedRowId" ON compliancecore_import_staged_mapping_candidates ("StagedRowId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_candidates_TenantId" ON compliancecore_import_staged_mapping_candidates ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_decisions_ImportSessio~" ON compliancecore_import_staged_mapping_decisions ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_decisions_MappingCandi~" ON compliancecore_import_staged_mapping_decisions ("MappingCandidateId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_decisions_StagedRowId" ON compliancecore_import_staged_mapping_decisions ("StagedRowId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_mapping_decisions_TenantId" ON compliancecore_import_staged_mapping_decisions ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_material_keys_ImportSessionId" ON compliancecore_import_staged_material_keys ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_material_keys_ImportSessionId_~" ON compliancecore_import_staged_material_keys ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_material_keys_ImportSessionId~1" ON compliancecore_import_staged_material_keys ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_material_keys_TenantId" ON compliancecore_import_staged_material_keys ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_regulatory_mappings_ImportSes~1" ON compliancecore_import_staged_regulatory_mappings ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_regulatory_mappings_ImportSes~2" ON compliancecore_import_staged_regulatory_mappings ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_regulatory_mappings_ImportSess~" ON compliancecore_import_staged_regulatory_mappings ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_regulatory_mappings_TenantId" ON compliancecore_import_staged_regulatory_mappings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_packs_ImportSessionId" ON compliancecore_import_staged_rule_packs ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_packs_ImportSessionId_Can~" ON compliancecore_import_staged_rule_packs ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_packs_ImportSessionId_Sou~" ON compliancecore_import_staged_rule_packs ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_packs_TenantId" ON compliancecore_import_staged_rule_packs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_requirements_ImportSessi~1" ON compliancecore_import_staged_rule_requirements ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_requirements_ImportSessi~2" ON compliancecore_import_staged_rule_requirements ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_requirements_ImportSessio~" ON compliancecore_import_staged_rule_requirements ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_rule_requirements_TenantId" ON compliancecore_import_staged_rule_requirements ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_sds_references_ImportSessionI~1" ON compliancecore_import_staged_sds_references ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_sds_references_ImportSessionId" ON compliancecore_import_staged_sds_references ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_sds_references_ImportSessionId~" ON compliancecore_import_staged_sds_references ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_sds_references_TenantId" ON compliancecore_import_staged_sds_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_vocabulary_aliases_ImportSess~1" ON compliancecore_import_staged_vocabulary_aliases ("ImportSessionId", "CanonicalKeyCandidate");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_vocabulary_aliases_ImportSess~2" ON compliancecore_import_staged_vocabulary_aliases ("ImportSessionId", "SourceFile", "RowNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_vocabulary_aliases_ImportSessi~" ON compliancecore_import_staged_vocabulary_aliases ("ImportSessionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_import_staged_vocabulary_aliases_TenantId" ON compliancecore_import_staged_vocabulary_aliases ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_jurisdictions_GoverningBodyId" ON compliancecore_jurisdictions ("GoverningBodyId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_jurisdictions_TenantId" ON compliancecore_jurisdictions ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_jurisdictions_TenantId_JurisdictionKey" ON compliancecore_jurisdictions ("TenantId", "JurisdictionKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_m12_analytics_batch_runs_TenantId_StartedAt" ON compliancecore_m12_analytics_batch_runs ("TenantId", "StartedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_material_keys_TenantId" ON compliancecore_material_keys ("TenantId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_material_keys_TenantId_Key" ON compliancecore_material_keys ("TenantId", "Key");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_material_references_TenantId" ON compliancecore_material_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_material_references_TenantId_SourceProduct_E~" ON compliancecore_material_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_material_references_TenantId_SourceProduct_O~" ON compliancecore_material_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_material_references_TenantId_StableKey" ON compliancecore_material_references ("TenantId", "StableKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_missing_evidence_warning_runs_TenantId" ON compliancecore_missing_evidence_warning_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_missing_evidence_warning_runs_TenantId_Evalu~" ON compliancecore_missing_evidence_warning_runs ("TenantId", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_missing_evidence_warnings_RunId" ON compliancecore_missing_evidence_warnings ("RunId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_missing_evidence_warnings_TenantId" ON compliancecore_missing_evidence_warnings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_missing_evidence_warnings_TenantId_ScopeKey_~" ON compliancecore_missing_evidence_warnings ("TenantId", "ScopeKey", "PackKey", "Severity", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_part_references_TenantId" ON compliancecore_part_references ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_part_references_TenantId_SourceProduct_Exter~" ON compliancecore_part_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_part_references_TenantId_SourceProduct_Objec~" ON compliancecore_part_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_part_references_TenantId_StableKey" ON compliancecore_part_references ("TenantId", "StableKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_product_fact_mirrors_TenantId" ON compliancecore_product_fact_mirrors ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_product_fact_mirrors_TenantId_IdempotencyKey" ON compliancecore_product_fact_mirrors ("TenantId", "IdempotencyKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_product_fact_mirrors_TenantId_SourceProduct_~" ON compliancecore_product_fact_mirrors ("TenantId", "SourceProduct", "FactKey", "ScopeKey");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_product_gate_responses_TenantId" ON compliancecore_product_gate_responses ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_product_gate_responses_TenantId_WorkflowGate~" ON compliancecore_product_gate_responses ("TenantId", "WorkflowGateCheckResultId", "RespondedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_product_gate_responses_WorkflowGateCheckResu~" ON compliancecore_product_gate_responses ("WorkflowGateCheckResultId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_readiness_forecast_runs_TenantId" ON compliancecore_readiness_forecast_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_readiness_forecast_runs_TenantId_ForecastedAt" ON compliancecore_readiness_forecast_runs ("TenantId", "ForecastedAt");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_readiness_forecasts_RunId" ON compliancecore_readiness_forecasts ("RunId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_readiness_forecasts_TenantId" ON compliancecore_readiness_forecasts ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_readiness_forecasts_TenantId_ScopeKey_PackKe~" ON compliancecore_readiness_forecasts ("TenantId", "ScopeKey", "PackKey", "ForecastedAt");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_citations_RegulatoryProgramId" ON compliancecore_regulatory_citations ("RegulatoryProgramId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_citations_RulePackId" ON compliancecore_regulatory_citations ("RulePackId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_citations_SupersedesCitationId" ON compliancecore_regulatory_citations ("SupersedesCitationId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_citations_TenantId" ON compliancecore_regulatory_citations ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_regulatory_citations_TenantId_CitationKey_Ve~" ON compliancecore_regulatory_citations ("TenantId", "CitationKey", "VersionNumber");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_CitationId" ON compliancecore_regulatory_mappings ("CitationId");
+[00:15:23 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_ComplianceKeyId" ON compliancecore_regulatory_mappings ("ComplianceKeyId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_FactDefinitionId" ON compliancecore_regulatory_mappings ("FactDefinitionId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_MaterialKeyId" ON compliancecore_regulatory_mappings ("MaterialKeyId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_RegulatoryProgramId" ON compliancecore_regulatory_mappings ("RegulatoryProgramId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_RulePackId" ON compliancecore_regulatory_mappings ("RulePackId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_mappings_TenantId" ON compliancecore_regulatory_mappings ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_regulatory_mappings_TenantId_MappingKey" ON compliancecore_regulatory_mappings ("TenantId", "MappingKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_programs_JurisdictionId" ON compliancecore_regulatory_programs ("JurisdictionId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_regulatory_programs_TenantId" ON compliancecore_regulatory_programs ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_regulatory_programs_TenantId_ProgramKey" ON compliancecore_regulatory_programs ("TenantId", "ProgramKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_risk_score_runs_TenantId" ON compliancecore_risk_score_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_risk_score_runs_TenantId_EvaluatedAt" ON compliancecore_risk_score_runs ("TenantId", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_risk_scores_RunId" ON compliancecore_risk_scores ("RunId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_risk_scores_TenantId" ON compliancecore_risk_scores ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_risk_scores_TenantId_ScopeKey_PackKey_Evalua~" ON compliancecore_risk_scores ("TenantId", "ScopeKey", "PackKey", "EvaluatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_events_RulePackId" ON compliancecore_rule_change_events ("RulePackId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_events_ScanRunId" ON compliancecore_rule_change_events ("ScanRunId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_events_TenantId" ON compliancecore_rule_change_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_events_TenantId_PackKey_Detected~" ON compliancecore_rule_change_events ("TenantId", "PackKey", "DetectedAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_scan_runs_StartedAt" ON compliancecore_rule_change_scan_runs ("StartedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_change_scan_runs_TenantId" ON compliancecore_rule_change_scan_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_evaluation_runs_AppliedWaiverId" ON compliancecore_rule_evaluation_runs ("AppliedWaiverId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_evaluation_runs_CreatedAt" ON compliancecore_rule_evaluation_runs ("CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_evaluation_runs_RulePackId" ON compliancecore_rule_evaluation_runs ("RulePackId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_evaluation_runs_TenantId" ON compliancecore_rule_evaluation_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_rule_pack_monitor_snapshots_RulePackId" ON compliancecore_rule_pack_monitor_snapshots ("RulePackId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_pack_monitor_snapshots_TenantId" ON compliancecore_rule_pack_monitor_snapshots ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_packs_RegulatoryProgramId" ON compliancecore_rule_packs ("RegulatoryProgramId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_packs_TenantId" ON compliancecore_rule_packs ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_rule_packs_TenantId_PackKey_VersionNumber" ON compliancecore_rule_packs ("TenantId", "PackKey", "VersionNumber");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_packs_TenantId_Status_LastScheduledEval~" ON compliancecore_rule_packs ("TenantId", "Status", "LastScheduledEvaluationAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_test_cases_RulePackId" ON compliancecore_rule_test_cases ("RulePackId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_test_cases_TenantId" ON compliancecore_rule_test_cases ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_rule_test_cases_TenantId_RulePackId_RuleKey" ON compliancecore_rule_test_cases ("TenantId", "RulePackId", "RuleKey");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_rule_test_cases_TenantId_RulePackId_TestKey" ON compliancecore_rule_test_cases ("TenantId", "RulePackId", "TestKey");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_scheduled_rule_evaluation_runs_StartedAt" ON compliancecore_scheduled_rule_evaluation_runs ("StartedAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_scheduled_rule_evaluation_runs_TenantId" ON compliancecore_scheduled_rule_evaluation_runs ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_sds_references_MaterialKeyId" ON compliancecore_sds_references ("MaterialKeyId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_sds_references_TenantId" ON compliancecore_sds_references ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_sds_references_TenantId_SdsKey" ON compliancecore_sds_references ("TenantId", "SdsKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_source_ingestion_batches_TenantId" ON compliancecore_source_ingestion_batches ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_source_ingestion_batches_TenantId_IngestionT~" ON compliancecore_source_ingestion_batches ("TenantId", "IngestionType", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_source_ingestion_jobs_BatchId" ON compliancecore_source_ingestion_jobs ("BatchId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_system_references_TenantId" ON compliancecore_system_references ("TenantId");
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_system_references_TenantId_SourceProduct_Ext~" ON compliancecore_system_references ("TenantId", "SourceProduct", "ExternalRecordId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_system_references_TenantId_SourceProduct_Obj~" ON compliancecore_system_references ("TenantId", "SourceProduct", "ObjectKind");
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_system_references_TenantId_StableKey" ON compliancecore_system_references ("TenantId", "StableKey");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_tenant_fact_source_sync_worker_settings_Tena~" ON compliancecore_tenant_fact_source_sync_worker_settings ("TenantId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_tenant_m12_analytics_worker_settings_TenantId" ON compliancecore_tenant_m12_analytics_worker_settings ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_applicability_results_SituationI~" ON compliancecore_theoretical_applicability_results ("SituationId", "ApplicabilityBand", "UserVisiblePriority");
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_applicability_results_SituationId" ON compliancecore_theoretical_applicability_results ("SituationId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_applicability_results_TenantId" ON compliancecore_theoretical_applicability_results ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_contexts_SituationId" ON compliancecore_theoretical_situation_contexts ("SituationId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_theoretical_situation_contexts_SituationId_C~" ON compliancecore_theoretical_situation_contexts ("SituationId", "ContextKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_contexts_TenantId" ON compliancecore_theoretical_situation_contexts ("TenantId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluation_details_Ev~1" ON compliancecore_theoretical_situation_evaluation_details ("EvaluationId", "VisiblePriority");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluation_details_Eva~" ON compliancecore_theoretical_situation_evaluation_details ("EvaluationId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluation_details_Ten~" ON compliancecore_theoretical_situation_evaluation_details ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluations_SituationI~" ON compliancecore_theoretical_situation_evaluations ("SituationId", "EvaluatedAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluations_SituationId" ON compliancecore_theoretical_situation_evaluations ("SituationId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_evaluations_TenantId" ON compliancecore_theoretical_situation_evaluations ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_facts_SituationId" ON compliancecore_theoretical_situation_facts ("SituationId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_facts_SituationId_Fact~" ON compliancecore_theoretical_situation_facts ("SituationId", "FactKey", "RequirementKey", "EvidenceOptionKey");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_facts_TenantId" ON compliancecore_theoretical_situation_facts ("TenantId");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_incidents_SituationId" ON compliancecore_theoretical_situation_incidents ("SituationId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situation_incidents_TenantId" ON compliancecore_theoretical_situation_incidents ("TenantId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situations_TenantId" ON compliancecore_theoretical_situations ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situations_TenantId_SituationKind" ON compliancecore_theoretical_situations ("TenantId", "SituationKind");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_theoretical_situations_TenantId_Status_Updat~" ON compliancecore_theoretical_situations ("TenantId", "Status", "UpdatedAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_vocabulary_aliases_TenantId" ON compliancecore_vocabulary_aliases ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_vocabulary_aliases_TenantId_VocabularyTermId~" ON compliancecore_vocabulary_aliases ("TenantId", "VocabularyTermId", "AliasText");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_vocabulary_aliases_VocabularyTermId" ON compliancecore_vocabulary_aliases ("VocabularyTermId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_vocabulary_terms_TenantId" ON compliancecore_vocabulary_terms ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_vocabulary_terms_TenantId_TermKey" ON compliancecore_vocabulary_terms ("TenantId", "TermKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_vocabulary_terms_TenantId_VocabularyTypeKey" ON compliancecore_vocabulary_terms ("TenantId", "VocabularyTypeKey");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_vocabulary_types_SortOrder" ON compliancecore_vocabulary_types ("SortOrder");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_vocabulary_types_TypeKey" ON compliancecore_vocabulary_types ("TypeKey");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_waivers_RulePackId" ON compliancecore_waivers ("RulePackId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_waivers_TenantId" ON compliancecore_waivers ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_waivers_TenantId_Status_ExpiresAt" ON compliancecore_waivers ("TenantId", "Status", "ExpiresAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_waivers_TenantId_WaiverKey" ON compliancecore_waivers ("TenantId", "WaiverKey");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_check_results_AppliedWaiverId" ON compliancecore_workflow_gate_check_results ("AppliedWaiverId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_check_results_CreatedAt" ON compliancecore_workflow_gate_check_results ("CreatedAt");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_check_results_RuleEvaluationRu~" ON compliancecore_workflow_gate_check_results ("RuleEvaluationRunId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_check_results_TenantId" ON compliancecore_workflow_gate_check_results ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_check_results_WorkflowGateDefi~" ON compliancecore_workflow_gate_check_results ("WorkflowGateDefinitionId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_definitions_RulePackId" ON compliancecore_workflow_gate_definitions ("RulePackId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_workflow_gate_definitions_TenantId" ON compliancecore_workflow_gate_definitions ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_workflow_gate_definitions_TenantId_GateKey" ON compliancecore_workflow_gate_definitions ("TenantId", "GateKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260609060205_CurrentSchemaBaseline', '10.0.8');
+[00:15:24 INF] Applying migration '20260613062100_AddQuestionnaires'.
+[00:15:24 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_questionnaire_runs (
+    "QuestionnaireRunId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(128) NOT NULL,
+    "WorkflowKey" character varying(128) NOT NULL,
+    "SubjectType" character varying(128) NOT NULL,
+    "SubjectId" character varying(256) NOT NULL,
+    "SourceRecordId" character varying(256) NOT NULL,
+    "SourceEntity" character varying(256) NOT NULL,
+    "SourceRecordContextJson" jsonb NOT NULL,
+    "KnownFactsJson" jsonb NOT NULL,
+    "TemplateKey" character varying(128) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SummaryJson" jsonb NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ResolvedAt" timestamp with time zone,
+    "SubmittedAt" timestamp with time zone,
+    CONSTRAINT "PK_compliancecore_questionnaire_runs" PRIMARY KEY ("QuestionnaireRunId")
+);
+[00:15:24 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE compliancecore_questionnaire_answers (
+    "QuestionnaireAnswerId" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "QuestionnaireRunId" uuid NOT NULL,
+    "QuestionKey" character varying(128) NOT NULL,
+    "QuestionLabel" character varying(512) NOT NULL,
+    "SectionKey" character varying(128) NOT NULL,
+    "SectionLabel" character varying(256) NOT NULL,
+    "AnswerKind" character varying(32) NOT NULL,
+    "SelectedOptionKey" character varying(128) NOT NULL,
+    "AnswerText" character varying(4000) NOT NULL,
+    "DocumentUrl" character varying(2048) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "FileName" character varying(512) NOT NULL,
+    "FileHash" character varying(256) NOT NULL,
+    "NormalizedFactKey" character varying(128) NOT NULL,
+    "NormalizedFactValue" character varying(4000) NOT NULL,
+    "NormalizedFactValueType" character varying(32) NOT NULL,
+    "SourceProduct" character varying(128) NOT NULL,
+    "WorkflowKey" character varying(128) NOT NULL,
+    "SubjectType" character varying(128) NOT NULL,
+    "SubjectId" character varying(256) NOT NULL,
+    "SourceRecordId" character varying(256) NOT NULL,
+    "ReviewStatus" character varying(32) NOT NULL,
+    "Confidence" numeric(5,3) NOT NULL,
+    "EffectiveAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "EvidenceReferenceId" uuid,
+    "EvidenceId" text,
+    "SourceContextJson" jsonb NOT NULL,
+    CONSTRAINT "PK_compliancecore_questionnaire_answers" PRIMARY KEY ("QuestionnaireAnswerId"),
+    CONSTRAINT "FK_compliancecore_questionnaire_answers_compliancecore_evidenc~" FOREIGN KEY ("EvidenceReferenceId") REFERENCES compliancecore_evidence_references ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_compliancecore_questionnaire_answers_compliancecore_questio~" FOREIGN KEY ("QuestionnaireRunId") REFERENCES compliancecore_questionnaire_runs ("QuestionnaireRunId") ON DELETE CASCADE
+);
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_questionnaire_answers_EvidenceReferenceId" ON compliancecore_questionnaire_answers ("EvidenceReferenceId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_questionnaire_answers_QuestionnaireRunId" ON compliancecore_questionnaire_answers ("QuestionnaireRunId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_questionnaire_answers_TenantId" ON compliancecore_questionnaire_answers ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_questionnaire_answers_TenantId_Questionnaire~" ON compliancecore_questionnaire_answers ("TenantId", "QuestionnaireRunId", "QuestionKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_questionnaire_runs_TenantId" ON compliancecore_questionnaire_runs ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_compliancecore_questionnaire_runs_TenantId_ProductKey_Workf~" ON compliancecore_questionnaire_runs ("TenantId", "ProductKey", "WorkflowKey", "SubjectType", "SubjectId", "SourceRecordId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_compliancecore_questionnaire_runs_TenantId_Status_UpdatedAt" ON compliancecore_questionnaire_runs ("TenantId", "Status", "UpdatedAt");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260613062100_AddQuestionnaires', '10.0.8');
+[00:15:24 INF] Applying migration '20260617062854_AddSmartImportDestinationRecords'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617062854_AddSmartImportDestinationRecords', '10.0.8');
+[00:15:24 INF] Applying migration '20260622060331_AddPrintExportLogs'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622060331_AddPrintExportLogs', '10.0.8');
+[00:15:24 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,64 +2248,48 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:06 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:25 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT EXISTS (
     SELECT 1
     FROM compliancecore_vocabulary_types AS c)
-[22:30:06 INF] Starting Compliance Core API (compliancecore) on http://localhost:5107
-[22:30:06 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:09 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5107: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Socke[22:30:11 INF] Request starting HTTP/1.1 GET http://localhost:5107/health - null null
-[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:11 INF] Setting HTTP status code 200.
-[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5107/health - 200 null application/json; charset=utf-8 33.9008ms
-.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:30:09 FTL] Compliance Core API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5107: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:25 INF] Executed DbCommand (15ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?', @p3='?' (DbType = Boolean), @p4='?', @p5='?' (DbType = Int32), @p6='?', @p7='?' (DbType = Guid), @p8='?' (DbType = DateTime), @p9='?', @p10='?' (DbType = Boolean), @p11='?', @p12='?' (DbType = Int32), @p13='?', @p14='?' (DbType = Guid), @p15='?' (DbType = DateTime), @p16='?', @p17='?' (DbType = Boolean), @p18='?', @p19='?' (DbType = Int32), @p20='?', @p21='?' (DbType = Guid), @p22='?' (DbType = DateTime), @p23='?', @p24='?' (DbType = Boolean), @p25='?', @p26='?' (DbType = Int32), @p27='?', @p28='?' (DbType = Guid), @p29='?' (DbType = DateTime), @p30='?', @p31='?' (DbType = Boolean), @p32='?', @p33='?' (DbType = Int32), @p34='?', @p35='?' (DbType = Guid), @p36='?' (DbType = DateTime), @p37='?', @p38='?' (DbType = Boolean), @p39='?', @p40='?' (DbType = Int32), @p41='?', @p42='?' (DbType = Guid), @p43='?' (DbType = DateTime), @p44='?', @p45='?' (DbType = Boolean), @p46='?', @p47='?' (DbType = Int32), @p48='?', @p49='?' (DbType = Guid), @p50='?' (DbType = DateTime), @p51='?', @p52='?' (DbType = Boolean), @p53='?', @p54='?' (DbType = Int32), @p55='?', @p56='?' (DbType = Guid), @p57='?' (DbType = DateTime), @p58='?', @p59='?' (DbType = Boolean), @p60='?', @p61='?' (DbType = Int32), @p62='?', @p63='?' (DbType = Guid), @p64='?' (DbType = DateTime), @p65='?', @p66='?' (DbType = Boolean), @p67='?', @p68='?' (DbType = Int32), @p69='?', @p70='?' (DbType = Guid), @p71='?' (DbType = DateTime), @p72='?', @p73='?' (DbType = Boolean), @p74='?', @p75='?' (DbType = Int32), @p76='?', @p77='?' (DbType = Guid), @p78='?' (DbType = DateTime), @p79='?', @p80='?' (DbType = Boolean), @p81='?', @p82='?' (DbType = Int32), @p83='?', @p84='?' (DbType = Guid), @p85='?' (DbType = DateTime), @p86='?', @p87='?' (DbType = Boolean), @p88='?', @p89='?' (DbType = Int32), @p90='?', @p91='?' (DbType = Guid), @p92='?' (DbType = DateTime), @p93='?', @p94='?' (DbType = Boolean), @p95='?', @p96='?' (DbType = Int32), @p97='?', @p98='?' (DbType = Guid), @p99='?' (DbType = DateTime), @p100='?', @p101='?' (DbType = Boolean), @p102='?', @p103='?' (DbType = Int32), @p104='?', @p105='?' (DbType = Guid), @p106='?' (DbType = DateTime), @p107='?', @p108='?' (DbType = Boolean), @p109='?', @p110='?' (DbType = Int32), @p111='?', @p112='?' (DbType = Guid), @p113='?' (DbType = DateTime), @p114='?', @p115='?' (DbType = Boolean), @p116='?', @p117='?' (DbType = Int32), @p118='?'], CommandType='Text', CommandTimeout='30']
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p7, @p8, @p9, @p10, @p11, @p12, @p13);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p14, @p15, @p16, @p17, @p18, @p19, @p20);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p21, @p22, @p23, @p24, @p25, @p26, @p27);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p28, @p29, @p30, @p31, @p32, @p33, @p34);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p35, @p36, @p37, @p38, @p39, @p40, @p41);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p42, @p43, @p44, @p45, @p46, @p47, @p48);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p49, @p50, @p51, @p52, @p53, @p54, @p55);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p56, @p57, @p58, @p59, @p60, @p61, @p62);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p63, @p64, @p65, @p66, @p67, @p68, @p69);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p70, @p71, @p72, @p73, @p74, @p75, @p76);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p77, @p78, @p79, @p80, @p81, @p82, @p83);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p84, @p85, @p86, @p87, @p88, @p89, @p90);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p91, @p92, @p93, @p94, @p95, @p96, @p97);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p98, @p99, @p100, @p101, @p102, @p103, @p104);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p105, @p106, @p107, @p108, @p109, @p110, @p111);
+INSERT INTO compliancecore_vocabulary_types ("Id", "CreatedAt", "Description", "IsActive", "Label", "SortOrder", "TypeKey")
+VALUES (@p112, @p113, @p114, @p115, @p116, @p117, @p118);
+[00:15:25 INF] Starting Compliance Core API (compliancecore) on http://localhost:5107
+[00:15:25 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:26 INF] Now listening on: http://localhost:5107
+[00:15:26 INF] Application started. Press Ctrl+C to shut down.
+[00:15:26 INF] Hosting environment: Development
+[00:15:26 INF] Content root path: F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api

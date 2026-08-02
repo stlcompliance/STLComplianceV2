@@ -397,6 +397,70 @@ public sealed class ComplianceCoreWaiverTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Internal_expire_batch_scopes_expiring_events_to_requested_tenant()
+    {
+        var otherTenantId = Guid.NewGuid();
+        var asOf = DateTimeOffset.UtcNow;
+
+        using (var scope = _complianceCoreFactory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+            db.ComplianceWaivers.AddRange(
+                new global::ComplianceCore.Api.Entities.ComplianceWaiver
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = PlatformSeeder.DemoTenantId,
+                    WaiverKey = "tenant-scoped-expiring-waiver",
+                    RulePackId = Guid.NewGuid(),
+                    PackKey = "driver_qualification",
+                    SubjectScopeKey = "tenant",
+                    ReasonCode = "temporary_ops_override",
+                    Explanation = "Primary tenant expiring warning.",
+                    Status = global::ComplianceCore.Api.Entities.WaiverStatuses.Approved,
+                    EffectiveAt = asOf.AddDays(-1),
+                    ExpiresAt = asOf.AddDays(2),
+                    CreatedAt = asOf.AddDays(-1),
+                    UpdatedAt = asOf.AddDays(-1),
+                },
+                new global::ComplianceCore.Api.Entities.ComplianceWaiver
+                {
+                    Id = Guid.NewGuid(),
+                    TenantId = otherTenantId,
+                    WaiverKey = "other-tenant-expiring-waiver",
+                    RulePackId = Guid.NewGuid(),
+                    PackKey = "driver_qualification",
+                    SubjectScopeKey = "tenant",
+                    ReasonCode = "temporary_ops_override",
+                    Explanation = "Other tenant expiring warning should stay isolated.",
+                    Status = global::ComplianceCore.Api.Entities.WaiverStatuses.Approved,
+                    EffectiveAt = asOf.AddDays(-1),
+                    ExpiresAt = asOf.AddDays(2),
+                    CreatedAt = asOf.AddDays(-1),
+                    UpdatedAt = asOf.AddDays(-1),
+                });
+            await db.SaveChangesAsync();
+        }
+
+        var expireRequest = ServiceAuthorized(HttpMethod.Post, "/api/internal/waivers/expire-batch", _workerExpireToken);
+        expireRequest.Content = JsonContent.Create(new ProcessExpiredWaiversRequest(
+            PlatformSeeder.DemoTenantId,
+            asOf,
+            50));
+        var expireResponse = await _complianceCoreClient.SendAsync(expireRequest);
+        expireResponse.EnsureSuccessStatusCode();
+
+        using var verifyScope = _complianceCoreFactory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ComplianceCoreDbContext>();
+        var expiringEvents = await verifyDb.AuditEvents
+            .AsNoTracking()
+            .Where(x => x.Action == ComplianceWaiverService.WaiverExpiringEventAction)
+            .ToListAsync();
+
+        Assert.Contains(expiringEvents, x => x.TenantId == PlatformSeeder.DemoTenantId && x.ReasonCode == "tenant-scoped-expiring-waiver");
+        Assert.DoesNotContain(expiringEvents, x => x.TenantId == otherTenantId && x.ReasonCode == "other-tenant-expiring-waiver");
+    }
+
+    [Fact]
     public async Task V1_waiver_routes_create_patch_and_get_round_trip()
     {
         var adminToken = CreateComplianceCoreAccessToken(["compliancecore"], tenantRoleKey: "compliance_admin");

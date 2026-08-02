@@ -56,6 +56,11 @@ function humanize(value: string | null | undefined): string {
   return value.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
+function toNonBlank(value: string | null | undefined): string | null {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : null
+}
+
 function formatDate(value: string | null | undefined): string {
   if (!value) return 'Not recorded'
   const date = new Date(value)
@@ -578,13 +583,17 @@ export function PeopleSection({ state }: Props) {
     const email = profile?.primaryEmail ?? selectedPerson?.primaryEmail ?? 'Not recorded'
     const phone = profile?.primaryPhone ?? profile?.workPhone ?? lookup?.workPhone ?? 'Not recorded'
     const employmentStatus = profile?.employmentStatus ?? selectedPerson?.employmentStatus ?? 'unknown'
-    const jobTitle = profile?.jobTitle ?? selectedPerson?.jobTitle ?? 'Unassigned role'
+    const accountAccessSummary = s.personAccountAccessQuery.data ?? null
+    const tenantRoleSummary = toNonBlank(accountAccessSummary?.tenantRoleSummary)
+    const explicitJobTitle = toNonBlank(profile?.jobTitle ?? selectedPerson?.jobTitle)
+    const jobTitle = explicitJobTitle ?? (tenantRoleSummary ? `${tenantRoleSummary} access` : 'Role not assigned')
+    const jobTitleSource = explicitJobTitle || !tenantRoleSummary ? null : 'NexArr tenant membership role'
     const primaryOrg = profile?.primaryOrgUnitName ?? selectedPerson?.primaryOrgUnitName ?? 'Unassigned'
     const activeAssignment = lookup?.placement.activeAssignments[0] ?? null
     const siteName = activeAssignment?.siteName ?? primaryOrg
     const departmentName = activeAssignment?.departmentName ?? 'Not assigned'
     const teamName = activeAssignment?.teamName ?? 'Not assigned'
-    const positionName = activeAssignment?.positionName ?? jobTitle
+    const positionName = toNonBlank(activeAssignment?.positionName) ?? explicitJobTitle
     const managerName = lookup?.placement.managerDisplayName ?? managerDisplayName
     const hasUserAccount = profile?.hasUserAccountSnapshot ?? Boolean(profile?.externalUserId ?? selectedPerson?.externalUserId)
     const canLogin = profile?.canLoginSnapshot ?? false
@@ -594,12 +603,30 @@ export function PeopleSection({ state }: Props) {
         .map((permission) => permission.permissionKey.split('.')[0]?.trim().toLowerCase())
         .filter(Boolean),
     ).size
+    const assignmentSummaryParts = [
+      departmentName !== 'Not assigned' ? departmentName : null,
+      siteName !== 'Unassigned' ? siteName : null,
+      positionName,
+    ].filter((value): value is string => Boolean(value))
+    const assignmentSummary =
+      assignmentSummaryParts.length > 0
+        ? assignmentSummaryParts.join(' - ')
+        : 'No active StaffArr assignment recorded'
+    const roleCoverageSummary = roleCoverageCount > 0
+      ? `${roleCoverageCount} product areas`
+      : 'No role coverage'
+    const roleCoverageLabel = tenantRoleSummary
+      ? `${tenantRoleSummary} - ${roleCoverageSummary}`
+      : roleCoverageSummary
     const activeCertifications = certifications.filter((cert) => cert.effectiveStatus === 'active')
     const expiringCertifications = activeCertifications.filter((cert) => {
       const remaining = daysUntil(cert.expiresAt)
       return remaining != null && remaining <= 60
     })
-    const missingRequirements = readiness?.requirements.filter((requirement) => requirement.requirementStatus !== 'satisfied') ?? []
+    const assignmentDrivenRequirements = readiness?.requirements ?? []
+    const missingRequirements = assignmentDrivenRequirements.filter((requirement) => requirement.requirementStatus !== 'satisfied')
+    const satisfiedRequirementCount = assignmentDrivenRequirements.filter((requirement) => requirement.requirementStatus === 'satisfied').length
+    const requiredCertificationCount = assignmentDrivenRequirements.length
     const permissionKeys = permissions.map((permission) => permission.permissionKey.toLowerCase())
     const hasProductSignal = (product: string) =>
       permissionKeys.some((permission) => permission.includes(product.toLowerCase()))
@@ -627,6 +654,11 @@ export function PeopleSection({ state }: Props) {
     ).length
     const readinessAllowed = readiness?.readinessStatus !== 'not_ready'
     const siteContextOrgUnitId = activeAssignment?.siteOrgUnitId ?? null
+    const activeWorkSurface = [
+      teamName !== 'Not assigned' ? teamName : null,
+      positionName,
+      siteName !== 'Unassigned' ? siteName : null,
+    ].filter(Boolean).join(' / ') || 'No active work surface recorded'
     const assignmentCards = lookup?.placement.activeAssignments.map((assignment) => ({
       key: assignment.assignmentId,
       title: assignment.positionName,
@@ -719,6 +751,10 @@ export function PeopleSection({ state }: Props) {
             ? getErrorMessage(s.personProfileMutationError, 'Failed to update person profile.')
             : null
         }
+        onOpenPermissionsReview={() => {
+          setShowEditor(false)
+          s.setPeopleDetailTab('permissions')
+        }}
         onUpdate={async (request) => {
           await s.updatePersonMutation.mutateAsync({
             personId: profile.personId,
@@ -765,7 +801,7 @@ export function PeopleSection({ state }: Props) {
           {
             label: 'Training',
             value: `${trainingCompletionPercent}%`,
-            hint: hasAnyTrainingActivity ? 'role path complete' : 'no training activity recorded',
+            hint: hasAnyTrainingActivity ? 'assignment-backed plan in progress' : 'no training activity recorded',
             tone: hasAnyTrainingActivity ? (openTrainingCount > 0 ? 'info' : 'good') : 'warn',
           },
           { label: 'Incidents', value: openIncidents.length, hint: 'open follow-up', tone: openIncidents.length > 0 ? 'bad' : 'good' },
@@ -828,7 +864,10 @@ export function PeopleSection({ state }: Props) {
               </div>
             </div>
             <div className="space-y-3">
-              <FieldTile label="Required certifications" value={`${activeCertifications.length} current`} />
+              <FieldTile
+                label="Required certifications"
+                value={requiredCertificationCount > 0 ? `${satisfiedRequirementCount} of ${requiredCertificationCount} current` : 'No work-surface requirements'}
+              />
               <FieldTile label="Required training" value={`${trainingCompletionPercent}% complete`} />
               <FieldTile label="Open incident follow-ups" value={`${openIncidents.length} open`} />
               <FieldTile label="Missing documents" value={`${needsActionDocuments.length} needs action`} />
@@ -948,7 +987,7 @@ export function PeopleSection({ state }: Props) {
         {renderMetricRow([
           { label: 'Active', value: activeCertifications.length, hint: 'current certs', tone: 'good' },
           { label: 'Expiring soon', value: expiringCertifications.length, hint: 'next 60 days', tone: expiringCertifications.length > 0 ? 'warn' : 'good' },
-          { label: 'Needs renewal', value: missingRequirements.length, hint: 'blocks one role', tone: missingRequirements.length > 0 ? 'bad' : 'good' },
+          { label: 'Needs renewal', value: missingRequirements.length, hint: 'blocks assigned work', tone: missingRequirements.length > 0 ? 'bad' : 'good' },
           { label: 'External evidence', value: evidenceDocumentCount, hint: 'stored in RecordArr', tone: 'info' },
         ])}
 
@@ -978,8 +1017,8 @@ export function PeopleSection({ state }: Props) {
         </SectionPanel>
 
         <SectionPanel
-          title="Role-driven certification gaps"
-          subtitle="Gaps are calculated from current assignments, site requirements, and workflow access."
+          title="Assignment-backed certification gaps"
+          subtitle="Gaps are calculated from current work assignments, readiness rules, and active work surfaces."
         >
           <div className="space-y-3">
             {missingRequirements.length > 0 ? missingRequirements.map((requirement) => (
@@ -990,7 +1029,7 @@ export function PeopleSection({ state }: Props) {
                 tone={requirement.requirementStatus === 'missing' ? 'bad' : 'warn'}
               />
             )) : (
-              <EmptyDetailState text="No role-driven certification gaps are currently flagged." />
+              <EmptyDetailState text="No assignment-backed certification gaps are currently flagged." />
             )}
           </div>
         </SectionPanel>
@@ -1056,7 +1095,7 @@ export function PeopleSection({ state }: Props) {
     const renderTrainingTab = () => (
       <div className="space-y-5">
         {renderMetricRow([
-          { label: 'Required', value: requiredTrainingCount, hint: 'current role path', tone: zeroWarnTone(requiredTrainingCount, 'info') },
+          { label: 'Required', value: requiredTrainingCount, hint: 'current work surface', tone: zeroWarnTone(requiredTrainingCount, 'info') },
           { label: 'Completed', value: completedTrainingCount, hint: `${trainingCompletionPercent}% complete`, tone: zeroWarnTone(completedTrainingCount, 'good') },
           { label: 'Due soon', value: openTrainingCount > 0 ? 1 : 0, hint: 'next 14 days', tone: zeroWarnTone(openTrainingCount > 0 ? 1 : 0, 'warn') },
           { label: 'Overdue', value: overdueTrainingCount, hint: 'requires attention', tone: zeroWarnTone(overdueTrainingCount, 'bad') },
@@ -1094,9 +1133,9 @@ export function PeopleSection({ state }: Props) {
         <SectionPanel title="Training drivers" subtitle="Why this person has these training requirements.">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
-              <p className="text-sm text-[var(--color-text-muted)]">Role driver</p>
-              <p className="mt-2 text-xl font-black text-[var(--color-text-primary)]">{positionName}</p>
-              <p className="mt-12 text-sm text-[var(--color-text-muted)]">Assigns leadership, incident documentation, safety, and role-specific curriculum.</p>
+              <p className="text-sm text-[var(--color-text-muted)]">Work surface</p>
+              <p className="mt-2 text-xl font-black text-[var(--color-text-primary)]">{activeWorkSurface}</p>
+              <p className="mt-12 text-sm text-[var(--color-text-muted)]">Current assignment context drives the work this person is cleared and trained to perform.</p>
             </div>
             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
               <p className="text-sm text-[var(--color-text-muted)]">Location driver</p>
@@ -1361,8 +1400,13 @@ export function PeopleSection({ state }: Props) {
                     <Badge label={humanize(profile?.employmentType ?? selectedPerson?.employmentType)} tone="info" />
                   </div>
                   <p className="mt-2 text-xl text-[var(--color-text-primary)]">{jobTitle}</p>
+                  {jobTitleSource ? (
+                    <p className="mt-1 text-xs font-black uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                      {jobTitleSource}
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-sm text-[var(--color-text-muted)]">
-                    {departmentName} - {siteName} - {positionName}
+                    {assignmentSummary}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Badge label={activeAssignment?.reason ?? humanize(profile?.workRelationshipType ?? selectedPerson?.workRelationshipType)} tone="info" />
@@ -1398,7 +1442,7 @@ export function PeopleSection({ state }: Props) {
                   <div>
                     <dt className="text-xs font-black uppercase text-[var(--color-text-muted)]">Role coverage</dt>
                     <dd className="mt-1 text-sm font-medium text-[var(--color-text-primary)]">
-                      {roleCoverageCount > 0 ? `${roleCoverageCount} product areas` : 'No role coverage'}
+                      {roleCoverageLabel}
                     </dd>
                   </div>
                 </dl>

@@ -16,6 +16,8 @@ export type ReportArrHandoffSessionResponse = {
   callbackUrl: string | null
 }
 
+export type HandoffSessionResponse = ReportArrHandoffSessionResponse
+
 export type ReportArrSessionBootstrapResponse = {
   userId: string
   personId: string

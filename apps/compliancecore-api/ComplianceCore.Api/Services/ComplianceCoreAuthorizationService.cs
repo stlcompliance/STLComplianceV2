@@ -417,6 +417,13 @@ public sealed class ComplianceCoreAuthorizationService
     public bool CanManageVocabulary(ClaimsPrincipal principal) =>
         principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin");
 
+    public bool CanManageWaivers(ClaimsPrincipal principal) =>
+        principal.IsPlatformAdmin() || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin");
+
+    public bool CanApproveWaivers(ClaimsPrincipal principal) =>
+        principal.IsPlatformAdmin()
+        || MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer");
+
     public bool CanExportAuditPackage(ClaimsPrincipal principal) =>
         principal.IsPlatformAdmin() ||
         MatchesRole(principal.GetTenantRoleKey(), "tenant_admin", "compliance_admin", "compliance_reviewer");

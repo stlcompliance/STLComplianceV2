@@ -403,7 +403,7 @@ export function SupplierReportsPanel({ accessToken, canRead, canExport }: Suppli
             Detail · {formatSupplierIdentitySummary({
               supplierDisplayName:
                 detailQuery.data.summary.supplierDisplayName
-                ?? detailQuery.data.summary.displayName
+                ?? detailQuery.data.summary.supplierKey
                 ?? 'Supplier',
               supplierKey: detailQuery.data.summary.supplierKey,
               parentSupplierDisplayName: detailQuery.data.summary.parentSupplierDisplayName,

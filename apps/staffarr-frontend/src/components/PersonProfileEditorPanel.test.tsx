@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -47,12 +47,33 @@ const mocked = vi.hoisted(() => ({
     ],
   })),
   listLocations: vi.fn(async () => []),
+  getStaffPersonRoles: vi.fn(async () => []),
+  listStaffRoles: vi.fn(async () => [
+    {
+      roleId: 'role-1',
+      tenantId: 'tenant-1',
+      name: 'Operations supervisor',
+      description: 'Can review and update workforce operations.',
+      roleType: 'tenant_role',
+      isSystem: false,
+      isArchived: false,
+      permissionCount: 12,
+      scopeCount: 2,
+      assignedPersonCount: 4,
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-02T00:00:00Z',
+    },
+  ]),
+  setStaffPersonRoles: vi.fn(async () => []),
 }))
 
 vi.mock('../api/client', () => ({
   getStaffArrFieldset: mocked.getStaffArrFieldset,
   listLocations: mocked.listLocations,
   listSiteLocations: mocked.listLocations,
+  getStaffPersonRoles: mocked.getStaffPersonRoles,
+  listStaffRoles: mocked.listStaffRoles,
+  setStaffPersonRoles: mocked.setStaffPersonRoles,
 }))
 
 vi.mock('@stl/shared-ui', async (importOriginal) => {
@@ -191,10 +212,12 @@ describe('PersonProfileEditorPanel', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: /Save profile changes/i })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Save profile changes/i })).toHaveLength(2)
     expect(screen.getByRole('button', { name: /Apply status/i })).toBeTruthy()
     expect(screen.getByTestId('edit-person-primary-org-unit-picker')).toBeTruthy()
     expect(screen.getByTestId('edit-person-manager-picker')).toBeTruthy()
+    expect(screen.getByText('Role and permission access')).toBeTruthy()
+    expect(screen.getByTestId('edit-person-role-assignment-picker')).toBeTruthy()
   })
 
   it('renders profile error in callout', () => {
@@ -239,5 +262,44 @@ describe('PersonProfileEditorPanel', () => {
     fireEvent.change(statusSelect as HTMLSelectElement)
 
     expect((screen.getByRole('button', { name: /apply status/i }) as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('submits an inline role assignment update', async () => {
+    renderPanel(
+      <PersonProfileEditorPanel
+        accessToken="token"
+        profile={profile}
+        orgUnits={[]}
+        peopleOptions={[]}
+        siteContextOrgUnitId={null}
+        canManage
+        isSubmitting={false}
+        errorMessage={null}
+        onUpdate={async () => {}}
+        onEmploymentStatusChange={async () => {}}
+      />,
+    )
+
+    await screen.findByText(/Operations supervisor/)
+
+    fireEvent.change(screen.getByTestId('edit-person-role-assignment-picker'), {
+      target: { value: 'role-1' },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /assign role/i }))
+
+    await waitFor(() => {
+      expect(mocked.setStaffPersonRoles).toHaveBeenCalledWith('token', profile.personId, {
+        roles: [
+          {
+            roleId: 'role-1',
+            assignmentScopeType: 'tenant',
+            assignmentScopeRefId: null,
+            startsAt: null,
+            endsAt: null,
+          },
+        ],
+      })
+    })
   })
 })

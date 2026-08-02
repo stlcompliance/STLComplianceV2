@@ -1,45 +1,2672 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(432,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(472,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(1238,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
   MaintainArr.Api -> F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\bin\Debug\net10.0\MaintainArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(432,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(472,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\Services\Recalls\RecallService.cs(1238,13): warning CS8604: Possible null reference argument for parameter 'targetType' in 'Task<Guid> IMaintainArrAuditService.WriteAsync(string action, Guid tenantId, Guid? actorUserId, string targetType, string? targetId, string result, string? reasonCode = null, CancellationToken cancellationToken = default(CancellationToken))'. [F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api\MaintainArr.Api.csproj]
+    7 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:03.41
+Time Elapsed 00:00:46.98
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer maintainarr-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for maintainarr-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 3 integration token(s) for maintainarr-api from NexArr.
-[22:30:03 INF] Applying EF migrations for MaintainArrDbContext (attempt 1/8)
-[22:30:09 INF] Executed DbCommand (38ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for MaintainArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:11 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT 1
-[22:30:11 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
     "MigrationId" character varying(150) NOT NULL,
     "ProductVersion" character varying(32) NOT NULL,
     CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
 );
-[22:30:11 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:11 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:11 INF] No migrations were applied. The database is already up to date.
-[22:30:11 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Applying migration '20260609060220_CurrentSchemaBaseline'.
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_assignment_history (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssignmentFieldKey" character varying(128) NOT NULL,
+    "PersonId" character varying(128) NOT NULL,
+    "ChangedByPersonId" character varying(128),
+    "EffectiveAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_assignment_history" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_availability_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(128) NOT NULL,
+    "AssetName" character varying(256) NOT NULL,
+    "PeriodStart" timestamp with time zone NOT NULL,
+    "PeriodEnd" timestamp with time zone NOT NULL,
+    "TotalHours" numeric(18,2) NOT NULL,
+    "DowntimeHours" numeric(18,2) NOT NULL,
+    "AvailabilityPercent" numeric(5,1) NOT NULL,
+    "PlannedDowntimeHours" numeric(18,2) NOT NULL,
+    "UnplannedDowntimeHours" numeric(18,2) NOT NULL,
+    "HasActiveDowntime" boolean NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_availability_snapshots" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_classes (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ClassKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_classes" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_compliance_state (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "GoverningBodyKeysJson" text NOT NULL,
+    "RulepackApplicabilityKeysJson" text NOT NULL,
+    "ComplianceCategoryKeysJson" text NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_compliance_state" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_components (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ComponentKey" character varying(128) NOT NULL,
+    "ValueJson" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_components" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_custom_field_values (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "FieldKey" character varying(128) NOT NULL,
+    "ValueJson" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_custom_field_values" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_documents (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "DocumentTypeKey" character varying(128) NOT NULL,
+    "ExternalDocumentId" character varying(128) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_documents" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_downtime_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(128) NOT NULL,
+    "AssetName" character varying(256) NOT NULL,
+    "Source" character varying(32) NOT NULL,
+    "Reason" character varying(64) NOT NULL,
+    "IsPlanned" boolean NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "EndedAt" timestamp with time zone,
+    "StatusTrigger" character varying(128),
+    "WorkOrderId" uuid,
+    "DefectId" uuid,
+    "Notes" character varying(1024),
+    "CreatedByUserId" uuid,
+    "ClosedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_downtime_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_downtime_sync_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AsOfUtc" timestamp with time zone NOT NULL,
+    "AssetsScanned" integer NOT NULL,
+    "EventsOpened" integer NOT NULL,
+    "EventsClosed" integer NOT NULL,
+    "SnapshotsRefreshed" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_downtime_sync_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_external_mappings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "SourceSystem" character varying(64) NOT NULL,
+    "ExternalEntityType" character varying(128) NOT NULL,
+    "ExternalId" character varying(128) NOT NULL,
+    "ExternalKey" character varying(128),
+    "MetadataJson" character varying(4096),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_external_mappings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_location_history (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "SiteId" character varying(128),
+    "StaffarrSiteOrgUnitId" uuid,
+    "StaffarrSiteNameSnapshot" character varying(256),
+    "HomeLocationId" character varying(128),
+    "CurrentLocationId" character varying(128),
+    "Yard" character varying(128),
+    "Bay" character varying(128),
+    "ParkingSpot" character varying(128),
+    "ChangedByPersonId" character varying(128),
+    "EffectiveAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_location_history" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_readiness_checks (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(128),
+    "VehicleRefKey" character varying(128),
+    "SourceProduct" character varying(64) NOT NULL,
+    "RequestedBy" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "ReadinessStatus" character varying(64) NOT NULL,
+    "ReadinessBasis" character varying(128) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_readiness_checks" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_readiness_state (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ReadinessStatusKey" character varying(128) NOT NULL,
+    "OperationalStatusKey" character varying(128) NOT NULL,
+    "AvailabilityStatusKey" character varying(128) NOT NULL,
+    "Basis" character varying(256),
+    "Notes" character varying(1024),
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_readiness_state" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (34ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_specs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "SpecKey" character varying(128) NOT NULL,
+    "ValueJson" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_specs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (38ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_status_history (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "StatusFieldKey" character varying(128) NOT NULL,
+    "StatusValueKey" character varying(128) NOT NULL,
+    "ChangedByPersonId" character varying(128),
+    "Notes" character varying(1024),
+    "ChangedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_status_history" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_status_rollup_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AsOfUtc" timestamp with time zone NOT NULL,
+    "CandidatesFound" integer NOT NULL,
+    "RefreshedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "ScopeRollupsRefreshed" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_status_rollup_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_status_rollups (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(128) NOT NULL,
+    "AssetName" character varying(256) NOT NULL,
+    "LifecycleStatus" character varying(32) NOT NULL,
+    "ReadinessStatus" character varying(32) NOT NULL,
+    "ReadinessBasis" character varying(64) NOT NULL,
+    "BlockerCount" integer NOT NULL,
+    "PrimaryBlockerMessage" character varying(512),
+    "OpenCriticalDefectCount" integer NOT NULL,
+    "OpenHighDefectCount" integer NOT NULL,
+    "ActiveWorkOrderCount" integer NOT NULL,
+    "PmDueCount" integer NOT NULL,
+    "PmOverdueCount" integer NOT NULL,
+    "FailedInspectionCount" integer NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_status_rollups" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_status_scope_rollups (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "ScopeEntityId" uuid NOT NULL,
+    "ScopeEntityKey" character varying(128),
+    "ScopeLabel" character varying(256) NOT NULL,
+    "TotalAssets" integer NOT NULL,
+    "ReadyCount" integer NOT NULL,
+    "NotReadyCount" integer NOT NULL,
+    "ReadyPercent" numeric(5,1) NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_status_scope_rollups" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_audit_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorUserId" uuid,
+    "ActorPersonId" character varying(128),
+    "Action" character varying(128) NOT NULL,
+    "TargetType" character varying(64) NOT NULL,
+    "TargetId" character varying(128),
+    "Result" character varying(32) NOT NULL,
+    "ReasonCode" character varying(64),
+    "CorrelationId" uuid NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_audit_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_audit_package_generation_jobs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequestedByUserId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Format" character varying(16) NOT NULL,
+    "FromUtc" timestamp with time zone,
+    "ToUtc" timestamp with time zone,
+    "FilterJson" character varying(4096),
+    "PackageId" uuid,
+    "ArtifactZip" bytea,
+    "ArtifactJson" text,
+    "ErrorMessage" character varying(2000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_audit_package_generation_jobs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_catalog_option_dependencies (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CatalogOptionId" uuid NOT NULL,
+    "DependsOnCatalogKey" character varying(128) NOT NULL,
+    "DependsOnOptionKey" character varying(128) NOT NULL,
+    "RuleJson" text NOT NULL,
+    CONSTRAINT "PK_maintainarr_catalog_option_dependencies" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_catalog_options (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CatalogId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" text NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "ParentOptionId" uuid,
+    "MetadataJson" text NOT NULL,
+    "IsSystem" boolean NOT NULL,
+    "IsTenantSpecific" boolean NOT NULL,
+    "OptionTenantId" uuid,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_catalog_options" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_catalogs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Label" character varying(256) NOT NULL,
+    "Description" text NOT NULL,
+    "Owner" character varying(64) NOT NULL,
+    "Scope" character varying(32) NOT NULL,
+    "IsSystem" boolean NOT NULL,
+    "IsTenantExtendable" boolean NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_catalogs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_compliance_regulatory_key_mirrors (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SubjectType" character varying(64) NOT NULL,
+    "SubjectId" uuid NOT NULL,
+    "ComplianceKey" character varying(128) NOT NULL,
+    "MaterialKey" character varying(128),
+    "RegulatoryCitationKey" character varying(128),
+    "SourceProduct" character varying(32) NOT NULL,
+    "SourceRecordKey" character varying(256) NOT NULL,
+    "SourceUpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_compliance_regulatory_key_mirrors" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_defect_escalation_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DefectId" uuid NOT NULL,
+    "ActionKind" character varying(64) NOT NULL,
+    "PreviousSeverity" character varying(32),
+    "NewSeverity" character varying(32),
+    "PreviousStatus" character varying(32),
+    "NewStatus" character varying(32),
+    "WorkOrderId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_defect_escalation_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_defect_escalation_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AsOfUtc" timestamp with time zone NOT NULL,
+    "CandidatesFound" integer NOT NULL,
+    "EscalatedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_defect_escalation_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_external_provider_audit_log_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid,
+    "ProviderKey" character varying(64) NOT NULL,
+    "OperationKey" character varying(64) NOT NULL,
+    "CacheKey" character varying(256) NOT NULL,
+    "ResultStatus" character varying(64) NOT NULL,
+    "DurationMs" integer,
+    "Message" character varying(1024) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_external_provider_audit_log_entries" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_external_provider_cache_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProviderKey" character varying(64) NOT NULL,
+    "CacheKey" character varying(256) NOT NULL,
+    "OperationKey" character varying(64) NOT NULL,
+    "RequestJson" text NOT NULL,
+    "ResponseJson" text NOT NULL,
+    "StatusCode" integer,
+    "ErrorMessage" character varying(1024),
+    "LastFetchedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_external_provider_cache_entries" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_fieldset_definitions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Label" text NOT NULL,
+    "EntityType" character varying(64) NOT NULL,
+    "Purpose" character varying(64) NOT NULL,
+    "Description" text NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_maintainarr_fieldset_definitions" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_fieldset_fields (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FieldsetId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Label" text NOT NULL,
+    "Description" text NOT NULL,
+    "DataType" character varying(64) NOT NULL,
+    "ControlType" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "CatalogKey" text,
+    "ReferenceKey" text,
+    "SourceType" character varying(64) NOT NULL,
+    "SourceOfTruth" character varying(128) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "SectionKey" text NOT NULL,
+    "DependencyJson" text NOT NULL,
+    "ValidationJson" text NOT NULL,
+    "DefaultValueJson" text NOT NULL,
+    "VisibilityJson" text NOT NULL,
+    "AllowCustom" boolean NOT NULL,
+    "CustomRequiresApproval" boolean NOT NULL,
+    "DrivesLogic" boolean NOT NULL,
+    "DrivesInspectionBranching" boolean NOT NULL,
+    "DrivesPMApplicability" boolean NOT NULL,
+    "DrivesCompliance" boolean NOT NULL,
+    "DrivesReporting" boolean NOT NULL,
+    "DrivesReadiness" boolean NOT NULL,
+    CONSTRAINT "PK_maintainarr_fieldset_fields" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_fleet_availability_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PeriodStart" timestamp with time zone NOT NULL,
+    "PeriodEnd" timestamp with time zone NOT NULL,
+    "AssetCount" integer NOT NULL,
+    "TotalHours" numeric(18,2) NOT NULL,
+    "DowntimeHours" numeric(18,2) NOT NULL,
+    "AvailabilityPercent" numeric(5,1) NOT NULL,
+    "PlannedDowntimeHours" numeric(18,2) NOT NULL,
+    "UnplannedDowntimeHours" numeric(18,2) NOT NULL,
+    "ActiveDowntimeEventCount" integer NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_fleet_availability_snapshots" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_import_batches (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportType" character varying(32) NOT NULL,
+    "Phase" character varying(32) NOT NULL,
+    "DryRun" boolean NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "TotalRows" integer NOT NULL,
+    "SuccessCount" integer NOT NULL,
+    "ErrorCount" integer NOT NULL,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_import_batches" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_templates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TemplateKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "TemplateCategoryKey" character varying(128) NOT NULL,
+    "OwningSiteRef" character varying(128),
+    "OwningTeamRef" character varying(128),
+    "OwnerPersonId" character varying(128),
+    "OwnerRoleKey" character varying(128),
+    "EstimatedDurationMinutes" integer,
+    "TagsJson" text NOT NULL,
+    "SettingsJson" text NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedByPersonId" character varying(128),
+    "PublishedByPersonId" character varying(128),
+    "PublishedAt" timestamp with time zone,
+    "RetiredByPersonId" character varying(128),
+    "RetiredAt" timestamp with time zone,
+    "InspectionType" character varying(32) NOT NULL,
+    "Version" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_templates" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_history_rollup_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AsOfUtc" timestamp with time zone NOT NULL,
+    "CandidatesFound" integer NOT NULL,
+    "RefreshedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_maintenance_history_rollup_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_history_rollups (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(128) NOT NULL,
+    "AssetName" character varying(256) NOT NULL,
+    "EventCount" integer NOT NULL,
+    "InspectionCount" integer NOT NULL,
+    "DefectCount" integer NOT NULL,
+    "WorkOrderCount" integer NOT NULL,
+    "PmCount" integer NOT NULL,
+    "LastEventAt" timestamp with time zone,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_maintenance_history_rollups" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_parts_kits (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "KitNumber" character varying(128) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "KitCategoryKey" character varying(128),
+    "KitTypeKey" character varying(128),
+    "PriorityKey" character varying(128),
+    "OwningSiteRef" character varying(128),
+    "OwningTeamRef" character varying(128),
+    "OwnerPersonId" character varying(128),
+    "OwnerRoleKey" character varying(128),
+    "TagsJson" text NOT NULL,
+    "AssetTypeApplicabilityJson" character varying(4096) NOT NULL,
+    "WorkOrderTypeApplicabilityJson" character varying(4096) NOT NULL,
+    "PmPlanRef" character varying(128),
+    "DefinitionJson" text NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Version" integer NOT NULL DEFAULT 1,
+    "CloneSourcePartsKitId" character varying(128),
+    "CreatedByPersonId" character varying(128),
+    "UpdatedByPersonId" character varying(128),
+    "ActivatedByPersonId" character varying(128),
+    "ApprovedByPersonId" character varying(128),
+    "RetiredByPersonId" character varying(128),
+    "EffectiveAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "ActivatedAt" timestamp with time zone,
+    "ApprovedAt" timestamp with time zone,
+    "RetiredAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_maintenance_parts_kits" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_notification_dispatches (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EventKind" character varying(64) NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "RelatedEntityType" character varying(64) NOT NULL,
+    "RelatedEntityId" uuid NOT NULL,
+    "DispatchStatus" character varying(32) NOT NULL,
+    "WebhookHost" character varying(256),
+    "HttpStatusCode" integer,
+    "ErrorMessage" character varying(512),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "DispatchedAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_notification_dispatches" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_parts (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PartNumber" character varying(128) NOT NULL,
+    "NormalizedPartNumber" character varying(128) NOT NULL,
+    "DisplayName" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "CategoryKey" character varying(128) NOT NULL,
+    "UnitOfMeasure" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceType" character varying(64) NOT NULL,
+    "SourceLabel" character varying(256) NOT NULL,
+    "SupplyArrPartId" uuid,
+    "ManufacturerName" character varying(256),
+    "ManufacturerPartNumber" character varying(128),
+    "SdsDocumentId" character varying(128),
+    "ComplianceCoreMaterialKey" character varying(128),
+    "ComplianceCoreHazardKeysJson" text NOT NULL,
+    "Notes" character varying(1024),
+    "CreatedByPersonId" character varying(128),
+    "UpdatedByPersonId" character varying(128),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_parts" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pending_catalog_values (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CatalogKey" character varying(128) NOT NULL,
+    "ProposedKey" character varying(128) NOT NULL,
+    "ProposedLabel" character varying(256) NOT NULL,
+    "ProposedByPersonId" character varying(128) NOT NULL,
+    "SourceEntityType" character varying(64) NOT NULL,
+    "SourceEntityId" character varying(128) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ReviewedByPersonId" text,
+    "ReviewedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_pending_catalog_values" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_platform_event_processing_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PendingFound" integer NOT NULL,
+    "ProcessedCount" integer NOT NULL,
+    "RetriedCount" integer NOT NULL,
+    "AbandonedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_platform_event_processing_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_platform_outbox_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EventKind" character varying(64) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "RelatedEntityType" character varying(64) NOT NULL,
+    "RelatedEntityId" uuid NOT NULL,
+    "PayloadJson" text NOT NULL,
+    "ProcessingStatus" character varying(32) NOT NULL,
+    "AttemptCount" integer NOT NULL,
+    "NextRetryAt" timestamp with time zone,
+    "ErrorMessage" character varying(512),
+    "CorrelationId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ProcessedAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_platform_outbox_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pm_due_scan_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AsOfUtc" timestamp with time zone NOT NULL,
+    "CandidatesFound" integer NOT NULL,
+    "MarkedDueCount" integer NOT NULL,
+    "MarkedOverdueCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "WorkOrdersCreatedCount" integer NOT NULL,
+    "WorkOrdersLinkedCount" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_pm_due_scan_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_recall_audit_log_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid,
+    "RecallCampaignId" uuid,
+    "Action" character varying(64) NOT NULL,
+    "PreviousStatus" character varying(64),
+    "NewStatus" character varying(64),
+    "PersonId" character varying(128),
+    "ServiceClientId" uuid,
+    "DetailsJson" text,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_recall_audit_log_entries" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_recall_campaigns (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProvider" character varying(64) NOT NULL,
+    "SourceType" character varying(64) NOT NULL,
+    "SourceProviderRecordId" character varying(128),
+    "NhtsaCampaignNumber" character varying(64),
+    "NhtsaActionNumber" character varying(64),
+    "ManufacturerCampaignNumber" character varying(128),
+    "CampaignTitle" character varying(256),
+    "Manufacturer" character varying(256) NOT NULL,
+    "Component" character varying(256) NOT NULL,
+    "ReportReceivedDate" character varying(64),
+    "CampaignStartDate" character varying(64),
+    "CampaignEndDate" character varying(64),
+    "CampaignStatus" character varying(32) NOT NULL,
+    "PotentialUnitsAffected" integer,
+    "Summary" character varying(1024) NOT NULL,
+    "Consequence" character varying(1024) NOT NULL,
+    "Remedy" character varying(1024) NOT NULL,
+    "Notes" character varying(1024) NOT NULL,
+    "ParkIt" boolean NOT NULL,
+    "ParkOutside" boolean NOT NULL,
+    "OverTheAirUpdate" boolean NOT NULL,
+    "RecallType" character varying(64) NOT NULL,
+    "SourceRawJson" text,
+    "SourceUrl" character varying(512),
+    "FetchedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_recall_campaigns" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_recall_make_model_aliases (
+    "Id" uuid NOT NULL,
+    "Provider" character varying(64) NOT NULL,
+    "RawMake" character varying(128) NOT NULL,
+    "RawModel" character varying(128) NOT NULL,
+    "NormalizedMake" character varying(128) NOT NULL,
+    "NormalizedModel" character varying(128) NOT NULL,
+    "Confidence" double precision NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_recall_make_model_aliases" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_reference_cache_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceOfTruth" character varying(64) NOT NULL,
+    "ReferenceKey" character varying(128) NOT NULL,
+    "ExternalKey" character varying(128) NOT NULL,
+    "ExternalId" character varying(128),
+    "Label" character varying(256) NOT NULL,
+    "Description" text,
+    "MetadataJson" text NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "LastSyncedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_reference_cache_entries" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_staff_person_refs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "StaffarrPersonId" character varying(128) NOT NULL,
+    "DisplayNameSnapshot" character varying(256) NOT NULL,
+    "ActiveStatusSnapshot" character varying(64),
+    "PrimarySiteSnapshot" character varying(128),
+    "LastSeenAt" timestamp with time zone NOT NULL,
+    "SourceCorrelationId" character varying(128),
+    CONSTRAINT "PK_maintainarr_staff_person_refs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_asset_status_rollup_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "StalenessHours" integer NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_asset_status_rollup_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_defect_escalation_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "LowThresholdHours" integer NOT NULL,
+    "MediumThresholdHours" integer NOT NULL,
+    "HighThresholdHours" integer NOT NULL,
+    "CriticalThresholdHours" integer NOT NULL,
+    "AutoAcknowledgeOnEscalation" boolean NOT NULL,
+    "AutoCreateWorkOrderOnEscalation" boolean NOT NULL,
+    "BumpSeverityOnRepeatEscalation" boolean NOT NULL,
+    "NotifyOnEscalation" boolean NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_defect_escalation_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_downtime_tracking_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "AutoTrackOutOfService" boolean NOT NULL,
+    "AutoTrackNotReady" boolean NOT NULL,
+    "AvailabilityPeriodDays" integer NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_downtime_tracking_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_maintenance_history_rollup_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "StalenessHours" integer NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_maintenance_history_rollup_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_notification_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "NotificationWebhookUrl" character varying(2048),
+    "NotifyOnWorkOrderCreated" boolean NOT NULL,
+    "NotifyOnPmScheduleDue" boolean NOT NULL,
+    "NotifyOnPmScheduleOverdue" boolean NOT NULL,
+    "NotifyOnDefectEscalated" boolean NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_notification_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_platform_event_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "MaxAttempts" integer NOT NULL,
+    "RetryIntervalMinutes" integer NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_platform_event_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_pm_due_scan_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "ScanIntervalMinutes" integer NOT NULL,
+    "BatchSize" integer NOT NULL,
+    "OverdueGraceDays" integer NOT NULL,
+    "LastRunAt" timestamp with time zone,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_pm_due_scan_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_parts_demand_status_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "MaintainarrPublicationId" uuid NOT NULL,
+    "SupplyarrDemandRefId" uuid NOT NULL,
+    "SupplyarrCallbackPublicationId" uuid NOT NULL,
+    "EventType" character varying(32) NOT NULL,
+    "ProcurementStatus" character varying(32) NOT NULL,
+    "SupplyarrPurchaseRequestId" uuid,
+    "SupplyarrPurchaseOrderId" uuid,
+    "SupplyarrReceivingReceiptId" uuid,
+    "Message" character varying(512) NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_parts_demand_status_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_types (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetClassId" uuid NOT NULL,
+    "TypeKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_types" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_types_maintainarr_asset_classes_AssetClas~" FOREIGN KEY ("AssetClassId") REFERENCES maintainarr_asset_classes ("Id") ON DELETE RESTRICT
+);
+[00:15:21 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_template_categories (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionTemplateId" uuid NOT NULL,
+    "CategoryKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "IsRequired" boolean NOT NULL,
+    "CanBeSkipped" boolean NOT NULL,
+    "SkipReasonRequired" boolean NOT NULL,
+    "TimingTracked" boolean NOT NULL,
+    "SettingsJson" text NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_template_categories" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_template_categories_maintainarr_insp~" FOREIGN KEY ("InspectionTemplateId") REFERENCES maintainarr_inspection_templates ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_history_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "RollupId" uuid NOT NULL,
+    "EntryId" character varying(256) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "EventType" character varying(64) NOT NULL,
+    "Title" character varying(512) NOT NULL,
+    "Detail" character varying(1024),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "ActorUserId" uuid,
+    "SourceEntityType" character varying(64) NOT NULL,
+    "SourceEntityId" character varying(64) NOT NULL,
+    "RelatedEntityId" character varying(64),
+    CONSTRAINT "PK_maintainarr_maintenance_history_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_maintenance_history_events_maintainarr_maintena~" FOREIGN KEY ("RollupId") REFERENCES maintainarr_maintenance_history_rollups ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_parts_kit_lines (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "MaintenancePartsKitId" uuid NOT NULL,
+    "ItemRef" character varying(128) NOT NULL,
+    "ItemDescriptionSnapshot" character varying(512) NOT NULL,
+    "Quantity" numeric NOT NULL,
+    "UnitOfMeasure" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "SubstituteAllowed" boolean NOT NULL,
+    "SortOrder" integer NOT NULL DEFAULT 0,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_maintenance_parts_kit_lines" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_maintenance_parts_kit_lines_maintainarr_mainten~" FOREIGN KEY ("MaintenancePartsKitId") REFERENCES maintainarr_maintenance_parts_kits ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_recall_campaign_applicabilities (
+    "Id" uuid NOT NULL,
+    "RecallCampaignId" uuid NOT NULL,
+    "ModelYear" integer,
+    "Make" character varying(128),
+    "Model" character varying(128),
+    "AssetClass" character varying(128),
+    "AssetType" character varying(128),
+    "BodyClass" character varying(128),
+    "VehicleType" character varying(128),
+    "FuelType" character varying(128),
+    "EngineFamily" character varying(128),
+    "EngineManufacturer" character varying(128),
+    "ComponentCategory" character varying(128),
+    "TireBrand" character varying(128),
+    "TireLine" character varying(128),
+    "TireSize" character varying(128),
+    "EquipmentMake" character varying(128),
+    "EquipmentModel" character varying(128),
+    "SerialRangeStart" character varying(128),
+    "SerialRangeEnd" character varying(128),
+    "ProductionStartDate" timestamp with time zone,
+    "ProductionEndDate" timestamp with time zone,
+    "Notes" character varying(1024),
+    "SourceRawJson" text,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_recall_campaign_applicabilities" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_recall_campaign_applicabilities_maintainarr_rec~" FOREIGN KEY ("RecallCampaignId") REFERENCES maintainarr_recall_campaigns ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_assets (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetTypeId" uuid NOT NULL,
+    "AssetTag" character varying(64) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "LifecycleStatus" character varying(32) NOT NULL,
+    "SiteRef" character varying(128),
+    "StaffarrSiteOrgUnitId" uuid,
+    "StaffarrSiteNameSnapshot" character varying(256) NOT NULL DEFAULT '',
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_assets" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_assets_maintainarr_asset_types_AssetTypeId" FOREIGN KEY ("AssetTypeId") REFERENCES maintainarr_asset_types ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_template_asset_types (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionTemplateId" uuid NOT NULL,
+    "AssetTypeId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_template_asset_types" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_template_asset_types_maintainarr_ass~" FOREIGN KEY ("AssetTypeId") REFERENCES maintainarr_asset_types ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_inspection_template_asset_types_maintainarr_ins~" FOREIGN KEY ("InspectionTemplateId") REFERENCES maintainarr_inspection_templates ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_checklist_items (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionTemplateId" uuid NOT NULL,
+    "CategoryId" uuid,
+    "ItemKey" character varying(128) NOT NULL,
+    "Prompt" character varying(512) NOT NULL,
+    "HelpText" character varying(1024) NOT NULL,
+    "ItemType" character varying(32) NOT NULL,
+    "SettingsJson" text NOT NULL,
+    "ControlledOptionsJson" character varying(2048) NOT NULL,
+    "AcceptableRangeMin" numeric,
+    "AcceptableRangeMax" numeric,
+    "UnitOfMeasure" text,
+    "IsRequired" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_checklist_items" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_checklist_items_maintainarr_inspecti~" FOREIGN KEY ("CategoryId") REFERENCES maintainarr_inspection_template_categories ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_inspection_checklist_items_maintainarr_inspect~1" FOREIGN KEY ("InspectionTemplateId") REFERENCES maintainarr_inspection_templates ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_enrichment_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ProviderKey" character varying(64) NOT NULL,
+    "SnapshotType" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256),
+    "Summary" character varying(1024) NOT NULL,
+    "PayloadJson" text NOT NULL,
+    "CapturedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_enrichment_snapshots" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_enrichment_snapshots_maintainarr_assets_A~" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_external_identifiers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "SourceSystem" character varying(64) NOT NULL,
+    "IdentifierType" character varying(64) NOT NULL,
+    "IdentifierValue" character varying(256) NOT NULL,
+    "NormalizedValue" character varying(256) NOT NULL,
+    "IsPrimary" boolean NOT NULL,
+    "IsVerified" boolean NOT NULL,
+    "MetadataJson" text NOT NULL,
+    "ObservedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_external_identifiers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_external_identifiers_maintainarr_assets_A~" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_installed_components (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ComponentNumber" character varying(64) NOT NULL,
+    "ParentAssetId" uuid NOT NULL,
+    "ParentComponentId" uuid,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512),
+    "ComponentType" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Make" character varying(128),
+    "Model" character varying(128),
+    "SerialNumber" character varying(128),
+    "PartNumberSnapshot" character varying(128),
+    "InstalledPartUsageRef" character varying(128),
+    "InstallDate" timestamp with time zone,
+    "InstalledByPersonId" character varying(128),
+    "InstalledMeterReading" numeric,
+    "RemovedDate" timestamp with time zone,
+    "RemovedByPersonId" character varying(128),
+    "RemovedMeterReading" numeric,
+    "RemovalReason" character varying(512),
+    "WarrantyStartDate" timestamp with time zone,
+    "WarrantyEndDate" timestamp with time zone,
+    "ExpectedLifeHours" numeric,
+    "ExpectedLifeMiles" numeric,
+    "ExpectedLifeCycles" integer,
+    "Condition" character varying(32) NOT NULL,
+    "ReplacementPartRefsJson" character varying(4000) NOT NULL,
+    "DocumentRefsJson" character varying(4000) NOT NULL,
+    "DefectRefsJson" character varying(4000) NOT NULL,
+    "WorkOrderRefsJson" character varying(4000) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_installed_components" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_installed_components_maintainarr_assets_P~" FOREIGN KEY ("ParentAssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_meters (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "MeterKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "Unit" character varying(32) NOT NULL,
+    "BaselineReading" numeric(18,4) NOT NULL,
+    "CurrentReading" numeric(18,4) NOT NULL,
+    "LastReadingAt" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_meters" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_meters_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_quality_holds (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "HoldType" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256),
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "ReleasedAt" timestamp with time zone,
+    "ReleasedByPersonId" character varying(128),
+    "ReleaseReason" character varying(1024),
+    CONSTRAINT "PK_maintainarr_asset_quality_holds" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_quality_holds_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_recall_cases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "RecallCampaignId" uuid NOT NULL,
+    "MatchBasis" character varying(64) NOT NULL,
+    "MatchConfidence" character varying(16) NOT NULL,
+    "MatchScore" numeric(6,2),
+    "Status" character varying(32) NOT NULL,
+    "ReadinessImpact" character varying(64) NOT NULL,
+    "Reason" character varying(1024) NOT NULL,
+    "DetectedAt" timestamp with time zone NOT NULL,
+    "LastRefreshedAt" timestamp with time zone,
+    "DismissedByPersonId" character varying(128),
+    "DismissedAt" timestamp with time zone,
+    "DismissalReason" character varying(1024),
+    "VerificationSource" character varying(64),
+    "VerificationMethod" character varying(64),
+    "VerificationStatus" character varying(32) NOT NULL,
+    "VerifiedByPersonId" character varying(128),
+    "VerifiedAt" timestamp with time zone,
+    "EvidenceDocumentId" uuid,
+    "EvidenceUrl" character varying(512),
+    "EvidenceText" character varying(1024),
+    "ProviderRawJson" text,
+    "ExpiresAt" timestamp with time zone,
+    "WorkOrderId" uuid,
+    "InspectionRunId" uuid,
+    "DefectId" uuid,
+    "ReadinessHoldId" uuid,
+    "ActionType" character varying(32) NOT NULL,
+    "ActionStatus" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_recall_cases" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_recall_cases_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_maintainarr_asset_recall_cases_maintainarr_recall_campaigns~" FOREIGN KEY ("RecallCampaignId") REFERENCES maintainarr_recall_campaigns ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_recall_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ProviderKey" character varying(64) NOT NULL,
+    "CampaignNumber" character varying(64) NOT NULL,
+    "ActionNumber" character varying(64),
+    "Manufacturer" character varying(256) NOT NULL,
+    "Component" character varying(256) NOT NULL,
+    "Summary" character varying(1024) NOT NULL,
+    "Consequence" character varying(1024) NOT NULL,
+    "Remedy" character varying(1024) NOT NULL,
+    "Notes" character varying(1024) NOT NULL,
+    "ModelYear" character varying(16),
+    "Make" character varying(128),
+    "Model" character varying(128),
+    "ReportReceivedDate" character varying(64),
+    "Status" character varying(32) NOT NULL,
+    "QualityHoldId" uuid,
+    "CapturedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_recall_snapshots" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_recall_snapshots_maintainarr_assets_Asset~" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pm_programs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProgramKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "AssetTypeId" uuid,
+    "AssetId" uuid,
+    "Status" character varying(32) NOT NULL DEFAULT 'draft',
+    "CategoryKey" character varying(128),
+    "WorkTypeKey" character varying(128),
+    "PriorityKey" character varying(128),
+    "OwningSiteRef" character varying(128),
+    "OwningTeamRef" character varying(128),
+    "OwningDepartmentRef" character varying(128),
+    "OwnerPersonId" character varying(128),
+    "OwnerRoleKey" character varying(128),
+    "TagsJson" text NOT NULL,
+    "ScopeDefinitionJson" text NOT NULL,
+    "DueTriggerDefinitionJson" text NOT NULL,
+    "WorkPackageDefinitionJson" text NOT NULL,
+    "InspectionDefinitionJson" text NOT NULL,
+    "ComplianceDefinitionJson" text NOT NULL,
+    "AutomationDefinitionJson" text NOT NULL,
+    "AutoGenerateWorkOrder" boolean NOT NULL DEFAULT TRUE,
+    "DefaultWorkOrderTemplateRef" character varying(128),
+    "AutoGenerateInspection" boolean NOT NULL DEFAULT FALSE,
+    "InspectionTemplateId" uuid,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedByPersonId" character varying(128),
+    "ActivatedByPersonId" character varying(128),
+    "ActivatedAt" timestamp with time zone,
+    "PausedByPersonId" character varying(128),
+    "PausedAt" timestamp with time zone,
+    "RetiredByPersonId" character varying(128),
+    "RetiredAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_pm_programs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_pm_programs_maintainarr_asset_types_AssetTypeId" FOREIGN KEY ("AssetTypeId") REFERENCES maintainarr_asset_types ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_pm_programs_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_pm_programs_maintainarr_inspection_templates_In~" FOREIGN KEY ("InspectionTemplateId") REFERENCES maintainarr_inspection_templates ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_enrichment_suggestions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "SnapshotId" uuid,
+    "ProviderKey" character varying(64) NOT NULL,
+    "FieldKey" character varying(128) NOT NULL,
+    "FieldLabel" character varying(256) NOT NULL,
+    "CurrentValue" character varying(512),
+    "ProposedValue" character varying(512),
+    "Reason" character varying(1024) NOT NULL,
+    "Confidence" double precision NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ReviewedByPersonId" character varying(128),
+    "ReviewedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_enrichment_suggestions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_enrichment_suggestions_maintainarr_asset_~" FOREIGN KEY ("SnapshotId") REFERENCES maintainarr_asset_enrichment_snapshots ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_asset_enrichment_suggestions_maintainarr_assets~" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_meter_readings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetMeterId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ReadingValue" numeric(18,4) NOT NULL,
+    "DeltaFromPrevious" numeric(18,4) NOT NULL,
+    "ReadAt" timestamp with time zone NOT NULL,
+    "RecordedByUserId" uuid NOT NULL,
+    "Notes" character varying(512) NOT NULL,
+    "IsCorrection" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_meter_readings" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_meter_readings_maintainarr_asset_meters_AssetMe~" FOREIGN KEY ("AssetMeterId") REFERENCES maintainarr_asset_meters ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_maintainarr_meter_readings_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pm_schedules (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "ScheduleKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512) NOT NULL,
+    "ScheduleMode" character varying(32) NOT NULL,
+    "AssetMeterId" uuid,
+    "IntervalUsage" numeric(18,4),
+    "NextDueAtUsage" numeric(18,4),
+    "LastCompletedUsage" numeric(18,4),
+    "IntervalDays" integer NOT NULL,
+    "NextDueAt" timestamp with time zone NOT NULL,
+    "LastCompletedAt" timestamp with time zone,
+    "SkippedAt" timestamp with time zone,
+    "SkippedByPersonId" uuid,
+    "SkippedReason" text,
+    "DueStatus" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "LastDueScanAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_pm_schedules" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_pm_schedules_maintainarr_asset_meters_AssetMete~" FOREIGN KEY ("AssetMeterId") REFERENCES maintainarr_asset_meters ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_pm_schedules_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "InspectionTemplateId" uuid NOT NULL,
+    "PmScheduleId" uuid,
+    "TemplateVersion" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Result" character varying(32),
+    "StartedByUserId" uuid NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_runs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_runs_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_inspection_runs_maintainarr_inspection_template~" FOREIGN KEY ("InspectionTemplateId") REFERENCES maintainarr_inspection_templates ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_inspection_runs_maintainarr_pm_schedules_PmSche~" FOREIGN KEY ("PmScheduleId") REFERENCES maintainarr_pm_schedules ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pm_occurrences (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PmScheduleId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "OccurrenceNumber" integer NOT NULL,
+    "DueAt" timestamp with time zone NOT NULL,
+    "DueMeterType" character varying(64),
+    "DueMeterValue" numeric(18,4),
+    "Status" character varying(32) NOT NULL,
+    "GeneratedWorkOrderRef" character varying(128),
+    "GeneratedInspectionRef" character varying(128),
+    "CompletedAt" timestamp with time zone,
+    "CompletedByWorkOrderRef" character varying(128),
+    "SkippedByPersonId" uuid,
+    "SkippedAt" timestamp with time zone,
+    "SkippedReason" character varying(512),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_pm_occurrences" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_pm_occurrences_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_pm_occurrences_maintainarr_pm_schedules_PmSched~" FOREIGN KEY ("PmScheduleId") REFERENCES maintainarr_pm_schedules ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_pm_program_schedules (
+    "PmProgramId" uuid NOT NULL,
+    "PmScheduleId" uuid NOT NULL,
+    "SortOrder" integer NOT NULL,
+    CONSTRAINT "PK_maintainarr_pm_program_schedules" PRIMARY KEY ("PmProgramId", "PmScheduleId"),
+    CONSTRAINT "FK_maintainarr_pm_program_schedules_maintainarr_pm_programs_Pm~" FOREIGN KEY ("PmProgramId") REFERENCES maintainarr_pm_programs ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_maintainarr_pm_program_schedules_maintainarr_pm_schedules_P~" FOREIGN KEY ("PmScheduleId") REFERENCES maintainarr_pm_schedules ("Id") ON DELETE RESTRICT
+);
+[00:15:22 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_defects (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "InspectionRunId" uuid,
+    "ChecklistItemId" uuid,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Priority" character varying(32) NOT NULL DEFAULT 'medium',
+    "DefectType" character varying(128),
+    "ReportSource" character varying(64),
+    "SourceType" character varying(64),
+    "SourceReferenceId" character varying(128),
+    "IncidentReferenceId" character varying(128),
+    "Status" character varying(32) NOT NULL,
+    "Source" character varying(32) NOT NULL,
+    "ReportedByUserId" uuid NOT NULL,
+    "ReportedByPersonId" text,
+    "DiscoveredByPersonId" text,
+    "CreatedByPersonId" text,
+    "UpdatedByPersonId" text,
+    "ReportedAt" timestamp with time zone,
+    "DiscoveredAt" timestamp with time zone,
+    "IsSafetyCritical" boolean NOT NULL,
+    "IsComplianceImpacting" boolean NOT NULL,
+    "IsOperabilityImpacting" boolean NOT NULL,
+    "FailureMode" character varying(128),
+    "SystemKey" character varying(128),
+    "ComponentKey" character varying(128),
+    "Symptom" character varying(256),
+    "SidePosition" character varying(64),
+    "OperatingCondition" character varying(128),
+    "DeferralCode" character varying(64),
+    "ReadinessNotes" character varying(1024),
+    "CorrectiveAction" character varying(1024),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ResolvedAt" timestamp with time zone,
+    "LastEscalatedAt" timestamp with time zone,
+    "EscalationCount" integer NOT NULL,
+    CONSTRAINT "PK_maintainarr_defects" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_defects_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_defects_maintainarr_inspection_checklist_items_~" FOREIGN KEY ("ChecklistItemId") REFERENCES maintainarr_inspection_checklist_items ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_defects_maintainarr_inspection_runs_InspectionR~" FOREIGN KEY ("InspectionRunId") REFERENCES maintainarr_inspection_runs ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_run_answers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionRunId" uuid NOT NULL,
+    "ChecklistItemId" uuid NOT NULL,
+    "PassFailValue" character varying(16),
+    "NumericValue" numeric(18,4),
+    "TextValue" character varying(512),
+    "SelectedOptionsJson" character varying(2048) NOT NULL,
+    "AnsweredAt" timestamp with time zone NOT NULL,
+    "AnsweredByUserId" uuid NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_run_answers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_run_answers_maintainarr_inspection_c~" FOREIGN KEY ("ChecklistItemId") REFERENCES maintainarr_inspection_checklist_items ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_inspection_run_answers_maintainarr_inspection_r~" FOREIGN KEY ("InspectionRunId") REFERENCES maintainarr_inspection_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_run_evidence (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionRunId" uuid NOT NULL,
+    "ChecklistItemId" uuid,
+    "EvidenceTypeKey" character varying(64) NOT NULL,
+    "FileName" character varying(255) NOT NULL,
+    "ContentType" character varying(128) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Notes" character varying(1024),
+    "UploadedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inspection_run_evidence" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_run_evidence_maintainarr_inspection_~" FOREIGN KEY ("ChecklistItemId") REFERENCES maintainarr_inspection_checklist_items ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_inspection_run_evidence_maintainarr_inspection~1" FOREIGN KEY ("InspectionRunId") REFERENCES maintainarr_inspection_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inspection_run_pause_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "InspectionRunId" uuid NOT NULL,
+    "PausedAt" timestamp with time zone NOT NULL,
+    "ResumedAt" timestamp with time zone,
+    "DurationMinutes" integer,
+    "Reason" character varying(64),
+    "Notes" character varying(1024),
+    "PausedByUserId" uuid NOT NULL,
+    "ResumedByUserId" uuid,
+    CONSTRAINT "PK_maintainarr_inspection_run_pause_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inspection_run_pause_events_maintainarr_inspect~" FOREIGN KEY ("InspectionRunId") REFERENCES maintainarr_inspection_runs ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_defect_evidence (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DefectId" uuid NOT NULL,
+    "EvidenceTypeKey" character varying(64) NOT NULL,
+    "FileName" character varying(255) NOT NULL,
+    "ContentType" character varying(128) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Notes" character varying(1024),
+    "UploadedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_defect_evidence" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_defect_evidence_maintainarr_defects_DefectId" FOREIGN KEY ("DefectId") REFERENCES maintainarr_defects ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_inbound_platform_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceEventId" uuid NOT NULL,
+    "EventKind" character varying(64) NOT NULL,
+    "RelatedEntityType" character varying(64) NOT NULL,
+    "RelatedEntityId" uuid NOT NULL,
+    "CorrelationId" uuid NOT NULL,
+    "PayloadJson" text NOT NULL,
+    "Outcome" character varying(32) NOT NULL,
+    "CreatedDefectId" uuid,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_inbound_platform_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_inbound_platform_events_maintainarr_defects_Cre~" FOREIGN KEY ("CreatedDefectId") REFERENCES maintainarr_defects ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_orders (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "DefectId" uuid,
+    "PmScheduleId" uuid,
+    "WorkOrderNumber" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "TemplateRef" character varying(128),
+    "Priority" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Source" character varying(32) NOT NULL,
+    "WorkOrderType" character varying(32) NOT NULL,
+    "OriginType" character varying(64) NOT NULL,
+    "OriginRef" character varying(128),
+    "StaffarrLocationId" character varying(128),
+    "RequiredQualificationRefsJson" character varying(2048) NOT NULL,
+    "QualificationCheckResultsJson" character varying(4096) NOT NULL,
+    "DraftPlanJson" text,
+    "PlannedStartAt" timestamp with time zone,
+    "PlannedDueAt" timestamp with time zone,
+    "AssignedTechnicianPersonId" character varying(128),
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "CancelledAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_work_orders" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_orders_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT,
+    CONSTRAINT "FK_maintainarr_work_orders_maintainarr_defects_DefectId" FOREIGN KEY ("DefectId") REFERENCES maintainarr_defects ("Id") ON DELETE SET NULL,
+    CONSTRAINT "FK_maintainarr_work_orders_maintainarr_pm_schedules_PmSchedule~" FOREIGN KEY ("PmScheduleId") REFERENCES maintainarr_pm_schedules ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_permit_refs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "PermitType" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256),
+    "RecordRef" character varying(256),
+    "StatusSnapshot" character varying(256),
+    "ApprovedByPersonId" character varying(128),
+    "ValidFrom" timestamp with time zone,
+    "ValidTo" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_maintenance_permit_refs" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_maintenance_permit_refs_maintainarr_work_orders~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_maintenance_vendor_works (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "SupplierRef" character varying(128) NOT NULL,
+    "VendorContactSnapshot" character varying(512),
+    "Status" character varying(32) NOT NULL,
+    "WorkDescription" character varying(1024),
+    "QuoteRecordRef" character varying(256),
+    "ApprovalRef" character varying(256),
+    "ScheduledAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "CostEstimateSnapshot" character varying(256),
+    "InvoiceRecordRef" character varying(256),
+    "WarrantyFlag" boolean NOT NULL,
+    "Notes" character varying(1024),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_maintenance_vendor_works" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_maintenance_vendor_works_maintainarr_work_order~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_return_to_services (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "RequiredChecksJson" character varying(2048) NOT NULL,
+    "CompletedChecksJson" character varying(2048) NOT NULL,
+    "FinalInspectionRef" uuid,
+    "ApprovedByPersonId" character varying(128),
+    "ApprovedAt" timestamp with time zone,
+    "RejectionReason" character varying(1024),
+    "FinalReadinessStatus" character varying(64),
+    "RecordRefsJson" character varying(2048) NOT NULL,
+    CONSTRAINT "PK_maintainarr_return_to_services" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_return_to_services_maintainarr_work_orders_Work~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_blockers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "BlockerType" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256),
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "RequiredAction" character varying(512),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "ResolvedAt" timestamp with time zone,
+    "ResolvedByPersonId" character varying(128),
+    "OverrideReason" character varying(1024),
+    CONSTRAINT "PK_maintainarr_work_order_blockers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_blockers_maintainarr_work_orders_Wor~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_closeouts (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "CompletionSummary" character varying(1024) NOT NULL,
+    "RootCause" character varying(64),
+    "CorrectiveAction" character varying(1024),
+    "PreventiveActionRecommendation" character varying(1024),
+    "AssetReturnedToService" boolean NOT NULL,
+    "ReturnToServiceAt" timestamp with time zone,
+    "ReturnToServiceByPersonId" character varying(128),
+    "PostRepairInspectionRequired" boolean NOT NULL,
+    "PostRepairInspectionRef" uuid,
+    "SupervisorReviewRequired" boolean NOT NULL,
+    "SupervisorReviewedByPersonId" character varying(128),
+    "SupervisorReviewedAt" timestamp with time zone,
+    "ComplianceReviewRequired" boolean NOT NULL,
+    "ComplianceReviewedByPersonId" character varying(128),
+    "ComplianceReviewedAt" timestamp with time zone,
+    "QualityReviewRequired" boolean NOT NULL,
+    "QualityReviewedByPersonId" character varying(128),
+    "QualityReviewedAt" timestamp with time zone,
+    "EvidenceAccepted" boolean NOT NULL,
+    "EvidenceRecordRefsJson" character varying(2048) NOT NULL,
+    "UnresolvedDefectRefs" character varying(512),
+    "FollowUpWorkOrderRefs" character varying(512),
+    "CustomerImpactSummary" character varying(1024),
+    "DowntimeSummary" character varying(1024),
+    "FinalAssetReadinessStatus" character varying(64),
+    "FinalStatus" character varying(64),
+    "PermitRecordRefsJson" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    CONSTRAINT "PK_maintainarr_work_order_closeouts" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_closeouts_maintainarr_work_orders_Wo~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_comments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "Body" character varying(2000) NOT NULL,
+    "Visibility" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "EditedAt" timestamp with time zone,
+    "EditedByPersonId" character varying(128),
+    "Pinned" boolean NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_comments" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_comments_maintainarr_work_orders_Wor~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_evidence (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "EvidenceTypeKey" character varying(64) NOT NULL,
+    "FileName" character varying(255) NOT NULL,
+    "ContentType" character varying(128) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Notes" character varying(1024),
+    "UploadedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_evidence" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_evidence_maintainarr_work_orders_Wor~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_parts_demand_lines (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "MaintenancePartId" uuid,
+    "SupplyarrPartId" uuid,
+    "PartNumber" character varying(128) NOT NULL,
+    "Description" character varying(256) NOT NULL,
+    "QuantityRequested" numeric(18,4) NOT NULL,
+    "UnitOfMeasure" character varying(32) NOT NULL,
+    "Notes" character varying(1024) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "MaintainarrPublicationId" uuid,
+    "SupplyarrDemandRefId" uuid,
+    "PublishedAt" timestamp with time zone,
+    "ProcurementStatus" character varying(32) NOT NULL,
+    "SupplyarrPurchaseRequestId" uuid,
+    "SupplyarrPurchaseOrderId" uuid,
+    "QuantityReceived" numeric(18,4) NOT NULL,
+    "ProcurementStatusMessage" character varying(512) NOT NULL,
+    "LastProcurementStatusAt" timestamp with time zone,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_parts_demand_lines" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_parts_demand_lines_maintainarr_parts~" FOREIGN KEY ("MaintenancePartId") REFERENCES maintainarr_parts ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_parts_demand_lines_maintainarr_work_~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_task_lines (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(1024) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_maintainarr_work_order_task_lines" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_task_lines_maintainarr_work_orders_W~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_technician_assignments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "PersonId" character varying(128) NOT NULL,
+    "AssignmentRole" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "AssignedAt" timestamp with time zone NOT NULL,
+    "AssignedByPersonId" character varying(128),
+    "AcceptedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "RequiredQualificationRefsJson" character varying(2048) NOT NULL,
+    "QualificationCheckSnapshotJson" character varying(4096) NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_technician_assignments" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_technician_assignments_maintainarr_w~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_timeline_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "EventType" character varying(128) NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "ActorPersonId" character varying(128),
+    "ActorServiceClientId" character varying(128),
+    "Summary" character varying(512) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(128),
+    "BeforeSnapshot" text,
+    "AfterSnapshot" text,
+    CONSTRAINT "PK_maintainarr_work_order_timeline_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_timeline_events_maintainarr_work_ord~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE
+);
+[00:15:22 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_work_order_labor_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkOrderId" uuid NOT NULL,
+    "WorkOrderTaskLineId" uuid,
+    "PersonId" character varying(128) NOT NULL,
+    "HoursWorked" numeric(8,2) NOT NULL,
+    "LaborTypeKey" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Notes" character varying(1024),
+    "SubmittedAt" timestamp with time zone,
+    "ApprovedByPersonId" character varying(128),
+    "ApprovedAt" timestamp with time zone,
+    "RejectionReason" character varying(1024),
+    "LoggedByUserId" uuid NOT NULL,
+    "LoggedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_work_order_labor_entries" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_work_order_labor_entries_maintainarr_work_order~" FOREIGN KEY ("WorkOrderId") REFERENCES maintainarr_work_orders ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_maintainarr_work_order_labor_entries_maintainarr_work_orde~1" FOREIGN KEY ("WorkOrderTaskLineId") REFERENCES maintainarr_work_order_task_lines ("Id") ON DELETE SET NULL
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_assignment_history_TenantId_AssetId_Assig~" ON maintainarr_asset_assignment_history ("TenantId", "AssetId", "AssignmentFieldKey", "EffectiveAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_availability_snapshots_TenantId" ON maintainarr_asset_availability_snapshots ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_availability_snapshots_TenantId_AssetId" ON maintainarr_asset_availability_snapshots ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_classes_TenantId" ON maintainarr_asset_classes ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_classes_TenantId_ClassKey" ON maintainarr_asset_classes ("TenantId", "ClassKey");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_compliance_state_TenantId_AssetId" ON maintainarr_asset_compliance_state ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_components_TenantId_AssetId_ComponentKey" ON maintainarr_asset_components ("TenantId", "AssetId", "ComponentKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_custom_field_values_TenantId_AssetId_Fiel~" ON maintainarr_asset_custom_field_values ("TenantId", "AssetId", "FieldKey");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_downtime_events_TenantId" ON maintainarr_asset_downtime_events ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_downtime_events_TenantId_AssetId_EndedAt" ON maintainarr_asset_downtime_events ("TenantId", "AssetId", "EndedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_downtime_events_TenantId_AssetId_StartedAt" ON maintainarr_asset_downtime_events ("TenantId", "AssetId", "StartedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_downtime_events_TenantId_Source_EndedAt" ON maintainarr_asset_downtime_events ("TenantId", "Source", "EndedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_downtime_sync_runs_TenantId_CreatedAt" ON maintainarr_asset_downtime_sync_runs ("TenantId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_snapshots_AssetId" ON maintainarr_asset_enrichment_snapshots ("AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_snapshots_TenantId" ON maintainarr_asset_enrichment_snapshots ("TenantId");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_snapshots_TenantId_AssetId" ON maintainarr_asset_enrichment_snapshots ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_snapshots_TenantId_AssetId_Pro~" ON maintainarr_asset_enrichment_snapshots ("TenantId", "AssetId", "ProviderKey", "SnapshotType", "CapturedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_suggestions_AssetId" ON maintainarr_asset_enrichment_suggestions ("AssetId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_suggestions_SnapshotId" ON maintainarr_asset_enrichment_suggestions ("SnapshotId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_suggestions_TenantId" ON maintainarr_asset_enrichment_suggestions ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_suggestions_TenantId_AssetId" ON maintainarr_asset_enrichment_suggestions ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_enrichment_suggestions_TenantId_AssetId_P~" ON maintainarr_asset_enrichment_suggestions ("TenantId", "AssetId", "ProviderKey", "FieldKey");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_enrichment_suggestions_TenantId_AssetId_S~" ON maintainarr_asset_enrichment_suggestions ("TenantId", "AssetId", "Status");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_external_identifiers_AssetId" ON maintainarr_asset_external_identifiers ("AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_external_identifiers_TenantId" ON maintainarr_asset_external_identifiers ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_external_identifiers_TenantId_AssetId" ON maintainarr_asset_external_identifiers ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_external_identifiers_TenantId_AssetId_Sou~" ON maintainarr_asset_external_identifiers ("TenantId", "AssetId", "SourceSystem", "IdentifierType", "NormalizedValue");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_external_mappings_TenantId_AssetId" ON maintainarr_asset_external_mappings ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_external_mappings_TenantId_SourceSystem_E~" ON maintainarr_asset_external_mappings ("TenantId", "SourceSystem", "ExternalEntityType", "ExternalId");
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_installed_components_ParentAssetId" ON maintainarr_asset_installed_components ("ParentAssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_installed_components_TenantId" ON maintainarr_asset_installed_components ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_installed_components_TenantId_ParentAsse~1" ON maintainarr_asset_installed_components ("TenantId", "ParentAssetId", "ComponentNumber");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_installed_components_TenantId_ParentAsset~" ON maintainarr_asset_installed_components ("TenantId", "ParentAssetId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_installed_components_TenantId_ParentCompo~" ON maintainarr_asset_installed_components ("TenantId", "ParentComponentId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_location_history_TenantId_AssetId_Effecti~" ON maintainarr_asset_location_history ("TenantId", "AssetId", "EffectiveAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_location_history_TenantId_StaffarrSiteOrg~" ON maintainarr_asset_location_history ("TenantId", "StaffarrSiteOrgUnitId");
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_meters_AssetId" ON maintainarr_asset_meters ("AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_meters_TenantId" ON maintainarr_asset_meters ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_meters_TenantId_AssetId_MeterKey" ON maintainarr_asset_meters ("TenantId", "AssetId", "MeterKey");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_meters_TenantId_AssetId_Status" ON maintainarr_asset_meters ("TenantId", "AssetId", "Status");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_quality_holds_AssetId" ON maintainarr_asset_quality_holds ("AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_quality_holds_TenantId" ON maintainarr_asset_quality_holds ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_quality_holds_TenantId_AssetId_Status" ON maintainarr_asset_quality_holds ("TenantId", "AssetId", "Status");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_quality_holds_TenantId_SourceProduct_Sour~" ON maintainarr_asset_quality_holds ("TenantId", "SourceProduct", "SourceObjectRef");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_readiness_checks_TenantId" ON maintainarr_asset_readiness_checks ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_readiness_checks_TenantId_AssetId_Created~" ON maintainarr_asset_readiness_checks ("TenantId", "AssetId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_readiness_state_TenantId_AssetId" ON maintainarr_asset_readiness_state ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_AssetId" ON maintainarr_asset_recall_cases ("AssetId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_RecallCampaignId" ON maintainarr_asset_recall_cases ("RecallCampaignId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_TenantId" ON maintainarr_asset_recall_cases ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_TenantId_AssetId" ON maintainarr_asset_recall_cases ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_recall_cases_TenantId_AssetId_RecallCampa~" ON maintainarr_asset_recall_cases ("TenantId", "AssetId", "RecallCampaignId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_TenantId_Status" ON maintainarr_asset_recall_cases ("TenantId", "Status");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_cases_TenantId_VerificationStatus" ON maintainarr_asset_recall_cases ("TenantId", "VerificationStatus");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_snapshots_AssetId" ON maintainarr_asset_recall_snapshots ("AssetId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_snapshots_TenantId" ON maintainarr_asset_recall_snapshots ("TenantId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_snapshots_TenantId_AssetId" ON maintainarr_asset_recall_snapshots ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_recall_snapshots_TenantId_AssetId_Campaig~" ON maintainarr_asset_recall_snapshots ("TenantId", "AssetId", "CampaignNumber");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_recall_snapshots_TenantId_AssetId_Status" ON maintainarr_asset_recall_snapshots ("TenantId", "AssetId", "Status");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_specs_TenantId_AssetId_SpecKey" ON maintainarr_asset_specs ("TenantId", "AssetId", "SpecKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_history_TenantId_AssetId_ChangedAt" ON maintainarr_asset_status_history ("TenantId", "AssetId", "ChangedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_rollup_runs_TenantId_CreatedAt" ON maintainarr_asset_status_rollup_runs ("TenantId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_rollups_TenantId" ON maintainarr_asset_status_rollups ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_status_rollups_TenantId_AssetId" ON maintainarr_asset_status_rollups ("TenantId", "AssetId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_rollups_TenantId_ComputedAt" ON maintainarr_asset_status_rollups ("TenantId", "ComputedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_scope_rollups_TenantId" ON maintainarr_asset_status_scope_rollups ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_status_scope_rollups_TenantId_ScopeType_C~" ON maintainarr_asset_status_scope_rollups ("TenantId", "ScopeType", "ComputedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_status_scope_rollups_TenantId_ScopeType_S~" ON maintainarr_asset_status_scope_rollups ("TenantId", "ScopeType", "ScopeEntityId", "ScopeEntityKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_types_AssetClassId" ON maintainarr_asset_types ("AssetClassId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_types_TenantId" ON maintainarr_asset_types ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_types_TenantId_TypeKey" ON maintainarr_asset_types ("TenantId", "TypeKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_assets_AssetTypeId" ON maintainarr_assets ("AssetTypeId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_assets_TenantId" ON maintainarr_assets ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_assets_TenantId_AssetTag" ON maintainarr_assets ("TenantId", "AssetTag");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_assets_TenantId_AssetTypeId" ON maintainarr_assets ("TenantId", "AssetTypeId");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_assets_TenantId_StaffarrSiteOrgUnitId" ON maintainarr_assets ("TenantId", "StaffarrSiteOrgUnitId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_audit_events_TenantId" ON maintainarr_audit_events ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_audit_events_TenantId_OccurredAt" ON maintainarr_audit_events ("TenantId", "OccurredAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_audit_package_generation_jobs_CreatedAt" ON maintainarr_audit_package_generation_jobs ("CreatedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_audit_package_generation_jobs_TenantId_Status_C~" ON maintainarr_audit_package_generation_jobs ("TenantId", "Status", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_catalog_options_TenantId_CatalogId_Key_OptionTe~" ON maintainarr_catalog_options ("TenantId", "CatalogId", "Key", "OptionTenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_catalogs_TenantId_Scope_Key" ON maintainarr_catalogs ("TenantId", "Scope", "Key");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_compliance_regulatory_key_mirrors_TenantId" ON maintainarr_compliance_regulatory_key_mirrors ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_compliance_regulatory_key_mirrors_TenantId_Comp~" ON maintainarr_compliance_regulatory_key_mirrors ("TenantId", "ComplianceKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_compliance_regulatory_key_mirrors_TenantId_Subj~" ON maintainarr_compliance_regulatory_key_mirrors ("TenantId", "SubjectType", "SubjectId", "ComplianceKey");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_escalation_events_TenantId_CreatedAt" ON maintainarr_defect_escalation_events ("TenantId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_escalation_events_TenantId_DefectId_Crea~" ON maintainarr_defect_escalation_events ("TenantId", "DefectId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_escalation_runs_TenantId_CreatedAt" ON maintainarr_defect_escalation_runs ("TenantId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_evidence_DefectId" ON maintainarr_defect_evidence ("DefectId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_evidence_TenantId" ON maintainarr_defect_evidence ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defect_evidence_TenantId_DefectId_CreatedAt" ON maintainarr_defect_evidence ("TenantId", "DefectId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_AssetId" ON maintainarr_defects ("AssetId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_ChecklistItemId" ON maintainarr_defects ("ChecklistItemId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_InspectionRunId" ON maintainarr_defects ("InspectionRunId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId" ON maintainarr_defects ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_AssetId_Status" ON maintainarr_defects ("TenantId", "AssetId", "Status");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_DefectType_Status" ON maintainarr_defects ("TenantId", "DefectType", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_InspectionRunId" ON maintainarr_defects ("TenantId", "InspectionRunId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_defects_TenantId_InspectionRunId_ChecklistItemId" ON maintainarr_defects ("TenantId", "InspectionRunId", "ChecklistItemId") WHERE "ChecklistItemId" IS NOT NULL;
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_ReportedByPersonId_CreatedAt" ON maintainarr_defects ("TenantId", "ReportedByPersonId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_ReportedByUserId_CreatedAt" ON maintainarr_defects ("TenantId", "ReportedByUserId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_ReportSource_Status" ON maintainarr_defects ("TenantId", "ReportSource", "Status");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_defects_TenantId_Status_UpdatedAt" ON maintainarr_defects ("TenantId", "Status", "UpdatedAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_external_provider_audit_log_entries_TenantId" ON maintainarr_external_provider_audit_log_entries ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_external_provider_audit_log_entries_TenantId_Pr~" ON maintainarr_external_provider_audit_log_entries ("TenantId", "ProviderKey", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_external_provider_cache_entries_TenantId" ON maintainarr_external_provider_cache_entries ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_external_provider_cache_entries_TenantId_Provi~1" ON maintainarr_external_provider_cache_entries ("TenantId", "ProviderKey", "ExpiresAt");
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_external_provider_cache_entries_TenantId_Provid~" ON maintainarr_external_provider_cache_entries ("TenantId", "ProviderKey", "CacheKey");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_fieldset_definitions_TenantId_Key_Purpose" ON maintainarr_fieldset_definitions ("TenantId", "Key", "Purpose");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_fieldset_fields_TenantId_FieldsetId_Key" ON maintainarr_fieldset_fields ("TenantId", "FieldsetId", "Key");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_fleet_availability_snapshots_TenantId" ON maintainarr_fleet_availability_snapshots ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_import_batches_TenantId_CreatedAt" ON maintainarr_import_batches ("TenantId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_import_batches_TenantId_ImportType_CreatedAt" ON maintainarr_import_batches ("TenantId", "ImportType", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inbound_platform_events_CreatedDefectId" ON maintainarr_inbound_platform_events ("CreatedDefectId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inbound_platform_events_TenantId" ON maintainarr_inbound_platform_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inbound_platform_events_TenantId_CreatedDefectId" ON maintainarr_inbound_platform_events ("TenantId", "CreatedDefectId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inbound_platform_events_TenantId_EventKind_Crea~" ON maintainarr_inbound_platform_events ("TenantId", "EventKind", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inbound_platform_events_TenantId_SourceProduct_~" ON maintainarr_inbound_platform_events ("TenantId", "SourceProduct", "SourceEventId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_checklist_items_CategoryId" ON maintainarr_inspection_checklist_items ("CategoryId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_checklist_items_InspectionTemplateId" ON maintainarr_inspection_checklist_items ("InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_checklist_items_TenantId" ON maintainarr_inspection_checklist_items ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_checklist_items_TenantId_Inspection~1" ON maintainarr_inspection_checklist_items ("TenantId", "InspectionTemplateId", "SortOrder");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inspection_checklist_items_TenantId_InspectionT~" ON maintainarr_inspection_checklist_items ("TenantId", "InspectionTemplateId", "ItemKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_answers_ChecklistItemId" ON maintainarr_inspection_run_answers ("ChecklistItemId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_answers_InspectionRunId" ON maintainarr_inspection_run_answers ("InspectionRunId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_answers_TenantId" ON maintainarr_inspection_run_answers ("TenantId");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inspection_run_answers_TenantId_InspectionRunId~" ON maintainarr_inspection_run_answers ("TenantId", "InspectionRunId", "ChecklistItemId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_evidence_ChecklistItemId" ON maintainarr_inspection_run_evidence ("ChecklistItemId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_evidence_InspectionRunId" ON maintainarr_inspection_run_evidence ("InspectionRunId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_evidence_TenantId" ON maintainarr_inspection_run_evidence ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_evidence_TenantId_InspectionRunI~" ON maintainarr_inspection_run_evidence ("TenantId", "InspectionRunId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_pause_events_InspectionRunId" ON maintainarr_inspection_run_pause_events ("InspectionRunId");
+[00:15:23 INF] Executed DbCommand (31ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_pause_events_TenantId" ON maintainarr_inspection_run_pause_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_run_pause_events_TenantId_Inspection~" ON maintainarr_inspection_run_pause_events ("TenantId", "InspectionRunId", "PausedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_AssetId" ON maintainarr_inspection_runs ("AssetId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_InspectionTemplateId" ON maintainarr_inspection_runs ("InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_PmScheduleId" ON maintainarr_inspection_runs ("PmScheduleId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_TenantId" ON maintainarr_inspection_runs ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_TenantId_AssetId_Status" ON maintainarr_inspection_runs ("TenantId", "AssetId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_TenantId_InspectionTemplateId" ON maintainarr_inspection_runs ("TenantId", "InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_TenantId_PmScheduleId_Status" ON maintainarr_inspection_runs ("TenantId", "PmScheduleId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_runs_TenantId_StartedByUserId_Starte~" ON maintainarr_inspection_runs ("TenantId", "StartedByUserId", "StartedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_template_asset_types_AssetTypeId" ON maintainarr_inspection_template_asset_types ("AssetTypeId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_template_asset_types_InspectionTempl~" ON maintainarr_inspection_template_asset_types ("InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_template_asset_types_TenantId" ON maintainarr_inspection_template_asset_types ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inspection_template_asset_types_TenantId_Inspec~" ON maintainarr_inspection_template_asset_types ("TenantId", "InspectionTemplateId", "AssetTypeId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_template_categories_InspectionTempla~" ON maintainarr_inspection_template_categories ("InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_template_categories_TenantId" ON maintainarr_inspection_template_categories ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inspection_template_categories_TenantId_Inspect~" ON maintainarr_inspection_template_categories ("TenantId", "InspectionTemplateId", "CategoryKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_templates_TenantId" ON maintainarr_inspection_templates ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_inspection_templates_TenantId_Status" ON maintainarr_inspection_templates ("TenantId", "Status");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_inspection_templates_TenantId_TemplateKey" ON maintainarr_inspection_templates ("TenantId", "TemplateKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_events_RollupId" ON maintainarr_maintenance_history_events ("RollupId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_events_TenantId_AssetId_Occ~" ON maintainarr_maintenance_history_events ("TenantId", "AssetId", "OccurredAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_events_TenantId_RollupId" ON maintainarr_maintenance_history_events ("TenantId", "RollupId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_rollup_runs_TenantId_Create~" ON maintainarr_maintenance_history_rollup_runs ("TenantId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_rollups_TenantId" ON maintainarr_maintenance_history_rollups ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_history_rollups_TenantId_AssetId" ON maintainarr_maintenance_history_rollups ("TenantId", "AssetId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_history_rollups_TenantId_ComputedAt" ON maintainarr_maintenance_history_rollups ("TenantId", "ComputedAt");
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_parts_kit_lines_MaintenancePartsKit~" ON maintainarr_maintenance_parts_kit_lines ("MaintenancePartsKitId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_parts_kit_lines_TenantId" ON maintainarr_maintenance_parts_kit_lines ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_parts_kit_lines_TenantId_Maintenan~1" ON maintainarr_maintenance_parts_kit_lines ("TenantId", "MaintenancePartsKitId", "ItemRef");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_parts_kit_lines_TenantId_Maintenanc~" ON maintainarr_maintenance_parts_kit_lines ("TenantId", "MaintenancePartsKitId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_parts_kits_TenantId" ON maintainarr_maintenance_parts_kits ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_parts_kits_TenantId_KitNumber" ON maintainarr_maintenance_parts_kits ("TenantId", "KitNumber");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_permit_refs_TenantId" ON maintainarr_maintenance_permit_refs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_permit_refs_TenantId_WorkOrderId_Re~" ON maintainarr_maintenance_permit_refs ("TenantId", "WorkOrderId", "RecordRef");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_permit_refs_WorkOrderId" ON maintainarr_maintenance_permit_refs ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_vendor_works_TenantId" ON maintainarr_maintenance_vendor_works ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_vendor_works_TenantId_WorkOrderId_S~" ON maintainarr_maintenance_vendor_works ("TenantId", "WorkOrderId", "SupplierRef");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_maintenance_vendor_works_WorkOrderId" ON maintainarr_maintenance_vendor_works ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_meter_readings_AssetId" ON maintainarr_meter_readings ("AssetId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_meter_readings_AssetMeterId" ON maintainarr_meter_readings ("AssetMeterId");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_meter_readings_TenantId" ON maintainarr_meter_readings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_meter_readings_TenantId_AssetId_ReadAt" ON maintainarr_meter_readings ("TenantId", "AssetId", "ReadAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_meter_readings_TenantId_AssetMeterId_ReadAt" ON maintainarr_meter_readings ("TenantId", "AssetMeterId", "ReadAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_notification_dispatches_TenantId" ON maintainarr_notification_dispatches ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_notification_dispatches_TenantId_DispatchStatus~" ON maintainarr_notification_dispatches ("TenantId", "DispatchStatus", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_notification_dispatches_TenantId_EventKind_Rela~" ON maintainarr_notification_dispatches ("TenantId", "EventKind", "RelatedEntityType", "RelatedEntityId");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_parts_TenantId" ON maintainarr_parts ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_parts_TenantId_NormalizedPartNumber" ON maintainarr_parts ("TenantId", "NormalizedPartNumber");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_parts_TenantId_Status" ON maintainarr_parts ("TenantId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_parts_TenantId_SupplyArrPartId" ON maintainarr_parts ("TenantId", "SupplyArrPartId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_platform_event_processing_runs_TenantId_Created~" ON maintainarr_platform_event_processing_runs ("TenantId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_platform_outbox_events_TenantId" ON maintainarr_platform_outbox_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_platform_outbox_events_TenantId_EventKind_Creat~" ON maintainarr_platform_outbox_events ("TenantId", "EventKind", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_platform_outbox_events_TenantId_IdempotencyKey" ON maintainarr_platform_outbox_events ("TenantId", "IdempotencyKey");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_platform_outbox_events_TenantId_ProcessingStatu~" ON maintainarr_platform_outbox_events ("TenantId", "ProcessingStatus", "NextRetryAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_due_scan_runs_TenantId_CreatedAt" ON maintainarr_pm_due_scan_runs ("TenantId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_occurrences_AssetId" ON maintainarr_pm_occurrences ("AssetId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_occurrences_PmScheduleId" ON maintainarr_pm_occurrences ("PmScheduleId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_occurrences_TenantId" ON maintainarr_pm_occurrences ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_pm_occurrences_TenantId_PmScheduleId_DueAt" ON maintainarr_pm_occurrences ("TenantId", "PmScheduleId", "DueAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_pm_occurrences_TenantId_PmScheduleId_Occurrence~" ON maintainarr_pm_occurrences ("TenantId", "PmScheduleId", "OccurrenceNumber");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_occurrences_TenantId_Status_DueAt" ON maintainarr_pm_occurrences ("TenantId", "Status", "DueAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_program_schedules_PmProgramId_SortOrder" ON maintainarr_pm_program_schedules ("PmProgramId", "SortOrder");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_pm_program_schedules_PmScheduleId" ON maintainarr_pm_program_schedules ("PmScheduleId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_AssetId" ON maintainarr_pm_programs ("AssetId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_AssetTypeId" ON maintainarr_pm_programs ("AssetTypeId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_InspectionTemplateId" ON maintainarr_pm_programs ("InspectionTemplateId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_TenantId" ON maintainarr_pm_programs ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_TenantId_AssetId" ON maintainarr_pm_programs ("TenantId", "AssetId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_TenantId_AssetTypeId" ON maintainarr_pm_programs ("TenantId", "AssetTypeId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_pm_programs_TenantId_ProgramKey" ON maintainarr_pm_programs ("TenantId", "ProgramKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_programs_TenantId_Status" ON maintainarr_pm_programs ("TenantId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_schedules_AssetId" ON maintainarr_pm_schedules ("AssetId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_schedules_AssetMeterId" ON maintainarr_pm_schedules ("AssetMeterId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_schedules_TenantId" ON maintainarr_pm_schedules ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_pm_schedules_TenantId_AssetId_ScheduleKey" ON maintainarr_pm_schedules ("TenantId", "AssetId", "ScheduleKey");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_schedules_TenantId_AssetMeterId_Status" ON maintainarr_pm_schedules ("TenantId", "AssetMeterId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_pm_schedules_TenantId_Status_DueStatus_NextDueAt" ON maintainarr_pm_schedules ("TenantId", "Status", "DueStatus", "NextDueAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_audit_log_entries_TenantId" ON maintainarr_recall_audit_log_entries ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_audit_log_entries_TenantId_AssetId_Creat~" ON maintainarr_recall_audit_log_entries ("TenantId", "AssetId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_audit_log_entries_TenantId_RecallCampaig~" ON maintainarr_recall_audit_log_entries ("TenantId", "RecallCampaignId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_campaign_applicabilities_RecallCampaignI~" ON maintainarr_recall_campaign_applicabilities ("RecallCampaignId", "ModelYear", "Make", "Model");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_campaigns_TenantId" ON maintainarr_recall_campaigns ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_recall_campaigns_TenantId_SourceProvider_Source~" ON maintainarr_recall_campaigns ("TenantId", "SourceProvider", "SourceProviderRecordId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_recall_make_model_aliases_Provider_NormalizedMa~" ON maintainarr_recall_make_model_aliases ("Provider", "NormalizedMake", "NormalizedModel");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_recall_make_model_aliases_Provider_RawMake_RawM~" ON maintainarr_recall_make_model_aliases ("Provider", "RawMake", "RawModel");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_reference_cache_entries_TenantId_SourceOfTruth_~" ON maintainarr_reference_cache_entries ("TenantId", "SourceOfTruth", "ReferenceKey", "ExternalKey");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_return_to_services_TenantId" ON maintainarr_return_to_services ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_return_to_services_TenantId_WorkOrderId" ON maintainarr_return_to_services ("TenantId", "WorkOrderId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_return_to_services_WorkOrderId" ON maintainarr_return_to_services ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_staff_person_refs_TenantId" ON maintainarr_staff_person_refs ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_staff_person_refs_TenantId_StaffarrPersonId" ON maintainarr_staff_person_refs ("TenantId", "StaffarrPersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_asset_status_rollup_settings_TenantId" ON maintainarr_tenant_asset_status_rollup_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_defect_escalation_settings_TenantId" ON maintainarr_tenant_defect_escalation_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_downtime_tracking_settings_TenantId" ON maintainarr_tenant_downtime_tracking_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_maintenance_history_rollup_settings_Tena~" ON maintainarr_tenant_maintenance_history_rollup_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_notification_settings_TenantId" ON maintainarr_tenant_notification_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_platform_event_settings_TenantId" ON maintainarr_tenant_platform_event_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_pm_due_scan_settings_TenantId" ON maintainarr_tenant_pm_due_scan_settings ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_blockers_TenantId" ON maintainarr_work_order_blockers ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_blockers_TenantId_WorkOrderId_Create~" ON maintainarr_work_order_blockers ("TenantId", "WorkOrderId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_work_order_blockers_TenantId_WorkOrderId_Source~" ON maintainarr_work_order_blockers ("TenantId", "WorkOrderId", "SourceProduct", "SourceObjectRef");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_blockers_WorkOrderId" ON maintainarr_work_order_blockers ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_closeouts_TenantId" ON maintainarr_work_order_closeouts ("TenantId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_work_order_closeouts_TenantId_WorkOrderId" ON maintainarr_work_order_closeouts ("TenantId", "WorkOrderId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_closeouts_WorkOrderId" ON maintainarr_work_order_closeouts ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_comments_TenantId" ON maintainarr_work_order_comments ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_comments_TenantId_WorkOrderId_Pinned~" ON maintainarr_work_order_comments ("TenantId", "WorkOrderId", "Pinned", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_comments_WorkOrderId" ON maintainarr_work_order_comments ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_evidence_TenantId" ON maintainarr_work_order_evidence ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_evidence_TenantId_WorkOrderId_Create~" ON maintainarr_work_order_evidence ("TenantId", "WorkOrderId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_evidence_WorkOrderId" ON maintainarr_work_order_evidence ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_TenantId" ON maintainarr_work_order_labor_entries ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_TenantId_PersonId_Logg~" ON maintainarr_work_order_labor_entries ("TenantId", "PersonId", "LoggedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_TenantId_WorkOrderId_L~" ON maintainarr_work_order_labor_entries ("TenantId", "WorkOrderId", "LoggedAt");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_TenantId_WorkOrderId_S~" ON maintainarr_work_order_labor_entries ("TenantId", "WorkOrderId", "Status");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_WorkOrderId" ON maintainarr_work_order_labor_entries ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_labor_entries_WorkOrderTaskLineId" ON maintainarr_work_order_labor_entries ("WorkOrderTaskLineId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_MaintenancePartId" ON maintainarr_work_order_parts_demand_lines ("MaintenancePartId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_TenantId" ON maintainarr_work_order_parts_demand_lines ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_TenantId_Maintain~" ON maintainarr_work_order_parts_demand_lines ("TenantId", "MaintainarrPublicationId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_TenantId_Procurem~" ON maintainarr_work_order_parts_demand_lines ("TenantId", "ProcurementStatus");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_TenantId_WorkOrd~1" ON maintainarr_work_order_parts_demand_lines ("TenantId", "WorkOrderId", "Status");
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_TenantId_WorkOrde~" ON maintainarr_work_order_parts_demand_lines ("TenantId", "WorkOrderId", "LineNumber");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_lines_WorkOrderId" ON maintainarr_work_order_parts_demand_lines ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_status_events_TenantId" ON maintainarr_work_order_parts_demand_status_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_work_order_parts_demand_status_events_TenantId_~" ON maintainarr_work_order_parts_demand_status_events ("TenantId", "SupplyarrCallbackPublicationId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_parts_demand_status_events_TenantId~1" ON maintainarr_work_order_parts_demand_status_events ("TenantId", "MaintainarrPublicationId", "OccurredAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_task_lines_TenantId" ON maintainarr_work_order_task_lines ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_task_lines_TenantId_WorkOrderId_Sort~" ON maintainarr_work_order_task_lines ("TenantId", "WorkOrderId", "SortOrder");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_task_lines_WorkOrderId" ON maintainarr_work_order_task_lines ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_technician_assignments_TenantId" ON maintainarr_work_order_technician_assignments ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_work_order_technician_assignments_TenantId_Wor~1" ON maintainarr_work_order_technician_assignments ("TenantId", "WorkOrderId", "PersonId", "AssignmentRole");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_technician_assignments_TenantId_Work~" ON maintainarr_work_order_technician_assignments ("TenantId", "WorkOrderId", "AssignedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_technician_assignments_WorkOrderId" ON maintainarr_work_order_technician_assignments ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_timeline_events_TenantId" ON maintainarr_work_order_timeline_events ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_timeline_events_TenantId_WorkOrderId~" ON maintainarr_work_order_timeline_events ("TenantId", "WorkOrderId", "OccurredAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_order_timeline_events_WorkOrderId" ON maintainarr_work_order_timeline_events ("WorkOrderId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_AssetId" ON maintainarr_work_orders ("AssetId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_DefectId" ON maintainarr_work_orders ("DefectId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_PmScheduleId" ON maintainarr_work_orders ("PmScheduleId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId" ON maintainarr_work_orders ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId_AssetId_Status" ON maintainarr_work_orders ("TenantId", "AssetId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId_AssignedTechnicianPersonId~" ON maintainarr_work_orders ("TenantId", "AssignedTechnicianPersonId", "Status");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId_CreatedByUserId_CreatedAt" ON maintainarr_work_orders ("TenantId", "CreatedByUserId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId_DefectId" ON maintainarr_work_orders ("TenantId", "DefectId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_work_orders_TenantId_PmScheduleId_Status" ON maintainarr_work_orders ("TenantId", "PmScheduleId", "Status");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_work_orders_TenantId_WorkOrderNumber" ON maintainarr_work_orders ("TenantId", "WorkOrderNumber");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260609060220_CurrentSchemaBaseline', '10.0.8');
+[00:15:24 INF] Applying migration '20260617062925_AddSmartImportDestinationRecords'.
+[00:15:24 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617062925_AddSmartImportDestinationRecords', '10.0.8');
+[00:15:24 INF] Applying migration '20260618004336_AddMaintainArrTenantSettings'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SchemaVersion" integer NOT NULL,
+    "SettingsJson" text NOT NULL,
+    "CreatedAtUtc" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedAtUtc" timestamp with time zone NOT NULL,
+    "UpdatedByPersonId" character varying(128),
+    CONSTRAINT "PK_maintainarr_tenant_settings" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_tenant_settings_audit (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SettingsId" uuid NOT NULL,
+    "SchemaVersion" integer NOT NULL,
+    "ChangedAtUtc" timestamp with time zone NOT NULL,
+    "ChangedByPersonId" character varying(128),
+    "ChangeReason" character varying(512),
+    "BeforeJson" text NOT NULL,
+    "AfterJson" text NOT NULL,
+    "DiffJson" text NOT NULL,
+    CONSTRAINT "PK_maintainarr_tenant_settings_audit" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_tenant_settings_TenantId" ON maintainarr_tenant_settings ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_tenant_settings_audit_TenantId" ON maintainarr_tenant_settings_audit ("TenantId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_tenant_settings_audit_TenantId_ChangedAtUtc" ON maintainarr_tenant_settings_audit ("TenantId", "ChangedAtUtc");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_tenant_settings_audit_TenantId_SettingsId" ON maintainarr_tenant_settings_audit ("TenantId", "SettingsId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618004336_AddMaintainArrTenantSettings', '10.0.8');
+[00:15:24 INF] Applying migration '20260622060318_AddPrintExportLogs'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622060318_AddPrintExportLogs', '10.0.8');
+[00:15:24 INF] Applying migration '20260626235457_AddAssetReservations'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_reservations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetId" uuid NOT NULL,
+    "AssetTag" character varying(64) NOT NULL,
+    "AssetName" character varying(128) NOT NULL,
+    "ReservationNumber" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Purpose" character varying(256) NOT NULL,
+    "RequestedStartAt" timestamp with time zone NOT NULL,
+    "RequestedEndAt" timestamp with time zone NOT NULL,
+    "PickupLocationRef" character varying(128),
+    "PickupLocationNameSnapshot" character varying(256),
+    "ReturnLocationRef" character varying(128),
+    "ReturnLocationNameSnapshot" character varying(256),
+    "CapacityNotes" character varying(512),
+    "EquipmentNotes" character varying(512),
+    "OperatorPersonId" character varying(128),
+    "OperatorDisplayNameSnapshot" character varying(256),
+    "DriverPersonId" character varying(128),
+    "DriverDisplayNameSnapshot" character varying(256),
+    "RequestedByPersonId" character varying(128),
+    "RequestedByDisplayNameSnapshot" character varying(256),
+    "Notes" character varying(2048),
+    "CheckOutMeterReading" numeric(18,2),
+    "ReturnMeterReading" numeric(18,2),
+    "ApprovedAt" timestamp with time zone,
+    "ReservedAt" timestamp with time zone,
+    "CheckedOutAt" timestamp with time zone,
+    "InUseAt" timestamp with time zone,
+    "ReturnedAt" timestamp with time zone,
+    "InspectedAt" timestamp with time zone,
+    "ClosedAt" timestamp with time zone,
+    "CanceledAt" timestamp with time zone,
+    "NoShowAt" timestamp with time zone,
+    "CancelReason" character varying(512),
+    "NoShowReason" character varying(512),
+    "InspectionNotes" character varying(1024),
+    "DamageNotes" character varying(1024),
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_reservations" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_reservations_maintainarr_assets_AssetId" FOREIGN KEY ("AssetId") REFERENCES maintainarr_assets ("Id") ON DELETE RESTRICT
+);
+[00:15:24 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE maintainarr_asset_reservation_status_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AssetReservationId" uuid NOT NULL,
+    "EventType" character varying(32) NOT NULL,
+    "FromStatus" character varying(32) NOT NULL,
+    "ToStatus" character varying(32) NOT NULL,
+    "Message" character varying(512) NOT NULL,
+    "ActorPersonId" character varying(128),
+    "ActorDisplayNameSnapshot" character varying(256),
+    "Notes" character varying(1024),
+    "MeterReading" numeric(18,2),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_maintainarr_asset_reservation_status_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_maintainarr_asset_reservation_status_events_maintainarr_ass~" FOREIGN KEY ("AssetReservationId") REFERENCES maintainarr_asset_reservations ("Id") ON DELETE CASCADE
+);
+[00:15:24 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservation_status_events_AssetReservatio~" ON maintainarr_asset_reservation_status_events ("AssetReservationId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservation_status_events_TenantId" ON maintainarr_asset_reservation_status_events ("TenantId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservation_status_events_TenantId_AssetR~" ON maintainarr_asset_reservation_status_events ("TenantId", "AssetReservationId", "OccurredAt");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservations_AssetId" ON maintainarr_asset_reservations ("AssetId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservations_TenantId" ON maintainarr_asset_reservations ("TenantId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservations_TenantId_AssetId" ON maintainarr_asset_reservations ("TenantId", "AssetId");
+[00:15:24 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservations_TenantId_RequestedStartAt" ON maintainarr_asset_reservations ("TenantId", "RequestedStartAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_asset_reservations_TenantId_ReservationNumber" ON maintainarr_asset_reservations ("TenantId", "ReservationNumber");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_maintainarr_asset_reservations_TenantId_Status" ON maintainarr_asset_reservations ("TenantId", "Status");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260626235457_AddAssetReservations', '10.0.8');
+[00:15:24 INF] Applying migration '20260627002831_AddMaintenanceVendorWorkPortalAccess'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessCode" character varying(128);
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessCodeIssuedAt" timestamp with time zone;
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessExpiresAt" timestamp with time zone;
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessOpenedAt" timestamp with time zone;
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessRevokedAt" timestamp with time zone;
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_maintenance_vendor_works ADD "PortalAccessStatus" character varying(32) NOT NULL DEFAULT 'draft';
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_maintainarr_maintenance_vendor_works_PortalAccessCode" ON maintainarr_maintenance_vendor_works ("PortalAccessCode");
+[00:15:24 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260627002831_AddMaintenanceVendorWorkPortalAccess', '10.0.8');
+[00:15:24 INF] Applying migration '20260627033130_AddAssetReservationChargeNotes'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE maintainarr_asset_reservations ADD "ChargeNotes" character varying(1024);
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260627033130_AddAssetReservationChargeNotes', '10.0.8');
+[00:15:24 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,59 +2698,27 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:11 INF] Starting MaintainArr API (maintainarr) on http://localhost:5104
-[22:30:11 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:14 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5104: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:30:14 FTL] MaintainArr API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5104: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:24 INF] Starting MaintainArr API (maintainarr) on http://localhost:5104
+[00:15:24 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:26 INF] Now listening on: http://localhost:5104
+[00:15:26 INF] Application started. Press Ctrl+C to shut down.
+[00:15:26 INF] Hosting environment: Development
+[00:15:26 INF] Content root path: F:\STLComplianceV2\apps\maintainarr-api\MaintainArr.Api
+[00:15:29 INF] Request starting HTTP/1.1 GET http://localhost:5104/health - null null
+[00:15:36 INF] Request starting HTTP/1.1 GET http://localhost:5104/health - null null
+[00:15:38 INF] Executing endpoint 'HTTP: GET /health'
+[00:15:38 INF] Executing endpoint 'HTTP: GET /health'
+[00:15:38 INF] Setting HTTP status code 200.
+[00:15:38 INF] Setting HTTP status code 200.
+[00:15:38 INF] Writing value of type 'HealthResponse' as Json.
+[00:15:38 INF] Writing value of type 'HealthResponse' as Json.
+[00:15:38 INF] Executed endpoint 'HTTP: GET /health'
+[00:15:38 INF] Request finished HTTP/1.1 GET http://localhost:5104/health - 499 null application/json; charset=utf-8 8912.7037ms
+[00:15:38 INF] Executed endpoint 'HTTP: GET /health'
+[00:15:38 INF] Request finished HTTP/1.1 GET http://localhost:5104/health - 200 null application/json; charset=utf-8 1562.3111ms
+[00:16:15 INF] Request starting HTTP/1.1 GET http://localhost:5104/ - null null
+[00:16:15 INF] Executing endpoint 'HTTP: GET /'
+[00:16:15 INF] Setting HTTP status code 200.
+[00:16:15 INF] Writing value of type '<>f__AnonymousType7`5' as Json.
+[00:16:15 INF] Executed endpoint 'HTTP: GET /'
+[00:16:15 INF] Request finished HTTP/1.1 GET http://localhost:5104/ - 200 null application/json; charset=utf-8 16.8939ms

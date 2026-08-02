@@ -134,6 +134,8 @@ describe('ProductWorkspaceLayout', () => {
       productKey: 'compliancecore',
       launchableProductKeys: ['compliancecore'],
       canManageVocabulary: true,
+      canManageWaivers: true,
+      canApproveWaivers: true,
       canExportAuditPackage: true,
       canEvaluateRiskScores: true,
       canEvaluateMissingEvidenceWarnings: true,

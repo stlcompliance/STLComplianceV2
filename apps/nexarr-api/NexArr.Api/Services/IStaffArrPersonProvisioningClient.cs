@@ -7,6 +7,7 @@ public interface IStaffArrPersonProvisioningClient
         Guid externalUserId,
         string email,
         string displayName,
+        string? roleKey,
         Guid? requestedByUserId,
         CancellationToken cancellationToken = default);
 }

@@ -1,38 +1,27 @@
 dotnet watch 🔥 Hot reload enabled. For a list of supported edits, see https://aka.ms/dotnet/hot-reload.
 dotnet watch 💡 Press Ctrl+R to restart.
 dotnet watch ⌚ Loading projects ...
-dotnet watch ⌚ Loaded 2 project(s) in 1.6s.
+dotnet watch ⌚ Loaded 2 project(s) in 1.1s.
 dotnet watch ⌚ Waiting for changes
-Unhandled exception. System.IO.IOException: Failed to bind to address http://127.0.0.1:5107: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 270
-   at Program.<Main>$(String[] args) in F:\STLComplianceV2\apps\compliancecore-api\ComplianceCore.Api\Program.cs:line 9
-   at Program.<Main>(String[] args)
-dotnet watch ❌ [ComplianceCore.Api (net10.0)] Exited with error code -532462766
+dotnet watch ⌚ File added: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs.backup
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 1.2s.
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File deleted: .\packages\shared-dotnet\STLCompliance.Shared\obj\Debug\net10.0\STLCompliance.Shared.AssemblyInfo.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\obj\Debug\net10.0\STLCompliance.Shared.AssemblyInfo.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(90,5): error CS1519: Invalid token '}' in a member declaration
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(13,52): error CS1061: 'IConfiguration' does not contain a definition for 'GetValue' and no accessible extension method 'GetValue' accepting a first argument of type 'IConfiguration' could be found (are you missing a using directive or an assembly reference?)
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 C# and Razor changes applied in 1598ms.
+dotnet watch ❌ [ComplianceCore.Api (net10.0)] Exited with error code 1073807364
 dotnet watch ⏳ Waiting for a file to change before restarting ...

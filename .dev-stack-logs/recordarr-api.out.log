@@ -1,45 +1,1390 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj]
+F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj]
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
   RecordArr.Api -> F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\bin\Debug\net10.0\RecordArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api\RecordArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+    4 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:04.48
+Time Elapsed 00:00:08.48
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer recordarr-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for recordarr-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 2/40 failed for recordarr-api; retrying in 5s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 1 integration token(s) for recordarr-api from NexArr.
-[22:29:52 INF] Applying EF migrations for RecordArrDbContext (attempt 1/8)
-[22:30:02 INF] Executed DbCommand (70ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for RecordArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (28ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:02 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT 1
-[22:30:03 INF] Executed DbCommand (31ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
-    "MigrationId" character varying(150) NOT NULL,
-    "ProductVersion" character varying(32) NOT NULL,
-    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
-);
-[22:30:03 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Applying migration '20260628035534_AddRecordArrDurableRecordFileStore'.
+[00:15:19 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_files_TenantId" ON recordarr_files ("TenantId");
+[00:15:19 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_files_TenantId_ChecksumSha256" ON recordarr_files ("TenantId", "ChecksumSha256");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_files_TenantId_FileId" ON recordarr_files ("TenantId", "FileId");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_files_TenantId_RecordId_UploadedAt" ON recordarr_files ("TenantId", "RecordId", "UploadedAt");
+[00:15:19 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_records_TenantId" ON recordarr_records ("TenantId");
+[00:15:19 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_records_TenantId_RecordId" ON recordarr_records ("TenantId", "RecordId");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_records_TenantId_SourceProduct_SourceObjectType_S~" ON recordarr_records ("TenantId", "SourceProduct", "SourceObjectType", "SourceObjectId");
+[00:15:19 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_records_TenantId_Status_UploadedAt" ON recordarr_records ("TenantId", "Status", "UploadedAt");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:19 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:19 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:19 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628035534_AddRecordArrDurableRecordFileStore', '10.0.8');
+[00:15:19 INF] Applying migration '20260628040246_AddRecordArrDurableRecordContextStore'.
+[00:15:19 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:03 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT "MigrationId", "ProductVersion"
-FROM "__EFMigrationsHistory"
-ORDER BY "MigrationId";
-[22:30:03 INF] No migrations were applied. The database is already up to date.
-[22:30:03 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_record_comments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CommentId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "Visibility" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "EditedAt" timestamp with time zone,
+    "EditedByPersonId" character varying(128),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_record_comments" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_record_links (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RecordLinkId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "LinkedRecordId" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "LinkType" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_record_links" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_record_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "MetadataId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "ValueType" character varying(64) NOT NULL,
+    "Source" character varying(64) NOT NULL,
+    "ConfidenceScore" numeric NOT NULL,
+    "Verified" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "VerifiedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_record_metadata" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_comments_TenantId" ON recordarr_record_comments ("TenantId");
+[00:15:19 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_record_comments_TenantId_CommentId" ON recordarr_record_comments ("TenantId", "CommentId");
+[00:15:19 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_comments_TenantId_RecordId_CreatedAt" ON recordarr_record_comments ("TenantId", "RecordId", "CreatedAt");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_links_TenantId" ON recordarr_record_links ("TenantId");
+[00:15:19 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_links_TenantId_RecordId_LinkType" ON recordarr_record_links ("TenantId", "RecordId", "LinkType");
+[00:15:19 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_record_links_TenantId_RecordLinkId" ON recordarr_record_links ("TenantId", "RecordLinkId");
+[00:15:19 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_links_TenantId_SourceObjectRef" ON recordarr_record_links ("TenantId", "SourceObjectRef");
+[00:15:20 INF] Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_metadata_TenantId" ON recordarr_record_metadata ("TenantId");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_record_metadata_TenantId_MetadataId" ON recordarr_record_metadata ("TenantId", "MetadataId");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_record_metadata_TenantId_RecordId_Key" ON recordarr_record_metadata ("TenantId", "RecordId", "Key");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628040246_AddRecordArrDurableRecordContextStore', '10.0.8');
+[00:15:20 INF] Applying migration '20260628040937_AddRecordArrDurableIntakeState'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_capture_requests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CaptureRequestId" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256) NOT NULL,
+    "CaptureType" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Required" boolean NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "UploadSessionRef" character varying(64),
+    "EvidenceRequirementRef" character varying(128),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_capture_requests" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_upload_sessions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "UploadSessionId" character varying(64) NOT NULL,
+    "UploadSessionNumber" character varying(64) NOT NULL,
+    "SessionType" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectType" character varying(96) NOT NULL,
+    "SourceObjectId" character varying(160) NOT NULL,
+    "UploadPurpose" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "RevokedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_upload_sessions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_capture_requests_TenantId" ON recordarr_capture_requests ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_capture_requests_TenantId_CaptureRequestId" ON recordarr_capture_requests ("TenantId", "CaptureRequestId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_capture_requests_TenantId_Status_CreatedAt" ON recordarr_capture_requests ("TenantId", "Status", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_capture_requests_TenantId_UploadSessionRef" ON recordarr_capture_requests ("TenantId", "UploadSessionRef");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_upload_sessions_TenantId" ON recordarr_upload_sessions ("TenantId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_upload_sessions_TenantId_SourceProduct_SourceObje~" ON recordarr_upload_sessions ("TenantId", "SourceProduct", "SourceObjectType", "SourceObjectId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_upload_sessions_TenantId_Status_CreatedAt" ON recordarr_upload_sessions ("TenantId", "Status", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_upload_sessions_TenantId_UploadSessionId" ON recordarr_upload_sessions ("TenantId", "UploadSessionId");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628040937_AddRecordArrDurableIntakeState', '10.0.8');
+[00:15:20 INF] Applying migration '20260628041529_AddRecordArrDurableProcessingState'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (31ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_extraction_results (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExtractionResultId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "ExtractionType" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "ConfidenceScore" numeric NOT NULL,
+    "ExtractedAt" timestamp with time zone NOT NULL,
+    "ReviewedByPersonId" character varying(128),
+    "ReviewedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_extraction_results" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_ocr_results (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OcrResultId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "FileId" character varying(64) NOT NULL,
+    "Engine" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "Language" character varying(32) NOT NULL,
+    "ConfidenceScore" numeric NOT NULL,
+    "ExtractedAt" timestamp with time zone NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_ocr_results" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_scan_processing (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScanProcessingId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "OriginalFileName" character varying(256) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "ScanPurpose" character varying(96) NOT NULL,
+    "OriginalFileRef" character varying(64),
+    "GeneratedPdfFileRef" character varying(64),
+    "OcrResultId" character varying(64),
+    "ExtractionResultId" character varying(64),
+    "ConfidenceScore" numeric NOT NULL,
+    "ProcessedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_scan_processing" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_extraction_results_TenantId" ON recordarr_extraction_results ("TenantId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_extraction_results_TenantId_ExtractionResultId" ON recordarr_extraction_results ("TenantId", "ExtractionResultId");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_extraction_results_TenantId_RecordId_ExtractedAt" ON recordarr_extraction_results ("TenantId", "RecordId", "ExtractedAt");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_extraction_results_TenantId_Status_ExtractedAt" ON recordarr_extraction_results ("TenantId", "Status", "ExtractedAt");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_ocr_results_TenantId" ON recordarr_ocr_results ("TenantId");
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_ocr_results_TenantId_OcrResultId" ON recordarr_ocr_results ("TenantId", "OcrResultId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_ocr_results_TenantId_RecordId_ExtractedAt" ON recordarr_ocr_results ("TenantId", "RecordId", "ExtractedAt");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_ocr_results_TenantId_Status_ExtractedAt" ON recordarr_ocr_results ("TenantId", "Status", "ExtractedAt");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_scan_processing_TenantId" ON recordarr_scan_processing ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_scan_processing_TenantId_RecordId_ProcessedAt" ON recordarr_scan_processing ("TenantId", "RecordId", "ProcessedAt");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_scan_processing_TenantId_ScanProcessingId" ON recordarr_scan_processing ("TenantId", "ScanProcessingId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_scan_processing_TenantId_Status_ProcessedAt" ON recordarr_scan_processing ("TenantId", "Status", "ProcessedAt");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628041529_AddRecordArrDurableProcessingState', '10.0.8');
+[00:15:20 INF] Applying migration '20260628042052_AddRecordArrDurableEvidenceMappings'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_evidence_mappings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EvidenceMappingId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectType" character varying(96) NOT NULL,
+    "SourceObjectId" character varying(160) NOT NULL,
+    "ComplianceRequirementRef" character varying(160) NOT NULL,
+    "EvidenceTypeKey" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "MappingSource" character varying(96) NOT NULL,
+    "ConfidenceScore" numeric NOT NULL,
+    "ConfirmedByPersonId" character varying(128),
+    "ConfirmedAt" timestamp with time zone,
+    "RejectedByPersonId" character varying(128),
+    "RejectedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_evidence_mappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_evidence_mappings_TenantId" ON recordarr_evidence_mappings ("TenantId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_evidence_mappings_TenantId_EvidenceMappingId" ON recordarr_evidence_mappings ("TenantId", "EvidenceMappingId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_evidence_mappings_TenantId_RecordId_Status" ON recordarr_evidence_mappings ("TenantId", "RecordId", "Status");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_evidence_mappings_TenantId_SourceProduct_SourceOb~" ON recordarr_evidence_mappings ("TenantId", "SourceProduct", "SourceObjectType", "SourceObjectId", "ComplianceRequirementRef");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628042052_AddRecordArrDurableEvidenceMappings', '10.0.8');
+[00:15:20 INF] Applying migration '20260628043137_AddRecordArrDurablePackages'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_package_manifests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ManifestId" character varying(64) NOT NULL,
+    "PackageId" character varying(64) NOT NULL,
+    "ManifestVersion" integer NOT NULL,
+    "GeneratedAt" timestamp with time zone NOT NULL,
+    "Checksum" character varying(128) NOT NULL,
+    "GeneratedByPersonId" character varying(128) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_package_manifests" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_packages (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PackageId" character varying(64) NOT NULL,
+    "PackageNumber" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "PackageType" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "ManifestChecksum" character varying(128),
+    "GeneratedPdfRecordRef" character varying(64),
+    "GeneratedZipFileRef" character varying(64),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "LockedAt" timestamp with time zone,
+    "ArchivedAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_packages" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_package_manifests_TenantId" ON recordarr_package_manifests ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_package_manifests_TenantId_ManifestId" ON recordarr_package_manifests ("TenantId", "ManifestId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_package_manifests_TenantId_PackageId_ManifestVers~" ON recordarr_package_manifests ("TenantId", "PackageId", "ManifestVersion");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_packages_TenantId" ON recordarr_packages ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_packages_TenantId_PackageId" ON recordarr_packages ("TenantId", "PackageId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_packages_TenantId_SourceProduct_CreatedAt" ON recordarr_packages ("TenantId", "SourceProduct", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_packages_TenantId_Status_CreatedAt" ON recordarr_packages ("TenantId", "Status", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628043137_AddRecordArrDurablePackages', '10.0.8');
+[00:15:20 INF] Applying migration '20260628044444_AddRecordArrDurableRetentionHolds'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_disposal_reviews (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DisposalReviewId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "RetentionStatusRef" character varying(64) NOT NULL,
+    "ProposedAction" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "ReviewedByPersonId" character varying(128),
+    "ReviewedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_disposal_reviews" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_legal_holds (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LegalHoldId" character varying(64) NOT NULL,
+    "HoldNumber" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "HoldType" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectType" character varying(96) NOT NULL,
+    "SourceObjectId" character varying(160) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "ActivatedAt" timestamp with time zone,
+    "ReleasedAt" timestamp with time zone,
+    "ReleasedByPersonId" character varying(128),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_legal_holds" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_retention_statuses (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RetentionStatusId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "RetentionPolicyRef" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RetentionStartAt" timestamp with time zone NOT NULL,
+    "RetentionExpiresAt" timestamp with time zone,
+    "NextReviewAt" timestamp with time zone,
+    "LastReviewedAt" timestamp with time zone,
+    "ReviewedByPersonId" character varying(128),
+    "DisposalReviewRef" character varying(64),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_retention_statuses" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disposal_reviews_TenantId" ON recordarr_disposal_reviews ("TenantId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_disposal_reviews_TenantId_DisposalReviewId" ON recordarr_disposal_reviews ("TenantId", "DisposalReviewId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disposal_reviews_TenantId_RecordId_Status" ON recordarr_disposal_reviews ("TenantId", "RecordId", "Status");
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disposal_reviews_TenantId_RetentionStatusRef" ON recordarr_disposal_reviews ("TenantId", "RetentionStatusRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_legal_holds_TenantId" ON recordarr_legal_holds ("TenantId");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_legal_holds_TenantId_LegalHoldId" ON recordarr_legal_holds ("TenantId", "LegalHoldId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_legal_holds_TenantId_SourceProduct_SourceObjectTy~" ON recordarr_legal_holds ("TenantId", "SourceProduct", "SourceObjectType", "SourceObjectId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_legal_holds_TenantId_Status_CreatedAt" ON recordarr_legal_holds ("TenantId", "Status", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_statuses_TenantId" ON recordarr_retention_statuses ("TenantId");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_statuses_TenantId_RecordId" ON recordarr_retention_statuses ("TenantId", "RecordId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_statuses_TenantId_RetentionStatusId" ON recordarr_retention_statuses ("TenantId", "RetentionStatusId");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_statuses_TenantId_Status_NextReviewAt" ON recordarr_retention_statuses ("TenantId", "Status", "NextReviewAt");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_statuses_TenantId_Status_RetentionExpir~" ON recordarr_retention_statuses ("TenantId", "Status", "RetentionExpiresAt");
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628044444_AddRecordArrDurableRetentionHolds', '10.0.8');
+[00:15:20 INF] Applying migration '20260628050256_AddRecordArrDurableControlledDocuments'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_controlled_document_versions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VersionId" character varying(64) NOT NULL,
+    "ControlledDocumentId" character varying(64) NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "VersionLabel" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "FileName" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "SubmittedForReviewAt" timestamp with time zone,
+    "ApprovedAt" timestamp with time zone,
+    "ApprovedByPersonId" character varying(128),
+    "EffectiveAt" timestamp with time zone,
+    "SupersededAt" timestamp with time zone,
+    "PreviousVersionRef" character varying(64),
+    "NextVersionRef" character varying(64),
+    "FileRef" character varying(64),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_controlled_document_versions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_controlled_documents (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ControlledDocumentId" character varying(64) NOT NULL,
+    "DocumentNumber" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "DocumentClass" character varying(64) NOT NULL,
+    "DocumentType" character varying(96) NOT NULL,
+    "DocumentSubtype" character varying(96) NOT NULL,
+    "ControlledDocumentType" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "OwnerPersonId" character varying(128) NOT NULL,
+    "DepartmentOrgUnitId" character varying(128) NOT NULL,
+    "StaffarrSiteId" character varying(128) NOT NULL,
+    "CurrentVersionId" character varying(64) NOT NULL,
+    "NextReviewAt" timestamp with time zone,
+    "EffectiveAt" timestamp with time zone,
+    "ExpiresAt" timestamp with time zone,
+    "AcknowledgementRequired" boolean NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_controlled_documents" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_document_acknowledgements (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AcknowledgementId" character varying(64) NOT NULL,
+    "ControlledDocumentId" character varying(64) NOT NULL,
+    "VersionId" character varying(64) NOT NULL,
+    "PersonId" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "AcknowledgedAt" timestamp with time zone,
+    "SignatureRecordRef" character varying(64),
+    "DueAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_document_acknowledgements" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_document_distributions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DistributionId" character varying(64) NOT NULL,
+    "ControlledDocumentId" character varying(64) NOT NULL,
+    "VersionId" character varying(64) NOT NULL,
+    "DistributionType" character varying(64) NOT NULL,
+    "TargetRef" character varying(160) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "DistributedAt" timestamp with time zone,
+    "AcknowledgedAt" timestamp with time zone,
+    "AcknowledgementRef" character varying(64),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_document_distributions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_document_reviews (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DocumentReviewId" character varying(64) NOT NULL,
+    "ControlledDocumentId" character varying(64) NOT NULL,
+    "VersionId" character varying(64) NOT NULL,
+    "ReviewType" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "ReviewerPersonId" character varying(128) NOT NULL,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "DueAt" timestamp with time zone,
+    "ReviewedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_document_reviews" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_document_versions_TenantId" ON recordarr_controlled_document_versions ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_document_versions_TenantId_ControlledD~" ON recordarr_controlled_document_versions ("TenantId", "ControlledDocumentId", "VersionNumber");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_document_versions_TenantId_Status_Crea~" ON recordarr_controlled_document_versions ("TenantId", "Status", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_controlled_document_versions_TenantId_VersionId" ON recordarr_controlled_document_versions ("TenantId", "VersionId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_documents_TenantId" ON recordarr_controlled_documents ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_controlled_documents_TenantId_ControlledDocumentId" ON recordarr_controlled_documents ("TenantId", "ControlledDocumentId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_documents_TenantId_RecordId" ON recordarr_controlled_documents ("TenantId", "RecordId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_controlled_documents_TenantId_Status_NextReviewAt" ON recordarr_controlled_documents ("TenantId", "Status", "NextReviewAt");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_acknowledgements_TenantId" ON recordarr_document_acknowledgements ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_document_acknowledgements_TenantId_Acknowledgemen~" ON recordarr_document_acknowledgements ("TenantId", "AcknowledgementId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_acknowledgements_TenantId_ControlledDocu~" ON recordarr_document_acknowledgements ("TenantId", "ControlledDocumentId", "Status");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_acknowledgements_TenantId_PersonId_DueAt" ON recordarr_document_acknowledgements ("TenantId", "PersonId", "DueAt");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_distributions_TenantId" ON recordarr_document_distributions ("TenantId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_distributions_TenantId_ControlledDocumen~" ON recordarr_document_distributions ("TenantId", "ControlledDocumentId", "Status");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_document_distributions_TenantId_DistributionId" ON recordarr_document_distributions ("TenantId", "DistributionId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_distributions_TenantId_TargetRef_Status" ON recordarr_document_distributions ("TenantId", "TargetRef", "Status");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_reviews_TenantId" ON recordarr_document_reviews ("TenantId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_reviews_TenantId_ControlledDocumentId_St~" ON recordarr_document_reviews ("TenantId", "ControlledDocumentId", "Status");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_document_reviews_TenantId_DocumentReviewId" ON recordarr_document_reviews ("TenantId", "DocumentReviewId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_document_reviews_TenantId_ReviewerPersonId_DueAt" ON recordarr_document_reviews ("TenantId", "ReviewerPersonId", "DueAt");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628050256_AddRecordArrDurableControlledDocuments', '10.0.8');
+[00:15:20 INF] Applying migration '20260628051842_AddRecordArrDurableAccessControls'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_access_grants (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AccessGrantId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "GranteeType" character varying(64) NOT NULL,
+    "GranteeRef" character varying(160) NOT NULL,
+    "Permission" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "GrantedByPersonId" character varying(128) NOT NULL,
+    "GrantedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "RevokedAt" timestamp with time zone,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_access_grants" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_access_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AccessLogId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "Action" character varying(96) NOT NULL,
+    "Result" character varying(64) NOT NULL,
+    "ActorPersonId" character varying(128),
+    "ActorServiceClientId" character varying(128),
+    "ExternalShareId" character varying(64),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "ReasonCode" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_access_logs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_access_policies (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AccessPolicyId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "PolicyType" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_access_policies" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_external_shares (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalShareId" character varying(64) NOT NULL,
+    "ShareNumber" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "SharePurpose" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RecipientEmail" character varying(256) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "RevokedAt" timestamp with time zone,
+    "LastAccessedAt" timestamp with time zone,
+    "AccessCount" integer NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_external_shares" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_grants_TenantId" ON recordarr_access_grants ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_access_grants_TenantId_AccessGrantId" ON recordarr_access_grants ("TenantId", "AccessGrantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_grants_TenantId_GranteeType_GranteeRef_Per~" ON recordarr_access_grants ("TenantId", "GranteeType", "GranteeRef", "Permission");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_grants_TenantId_RecordId_Status" ON recordarr_access_grants ("TenantId", "RecordId", "Status");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_logs_TenantId" ON recordarr_access_logs ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_access_logs_TenantId_AccessLogId" ON recordarr_access_logs ("TenantId", "AccessLogId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_logs_TenantId_ExternalShareId_OccurredAt" ON recordarr_access_logs ("TenantId", "ExternalShareId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_logs_TenantId_RecordId_OccurredAt" ON recordarr_access_logs ("TenantId", "RecordId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_policies_TenantId" ON recordarr_access_policies ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_access_policies_TenantId_AccessPolicyId" ON recordarr_access_policies ("TenantId", "AccessPolicyId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_policies_TenantId_RecordId_Status" ON recordarr_access_policies ("TenantId", "RecordId", "Status");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_external_shares_TenantId" ON recordarr_external_shares ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_external_shares_TenantId_ExternalShareId" ON recordarr_external_shares ("TenantId", "ExternalShareId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_external_shares_TenantId_RecordId_Status" ON recordarr_external_shares ("TenantId", "RecordId", "Status");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_external_shares_TenantId_Status_ExpiresAt" ON recordarr_external_shares ("TenantId", "Status", "ExpiresAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628051842_AddRecordArrDurableAccessControls', '10.0.8');
+[00:15:21 INF] Applying migration '20260628052740_AddRecordArrDurableRedactionsSignaturesPhotos'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_photo_evidence (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PhotoEvidenceId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "PhotoPurpose" character varying(96) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256) NOT NULL,
+    "CapturedAt" timestamp with time zone NOT NULL,
+    "CapturedByPersonId" character varying(128) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_photo_evidence" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_redactions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RedactionId" character varying(64) NOT NULL,
+    "SourceRecordId" character varying(64) NOT NULL,
+    "RedactedRecordId" character varying(64) NOT NULL,
+    "RedactionReason" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RedactedByPersonId" character varying(128) NOT NULL,
+    "RedactedAt" timestamp with time zone NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_redactions" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_signature_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SignatureRecordId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "SignaturePurpose" character varying(96) NOT NULL,
+    "SignerPersonId" character varying(128),
+    "SignerExternalName" character varying(256),
+    "SignerTitle" character varying(160),
+    "SignatureFileRef" character varying(64) NOT NULL,
+    "SignedAt" timestamp with time zone NOT NULL,
+    "CapturedByPersonId" character varying(128) NOT NULL,
+    "SourceProduct" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_signature_records" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_photo_evidence_TenantId" ON recordarr_photo_evidence ("TenantId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_photo_evidence_TenantId_PhotoEvidenceId" ON recordarr_photo_evidence ("TenantId", "PhotoEvidenceId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_photo_evidence_TenantId_RecordId_CapturedAt" ON recordarr_photo_evidence ("TenantId", "RecordId", "CapturedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_photo_evidence_TenantId_SourceProduct_SourceObjec~" ON recordarr_photo_evidence ("TenantId", "SourceProduct", "SourceObjectRef");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redactions_TenantId" ON recordarr_redactions ("TenantId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redactions_TenantId_RedactedRecordId" ON recordarr_redactions ("TenantId", "RedactedRecordId");
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_redactions_TenantId_RedactionId" ON recordarr_redactions ("TenantId", "RedactionId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redactions_TenantId_SourceRecordId_Status" ON recordarr_redactions ("TenantId", "SourceRecordId", "Status");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_records_TenantId" ON recordarr_signature_records ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_records_TenantId_RecordId_SignedAt" ON recordarr_signature_records ("TenantId", "RecordId", "SignedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_signature_records_TenantId_SignatureRecordId" ON recordarr_signature_records ("TenantId", "SignatureRecordId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_records_TenantId_SourceProduct_SourceOb~" ON recordarr_signature_records ("TenantId", "SourceProduct", "SourceObjectRef");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628052740_AddRecordArrDurableRedactionsSignaturesPhotos', '10.0.8');
+[00:15:21 INF] Applying migration '20260628053838_AddRecordArrDurableFileIntegrityChecks'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_file_integrity_checks (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IntegrityCheckId" character varying(64) NOT NULL,
+    "FileId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "StorageProvider" character varying(64) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "ExpectedChecksumSha256" character varying(128) NOT NULL,
+    "ObservedChecksumSha256" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "CheckMethod" character varying(96) NOT NULL,
+    "CheckedAt" timestamp with time zone NOT NULL,
+    "CheckedByPersonId" character varying(128) NOT NULL,
+    "FailureReason" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_file_integrity_checks" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_integrity_checks_TenantId" ON recordarr_file_integrity_checks ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_integrity_checks_TenantId_FileId_CheckedAt" ON recordarr_file_integrity_checks ("TenantId", "FileId", "CheckedAt");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_file_integrity_checks_TenantId_IntegrityCheckId" ON recordarr_file_integrity_checks ("TenantId", "IntegrityCheckId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_integrity_checks_TenantId_RecordId_CheckedAt" ON recordarr_file_integrity_checks ("TenantId", "RecordId", "CheckedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_integrity_checks_TenantId_Status_CheckedAt" ON recordarr_file_integrity_checks ("TenantId", "Status", "CheckedAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628053838_AddRecordArrDurableFileIntegrityChecks', '10.0.8');
+[00:15:21 INF] Applying migration '20260628054547_AddRecordArrDurableAuditEvents'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (42ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_audit_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AuditEventId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "Action" character varying(96) NOT NULL,
+    "Outcome" character varying(64) NOT NULL,
+    "ActorType" character varying(64) NOT NULL,
+    "ActorPersonId" character varying(128),
+    "ActorServiceClientId" character varying(128),
+    "ExternalShareId" character varying(64),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "ReasonCode" character varying(256),
+    "CorrelationId" character varying(128),
+    "PreviousEventHash" character varying(128),
+    "EventHash" character varying(128) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_audit_events" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_events_TenantId" ON recordarr_audit_events ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_events_TenantId_Action_OccurredAt" ON recordarr_audit_events ("TenantId", "Action", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_audit_events_TenantId_AuditEventId" ON recordarr_audit_events ("TenantId", "AuditEventId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_audit_events_TenantId_EventHash" ON recordarr_audit_events ("TenantId", "EventHash");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_events_TenantId_RecordId_OccurredAt" ON recordarr_audit_events ("TenantId", "RecordId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628054547_AddRecordArrDurableAuditEvents', '10.0.8');
+[00:15:21 INF] Applying migration '20260628055613_AddRecordArrDurableMalwareScans'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_file_malware_scans (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "MalwareScanId" character varying(64) NOT NULL,
+    "FileId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "StorageProvider" character varying(64) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "ScannerName" character varying(128) NOT NULL,
+    "ScannerVersion" character varying(64),
+    "SignatureVersion" character varying(128),
+    "ThreatName" character varying(256),
+    "QuarantineStatus" character varying(64) NOT NULL,
+    "ScannedAt" timestamp with time zone NOT NULL,
+    "ScannedByPersonId" character varying(128) NOT NULL,
+    "FailureReason" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_file_malware_scans" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_malware_scans_TenantId" ON recordarr_file_malware_scans ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_malware_scans_TenantId_FileId_ScannedAt" ON recordarr_file_malware_scans ("TenantId", "FileId", "ScannedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_file_malware_scans_TenantId_MalwareScanId" ON recordarr_file_malware_scans ("TenantId", "MalwareScanId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_malware_scans_TenantId_QuarantineStatus_Scan~" ON recordarr_file_malware_scans ("TenantId", "QuarantineStatus", "ScannedAt");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_malware_scans_TenantId_RecordId_ScannedAt" ON recordarr_file_malware_scans ("TenantId", "RecordId", "ScannedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_file_malware_scans_TenantId_Status_ScannedAt" ON recordarr_file_malware_scans ("TenantId", "Status", "ScannedAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628055613_AddRecordArrDurableMalwareScans', '10.0.8');
+[00:15:21 INF] Applying migration '20260628060617_AddRecordArrDurableStorageReconciliations'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_storage_reconciliations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ReconciliationId" character varying(64) NOT NULL,
+    "Scope" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "TotalFiles" integer NOT NULL,
+    "CheckedFiles" integer NOT NULL,
+    "PassedFiles" integer NOT NULL,
+    "MissingFiles" integer NOT NULL,
+    "CorruptFiles" integer NOT NULL,
+    "QuarantinedFiles" integer NOT NULL,
+    "PendingScanFiles" integer NOT NULL,
+    "DeletedFiles" integer NOT NULL,
+    "IssueSummary" character varying(512),
+    "RemediationStatus" character varying(64) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_storage_reconciliations" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_storage_reconciliations_TenantId" ON recordarr_storage_reconciliations ("TenantId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_storage_reconciliations_TenantId_ReconciliationId" ON recordarr_storage_reconciliations ("TenantId", "ReconciliationId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_storage_reconciliations_TenantId_RemediationStatu~" ON recordarr_storage_reconciliations ("TenantId", "RemediationStatus", "CompletedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_storage_reconciliations_TenantId_Status_Completed~" ON recordarr_storage_reconciliations ("TenantId", "Status", "CompletedAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628060617_AddRecordArrDurableStorageReconciliations', '10.0.8');
+[00:15:21 INF] Applying migration '20260628062647_AddRecordArrDurableAuditSeals'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_audit_seals (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AuditSealId" character varying(64) NOT NULL,
+    "RecordId" character varying(64),
+    "Scope" character varying(64) NOT NULL,
+    "SealedEventCount" integer NOT NULL,
+    "FirstAuditEventId" character varying(64),
+    "SealedThroughAuditEventId" character varying(64),
+    "SealedThroughEventHash" character varying(128),
+    "SealHash" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "SealedByPersonId" character varying(128) NOT NULL,
+    "SealedAt" timestamp with time zone NOT NULL,
+    "VerifiedAt" timestamp with time zone,
+    "IssueSummary" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_audit_seals" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_seals_TenantId" ON recordarr_audit_seals ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_audit_seals_TenantId_AuditSealId" ON recordarr_audit_seals ("TenantId", "AuditSealId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_seals_TenantId_RecordId_SealedAt" ON recordarr_audit_seals ("TenantId", "RecordId", "SealedAt");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_audit_seals_TenantId_Status_SealedAt" ON recordarr_audit_seals ("TenantId", "Status", "SealedAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628062647_AddRecordArrDurableAuditSeals', '10.0.8');
+[00:15:21 INF] Applying migration '20260628063603_AddRecordArrDurableDestructionCertificates'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_destruction_certificates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DestructionCertificateId" character varying(64) NOT NULL,
+    "CertificateNumber" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "RetentionStatusRef" character varying(64) NOT NULL,
+    "DisposalReviewRef" character varying(64) NOT NULL,
+    "DispositionAction" character varying(64) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "ExecutedAt" timestamp with time zone NOT NULL,
+    "ExecutedByPersonId" character varying(128) NOT NULL,
+    "CertificateHash" character varying(128) NOT NULL,
+    "FailureReason" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_destruction_certificates" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_destruction_certificates_TenantId" ON recordarr_destruction_certificates ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_destruction_certificates_TenantId_CertificateNumb~" ON recordarr_destruction_certificates ("TenantId", "CertificateNumber");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_destruction_certificates_TenantId_DestructionCert~" ON recordarr_destruction_certificates ("TenantId", "DestructionCertificateId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_destruction_certificates_TenantId_DisposalReviewR~" ON recordarr_destruction_certificates ("TenantId", "DisposalReviewRef");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_destruction_certificates_TenantId_RecordId_Execut~" ON recordarr_destruction_certificates ("TenantId", "RecordId", "ExecutedAt");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260628063603_AddRecordArrDurableDestructionCertificates', '10.0.8');
+[00:15:21 INF] Applying migration '20260629015514_AddRecordArrDurableRetentionSchedulerEvidence'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_retention_scheduler_leases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LeaseId" character varying(64) NOT NULL,
+    "SchedulerKey" character varying(96) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "AcquiredAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone NOT NULL,
+    "ReleasedAt" timestamp with time zone,
+    "AcquiredByPersonId" character varying(128) NOT NULL,
+    "SchedulerRunId" character varying(64),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_retention_scheduler_leases" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_retention_scheduler_outbox_messages (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OutboxMessageId" character varying(64) NOT NULL,
+    "SchedulerRunId" character varying(64) NOT NULL,
+    "MessageType" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "TargetRecordId" character varying(64) NOT NULL,
+    "DisposalReviewRef" character varying(64),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128) NOT NULL,
+    "DeduplicationKey" character varying(256) NOT NULL,
+    "ErrorMessage" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_retention_scheduler_outbox_messages" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_retention_scheduler_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SchedulerRunId" character varying(64) NOT NULL,
+    "LeaseId" character varying(64) NOT NULL,
+    "RanAt" timestamp with time zone NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "ExecutionPolicy" character varying(96) NOT NULL,
+    "EvaluatedRecordCount" integer NOT NULL,
+    "EligibleRecordCount" integer NOT NULL,
+    "CreatedReviewCount" integer NOT NULL,
+    "SkippedExistingReviewCount" integer NOT NULL,
+    "BlockedByLegalHoldCount" integer NOT NULL,
+    "AutomaticExecutionCount" integer NOT NULL,
+    "NotificationMessageCount" integer NOT NULL,
+    "FailureReason" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_retention_scheduler_runs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_leases_TenantId" ON recordarr_retention_scheduler_leases ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_scheduler_leases_TenantId_LeaseId" ON recordarr_retention_scheduler_leases ("TenantId", "LeaseId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_leases_TenantId_SchedulerKey_~" ON recordarr_retention_scheduler_leases ("TenantId", "SchedulerKey", "Status", "ExpiresAt");
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId" ON recordarr_retention_scheduler_outbox_messages ("TenantId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Dedu~" ON recordarr_retention_scheduler_outbox_messages ("TenantId", "DeduplicationKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Outb~" ON recordarr_retention_scheduler_outbox_messages ("TenantId", "OutboxMessageId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Stat~" ON recordarr_retention_scheduler_outbox_messages ("TenantId", "Status", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_runs_TenantId" ON recordarr_retention_scheduler_runs ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_retention_scheduler_runs_TenantId_SchedulerRunId" ON recordarr_retention_scheduler_runs ("TenantId", "SchedulerRunId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_runs_TenantId_Status_RanAt" ON recordarr_retention_scheduler_runs ("TenantId", "Status", "RanAt");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629015514_AddRecordArrDurableRetentionSchedulerEvidence', '10.0.8');
+[00:15:22 INF] Applying migration '20260629020130_AddRecordArrRetentionSchedulerOutboxDelivery'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "DeliveredAt" timestamp with time zone;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "DeliveredByPersonId" character varying(128);
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "DeliveryAttemptCount" integer NOT NULL DEFAULT 0;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "LastAttemptAt" timestamp with time zone;
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Sta~1" ON recordarr_retention_scheduler_outbox_messages ("TenantId", "Status", "LastAttemptAt");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629020130_AddRecordArrRetentionSchedulerOutboxDelivery', '10.0.8');
+[00:15:22 INF] Applying migration '20260629021035_AddRecordArrAccessHistoryIntegrity'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_access_logs ADD "AccessLogHash" character varying(128) NOT NULL DEFAULT '';
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_access_logs ADD "PreviousAccessLogHash" character varying(128);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_logs_TenantId_AccessLogHash" ON recordarr_access_logs ("TenantId", "AccessLogHash");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629021035_AddRecordArrAccessHistoryIntegrity', '10.0.8');
+[00:15:22 INF] Applying migration '20260629022314_AddRecordArrAccessHistorySeals'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_access_history_seals (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AccessHistorySealId" character varying(64) NOT NULL,
+    "RecordId" character varying(64),
+    "Scope" character varying(64) NOT NULL,
+    "SealedAccessLogCount" integer NOT NULL,
+    "FirstAccessLogId" character varying(64),
+    "SealedThroughAccessLogId" character varying(64),
+    "SealedThroughAccessLogHash" character varying(128),
+    "SealHash" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "SealedByPersonId" character varying(128) NOT NULL,
+    "SealedAt" timestamp with time zone NOT NULL,
+    "VerifiedAt" timestamp with time zone,
+    "IssueSummary" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_access_history_seals" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_history_seals_TenantId" ON recordarr_access_history_seals ("TenantId");
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_access_history_seals_TenantId_AccessHistorySealId" ON recordarr_access_history_seals ("TenantId", "AccessHistorySealId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_history_seals_TenantId_RecordId_SealedAt" ON recordarr_access_history_seals ("TenantId", "RecordId", "SealedAt");
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_access_history_seals_TenantId_Status_SealedAt" ON recordarr_access_history_seals ("TenantId", "Status", "SealedAt");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629022314_AddRecordArrAccessHistorySeals', '10.0.8');
+[00:15:22 INF] Applying migration '20260629023920_AddRecordArrRetentionOutboxEscalation'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Sta~1" RENAME TO "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Sta~2";
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "DeliveryChannel" character varying(64) NOT NULL DEFAULT 'in_app';
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "DueAt" timestamp with time zone;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "EscalateAfter" timestamp with time zone;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "EscalatedAt" timestamp with time zone;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "EscalatedToRecipientRef" character varying(160);
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "EscalationLevel" integer NOT NULL DEFAULT 0;
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "ExternalProviderRef" character varying(160);
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE recordarr_retention_scheduler_outbox_messages ADD "RecipientRef" character varying(160) NOT NULL DEFAULT 'role:records';
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_retention_scheduler_outbox_messages_TenantId_Sta~1" ON recordarr_retention_scheduler_outbox_messages ("TenantId", "Status", "EscalateAfter");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629023920_AddRecordArrRetentionOutboxEscalation', '10.0.8');
+[00:15:22 INF] Applying migration '20260629040441_AddRecordArrObjectStoreMetadataFixityHistory'.
+[00:15:22 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_object_store_fixity_observations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixityObservationId" character varying(64) NOT NULL,
+    "FileId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "StorageProvider" character varying(64) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "ExpectedChecksumSha256" character varying(128) NOT NULL,
+    "ObservedChecksumSha256" character varying(128),
+    "Status" character varying(64) NOT NULL,
+    "ObservationSource" character varying(96) NOT NULL,
+    "IntegrityCheckRef" character varying(64),
+    "ReconciliationRef" character varying(64),
+    "ObservedAt" timestamp with time zone NOT NULL,
+    "ObservedByPersonId" character varying(128) NOT NULL,
+    "FailureReason" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_object_store_fixity_observations" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_object_store_objects (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ObjectStoreObjectId" character varying(64) NOT NULL,
+    "FileId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "StorageProvider" character varying(64) NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "ExpectedChecksumSha256" character varying(128) NOT NULL,
+    "LastObservedChecksumSha256" character varying(128),
+    "Status" character varying(64) NOT NULL,
+    "LastObservationSource" character varying(96) NOT NULL,
+    "LastIntegrityCheckRef" character varying(64),
+    "LastReconciliationRef" character varying(64),
+    "LastObservedAt" timestamp with time zone NOT NULL,
+    "LastObservedByPersonId" character varying(128) NOT NULL,
+    "FailureReason" character varying(256),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_object_store_objects" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_fixity_observations_TenantId" ON recordarr_object_store_fixity_observations ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_fixity_observations_TenantId_FileId_~" ON recordarr_object_store_fixity_observations ("TenantId", "FileId", "ObservedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_object_store_fixity_observations_TenantId_FixityO~" ON recordarr_object_store_fixity_observations ("TenantId", "FixityObservationId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_fixity_observations_TenantId_Reconci~" ON recordarr_object_store_fixity_observations ("TenantId", "ReconciliationRef");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_fixity_observations_TenantId_RecordI~" ON recordarr_object_store_fixity_observations ("TenantId", "RecordId", "ObservedAt");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_fixity_observations_TenantId_Status_~" ON recordarr_object_store_fixity_observations ("TenantId", "Status", "ObservedAt");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_objects_TenantId" ON recordarr_object_store_objects ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_object_store_objects_TenantId_FileId" ON recordarr_object_store_objects ("TenantId", "FileId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_object_store_objects_TenantId_ObjectStoreObjectId" ON recordarr_object_store_objects ("TenantId", "ObjectStoreObjectId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_objects_TenantId_RecordId_LastObserv~" ON recordarr_object_store_objects ("TenantId", "RecordId", "LastObservedAt");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_objects_TenantId_Status_LastObserved~" ON recordarr_object_store_objects ("TenantId", "Status", "LastObservedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_object_store_objects_TenantId_StorageProvider_Sto~" ON recordarr_object_store_objects ("TenantId", "StorageProvider", "StorageKey");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629040441_AddRecordArrObjectStoreMetadataFixityHistory', '10.0.8');
+[00:15:22 INF] Applying migration '20260629061242_AddRecordArrDisasterRecoveryRuns'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_disaster_recovery_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DisasterRecoveryRunId" character varying(64) NOT NULL,
+    "Scope" character varying(128) NOT NULL,
+    "RecoveryPointId" character varying(128) NOT NULL,
+    "RecoveryPointCreatedAt" timestamp with time zone NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RpoTargetMinutes" integer NOT NULL,
+    "RtoTargetMinutes" integer NOT NULL,
+    "RecoveryPointAgeMinutes" integer NOT NULL,
+    "DurationSeconds" integer NOT NULL,
+    "RpoMet" boolean NOT NULL,
+    "RtoMet" boolean NOT NULL,
+    "TotalRecordCount" integer NOT NULL,
+    "RestoredRecordCount" integer NOT NULL,
+    "BlockedRecordCount" integer NOT NULL,
+    "TotalFileCount" integer NOT NULL,
+    "VerifiedFileCount" integer NOT NULL,
+    "FailedFileCount" integer NOT NULL,
+    "EvidenceSummary" character varying(512),
+    "FailureReason" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_disaster_recovery_runs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disaster_recovery_runs_TenantId" ON recordarr_disaster_recovery_runs ("TenantId");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_disaster_recovery_runs_TenantId_DisasterRecoveryR~" ON recordarr_disaster_recovery_runs ("TenantId", "DisasterRecoveryRunId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disaster_recovery_runs_TenantId_RecoveryPointId_C~" ON recordarr_disaster_recovery_runs ("TenantId", "RecoveryPointId", "CompletedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_disaster_recovery_runs_TenantId_Status_CompletedAt" ON recordarr_disaster_recovery_runs ("TenantId", "Status", "CompletedAt");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629061242_AddRecordArrDisasterRecoveryRuns', '10.0.8');
+[00:15:22 INF] Applying migration '20260629073309_AddRecordArrRedactionProviderJobs'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_redaction_provider_jobs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProviderJobId" character varying(64) NOT NULL,
+    "RedactionId" character varying(64) NOT NULL,
+    "SourceRecordId" character varying(64) NOT NULL,
+    "RedactedRecordId" character varying(64) NOT NULL,
+    "ProviderName" character varying(128) NOT NULL,
+    "ProviderJobRef" character varying(160) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "RedactionPackageHash" character varying(128) NOT NULL,
+    "SubmissionEvidenceHash" character varying(128) NOT NULL,
+    "LastSubmittedAt" timestamp with time zone,
+    "ProviderCallbackStatus" character varying(64),
+    "ProviderCallbackRef" character varying(160),
+    "ProviderCallbackReceivedAt" timestamp with time zone,
+    "ProviderEvidenceHash" character varying(128),
+    "FailureReason" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_redaction_provider_jobs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redaction_provider_jobs_TenantId" ON recordarr_redaction_provider_jobs ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_redaction_provider_jobs_TenantId_ProviderJobId" ON recordarr_redaction_provider_jobs ("TenantId", "ProviderJobId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_redaction_provider_jobs_TenantId_ProviderName_Pro~" ON recordarr_redaction_provider_jobs ("TenantId", "ProviderName", "ProviderJobRef");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redaction_provider_jobs_TenantId_RedactionId_Stat~" ON recordarr_redaction_provider_jobs ("TenantId", "RedactionId", "Status");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_redaction_provider_jobs_TenantId_Status_Requested~" ON recordarr_redaction_provider_jobs ("TenantId", "Status", "RequestedAt");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629073309_AddRecordArrRedactionProviderJobs', '10.0.8');
+[00:15:22 INF] Applying migration '20260629074155_AddRecordArrSignatureTrustServiceJobs'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE recordarr_signature_trust_service_jobs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TrustServiceJobId" character varying(64) NOT NULL,
+    "SignatureRecordId" character varying(64) NOT NULL,
+    "RecordId" character varying(64) NOT NULL,
+    "ProviderName" character varying(128) NOT NULL,
+    "ProviderEnvelopeRef" character varying(160) NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "RequestedByPersonId" character varying(128) NOT NULL,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "CertificateFingerprintSha256" character varying(128) NOT NULL,
+    "SignatureEvidenceHash" character varying(128) NOT NULL,
+    "SubmissionEvidenceHash" character varying(128) NOT NULL,
+    "LastSubmittedAt" timestamp with time zone,
+    "ProviderCallbackStatus" character varying(64),
+    "ProviderCallbackRef" character varying(160),
+    "ProviderCallbackReceivedAt" timestamp with time zone,
+    "ProviderCallbackEvidenceHash" character varying(128),
+    "TrustTimestampAuthorityRef" character varying(256),
+    "LongTermValidationStatus" character varying(64),
+    "FailureReason" character varying(512),
+    "PayloadJson" jsonb NOT NULL,
+    CONSTRAINT "PK_recordarr_signature_trust_service_jobs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_trust_service_jobs_TenantId" ON recordarr_signature_trust_service_jobs ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_signature_trust_service_jobs_TenantId_ProviderNam~" ON recordarr_signature_trust_service_jobs ("TenantId", "ProviderName", "ProviderEnvelopeRef");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_trust_service_jobs_TenantId_SignatureRe~" ON recordarr_signature_trust_service_jobs ("TenantId", "SignatureRecordId", "Status");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_recordarr_signature_trust_service_jobs_TenantId_Status_Requ~" ON recordarr_signature_trust_service_jobs ("TenantId", "Status", "RequestedAt");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_recordarr_signature_trust_service_jobs_TenantId_TrustServic~" ON recordarr_signature_trust_service_jobs ("TenantId", "TrustServiceJobId");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260629074155_AddRecordArrSignatureTrustServiceJobs', '10.0.8');
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,60 +1416,9 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:03 INF] Starting RecordArr API (recordarr) on http://localhost:5110
-[22:30:03 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:04 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5110: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System[22:30:11 INF] Request starting HTTP/1.1 GET http://localhost:5110/health - null null
-[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:11 INF] Setting HTTP status code 200.
-[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5110/health - 200 null application/json; charset=utf-8 32.9865ms
-ore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:30:04 FTL] RecordArr API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5110: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:22 INF] Starting RecordArr API (recordarr) on http://localhost:5110
+[00:15:22 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:23 INF] Now listening on: http://localhost:5110
+[00:15:23 INF] Application started. Press Ctrl+C to shut down.
+[00:15:23 INF] Hosting environment: Development
+[00:15:23 INF] Content root path: F:\STLComplianceV2\apps\recordarr-api\RecordArr.Api

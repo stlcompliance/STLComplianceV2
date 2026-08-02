@@ -5,7 +5,7 @@ using STLCompliance.Shared.Hosting;
 using STLCompliance.Shared.Endpoints;
 
 await StlApiHost.RunAsync<ReportArrDbContext>(
-    new ProductDescriptor("reportarr", "ReportArr", 5111),
+    new ProductDescriptor("reportarr", "ReportArr", 5114),
     args,
     ReportArrServiceRegistration.ConfigureServices,
     ReportArrServiceRegistration.ConfigurePipeline,

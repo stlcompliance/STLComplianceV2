@@ -103,7 +103,8 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             externalUserId,
             "new.person@example.com",
-            "New Person"));
+            "New Person",
+            TenantAdminPermissionInheritanceRules.TenantAdminRoleKey));
         var createResponse = await _client.SendAsync(createRequest);
         createResponse.EnsureSuccessStatusCode();
 
@@ -117,7 +118,8 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             PlatformSeeder.DemoTenantId,
             externalUserId,
             "new.person@example.com",
-            "Updated Person"));
+            "Updated Person",
+            TenantAdminPermissionInheritanceRules.TenantAdminRoleKey));
         var updateResponse = await _client.SendAsync(updateRequest);
         updateResponse.EnsureSuccessStatusCode();
 
@@ -133,6 +135,17 @@ public sealed class StaffArrIntegrationSurfaceTests : IAsyncLifetime
             x.TenantId == PlatformSeeder.DemoTenantId && x.ExternalUserId == externalUserId);
         Assert.NotNull(person);
         Assert.Equal("Updated Person", person!.DisplayName);
+
+        var tenantAdminRole = await db.StaffRoles.SingleAsync(x =>
+            x.TenantId == PlatformSeeder.DemoTenantId
+            && x.Name == TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName);
+        Assert.Contains(
+            await db.StaffPersonRoles
+                .Where(x => x.TenantId == PlatformSeeder.DemoTenantId && x.PersonId == person.Id)
+                .ToListAsync(),
+            assignment => assignment.RoleId == tenantAdminRole.Id
+                && assignment.AssignmentScopeType == "tenant"
+                && assignment.AssignmentScopeRefId is null);
     }
 
     [Fact]

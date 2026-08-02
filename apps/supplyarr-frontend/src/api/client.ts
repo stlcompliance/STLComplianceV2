@@ -84,6 +84,7 @@ import type {
   UpsertApprovalReminderSettingsRequest,
   PendingApprovalRemindersResponse,
   ApprovalReminderRunsResponse,
+  ApprovalReminderSummaryResponse,
   ApprovalRemindersDashboardResponse,
   ProcurementExceptionEscalationSettingsResponse,
   UpsertProcurementExceptionEscalationSettingsRequest,
@@ -117,6 +118,7 @@ import type {
   CreatePurchaseRequestFromRfqResponse,
   SupplierOnboardingResponse,
   SupplierOnboardingDocumentRequirementsResponse,
+  UpsertSupplierOnboardingDocumentRequirementsRequest,
   SupplierRestrictionResponse,
   CreateSupplierRestrictionRequest,
   LiftSupplierRestrictionRequest,
@@ -2993,6 +2995,21 @@ export async function getSupplierOnboardingDocumentRequirements(
   )
 }
 
+export async function upsertSupplierOnboardingDocumentRequirements(
+  accessToken: string,
+  payload: UpsertSupplierOnboardingDocumentRequirementsRequest,
+): Promise<SupplierOnboardingDocumentRequirementsResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/document-requirements`, {
+    method: 'PUT',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify(payload),
+  })
+  return parseJsonResponse<SupplierOnboardingDocumentRequirementsResponse>(
+    response,
+    'Failed to update onboarding document requirements',
+  )
+}
+
 export async function listPendingSupplierOnboarding(
   accessToken: string,
 ): Promise<SupplierOnboardingResponse[]> {
@@ -3074,6 +3091,21 @@ export async function rejectSupplierOnboarding(
   })
   return normalizeSupplierOnboarding(
     await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to reject supplier onboarding'),
+  )
+}
+
+export async function suspendSupplierOnboarding(
+  accessToken: string,
+  supplierId: string,
+  reason?: string,
+): Promise<SupplierOnboardingResponse> {
+  const response = await fetch(`${apiBase}/api/v1/supplier-onboarding/suppliers/${supplierId}/suspend`, {
+    method: 'POST',
+    headers: authHeaders(accessToken),
+    body: JSON.stringify({ reason: reason ?? null }),
+  })
+  return normalizeSupplierOnboarding(
+    await parseJsonResponse<SupplierOnboardingResponse>(response, 'Failed to suspend supplier onboarding'),
   )
 }
 

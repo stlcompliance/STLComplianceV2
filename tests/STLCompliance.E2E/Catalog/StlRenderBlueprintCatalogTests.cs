@@ -87,7 +87,7 @@ public sealed class StlRenderBlueprintCatalogTests
     }
 
     [Fact]
-    public void Staffarr_nexarr_login_token_includes_identity_create_and_login_scopes()
+    public void Staffarr_nexarr_login_token_includes_identity_read_create_and_login_scopes()
     {
         var profile = Assert.Single(
             StlIntegrationTokenCatalog.All,
@@ -98,6 +98,7 @@ public sealed class StlRenderBlueprintCatalogTests
         Assert.Equal("staffarr", profile.SourceProductKey);
         Assert.Single(profile.AllowedProductKeys);
         Assert.Equal("nexarr", profile.AllowedProductKeys[0]);
+        Assert.Contains("nexarr.identities.read", profile.ActionScope, StringComparison.Ordinal);
         Assert.Contains("nexarr.identities.create", profile.ActionScope, StringComparison.Ordinal);
         Assert.Contains("nexarr.users.login_disable", profile.ActionScope, StringComparison.Ordinal);
         Assert.Contains("nexarr.users.login_enable", profile.ActionScope, StringComparison.Ordinal);

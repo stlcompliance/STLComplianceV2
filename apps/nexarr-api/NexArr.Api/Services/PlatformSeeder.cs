@@ -26,6 +26,9 @@ public static class PlatformSeeder
     private const string FirstAdminEmailConfigKey = "Seed:FirstAdminEmail";
     private const string FirstAdminPasswordConfigKey = "Seed:FirstAdminPassword";
     private const string FirstAdminDisplayNameConfigKey = "Seed:FirstAdminDisplayName";
+    private const string BootstrapTenantAdminEmailConfigKey = "Seed:BootstrapTenantAdminEmail";
+    private const string BootstrapTenantAdminPasswordConfigKey = "Seed:BootstrapTenantAdminPassword";
+    private const string BootstrapTenantAdminDisplayNameConfigKey = "Seed:BootstrapTenantAdminDisplayName";
     private const string BootstrapTenantSlugConfigKey = "Seed:BootstrapTenantSlug";
     private const string BootstrapTenantDisplayNameConfigKey = "Seed:BootstrapTenantDisplayName";
     private const string DefaultBootstrapTenantSlug = "stl-root";
@@ -48,7 +51,7 @@ public static class PlatformSeeder
         new("compliancecore", "Compliance Core", 70, "compliance", "Compliance Platform", "available", "http://localhost:5107", "http://localhost:5107/health/ready", "stl:compliancecore:api"),
         new("loadarr", "LoadArr", 75, "warehouse", "Warehouse Operations", "available", "http://localhost:5108", "http://localhost:5108/health/ready", "stl:loadarr:api"),
         new("assurarr", "AssurArr", 76, "assurance", "Quality and Assurance", "available", "http://localhost:5109", "http://localhost:5109/health/ready", "stl:assurarr:api"),
-        new("reportarr", "ReportArr", 77, "analytics", "Analytics and Reporting", "available", "http://localhost:5111", "http://localhost:5111/health/ready", "stl:reportarr:api"),
+        new("reportarr", "ReportArr", 77, "analytics", "Analytics and Reporting", "available", "http://localhost:5114", "http://localhost:5114/health/ready", "stl:reportarr:api"),
         new("recordarr", "RecordArr", 78, "records", "Records and Evidence", "available", "http://localhost:5110", "http://localhost:5110/health/ready", "stl:recordarr:api"),
         new("ledgarr", "LedgArr", 79, "finance", "Financial Operations", "available", "http://localhost:5113", "http://localhost:5113/health/ready", "stl:ledgarr:api"),
         new("fieldcompanion", "Field Companion", 80, "field-execution", "Platform Engineering", "available", "", "", "stl:fieldcompanion:frontend")
@@ -497,6 +500,7 @@ public static class PlatformSeeder
         {
             await EnsureBootstrapTenantForFirstAdminAsync(
                 db,
+                passwordHasher,
                 configuration,
                 admin.Id,
                 now,
@@ -526,6 +530,7 @@ public static class PlatformSeeder
 
     private static async Task EnsureBootstrapTenantForFirstAdminAsync(
         NexArrDbContext db,
+        IPasswordHasher passwordHasher,
         IConfiguration configuration,
         Guid adminUserId,
         DateTimeOffset now,
@@ -567,7 +572,92 @@ public static class PlatformSeeder
             CreatedAt = now
         });
 
+        var tenantAdminProfile = ResolveBootstrapTenantAdminProfile(configuration);
+        if (tenantAdminProfile is not null)
+        {
+            await EnsureBootstrapTenantAdminAsync(
+                db,
+                passwordHasher,
+                bootstrapTenantId,
+                tenantAdminProfile,
+                now,
+                cancellationToken);
+        }
+
         await EnsureAllProductAccessAsync(db, bootstrapTenantId, now, cancellationToken);
+    }
+
+    private static async Task EnsureBootstrapTenantAdminAsync(
+        NexArrDbContext db,
+        IPasswordHasher passwordHasher,
+        Guid tenantId,
+        BootstrapTenantAdminSeedProfile profile,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var user = await db.Users
+            .Include(x => x.Credential)
+            .FirstOrDefaultAsync(x => x.Email == profile.Email, cancellationToken);
+
+        if (user is null)
+        {
+            user = new PlatformUser
+            {
+                Id = Guid.NewGuid(),
+                Email = profile.Email,
+                DisplayName = profile.DisplayName,
+                IsActive = true,
+                IsPlatformAdmin = false,
+                CreatedAt = now,
+                ModifiedAt = now,
+                Credential = new UserCredential
+                {
+                    UserId = Guid.Empty,
+                    PasswordHash = passwordHasher.Hash(profile.Password),
+                    PasswordChangedAt = now
+                }
+            };
+            user.Credential.UserId = user.Id;
+            db.Users.Add(user);
+        }
+        else
+        {
+            user.IsActive = true;
+            user.DisplayName = string.IsNullOrWhiteSpace(user.DisplayName)
+                ? profile.DisplayName
+                : user.DisplayName;
+            user.ModifiedAt = now;
+            if (user.Credential is null)
+            {
+                user.Credential = new UserCredential
+                {
+                    UserId = user.Id,
+                    PasswordHash = passwordHasher.Hash(profile.Password),
+                    PasswordChangedAt = now
+                };
+            }
+        }
+
+        var membership = await db.TenantMemberships.FirstOrDefaultAsync(
+            existingMembership => existingMembership.TenantId == tenantId && existingMembership.UserId == user.Id,
+            cancellationToken);
+        if (membership is null)
+        {
+            db.TenantMemberships.Add(new TenantMembership
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                UserId = user.Id,
+                RoleKey = "tenant_admin",
+                IsActive = true,
+                CreatedAt = now
+            });
+        }
+        else
+        {
+            membership.RoleKey = "tenant_admin";
+            membership.IsActive = true;
+        }
     }
 
     public static async Task SeedMasterReferenceDataAsync(
@@ -728,6 +818,22 @@ public static class PlatformSeeder
                 configuredPassword.Trim(),
                 configuration[FirstAdminDisplayNameConfigKey]?.Trim() ?? "Platform Admin",
                 false);
+        }
+
+        return null;
+    }
+
+    private static BootstrapTenantAdminSeedProfile? ResolveBootstrapTenantAdminProfile(
+        IConfiguration configuration)
+    {
+        var configuredEmail = configuration[BootstrapTenantAdminEmailConfigKey];
+        var configuredPassword = configuration[BootstrapTenantAdminPasswordConfigKey];
+        if (!string.IsNullOrWhiteSpace(configuredEmail) && !string.IsNullOrWhiteSpace(configuredPassword))
+        {
+            return new BootstrapTenantAdminSeedProfile(
+                configuredEmail.Trim().ToLowerInvariant(),
+                configuredPassword.Trim(),
+                configuration[BootstrapTenantAdminDisplayNameConfigKey]?.Trim() ?? "Tenant Admin");
         }
 
         return null;
@@ -2330,4 +2436,9 @@ public static class PlatformSeeder
         string Password,
         string DisplayName,
         bool UseDeterministicId);
+
+    private sealed record BootstrapTenantAdminSeedProfile(
+        string Email,
+        string Password,
+        string DisplayName);
 }

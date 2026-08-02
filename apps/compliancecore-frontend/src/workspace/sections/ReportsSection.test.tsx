@@ -64,6 +64,8 @@ function buildState(roleKey: string): ComplianceCoreWorkspaceState {
       productKey: 'compliancecore',
       launchableProductKeys: ['compliancecore'],
       canManageVocabulary: false,
+      canManageWaivers: false,
+      canApproveWaivers: false,
       canExportAuditPackage: false,
       canEvaluateRiskScores: false,
       canEvaluateMissingEvidenceWarnings: false,

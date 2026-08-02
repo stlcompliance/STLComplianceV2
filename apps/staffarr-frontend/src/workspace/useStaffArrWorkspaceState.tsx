@@ -14,6 +14,7 @@ import {
   getPersonHistorySummary,
   getPersonTrainarrTrainingHistory,
   getPersonSummary,
+  getPersonAccountAccess,
   getWorkforceOnboardingJourney,
   getPersonOffboarding,
   startPersonOffboarding,
@@ -255,6 +256,11 @@ export function useStaffArrWorkspaceState() {
   const personProfileQuery = useQuery({
     queryKey: ['staffarr-person', session?.accessToken, effectivePersonId],
     queryFn: () => getPerson(session!.accessToken, effectivePersonId!),
+    enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
+  })
+  const personAccountAccessQuery = useQuery({
+    queryKey: ['staffarr-person-account-access', session?.accessToken, effectivePersonId],
+    queryFn: () => getPersonAccountAccess(session!.accessToken, effectivePersonId!),
     enabled: Boolean(session?.accessToken && effectivePersonId && shouldLoadPeopleDetailQueries),
   })
   const personSummaryQuery = useQuery({
@@ -1022,6 +1028,7 @@ export function useStaffArrWorkspaceState() {
     fallbackPersonId,
     effectivePersonId,
     personProfileQuery,
+    personAccountAccessQuery,
     personSummaryQuery,
     assignmentQuery,
     managerChainQuery,

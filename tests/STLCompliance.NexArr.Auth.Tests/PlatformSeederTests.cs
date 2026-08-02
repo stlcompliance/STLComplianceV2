@@ -220,7 +220,7 @@ public sealed class PlatformSeederTests
     }
 
     [Fact]
-    public async Task Staffarr_api_nexarr_service_token_includes_person_create_and_login_scopes()
+    public async Task Staffarr_api_nexarr_service_token_includes_person_read_create_and_login_scopes()
     {
         await using var connection = new SqliteConnection("Filename=:memory:");
         await connection.OpenAsync();
@@ -266,6 +266,7 @@ public sealed class PlatformSeederTests
 
         Assert.Equal("staffarr", validated.SourceProductKey);
         Assert.Contains("nexarr", validated.AllowedProductKeys);
+        Assert.Contains("nexarr.identities.read", validated.ActionScope);
         Assert.Contains("nexarr.identities.create", validated.ActionScope);
         Assert.Contains("nexarr.users.login_disable", validated.ActionScope);
         Assert.Contains("nexarr.users.login_enable", validated.ActionScope);
@@ -331,6 +332,50 @@ public sealed class PlatformSeederTests
 
         Assert.Equal(expectedTenantProducts, accessibleToTenantUsers);
         Assert.Equal(expectedPlatformAdminProducts, accessibleToPlatformAdmins);
+    }
+
+    [Fact]
+    public async Task SeedFirstAdminAsync_can_seed_bootstrap_tenant_admin_for_production()
+    {
+        var options = new DbContextOptionsBuilder<NexArrDbContext>()
+            .UseInMemoryDatabase($"platform-seeder-bootstrap-tenant-admin-tests-{Guid.NewGuid():N}")
+            .Options;
+
+        await using var db = new NexArrDbContext(options);
+        var hasher = new BcryptPasswordHasher();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Seed:FirstAdminEmail"] = "root@demo.stl",
+                ["Seed:FirstAdminPassword"] = "ChangeMe!Bootstrap2026",
+                ["Seed:BootstrapTenantAdminEmail"] = "tenant-admin@bootstrap.stl",
+                ["Seed:BootstrapTenantAdminPassword"] = "ChangeMe!BootstrapTenant2026"
+            })
+            .Build();
+
+        await PlatformSeeder.SeedInfrastructureAsync(db);
+
+        var adminId = await PlatformSeeder.SeedFirstAdminAsync(
+            db,
+            hasher,
+            configuration,
+            new TestWebHostEnvironment("Production"));
+
+        Assert.NotNull(adminId);
+
+        var tenant = Assert.Single(await db.Tenants.ToListAsync());
+        var memberships = await db.TenantMemberships
+            .Where(x => x.TenantId == tenant.Id)
+            .OrderBy(x => x.RoleKey)
+            .ToListAsync();
+        Assert.Equal(2, memberships.Count);
+        Assert.Contains(memberships, membership => membership.UserId == adminId && membership.RoleKey == "platform_admin");
+
+        var tenantAdminMembership = Assert.Single(memberships.Where(membership => membership.RoleKey == "tenant_admin"));
+        var tenantAdmin = await db.Users.Include(x => x.Credential).SingleAsync(x => x.Id == tenantAdminMembership.UserId);
+        Assert.Equal("tenant-admin@bootstrap.stl", tenantAdmin.Email);
+        Assert.False(tenantAdmin.IsPlatformAdmin);
+        Assert.NotNull(tenantAdmin.Credential);
     }
 
     [Fact]

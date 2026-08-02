@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiErrorCallout, StaticSearchPicker, getErrorMessage, type PickerOption } from '@stl/shared-ui'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import {
   approveSupplierComplianceDocument,
@@ -13,6 +13,7 @@ import {
   rejectSupplierOnboarding,
   startSupplierOnboarding,
   submitSupplierOnboarding,
+  suspendSupplierOnboarding,
 } from '../api/client'
 import type { SupplierResponse, SupplierComplianceDocumentResponse } from '../api/types'
 import { GeneratedKeyFieldGroup } from '../forms/GeneratedKeyFieldGroup'
@@ -77,6 +78,7 @@ export function SupplierOnboardingPanel({
   const [selectedSupplierId, setSelectedSupplierId] = useState('')
   const [onboardingNotes, setOnboardingNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
+  const [suspendReason, setSuspendReason] = useState('')
   const [docTypeKey, setDocTypeKey] = useState('w9')
   const [docKey, setDocKey] = useState('')
   const [docTitle, setDocTitle] = useState('')
@@ -128,6 +130,12 @@ export function SupplierOnboardingPanel({
     [supplierOptions, selectedSupplierId],
   )
 
+  useEffect(() => {
+    setOnboardingNotes(onboardingQuery.data?.notes ?? '')
+    setRejectReason('')
+    setSuspendReason('')
+  }, [onboardingQuery.data?.notes, selectedSupplierId])
+
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['supplyarr-onboarding-pending', accessToken] })
     if (selectedSupplierId) {
@@ -157,6 +165,11 @@ export function SupplierOnboardingPanel({
 
   const rejectMutation = useMutation({
     mutationFn: () => rejectSupplierOnboarding(accessToken, selectedSupplierId, rejectReason),
+    onSuccess: invalidate,
+  })
+
+  const suspendMutation = useMutation({
+    mutationFn: () => suspendSupplierOnboarding(accessToken, selectedSupplierId, suspendReason),
     onSuccess: invalidate,
   })
 
@@ -196,12 +209,16 @@ export function SupplierOnboardingPanel({
     || (submitMutation.isError && submitMutation.error)
     || (approveMutation.isError && approveMutation.error)
     || (rejectMutation.isError && rejectMutation.error)
+    || (suspendMutation.isError && suspendMutation.error)
     || (registerDocMutation.isError && registerDocMutation.error)
     || null
   const canSubmit =
     onboarding &&
     (onboarding.onboardingStatus === 'draft' || onboarding.onboardingStatus === 'rejected')
   const canApproveReview = onboarding?.onboardingStatus === 'pending_review' && canReview
+  const totalRequirements = onboarding?.documentRequirements.length ?? 0
+  const satisfiedRequirements = onboarding?.documentRequirements.filter((doc) => doc.isSatisfied).length ?? 0
+  const missingRequirements = totalRequirements - satisfiedRequirements
   const documentPosture =
     onboarding?.documentRequirements.some((doc) => !doc.isSatisfied)
       ? 'missing required documents'
@@ -218,10 +235,68 @@ export function SupplierOnboardingPanel({
       data-testid="supplier-onboarding-panel"
       className="rounded-xl border border-slate-700 bg-slate-900/60 p-5 lg:col-span-2"
     >
-      <h2 className="text-lg font-medium text-white">Supplier onboarding</h2>
-      <p className="mt-1 text-sm text-slate-400">
-        Register compliance documents, submit supplier identities or sub-units for review, and approve them for sourcing.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-medium text-white">Supplier onboarding</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Register compliance documents, submit supplier identities or sub-units for review, and approve them for sourcing.
+          </p>
+        </div>
+        {onboarding ? (
+          <span className={`rounded-full px-2 py-1 text-xs ring-1 ${statusBadgeClass(onboarding.onboardingStatus)}`}>
+            {onboarding.onboardingStatus}
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Selected supplier</p>
+          <p className="mt-1 text-sm font-medium text-slate-100">
+            {selectedSupplier
+              ? formatSupplierIdentitySummary({
+                supplierDisplayName: selectedSupplier.displayName,
+                supplierKey: selectedSupplier.supplierKey,
+                parentSupplierDisplayName: selectedSupplier.parentSupplierDisplayName,
+                supplierUnitKind: selectedSupplier.unitKind,
+              })
+              : 'Choose a supplier identity or sub-unit'}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {selectedSupplier
+              ? `${humanizeSupplierUnitKind(selectedSupplier.unitKind)} · ${formatSupplierOperationalContext({
+                supplierServiceTypes: selectedSupplier.serviceTypes,
+                addressLine1: selectedSupplier.addressLine1,
+                locality: selectedSupplier.locality,
+                regionCode: selectedSupplier.regionCode,
+                postalCode: selectedSupplier.postalCode,
+              })}`
+              : 'Use the searchable picker to load the onboarding record.'}
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Document gate</p>
+          <p className="mt-1 text-sm font-medium text-slate-100">
+            {satisfiedRequirements} of {totalRequirements} requirements satisfied
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {missingRequirements > 0 ? `${missingRequirements} requirement(s) still block submission.` : 'All required documents are approved.'}
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-800 bg-slate-950/40 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">Workflow timestamps</p>
+          <p className="mt-1 text-sm font-medium text-slate-100">
+            {onboarding?.submittedAt ? `Submitted ${new Date(onboarding.submittedAt).toLocaleString()}` : 'Not submitted yet'}
+          </p>
+          <p className="mt-1 text-xs text-slate-400">
+            {onboarding?.reviewedAt
+              ? `Reviewed ${new Date(onboarding.reviewedAt).toLocaleString()}`
+              : onboarding?.createdAt
+                ? `Draft created ${new Date(onboarding.createdAt).toLocaleString()}`
+                : 'No onboarding record loaded'}
+          </p>
+        </div>
+      </div>
       {requirementsQuery.isError ? (
         <div className="mt-3">
           <ApiErrorCallout
@@ -336,7 +411,30 @@ export function SupplierOnboardingPanel({
               Submit for review
             </button>
           ) : null}
+          {onboarding?.onboardingStatus === 'approved' || onboarding?.onboardingStatus === 'suspended' ? null : (
+            <button
+              type="button"
+              className="rounded-lg border border-slate-600 px-3 py-1.5 text-sm text-slate-100 disabled:opacity-50"
+              disabled={suspendMutation.isPending || !suspendReason.trim()}
+              onClick={() => suspendMutation.mutate()}
+            >
+              {onboarding?.onboardingStatus === 'pending_review' ? 'Suspend review' : 'Suspend onboarding'}
+            </button>
+          )}
         </div>
+      ) : null}
+
+      {canManage && selectedSupplierId ? (
+        <label htmlFor="supplier-onboarding-suspend-reason" className="mt-3 block text-sm text-slate-400">
+          Suspension reason
+          <input
+            id="supplier-onboarding-suspend-reason"
+            className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+            placeholder="Why should onboarding be suspended?"
+            value={suspendReason}
+            onChange={(e) => setSuspendReason(e.target.value)}
+          />
+        </label>
       ) : null}
 
       {requirementsQuery.data ? (
@@ -502,6 +600,25 @@ export function SupplierOnboardingPanel({
             >
               {onboarding.onboardingStatus}
             </span>
+          </div>
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            <div className="rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Onboarding notes</p>
+              <p className="mt-1 text-sm text-slate-200 whitespace-pre-wrap">
+                {onboarding.notes || 'No onboarding notes yet.'}
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Checklist posture</p>
+              <p className="mt-1 text-sm text-slate-200">
+                {documentPosture}
+              </p>
+              {missingRequirements > 0 ? (
+                <p className="mt-1 text-xs text-amber-300">
+                  Submission stays locked until every required approved document is present.
+                </p>
+              ) : null}
+            </div>
           </div>
           {onboarding.rejectionReason ? (
             <p className="mt-2 text-sm text-rose-300">Rejected: {onboarding.rejectionReason}</p>

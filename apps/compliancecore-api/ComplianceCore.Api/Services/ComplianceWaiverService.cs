@@ -312,13 +312,20 @@ public sealed class ComplianceWaiverService(
         var batchSize = ComplianceWaiverRules.NormalizeBatchSize(request.BatchSize);
         var expiringUntil = asOf.Add(ExpiringEventLeadTime);
 
-        var expiringCandidates = await db.ComplianceWaivers
+        var expiringCandidatesQuery = db.ComplianceWaivers
             .AsNoTracking()
             .Where(x =>
                 x.Status == WaiverStatuses.Approved
                 && x.ExpiresAt.HasValue
                 && x.ExpiresAt.Value > asOf
-                && x.ExpiresAt.Value <= expiringUntil)
+                && x.ExpiresAt.Value <= expiringUntil);
+
+        if (request.TenantId.HasValue)
+        {
+            expiringCandidatesQuery = expiringCandidatesQuery.Where(x => x.TenantId == request.TenantId.Value);
+        }
+
+        var expiringCandidates = await expiringCandidatesQuery
             .OrderBy(x => x.ExpiresAt)
             .Take(batchSize)
             .ToListAsync(cancellationToken);

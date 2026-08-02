@@ -109,6 +109,7 @@ public sealed class TenantMembershipAdminService(
             user.Id,
             user.Email,
             user.DisplayName,
+            roleKey,
             actorUserId,
             cancellationToken);
 

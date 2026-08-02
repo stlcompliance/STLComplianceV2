@@ -173,6 +173,7 @@ function buildState(overrides: Partial<StaffArrWorkspaceState> = {}): StaffArrWo
     permissionCheckMutationError: null,
     profile: null,
     personProfileQuery: { isLoading: false, data: null },
+    personAccountAccessQuery: { data: null, isLoading: false, isError: false, error: null, refetch: vi.fn() },
     personSummaryQuery: { isLoading: false, isError: false, error: null, refetch: vi.fn(), data: null },
     selectedPerson: null,
     assignments: [],
@@ -370,6 +371,38 @@ describe('PeopleSection', () => {
     expect(screen.getByText('Authorization decision')).toBeTruthy()
     expect(screen.getByRole('tab', { name: 'Overview' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tab', { name: 'Documents' })).toBeTruthy()
+  })
+
+  it('falls back to the NexArr tenant role when no job title is recorded', () => {
+    const profile = { ...buildProfile(), jobTitle: null, primaryOrgUnitName: null }
+    const selectedPerson = {
+      ...buildPerson('person-1', 'Alex Rivera', 'alex.rivera@example.com', 'active'),
+      jobTitle: null,
+      primaryOrgUnitName: null,
+    }
+
+    renderPeopleSection(
+      buildState({
+        profile,
+        personProfileQuery: { isLoading: false, data: profile } as any,
+        selectedPerson: selectedPerson as any,
+        personAccountAccessQuery: {
+          data: {
+            tenantRoleSummary: 'Tenant Admin',
+          },
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: vi.fn(),
+        } as any,
+      }),
+      '/people/details?person=person-1&tab=overview',
+    )
+
+    expect(screen.getByText('Tenant Admin access')).toBeTruthy()
+    expect(screen.getByText('NexArr tenant membership role')).toBeTruthy()
+    expect(screen.getByText('No active StaffArr assignment recorded')).toBeTruthy()
+    expect(screen.getByText('Tenant Admin - No role coverage')).toBeTruthy()
   })
 
   it('shows a person-scoped incident create action on the incidents tab', () => {

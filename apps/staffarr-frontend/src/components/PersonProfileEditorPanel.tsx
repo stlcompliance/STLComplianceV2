@@ -1,12 +1,15 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { ApiErrorCallout, ConfirmDialog, StaticSearchPicker, type PickerOption } from '@stl/shared-ui'
-import { getStaffArrFieldset, listLocations } from '../api/client'
+import { getErrorMessage } from '@stl/shared-ui'
+import { getStaffArrFieldset, getStaffPersonRoles, listLocations, listStaffRoles, setStaffPersonRoles } from '../api/client'
 import { PersonAccountAccessPanel } from './PersonAccountAccessPanel'
 import type {
   OrgUnitResponse,
+  SetStaffPersonRoleItemRequest,
   StaffArrFieldOptionResponse,
   StaffArrFieldsetResponse,
+  StaffPersonRoleAssignmentResponse,
   StaffPersonDetailResponse,
 } from '../api/types'
 const WRITER_ROLES = new Set(['tenant_admin', 'staffarr_admin', 'hr_admin'])
@@ -20,6 +23,7 @@ interface PersonProfileEditorPanelProps {
   canManage: boolean
   isSubmitting: boolean
   errorMessage: string | null
+  onOpenPermissionsReview?: () => void
   onUpdate: (request: {
     legalFirstName?: string | null
     legalMiddleName?: string | null
@@ -80,9 +84,11 @@ export function PersonProfileEditorPanel({
   canManage,
   isSubmitting,
   errorMessage,
+  onOpenPermissionsReview,
   onUpdate,
   onEmploymentStatusChange,
 }: PersonProfileEditorPanelProps) {
+  const queryClient = useQueryClient()
   const [legalFirstName, setLegalFirstName] = useState(profile.legalFirstName)
   const [legalMiddleName, setLegalMiddleName] = useState(profile.legalMiddleName ?? '')
   const [legalLastName, setLegalLastName] = useState(profile.legalLastName)
@@ -115,6 +121,11 @@ export function PersonProfileEditorPanel({
   const [statusReason, setStatusReason] = useState('')
   const [statusDraft, setStatusDraft] = useState(profile.employmentStatus)
   const [pendingStatusConfirmation, setPendingStatusConfirmation] = useState(false)
+  const [roleIdDraft, setRoleIdDraft] = useState('')
+  const [roleScopeTypeDraft, setRoleScopeTypeDraft] = useState<SetStaffPersonRoleItemRequest['assignmentScopeType']>('tenant')
+  const [roleScopeRefIdDraft, setRoleScopeRefIdDraft] = useState('')
+  const [roleStartsAtDraft, setRoleStartsAtDraft] = useState('')
+  const [roleEndsAtDraft, setRoleEndsAtDraft] = useState('')
 
   const profileFieldsetQuery = useQuery({
     queryKey: ['staffarr-fieldset', accessToken, 'people.profile'],
@@ -181,6 +192,16 @@ export function PersonProfileEditorPanel({
     [locationQuery.data],
   )
   const selectedLocationOption = locationOptions.find((option) => option.value === homeBaseLocationId)
+  const personRolesQuery = useQuery({
+    queryKey: ['staffarr-person-roles-inline-editor', accessToken, profile.personId],
+    queryFn: () => getStaffPersonRoles(accessToken, profile.personId),
+    enabled: Boolean(accessToken && profile.personId),
+  })
+  const rolesCatalogQuery = useQuery({
+    queryKey: ['staffarr-role-catalog-inline-editor', accessToken],
+    queryFn: () => listStaffRoles(accessToken),
+    enabled: Boolean(accessToken),
+  })
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -231,6 +252,155 @@ export function PersonProfileEditorPanel({
     await onEmploymentStatusChange({ employmentStatus: statusDraft, reason: statusReason || null })
   }
 
+  const selectedAssignableRole = useMemo(
+    () => (rolesCatalogQuery.data ?? []).find((role) => role.roleId === roleIdDraft) ?? null,
+    [roleIdDraft, rolesCatalogQuery.data],
+  )
+
+  const availableRoleOptions = useMemo<PickerOption[]>(
+    () =>
+      (rolesCatalogQuery.data ?? [])
+        .filter((role) => !role.isArchived)
+        .map((role) => ({
+          value: role.roleId,
+          label: `${role.name} · ${role.permissionCount} permissions · ${role.scopeCount} scopes`,
+        })),
+    [rolesCatalogQuery.data],
+  )
+  const selectedAssignableRoleOption = availableRoleOptions.find((option) => option.value === roleIdDraft)
+
+  const roleScopeOptions: Array<{
+    value: SetStaffPersonRoleItemRequest['assignmentScopeType']
+    label: string
+    help: string
+  }> = [
+    { value: 'tenant', label: 'Entire tenant', help: 'Grants the role anywhere in this tenant.' },
+    { value: 'site', label: 'Site only', help: 'Keeps the role limited to one site.' },
+    { value: 'department', label: 'Department only', help: 'Applies only to one department.' },
+    { value: 'team', label: 'Team only', help: 'Applies only to one team.' },
+    { value: 'position', label: 'Position only', help: 'Applies only to one position group.' },
+    { value: 'location', label: 'Location only', help: 'Applies only to one physical location.' },
+    { value: 'direct_reports', label: 'Direct reports only', help: 'Limits access to the person’s direct reports.' },
+    { value: 'own_records', label: 'Own records only', help: 'Limits access to the person’s own records.' },
+    { value: 'assigned_assets', label: 'Assigned assets only', help: 'Limits access to assigned assets.' },
+  ]
+
+  const selectedScopeNeedsReference = ['site', 'department', 'team', 'position', 'location'].includes(roleScopeTypeDraft)
+  const roleScopeReferenceOptions = useMemo<PickerOption[]>(() => {
+    if (roleScopeTypeDraft === 'location') {
+      return locationOptions
+    }
+
+    if (roleScopeTypeDraft === 'site') {
+      return orgUnits
+        .filter((unit) => unit.unitType.toLowerCase().includes('site'))
+        .map((unit) => ({ value: unit.orgUnitId, label: unit.name }))
+    }
+
+    if (roleScopeTypeDraft === 'department') {
+      return orgUnits
+        .filter((unit) => unit.unitType.toLowerCase().includes('department'))
+        .map((unit) => ({ value: unit.orgUnitId, label: unit.name }))
+    }
+
+    if (roleScopeTypeDraft === 'team') {
+      return orgUnits
+        .filter((unit) => unit.unitType.toLowerCase().includes('team'))
+        .map((unit) => ({ value: unit.orgUnitId, label: unit.name }))
+    }
+
+    if (roleScopeTypeDraft === 'position') {
+      return orgUnits
+        .filter((unit) => unit.unitType.toLowerCase().includes('position'))
+        .map((unit) => ({ value: unit.orgUnitId, label: unit.name }))
+    }
+
+    return []
+  }, [locationOptions, orgUnits, roleScopeTypeDraft])
+
+  const selectedRoleScopeRefOption = roleScopeReferenceOptions.find((option) => option.value === roleScopeRefIdDraft)
+
+  const roleAssignmentsById = useMemo(
+    () => new Map((rolesCatalogQuery.data ?? []).map((role) => [role.roleId, role])),
+    [rolesCatalogQuery.data],
+  )
+
+  const resetRoleDraft = () => {
+    setRoleIdDraft('')
+    setRoleScopeTypeDraft('tenant')
+    setRoleScopeRefIdDraft('')
+    setRoleStartsAtDraft('')
+    setRoleEndsAtDraft('')
+  }
+
+  const mapAssignmentsForSave = (assignments: StaffPersonRoleAssignmentResponse[]): SetStaffPersonRoleItemRequest[] =>
+    assignments.map((assignment) => ({
+      roleId: assignment.roleId,
+      assignmentScopeType: assignment.assignmentScopeType,
+      assignmentScopeRefId: assignment.assignmentScopeRefId,
+      startsAt: assignment.startsAt,
+      endsAt: assignment.endsAt,
+    }))
+
+  const roleAssignmentsMutation = useMutation({
+    mutationFn: async (nextRoles: SetStaffPersonRoleItemRequest[]) =>
+      setStaffPersonRoles(accessToken, profile.personId, { roles: nextRoles }),
+    onSuccess: async () => {
+      resetRoleDraft()
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-roles-inline-editor', accessToken, profile.personId] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-role-assignments', accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-effective-permissions', accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-timeline', accessToken] }),
+        queryClient.invalidateQueries({ queryKey: ['staffarr-person-history-summary', accessToken, profile.personId] }),
+      ])
+    },
+  })
+
+  const handleAssignRole = async () => {
+    if (!roleIdDraft) {
+      return
+    }
+
+    const currentAssignments = personRolesQuery.data ?? []
+    const nextRoles = mapAssignmentsForSave(currentAssignments)
+    nextRoles.push({
+      roleId: roleIdDraft,
+      assignmentScopeType: roleScopeTypeDraft,
+      assignmentScopeRefId: selectedScopeNeedsReference ? roleScopeRefIdDraft || null : null,
+      startsAt: roleStartsAtDraft ? new Date(roleStartsAtDraft).toISOString() : null,
+      endsAt: roleEndsAtDraft ? new Date(roleEndsAtDraft).toISOString() : null,
+    })
+    await roleAssignmentsMutation.mutateAsync(nextRoles)
+  }
+
+  const handleRemoveRole = async (personRoleId: string) => {
+    const currentAssignments = personRolesQuery.data ?? []
+    const remaining = currentAssignments.filter((assignment) => assignment.personRoleId !== personRoleId)
+    await roleAssignmentsMutation.mutateAsync(mapAssignmentsForSave(remaining))
+  }
+
+  const formatAssignmentScope = (assignment: StaffPersonRoleAssignmentResponse): string => {
+    if (!assignment.assignmentScopeRefId) {
+      return assignment.assignmentScopeType.replace(/_/g, ' ')
+    }
+
+    const orgUnit = orgUnits.find((unit) => unit.orgUnitId === assignment.assignmentScopeRefId)
+    const location = locationQuery.data?.find((item) => item.locationId === assignment.assignmentScopeRefId)
+    return orgUnit?.name ?? location?.name ?? assignment.assignmentScopeRefId
+  }
+
+  const formatDateTime = (value: string | null) => {
+    if (!value) {
+      return 'Not scheduled'
+    }
+    const date = new Date(value)
+    if (Number.isNaN(date.getTime())) {
+      return 'Not scheduled'
+    }
+    return date.toLocaleString()
+  }
+
   const SectionHeading = ({
     title,
     description,
@@ -263,13 +433,207 @@ export function PersonProfileEditorPanel({
             Manage the StaffArr-owned person record with separate delegated account controls below.
           </p>
         </div>
-        <span className={`text-xs ${canManage ? 'text-[var(--color-success-text)]' : 'text-[var(--color-text-muted)]'}`}>
-          {canManage ? 'Write enabled' : 'Read only'}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {onOpenPermissionsReview ? (
+            <button
+              type="button"
+              onClick={onOpenPermissionsReview}
+              className="rounded-md border border-[var(--color-border-subtle)] px-3 py-2 text-xs font-medium text-[var(--color-text-primary)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-control-hover)]"
+            >
+              Review permissions
+            </button>
+          ) : null}
+          {canManage ? (
+            <button
+              type="submit"
+              form="staffarr-person-profile-form"
+              disabled={isSubmitting}
+              className="rounded-md bg-[var(--color-accent)] px-3 py-2 text-xs font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : 'Save profile changes'}
+            </button>
+          ) : null}
+          <span className={`text-xs ${canManage ? 'text-[var(--color-success-text)]' : 'text-[var(--color-text-muted)]'}`}>
+            {canManage ? 'Write enabled' : 'Read only'}
+          </span>
+        </div>
       </header>
 
+      <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-medium text-[var(--color-text-primary)]">Role and permission access</h3>
+            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+              Review who this person can act as, where the role applies, and what changes will be granted before saving.
+            </p>
+          </div>
+          <p className="max-w-sm text-right text-xs text-[var(--color-text-muted)]">
+            StaffArr owns person authority. Effective permission detail stays in the permissions review tab.
+          </p>
+        </div>
+
+        {personRolesQuery.isLoading || rolesCatalogQuery.isLoading ? (
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">Loading role assignments...</p>
+        ) : null}
+
+        {personRolesQuery.data && personRolesQuery.data.length > 0 ? (
+          <div className="mt-4 space-y-3">
+            {personRolesQuery.data.map((assignment) => {
+              const roleSummary = roleAssignmentsById.get(assignment.roleId)
+              return (
+                <div key={assignment.personRoleId} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-[var(--color-text-primary)]">{assignment.roleName}</p>
+                        <span className="rounded-full bg-[var(--color-bg-control)] px-2 py-0.5 text-[11px] text-[var(--color-text-secondary)]">
+                          {assignment.roleType.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+                        Applies to {formatAssignmentScope(assignment)}. Starts {formatDateTime(assignment.startsAt)}.
+                        {assignment.endsAt ? ` Ends ${formatDateTime(assignment.endsAt)}.` : ' No end date set.'}
+                      </p>
+                      {roleSummary ? (
+                        <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                          {roleSummary.permissionCount} permissions across {roleSummary.scopeCount} saved role scopes.
+                        </p>
+                      ) : null}
+                    </div>
+                    {canManage ? (
+                      <button
+                        type="button"
+                        disabled={roleAssignmentsMutation.isPending}
+                        onClick={() => void handleRemoveRole(assignment.personRoleId)}
+                        className="rounded-md border border-[var(--tone-danger-border)] bg-[var(--tone-danger-bg)] px-3 py-2 text-xs font-medium text-[var(--tone-danger-text)] disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : !personRolesQuery.isLoading ? (
+          <p className="mt-4 text-sm text-[var(--color-text-muted)]">No StaffArr role assignments are currently recorded for this person.</p>
+        ) : null}
+
+        {canManage ? (
+          <div className="mt-4 rounded-lg border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-4">
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <label className="block text-sm text-[var(--color-text-secondary)]">
+                Role
+                <StaticSearchPicker
+                  id="edit-person-role-assignment"
+                  label="Role"
+                  value={roleIdDraft}
+                  onChange={setRoleIdDraft}
+                  options={availableRoleOptions}
+                  placeholder="Search roles..."
+                  testId="edit-person-role-assignment-picker"
+                  selectedOption={selectedAssignableRoleOption}
+                />
+              </label>
+              <label htmlFor="edit-person-role-scope-type" className="block text-sm text-[var(--color-text-secondary)]">
+                Scope
+                <select
+                  id="edit-person-role-scope-type"
+                  value={roleScopeTypeDraft}
+                  onChange={(event) => {
+                    setRoleScopeTypeDraft(event.target.value as SetStaffPersonRoleItemRequest['assignmentScopeType'])
+                    setRoleScopeRefIdDraft('')
+                  }}
+                  className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                >
+                  {roleScopeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-sm text-[var(--color-text-secondary)]">
+                Scope reference
+                <StaticSearchPicker
+                  id="edit-person-role-scope-reference"
+                  label="Scope reference"
+                  value={roleScopeRefIdDraft}
+                  onChange={setRoleScopeRefIdDraft}
+                  options={roleScopeReferenceOptions}
+                  placeholder={selectedScopeNeedsReference ? 'Search scope...' : 'No reference needed'}
+                  testId="edit-person-role-scope-reference-picker"
+                  selectedOption={selectedRoleScopeRefOption}
+                  disabled={!selectedScopeNeedsReference}
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <label htmlFor="edit-person-role-starts-at" className="block text-sm text-[var(--color-text-secondary)]">
+                  Starts at
+                  <input
+                    id="edit-person-role-starts-at"
+                    type="datetime-local"
+                    value={roleStartsAtDraft}
+                    onChange={(event) => setRoleStartsAtDraft(event.target.value)}
+                    className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  />
+                </label>
+                <label htmlFor="edit-person-role-ends-at" className="block text-sm text-[var(--color-text-secondary)]">
+                  Ends at
+                  <input
+                    id="edit-person-role-ends-at"
+                    type="datetime-local"
+                    value={roleEndsAtDraft}
+                    onChange={(event) => setRoleEndsAtDraft(event.target.value)}
+                    className="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-control)] px-3 py-2 text-sm text-[var(--color-text-primary)]"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {selectedAssignableRole ? (
+              <div className="mt-4 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface-elevated)] p-3 text-sm">
+                <p className="font-medium text-[var(--color-text-primary)]">Assignment preview</p>
+                <p className="mt-1 text-[var(--color-text-muted)]">
+                  {selectedAssignableRole.name} grants {selectedAssignableRole.permissionCount} permissions and currently defines {selectedAssignableRole.scopeCount} saved role scopes.
+                  This person assignment will apply at the {roleScopeOptions.find((option) => option.value === roleScopeTypeDraft)?.label.toLowerCase()} level.
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  {selectedAssignableRole.description ?? 'No role description has been provided yet.'}
+                </p>
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {roleScopeOptions.find((option) => option.value === roleScopeTypeDraft)?.help}
+              </p>
+              <button
+                type="button"
+                disabled={
+                  roleAssignmentsMutation.isPending
+                  || !roleIdDraft
+                  || (selectedScopeNeedsReference && !roleScopeRefIdDraft)
+                }
+                onClick={() => void handleAssignRole()}
+                className="rounded-md bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)] disabled:opacity-50"
+              >
+                {roleAssignmentsMutation.isPending ? 'Saving assignment...' : 'Assign role'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {roleAssignmentsMutation.error ? (
+          <ApiErrorCallout
+            title="Role assignment update failed"
+            message={getErrorMessage(roleAssignmentsMutation.error, 'Failed to update role assignments.')}
+          />
+        ) : null}
+      </div>
+
       {canManage ? (
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+        <form id="staffarr-person-profile-form" className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
           <SectionHeading
             title="Profile"
             description="Legal and display identity fields that StaffArr owns directly."
@@ -589,7 +953,10 @@ export function PersonProfileEditorPanel({
               <p className="mt-1 text-xs text-[var(--color-text-muted)]">Loading locations...</p>
             ) : null}
           </label>
-          <div className="md:col-span-2">
+          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Save profile changes separately from role assignment updates so each audit action stays readable.
+            </p>
             <button
               type="submit"
               disabled={isSubmitting}

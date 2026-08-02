@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ApiErrorCallout,
@@ -8,7 +8,7 @@ import {
   type PickerOption,
 } from '@stl/shared-ui'
 
-import { getSupplierDirectoryMetadata } from '../../api/client'
+import { getSupplierDirectoryMetadata, getSupplierOnboarding } from '../../api/client'
 import type { SupplierResponse } from '../../api/types'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
 
@@ -85,6 +85,15 @@ function formatTimestamp(value: string | null | undefined): string {
     : date.toLocaleDateString(undefined, { month: 'short', day: '2-digit', year: 'numeric' })
 }
 
+function isMissingOnboardingRecordError(error: unknown): boolean {
+  return (
+    typeof error === 'object'
+    && error !== null
+    && 'status' in error
+    && (error as { status?: number }).status === 404
+  )
+}
+
 function EmptyPanel({ title, description }: { title: string; description: string }) {
   return (
     <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-5">
@@ -159,6 +168,19 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
   const selectedSupplierContracts = (s.contractsQuery.data ?? []).filter(
     (contract) => contract.supplierId === selectedSupplier?.supplierId,
   )
+  const onboardingQuery = useQuery({
+    queryKey: ['supplyarr-supplier-onboarding', s.accessToken, selectedSupplier?.supplierId],
+    queryFn: () => getSupplierOnboarding(s.accessToken, selectedSupplier!.supplierId),
+    enabled: Boolean(s.accessToken && selectedSupplier?.supplierId),
+    retry: false,
+  })
+  const onboarding = onboardingQuery.data ?? null
+  const onboardingSatisfiedCount = onboarding?.documentRequirements.filter((doc) => doc.isSatisfied).length ?? 0
+  const onboardingRequiredCount = onboarding?.documentRequirements.length ?? 0
+  const onboardingMissingCount = onboardingRequiredCount - onboardingSatisfiedCount
+  const onboardingStateLabel = onboarding
+    ? humanize(onboarding.onboardingStatus)
+    : 'No onboarding record'
   const linkedItems = (s.partsQuery.data ?? []).flatMap((part) =>
     part.supplierLinks
       .filter((link) => link.supplierId === selectedSupplier?.supplierId)
@@ -482,6 +504,90 @@ function SupplierDirectoryWorkspace({ state: s, mode }: { state: SupplyArrWorksp
               </div>
             )}
           </div>
+
+          {selectedSupplier ? (
+            <section className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-surface)] p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">Onboarding posture</h3>
+                  <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                    Supplier onboarding stays with SupplyArr, while approved document requirements and final approval state influence sourcing eligibility.
+                  </p>
+                </div>
+                <span className="rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-3 py-1 text-xs text-[var(--color-text-secondary)]">
+                  {onboardingStateLabel}
+                </span>
+              </div>
+
+              {onboardingQuery.isError && !isMissingOnboardingRecordError(onboardingQuery.error) ? (
+                <ApiErrorCallout
+                  className="mt-4"
+                  message={getErrorMessage(onboardingQuery.error, 'Failed to load supplier onboarding details.')}
+                  onRetry={() => void onboardingQuery.refetch()}
+                  retryLabel="Retry onboarding"
+                />
+              ) : null}
+
+              {onboarding ? (
+                <div className="mt-4 grid gap-3 md:grid-cols-3">
+                  <DetailCard label="Submitted" value={onboarding.submittedAt ? formatTimestamp(onboarding.submittedAt) : 'Not submitted'} />
+                  <DetailCard label="Reviewed" value={onboarding.reviewedAt ? formatTimestamp(onboarding.reviewedAt) : 'Not reviewed'} />
+                  <DetailCard
+                    label="Document gate"
+                    value={
+                      onboardingMissingCount > 0
+                        ? `${onboardingSatisfiedCount}/${onboardingRequiredCount} approved`
+                        : `${onboardingRequiredCount}/${onboardingRequiredCount} approved`
+                    }
+                  />
+                </div>
+              ) : (
+                <EmptyPanel
+                  title="No onboarding record yet"
+                  description="Start supplier onboarding to track required documents, review state, and approval eligibility."
+                />
+              )}
+
+              {onboarding ? (
+                <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] p-4">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)]">Document requirements</p>
+                  <div className="mt-3 space-y-2">
+                    {onboarding.documentRequirements.map((doc) => (
+                      <div key={doc.documentTypeKey} className="flex items-center justify-between gap-3 text-sm">
+                        <span className="text-[var(--color-text-secondary)]">{doc.label}</span>
+                        <span className={doc.isSatisfied ? 'text-emerald-300' : 'text-amber-300'}>
+                          {doc.isSatisfied ? 'Approved' : 'Missing'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {onboardingMissingCount > 0 ? (
+                    <p className="mt-3 text-xs text-amber-300">
+                      Submission remains blocked until required documents are approved.
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link
+                  to="/onboarding"
+                  className="rounded-xl bg-[var(--color-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-on-accent)] hover:bg-[var(--color-accent-hover)]"
+                >
+                  Open onboarding
+                </Link>
+                {onboarding?.onboardingStatus === 'approved' ? (
+                  <span className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-2 text-sm text-[var(--color-text-secondary)]">
+                    Eligible for sourcing
+                  </span>
+                ) : onboarding ? (
+                  <span className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-control)] px-4 py-2 text-sm text-[var(--color-text-secondary)]">
+                    Review required before sourcing
+                  </span>
+                ) : null}
+              </div>
+            </section>
+          ) : null}
 
           {selectedSupplier ? (
             <div className="grid gap-4 xl:grid-cols-2">

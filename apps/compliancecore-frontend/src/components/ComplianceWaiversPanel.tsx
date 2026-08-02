@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { buildSemanticKey, GeneratedKeyField } from '@stl/shared-ui'
+import { ApiErrorCallout, buildSemanticKey, GeneratedKeyField, getErrorMessage } from '@stl/shared-ui'
 import { useMemo, useState } from 'react'
 
 import {
@@ -15,12 +15,14 @@ interface ComplianceWaiversPanelProps {
   accessToken: string
   rulePacks: RulePackResponse[]
   canManage: boolean
+  canApprove: boolean
 }
 
 export function ComplianceWaiversPanel({
   accessToken,
   rulePacks,
   canManage,
+  canApprove,
 }: ComplianceWaiversPanelProps) {
   const queryClient = useQueryClient()
   const [rulePackId, setRulePackId] = useState('')
@@ -134,6 +136,47 @@ export function ComplianceWaiversPanel({
           <span className="font-mono text-amber-300">nonWaivable</span> in rule pack content cannot be waived.
         </p>
       </header>
+
+      {waiversQuery.isLoading ? <p className="text-sm text-slate-400">Loading compliance waivers…</p> : null}
+
+      {waiversQuery.isError ? (
+        <ApiErrorCallout
+          title="Waivers unavailable"
+          message={getErrorMessage(waiversQuery.error, 'Failed to load compliance waivers.')}
+          retryLabel="Retry waivers"
+          onRetry={() => {
+            void waiversQuery.refetch()
+          }}
+        />
+      ) : null}
+
+      {createMutation.isError ? (
+        <ApiErrorCallout
+          title="Waiver request failed"
+          message={getErrorMessage(createMutation.error, 'Unable to request the waiver.')}
+        />
+      ) : null}
+
+      {approveMutation.isError ? (
+        <ApiErrorCallout
+          title="Waiver approval failed"
+          message={getErrorMessage(approveMutation.error, 'Unable to approve the waiver.')}
+        />
+      ) : null}
+
+      {renewMutation.isError ? (
+        <ApiErrorCallout
+          title="Waiver renewal failed"
+          message={getErrorMessage(renewMutation.error, 'Unable to renew the waiver.')}
+        />
+      ) : null}
+
+      {revokeMutation.isError ? (
+        <ApiErrorCallout
+          title="Waiver revocation failed"
+          message={getErrorMessage(revokeMutation.error, 'Unable to revoke the waiver.')}
+        />
+      ) : null}
 
       {canManage && (
         <form
@@ -260,7 +303,7 @@ export function ComplianceWaiversPanel({
                   {waiver.status}
                 </span>
               </div>
-              {canManage && waiver.status === 'pending' && (
+              {canApprove && waiver.status === 'pending' && (
                 <button
                   type="button"
                   onClick={() => approveMutation.mutate(waiver.waiverId)}
@@ -270,27 +313,31 @@ export function ComplianceWaiversPanel({
                   Approve
                 </button>
               )}
-              {canManage && waiver.status === 'approved' && (
+              {waiver.status === 'approved' && (canApprove || canManage) ? (
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => renewMutation.mutate(waiver.waiverId)}
-                    disabled={renewMutation.isPending}
-                    className="rounded-md bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600"
-                  >
-                    Renew 30 days
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => revokeMutation.mutate(waiver.waiverId)}
-                    disabled={revokeMutation.isPending}
-                    className="rounded-md bg-rose-800 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
-                  >
-                    Revoke
-                  </button>
+                  {canApprove ? (
+                    <button
+                      type="button"
+                      onClick={() => renewMutation.mutate(waiver.waiverId)}
+                      disabled={renewMutation.isPending}
+                      className="rounded-md bg-sky-700 px-2 py-1 text-xs font-medium text-white hover:bg-sky-600"
+                    >
+                      Renew 30 days
+                    </button>
+                  ) : null}
+                  {canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => revokeMutation.mutate(waiver.waiverId)}
+                      disabled={revokeMutation.isPending}
+                      className="rounded-md bg-rose-800 px-2 py-1 text-xs font-medium text-white hover:bg-rose-700"
+                    >
+                      Revoke
+                    </button>
+                  ) : null}
                 </div>
-              )}
-              {canManage && waiver.status === 'expired' && (
+              ) : null}
+              {canApprove && waiver.status === 'expired' && (
                 <button
                   type="button"
                   onClick={() => renewMutation.mutate(waiver.waiverId)}

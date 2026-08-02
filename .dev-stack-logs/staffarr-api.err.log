@@ -1,5 +1,27 @@
 dotnet watch 🔥 Hot reload enabled. For a list of supported edits, see https://aka.ms/dotnet/hot-reload.
 dotnet watch 💡 Press Ctrl+R to restart.
 dotnet watch ⌚ Loading projects ...
-dotnet watch ⌚ Loaded 2 project(s) in 2.5s.
+dotnet watch ⌚ Loaded 2 project(s) in 1.0s.
 dotnet watch ⌚ Waiting for changes
+dotnet watch ⌚ File added: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs.backup
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 1.5s.
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File deleted: .\packages\shared-dotnet\STLCompliance.Shared\obj\Debug\net10.0\STLCompliance.Shared.AssemblyInfo.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\obj\Debug\net10.0\STLCompliance.Shared.AssemblyInfo.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(90,5): error CS1519: Invalid token '}' in a member declaration
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(13,52): error CS1061: 'IConfiguration' does not contain a definition for 'GetValue' and no accessible extension method 'GetValue' accepting a first argument of type 'IConfiguration' could be found (are you missing a using directive or an assembly reference?)
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 C# and Razor changes applied in 1422ms.
+dotnet watch ❌ [StaffArr.Api (net10.0)] Exited with error code 1073807364
+dotnet watch ⏳ Waiting for a file to change before restarting ...

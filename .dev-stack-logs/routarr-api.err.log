@@ -1,37 +1,86 @@
 dotnet watch 🔥 Hot reload enabled. For a list of supported edits, see https://aka.ms/dotnet/hot-reload.
 dotnet watch 💡 Press Ctrl+R to restart.
 dotnet watch ⌚ Loading projects ...
-dotnet watch ⌚ Loaded 2 project(s) in 2.2s.
+dotnet watch ⌚ Loaded 2 project(s) in 1.7s.
 dotnet watch ⌚ Waiting for changes
-Unhandled exception. System.IO.IOException: Failed to bind to address http://127.0.0.1:5105: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+Unhandled exception. System.InvalidOperationException: An error was generated for warning 'Microsoft.EntityFrameworkCore.Migrations.PendingModelChangesWarning': The model for context 'RoutArrDbContext' has pending changes. Add a new migration before updating the database. See https://aka.ms/efcore-docs-pending-changes. This exception can be suppressed or logged by passing event ID 'RelationalEventId.PendingModelChangesWarning' to the 'ConfigureWarnings' method in 'DbContext.OnConfiguring' or 'AddDbContext'.
+   at Microsoft.EntityFrameworkCore.Diagnostics.EventDefinition`1.Log[TLoggerCategory](IDiagnosticsLogger`1 logger, TParam arg)
+   at Microsoft.EntityFrameworkCore.Diagnostics.RelationalLoggerExtensions.PendingModelChangesWarning(IDiagnosticsLogger`1 diagnostics, Type contextType)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.ValidateMigrations(Boolean useTransaction, String targetMigration)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.Migrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Internal.NpgsqlMigrator.MigrateAsync(String targetMigration, CancellationToken cancellationToken)
+   at STLCompliance.Shared.Hosting.StlApiHost.ApplyMigrationsAsync[TContext](WebApplication app) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 322
+   at STLCompliance.Shared.Hosting.StlApiHost.ApplyMigrationsAsync[TContext](WebApplication app) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 336
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 169
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 283
+   at Program.<Main>$(String[] args) in F:\STLComplianceV2\apps\routarr-api\RoutArr.Api\Program.cs:line 7
+   at Program.<Main>(String[] args)
+dotnet watch ❌ [RoutArr.Api (net10.0)] Exited with error code -532462766
+dotnet watch ⏳ Waiting for a file to change before restarting ...
+dotnet watch ⌚ Loading projects ...
+dotnet watch ⌚ Loaded 2 project(s) in 0.2s.
+dotnet watch ⌚ Waiting for changes
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(90,5): error CS1519: Invalid token '}' in a member declaration
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 Unable to apply changes due to compilation errors.
+dotnet watch ❌ F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs(13,52): error CS1061: 'IConfiguration' does not contain a definition for 'GetValue' and no accessible extension method 'GetValue' accepting a first argument of type 'IConfiguration' could be found (are you missing a using directive or an assembly reference?)
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch ⌚ No managed code changes to apply.
+dotnet watch ⌚ File updated: .\packages\shared-dotnet\STLCompliance.Shared\Endpoints\StlProductLaunchEndpoints.cs
+dotnet watch 🔥 C# and Razor changes applied in 1594ms.
+Unhandled exception. System.InvalidOperationException: Unable to provision integration tokens for routarr-api from NexArr after 40 attempts.
+ ---> System.InvalidOperationException: NexArr integration token provision failed (500): System.InvalidOperationException: An exception has been raised that is likely due to a transient failure.
+ ---> Npgsql.NpgsqlException (0x80004005): Failed to connect to 127.0.0.1:5432
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.ConnectAsync(NpgsqlTimeout timeout, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.RawOpen(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|209_0(NpgsqlConnector conn, String username, SslMode sslMode, GssEncryptionMode gssEncMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.OpenNewConnector(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.PoolingDataSource.<Get>g__RentAsync|33_0(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
    --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.ShapedQueryCompilingExpressionVisitor.SingleAsync[TSource](IAsyncEnumerable`1 asyncEnumerable, CancellationToken cancellationToken)
+   at NexArr.Api.Services.IntegrationTokenBootstrapService.EnsureProductCatalogAsync(CancellationToken cancellationToken) in F:\STLComplianceV2\apps\nexarr-api\NexArr.Api\Services\IntegrationTokenBootstrapService.cs:line 81
+   at NexArr.Api.Services.IntegrationTokenBootstrapService.EnsureProvisionedAsync(CancellationToken cancellationToken) in F:\STLComplianceV2\apps\nexarr-api\NexArr.Api\Services\IntegrationTokenBootstrapService.cs:line 49
+   at NexArr.Api.Services.IntegrationTokenBootstrapService.GetTokensForConsumerAsync(String consumerService, CancellationToken cancellationToken) in F:\STLComplianceV2\apps\nexarr-api\NexArr.Api\Services\IntegrationTokenBootstrapService.cs:line 65
+   at NexArr.Api.Endpoints.InternalIntegrationTokenEndpoints.<>c.<<MapInternalIntegrationTokenEndpoints>b__0_0>d.MoveNext() in F:\STLComplianceV2\apps\nexarr-api\NexArr.Api\Endpoints\InternalIntegrationTokenEndpoints.cs:line 28
 --- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at STLCompliance.Shared.Middleware.ApiExceptionMiddleware.InvokeAsync(HttpContext context, ICorrelationIdAccessor correlationIdAccessor)
+   at STLCompliance.Shared.Middleware.SecurityHeadersMiddlewareExtensions.<>c.<<UseStlSecurityHeaders>b__6_0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at STLCompliance.Shared.Middleware.CorrelationIdMiddleware.InvokeAsync(HttpContext context, ICorrelationIdAccessor correlationIdAccessor)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+
+HEADERS
+=======
+Host: localhost:5101
+X-Integration-Bootstrap-Secret: stl-local-bootstrap-secret
+
    --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 270
+   at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger)
+   at STLCompliance.Shared.Integration.StlIntegrationTokenServiceCollectionExtensions.AddStlIntegrationTokenProvisioning(IHostApplicationBuilder builder)
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints)
+   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints)
    at Program.<Main>$(String[] args) in F:\STLComplianceV2\apps\routarr-api\RoutArr.Api\Program.cs:line 7
    at Program.<Main>(String[] args)
 dotnet watch ❌ [RoutArr.Api (net10.0)] Exited with error code -532462766

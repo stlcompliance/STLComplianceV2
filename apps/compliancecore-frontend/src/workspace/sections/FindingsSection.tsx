@@ -28,6 +28,7 @@ export function FindingsSection({ state }: Props) {
         accessToken={s.accessToken}
         rulePacks={s.rulePacksQuery.data ?? []}
         canManage={s.canManage}
+        canApprove={s.canApproveWaivers}
       />
     </div>
   )

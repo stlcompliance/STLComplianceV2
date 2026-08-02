@@ -85,6 +85,12 @@ public sealed class RoleManagementService(
         "Product Admin"
     };
 
+    private static readonly HashSet<string> PlatformManagedSystemTemplateNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Platform Admin",
+        TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName
+    };
+
     private static readonly IReadOnlyDictionary<string, IReadOnlyList<string>> StandardRolePermissionDefaults =
         new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase)
         {
@@ -665,6 +671,99 @@ public sealed class RoleManagementService(
             cancellationToken);
 
         return await GetPersonRolesAsync(tenantId, personId, cancellationToken);
+    }
+
+    public async Task EnsurePlatformManagedSystemRoleAssignmentsAsync(
+        Guid tenantId,
+        Guid personId,
+        string? tenantRoleKey,
+        CancellationToken cancellationToken = default)
+    {
+        await EnsurePersonExistsAsync(tenantId, personId, cancellationToken);
+        await EnsureSystemTemplatesAsync(tenantId, cancellationToken);
+
+        var managedRoles = await db.StaffRoles
+            .AsNoTracking()
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.IsSystem
+                && !x.IsArchived
+                && PlatformManagedSystemTemplateNames.Contains(x.Name))
+            .ToListAsync(cancellationToken);
+        if (managedRoles.Count == 0)
+        {
+            return;
+        }
+
+        var desiredRoleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.Equals(tenantRoleKey, "platform_admin", StringComparison.OrdinalIgnoreCase))
+        {
+            desiredRoleNames.Add("Platform Admin");
+        }
+        else if (TenantAdminPermissionInheritanceRules.IsTenantAdminRoleKey(tenantRoleKey))
+        {
+            desiredRoleNames.Add(TenantAdminPermissionInheritanceRules.TenantAdminSystemTemplateName);
+        }
+
+        var managedRoleIds = managedRoles.Select(role => role.Id).ToHashSet();
+        var desiredRoleIds = managedRoles
+            .Where(role => desiredRoleNames.Contains(role.Name))
+            .Select(role => role.Id)
+            .ToHashSet();
+
+        var now = DateTimeOffset.UtcNow;
+        var activeAssignments = await db.StaffPersonRoles
+            .Where(x =>
+                x.TenantId == tenantId
+                && x.PersonId == personId
+                && managedRoleIds.Contains(x.RoleId)
+                && (x.StartsAt == null || x.StartsAt <= now)
+                && (x.EndsAt == null || x.EndsAt > now))
+            .ToListAsync(cancellationToken);
+
+        var tenantWideAssignmentRoleIds = activeAssignments
+            .Where(assignment =>
+                assignment.AssignmentScopeType.Equals("tenant", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(assignment.AssignmentScopeRefId))
+            .Select(assignment => assignment.RoleId)
+            .ToHashSet();
+
+        var assignmentsToRemove = activeAssignments
+            .Where(assignment =>
+                !desiredRoleIds.Contains(assignment.RoleId)
+                || !assignment.AssignmentScopeType.Equals("tenant", StringComparison.OrdinalIgnoreCase)
+                || !string.IsNullOrWhiteSpace(assignment.AssignmentScopeRefId))
+            .ToList();
+
+        var missingRoleIds = desiredRoleIds
+            .Except(tenantWideAssignmentRoleIds)
+            .ToList();
+
+        if (assignmentsToRemove.Count == 0 && missingRoleIds.Count == 0)
+        {
+            return;
+        }
+
+        if (assignmentsToRemove.Count > 0)
+        {
+            db.StaffPersonRoles.RemoveRange(assignmentsToRemove);
+        }
+
+        foreach (var roleId in missingRoleIds)
+        {
+            db.StaffPersonRoles.Add(new StaffPersonRole
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                PersonId = personId,
+                RoleId = roleId,
+                AssignmentScopeType = "tenant",
+                CreatedAt = now
+            });
+        }
+
+        await InvalidatePermissionProjectionAsync(tenantId, personId, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<PermissionCatalogResponse>> GetPermissionCatalogsAsync(

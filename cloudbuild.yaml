@@ -1,0 +1,13 @@
+# cloudbuild.yaml
+steps:
+  # Step 1: Deploy the entire stack using your Compose files
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run compose up \
+          --file docker-compose.yml \
+          --file compose.override.yml \
+          --region us-central1 \
+          --quiet

@@ -937,6 +937,7 @@ public sealed class PlatformUserAdminService(
             user.Id,
             user.Email,
             user.DisplayName,
+            roleKey,
             actorUserId,
             cancellationToken);
 

@@ -1,45 +1,1546 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj]
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj]
+F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
   CustomArr.Api -> F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\bin\Debug\net10.0\CustomArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\customarr-api\CustomArr.Api\CustomArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+    4 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:03.34
+Time Elapsed 00:00:03.56
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer customarr-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for customarr-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 2/40 failed for customarr-api; retrying in 5s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 1 integration token(s) for customarr-api from NexArr.
-[22:29:49 INF] Applying EF migrations for CustomArrDbContext (attempt 1/8)
-[22:30:00 INF] Executed DbCommand (53ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for CustomArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:01 INF] Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT 1
-[22:30:01 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
-    "MigrationId" character varying(150) NOT NULL,
-    "ProductVersion" character varying(32) NOT NULL,
-    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+[00:15:20 INF] Applying migration '20260617043317_CustomArrCanonicalCustomers'.
+[00:15:20 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customers (
+    "CustomerId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerNumber" character varying(64) NOT NULL,
+    "CustomerCode" character varying(64) NOT NULL,
+    "LegalName" character varying(256) NOT NULL,
+    "DisplayName" character varying(256) NOT NULL,
+    "DbaName" character varying(256),
+    "CustomerTypeKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "ParentCustomerId" character varying(64),
+    "PrimaryContactId" character varying(64),
+    "PrimaryBillingAddressId" character varying(64),
+    "PrimaryShippingAddressId" character varying(64),
+    "PrimaryServiceAddressId" character varying(64),
+    "AccountOwnerPersonId" character varying(128),
+    "AssignedTeamId" character varying(128),
+    "CustomerSinceDate" timestamp with time zone,
+    "SourceKey" character varying(64) NOT NULL,
+    "Notes" character varying(4000) NOT NULL,
+    "Tags" text[] NOT NULL,
+    "HoldStatusKey" character varying(64) NOT NULL,
+    "RiskRatingKey" character varying(64) NOT NULL,
+    "PortalEnabled" boolean NOT NULL,
+    "PortalDisplayName" character varying(256),
+    "AllowPortalOrderCreate" boolean NOT NULL,
+    "AllowPortalDocumentUpload" boolean NOT NULL,
+    "AllowPortalStatusView" boolean NOT NULL,
+    "DefaultPortalContactId" character varying(64),
+    "PortalInviteStatusKey" character varying(64) NOT NULL,
+    "PortalTermsAcceptedAt" timestamp with time zone,
+    "PortalTermsAcceptedByPersonId" character varying(128),
+    "PortalNotes" character varying(4000),
+    "DefaultOrderTypeKey" character varying(64),
+    "DefaultServiceLevelKey" character varying(64),
+    "DefaultPickupAddressId" character varying(64),
+    "DefaultDeliveryAddressId" character varying(64),
+    "DefaultContactId" character varying(64),
+    "RequiresAppointment" boolean NOT NULL,
+    "RequiresProofOfDelivery" boolean NOT NULL,
+    "RequiresCustomerReference" boolean NOT NULL,
+    "CustomerReferenceLabel" character varying(128),
+    "DefaultInstructions" character varying(4000),
+    "RestrictedServiceNotes" character varying(4000),
+    "NotificationPreferenceKey" character varying(64),
+    "OrderConfirmationRequired" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "UpdatedByPersonId" character varying(128),
+    "ArchivedAt" timestamp with time zone,
+    "ArchivedByPersonId" character varying(128),
+    "RowVersion" bigint NOT NULL,
+    CONSTRAINT "PK_customarr_customers" PRIMARY KEY ("CustomerId")
 );
-[22:30:01 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_idempotency_records (
+    "IdempotencyRecordId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OperationKey" character varying(128) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "ResourceId" character varying(128) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_idempotency_records" PRIMARY KEY ("IdempotencyRecordId")
+);
+[00:15:20 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_portal_submissions (
+    "SubmissionId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Status" character varying(64) NOT NULL,
+    "CreatedEventType" character varying(128) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "CustomerNumberSnapshot" character varying(64) NOT NULL,
+    "CustomerNameSnapshot" character varying(256) NOT NULL,
+    "CustomerAddressId" character varying(64),
+    "CustomerAddressSnapshot" character varying(512),
+    "RequestType" character varying(64) NOT NULL,
+    "OwnerPersonId" character varying(128) NOT NULL,
+    "Summary" character varying(4000) NOT NULL,
+    "RequestedWindowStart" timestamp with time zone,
+    "RequestedWindowEnd" timestamp with time zone,
+    "PromisedWindowStart" timestamp with time zone,
+    "PromisedWindowEnd" timestamp with time zone,
+    "FulfillmentProductKeys" text[] NOT NULL,
+    "SubmittedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "OrdArrOrderId" character varying(64),
+    "OrdArrOrderNumber" character varying(64),
+    CONSTRAINT "PK_customarr_portal_submissions" PRIMARY KEY ("SubmissionId")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_activity (
+    "ActivityId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "Kind" character varying(64) NOT NULL,
+    "Message" character varying(1000) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "ActorPersonId" character varying(128),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_customer_activity" PRIMARY KEY ("ActivityId"),
+    CONSTRAINT "FK_customarr_customer_activity_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_addresses (
+    "AddressId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "AddressTypeKey" character varying(64) NOT NULL,
+    "LocationName" character varying(256) NOT NULL,
+    "AttentionTo" character varying(256),
+    "Line1" character varying(256) NOT NULL,
+    "Line2" character varying(256),
+    "City" character varying(128) NOT NULL,
+    "StateProvince" character varying(128) NOT NULL,
+    "PostalCode" character varying(32) NOT NULL,
+    "CountryCode" character varying(2) NOT NULL,
+    "Latitude" numeric(9,6),
+    "Longitude" numeric(9,6),
+    "Timezone" character varying(128),
+    "DeliveryInstructions" character varying(4000),
+    "AppointmentRequired" boolean NOT NULL,
+    "ReceivingHours" character varying(512),
+    "DockDoorNotes" character varying(1000),
+    "AccessRestrictions" character varying(1000),
+    "IsDefaultBilling" boolean NOT NULL,
+    "IsDefaultShipping" boolean NOT NULL,
+    "IsDefaultService" boolean NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    CONSTRAINT "PK_customarr_customer_addresses" PRIMARY KEY ("AddressId"),
+    CONSTRAINT "FK_customarr_customer_addresses_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_billing_profiles (
+    "BillingProfileId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "BillingContactId" character varying(64),
+    "BillingAddressId" character varying(64),
+    "PaymentTermsKey" character varying(64) NOT NULL,
+    "InvoiceDeliveryMethodKey" character varying(64) NOT NULL,
+    "BillingEmail" character varying(256),
+    "PurchaseOrderRequired" boolean NOT NULL,
+    "TaxExempt" boolean NOT NULL,
+    "TaxExemptionRecordId" character varying(128),
+    "CurrencyCode" character varying(3) NOT NULL,
+    "CreditStatusKey" character varying(64) NOT NULL,
+    "CreditLimit" numeric(18,2),
+    "ExternalAccountingCustomerRef" character varying(256),
+    CONSTRAINT "PK_customarr_customer_billing_profiles" PRIMARY KEY ("BillingProfileId"),
+    CONSTRAINT "FK_customarr_customer_billing_profiles_customarr_customers_Cus~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_contacts (
+    "ContactId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "PersonId" character varying(128),
+    "FirstName" character varying(128) NOT NULL,
+    "LastName" character varying(128) NOT NULL,
+    "DisplayName" character varying(256) NOT NULL,
+    "Title" character varying(128),
+    "Department" character varying(128),
+    "Email" character varying(256) NOT NULL,
+    "Phone" character varying(64) NOT NULL,
+    "MobilePhone" character varying(64),
+    "PhoneExtension" character varying(32),
+    "PreferredContactMethodKey" character varying(64) NOT NULL,
+    "PreferredLanguageKey" character varying(64),
+    "Timezone" character varying(128),
+    "IsPrimary" boolean NOT NULL,
+    "IsBillingContact" boolean NOT NULL,
+    "IsOrderingContact" boolean NOT NULL,
+    "IsShippingContact" boolean NOT NULL,
+    "IsEmergencyContact" boolean NOT NULL,
+    "PortalAccessEnabled" boolean NOT NULL,
+    "PortalRoleKey" character varying(64),
+    "StatusKey" character varying(64) NOT NULL,
+    "LastVerifiedAt" timestamp with time zone,
+    CONSTRAINT "PK_customarr_customer_contacts" PRIMARY KEY ("ContactId"),
+    CONSTRAINT "FK_customarr_customer_contacts_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_custom_field_values (
+    "FieldValueId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FieldDefinitionId" character varying(64) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "ValueText" character varying(4000),
+    "ValueNumber" numeric(18,4),
+    "ValueBoolean" boolean,
+    "ValueDate" timestamp with time zone,
+    "ValueOptionKey" character varying(128),
+    "EffectiveDate" timestamp with time zone,
+    "SourceKey" character varying(64) NOT NULL,
+    "LastVerifiedAt" timestamp with time zone,
+    "UpdatedByPersonId" character varying(128),
+    CONSTRAINT "PK_customarr_customer_custom_field_values" PRIMARY KEY ("FieldValueId"),
+    CONSTRAINT "FK_customarr_customer_custom_field_values_customarr_customers_~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (27ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_external_refs (
+    "ExternalRefId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "SystemKey" character varying(64) NOT NULL,
+    "ExternalId" character varying(256) NOT NULL,
+    "ExternalCode" character varying(256),
+    "LastSyncedAt" timestamp with time zone,
+    "SyncStatusKey" character varying(64) NOT NULL,
+    CONSTRAINT "PK_customarr_customer_external_refs" PRIMARY KEY ("ExternalRefId"),
+    CONSTRAINT "FK_customarr_customer_external_refs_customarr_customers_Custom~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_identifiers (
+    "IdentifierId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "IdentifierTypeKey" character varying(64) NOT NULL,
+    "IdentifierValue" character varying(256) NOT NULL,
+    "JurisdictionKey" character varying(128),
+    "IssuingAuthority" character varying(256),
+    "EffectiveDate" timestamp with time zone,
+    "ExpirationDate" timestamp with time zone,
+    "VerificationStatusKey" character varying(64) NOT NULL,
+    "RecordArrDocumentId" character varying(128),
+    CONSTRAINT "PK_customarr_customer_identifiers" PRIMARY KEY ("IdentifierId"),
+    CONSTRAINT "FK_customarr_customer_identifiers_customarr_customers_Customer~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_relationships (
+    "RelationshipId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "RelatedCustomerId" character varying(64) NOT NULL,
+    "RelationshipTypeKey" character varying(64) NOT NULL,
+    "EffectiveDate" timestamp with time zone,
+    "EndDate" timestamp with time zone,
+    CONSTRAINT "PK_customarr_customer_relationships" PRIMARY KEY ("RelationshipId"),
+    CONSTRAINT "FK_customarr_customer_relationships_customarr_customers_Custom~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (25ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_requirements (
+    "RequirementId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "RequirementTypeKey" character varying(64) NOT NULL,
+    "RequirementName" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "RequiredBeforeKey" character varying(64) NOT NULL,
+    "RecordArrDocumentId" character varying(128),
+    "ComplianceCoreRuleRef" character varying(256),
+    "StatusKey" character varying(64) NOT NULL,
+    "EffectiveDate" timestamp with time zone,
+    "ExpirationDate" timestamp with time zone,
+    "ReviewedByPersonId" character varying(128),
+    "ReviewedAt" timestamp with time zone,
+    "WaiverReason" character varying(4000),
+    "WaivedByPersonId" character varying(128),
+    "OwnerTeam" character varying(128) NOT NULL,
+    CONSTRAINT "PK_customarr_customer_requirements" PRIMARY KEY ("RequirementId"),
+    CONSTRAINT "FK_customarr_customer_requirements_customarr_customers_Custome~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_activity_CustomerId" ON customarr_customer_activity ("CustomerId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_activity_TenantId_CustomerId_OccurredAt" ON customarr_customer_activity ("TenantId", "CustomerId", "OccurredAt");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_addresses_CustomerId" ON customarr_customer_addresses ("CustomerId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_addresses_TenantId_AddressTypeKey" ON customarr_customer_addresses ("TenantId", "AddressTypeKey");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_addresses_TenantId_CustomerId" ON customarr_customer_addresses ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_billing_profiles_CustomerId" ON customarr_customer_billing_profiles ("CustomerId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_billing_profiles_TenantId_CustomerId" ON customarr_customer_billing_profiles ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_contacts_CustomerId" ON customarr_customer_contacts ("CustomerId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_contacts_TenantId_CustomerId" ON customarr_customer_contacts ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_contacts_TenantId_Email" ON customarr_customer_contacts ("TenantId", "Email");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_custom_field_values_CustomerId" ON customarr_customer_custom_field_values ("CustomerId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_custom_field_values_TenantId_CustomerId" ON customarr_customer_custom_field_values ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_custom_field_values_TenantId_FieldDefini~" ON customarr_customer_custom_field_values ("TenantId", "FieldDefinitionId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_external_refs_CustomerId" ON customarr_customer_external_refs ("CustomerId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_external_refs_TenantId_CustomerId" ON customarr_customer_external_refs ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_external_refs_TenantId_SystemKey_Externa~" ON customarr_customer_external_refs ("TenantId", "SystemKey", "ExternalId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_identifiers_CustomerId" ON customarr_customer_identifiers ("CustomerId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_identifiers_TenantId_CustomerId" ON customarr_customer_identifiers ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_identifiers_TenantId_IdentifierTypeKey_I~" ON customarr_customer_identifiers ("TenantId", "IdentifierTypeKey", "IdentifierValue");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_relationships_CustomerId" ON customarr_customer_relationships ("CustomerId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_relationships_TenantId_CustomerId" ON customarr_customer_relationships ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_relationships_TenantId_RelatedCustomerId" ON customarr_customer_relationships ("TenantId", "RelatedCustomerId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_requirements_CustomerId" ON customarr_customer_requirements ("CustomerId");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_requirements_TenantId_CustomerId" ON customarr_customer_requirements ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_requirements_TenantId_StatusKey" ON customarr_customer_requirements ("TenantId", "StatusKey");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId" ON customarr_customers ("TenantId");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customers_TenantId_CustomerCode" ON customarr_customers ("TenantId", "CustomerCode");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customers_TenantId_CustomerNumber" ON customarr_customers ("TenantId", "CustomerNumber");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId_ParentCustomerId" ON customarr_customers ("TenantId", "ParentCustomerId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId_StatusKey" ON customarr_customers ("TenantId", "StatusKey");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_idempotency_records_TenantId_OperationKey_Idempot~" ON customarr_idempotency_records ("TenantId", "OperationKey", "IdempotencyKey");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_submissions_TenantId_CustomerId" ON customarr_portal_submissions ("TenantId", "CustomerId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_submissions_TenantId_SubmittedAt" ON customarr_portal_submissions ("TenantId", "SubmittedAt");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617043317_CustomArrCanonicalCustomers', '10.0.8');
+[00:15:20 INF] Applying migration '20260617062907_AddSmartImportDestinationRecords'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:01 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT "MigrationId", "ProductVersion"
-FROM "__EFMigrationsHistory"
-ORDER BY "MigrationId";
-[22:30:01 INF] No migrations were applied. The database is already up to date.
-[22:30:01 INF] Executed DbCommand (36ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617062907_AddSmartImportDestinationRecords', '10.0.8');
+[00:15:20 INF] Applying migration '20260617224339_CustomArrFullCrmSourceOfTruth'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "AccountClassKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "ActivatedAt" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "ChurnedAt" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "ComplianceStatusKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "CustomerSuccessOwnerPersonId" character varying(128);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "FirstOrderDate" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "HealthScore" integer;
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "HealthScoreKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "HealthScoreReason" character varying(1000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "IndustryKey" character varying(128) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "InternalNotes" character varying(4000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "IsKeyAccount" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "IsStrategicAccount" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "LastActivityAt" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "LeadDate" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "MarketKey" character varying(64);
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "NaicsCode" character varying(32);
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "OnboardingStatusKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "QualifiedDate" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "RegionKey" character varying(64);
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "RelationshipRoleKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "RelationshipSummary" character varying(4000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "RevenueBandKey" character varying(64);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "SalesOwnerPersonId" character varying(128);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "ServiceEligibilityStatusKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "SicCode" character varying(32);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "SupportOwnerPersonId" character varying(128);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "VerticalKey" character varying(64);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customers ADD "WebsiteUrl" character varying(512);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_external_refs ADD "ExternalEntityType" character varying(128) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_external_refs ADD "LastVerifiedAt" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_external_refs ADD "SyncDirectionKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "AuthorizationScopes" text[] NOT NULL DEFAULT ARRAY[]::text[];
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "CanApproveQuotes" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "CanPlaceOrders" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "CanSignContracts" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "CanSubmitCases" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "CanUploadDocuments" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "ConsentCapturedAt" timestamp with time zone;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "ConsentLegalBasisKey" character varying(128);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "EmailOptIn" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "IsDecisionMaker" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "LocationId" character varying(64);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "MarketingConsent" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_contacts ADD "SmsOptIn" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "AfterHoursRules" character varying(1000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "AppointmentInstructions" character varying(1000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "ComplianceNotes" character varying(2000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "DriverCheckInRules" character varying(1000);
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "DropTrailerAllowed" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "EligibleProductKeys" text[] NOT NULL DEFAULT ARRAY[]::text[];
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "GateInstructions" character varying(1000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "HazmatRestrictions" character varying(1000);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "LiftgateRequired" boolean NOT NULL DEFAULT FALSE;
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "LocationCode" character varying(64) NOT NULL DEFAULT '';
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingCity" character varying(128);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingCountryCode" character varying(2);
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingLine1" character varying(256);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingLine2" character varying(256);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingPostalCode" character varying(32);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "MailingStateProvince" character varying(128);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "ParkingInstructions" character varying(1000);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "PpeRequirements" character varying(1000);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "ServiceAreaKeys" text[] NOT NULL DEFAULT ARRAY[]::text[];
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "ShippingHours" character varying(512);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "TemperatureRules" character varying(1000);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_addresses ADD "TruckSizeRestrictions" character varying(1000);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "ActivityTypeKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "Body" character varying(4000);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "ContactId" character varying(64);
+[00:15:21 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "CreatedAt" timestamp with time zone NOT NULL DEFAULT TIMESTAMPTZ '-infinity';
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "CustomerLocationId" character varying(64);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "DirectionKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "RecordRefs" text[] NOT NULL DEFAULT ARRAY[]::text[];
+[00:15:21 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "RelatedObjectRefs" text[] NOT NULL DEFAULT ARRAY[]::text[];
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "SourceObjectRef" character varying(256);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "Subject" character varying(256);
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE customarr_customer_activity ADD "VisibilityKey" character varying(64) NOT NULL DEFAULT '';
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_agreements (
+    "AgreementId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AgreementNumber" character varying(64) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "AgreementTypeKey" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "EffectiveDate" timestamp with time zone,
+    "ExpirationDate" timestamp with time zone,
+    "RenewalDate" timestamp with time zone,
+    "TerminationDate" timestamp with time zone,
+    "ScopeSummary" character varying(4000),
+    "TermsSummary" character varying(4000),
+    "CoveredProductKeys" text[] NOT NULL,
+    "CoveredLocationIds" text[] NOT NULL,
+    "RequirementRefs" text[] NOT NULL,
+    "RecordRefs" text[] NOT NULL,
+    "OwnerPersonId" character varying(128),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_agreements" PRIMARY KEY ("AgreementId"),
+    CONSTRAINT "FK_customarr_agreements_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_cases (
+    "CaseId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CaseNumber" character varying(64) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "ContactId" character varying(64),
+    "CustomerLocationId" character varying(64),
+    "Subject" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "SourceKey" character varying(64) NOT NULL,
+    "PriorityKey" character varying(64) NOT NULL,
+    "SeverityKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "FirstResponseDueAt" timestamp with time zone,
+    "ResolutionDueAt" timestamp with time zone,
+    "SlaBreached" boolean NOT NULL,
+    "SupportOwnerPersonId" character varying(128),
+    "EscalationOwnerPersonId" character varying(128),
+    "OwningProductKey" character varying(64),
+    "OwningProductIssueRef" character varying(256),
+    "RootCauseCategoryKey" character varying(128),
+    "ResolutionSummary" character varying(4000),
+    "CustomerSatisfactionKey" character varying(64),
+    "ResolvedAt" timestamp with time zone,
+    "ClosedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_customer_cases" PRIMARY KEY ("CaseId"),
+    CONSTRAINT "FK_customarr_customer_cases_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_health_profiles (
+    "HealthProfileId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "HealthStatusKey" character varying(64) NOT NULL,
+    "Score" integer,
+    "ScoreReason" character varying(1000),
+    "OpenCaseCount" integer NOT NULL,
+    "SlaBreachCount" integer NOT NULL,
+    "ActiveContactCount" integer NOT NULL,
+    "ActiveLocationCount" integer NOT NULL,
+    "RevenueSnapshot" numeric(18,2),
+    "ChurnRiskKey" character varying(64) NOT NULL,
+    "PaymentRiskKey" character varying(64) NOT NULL,
+    "ExpansionSummary" character varying(1000),
+    "LastCheckInAt" timestamp with time zone,
+    "NextBusinessReviewAt" timestamp with time zone,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_customer_health_profiles" PRIMARY KEY ("HealthProfileId"),
+    CONSTRAINT "FK_customarr_customer_health_profiles_customarr_customers_Cust~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_onboarding (
+    "OnboardingId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "OnboardingNumber" character varying(64) NOT NULL,
+    "OnboardingTypeKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "OwnerPersonId" character varying(128),
+    "LaunchDate" timestamp with time zone,
+    "DueAt" timestamp with time zone,
+    "SubmittedAt" timestamp with time zone,
+    "ApprovedAt" timestamp with time zone,
+    "Blockers" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_customer_onboarding" PRIMARY KEY ("OnboardingId"),
+    CONSTRAINT "FK_customarr_customer_onboarding_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_service_profiles (
+    "ServiceProfileId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "CustomerLocationId" character varying(64),
+    "StatusKey" character varying(64) NOT NULL,
+    "ServiceEligibilityStatusKey" character varying(64) NOT NULL,
+    "AllowedProductKeys" text[] NOT NULL,
+    "BlockedProductKeys" text[] NOT NULL,
+    "AllowedWorkflowKeys" text[] NOT NULL,
+    "BlockedWorkflowKeys" text[] NOT NULL,
+    "RequiredApprovalTypes" text[] NOT NULL,
+    "RequiredRequirementRefs" text[] NOT NULL,
+    "ActiveHoldRefs" text[] NOT NULL,
+    "Restrictions" character varying(4000),
+    "ServiceLevelKey" character varying(64) NOT NULL,
+    "ExternalCreditStatusSnapshotKey" character varying(64) NOT NULL,
+    "LastEligibilityReason" character varying(1000),
+    "LastEligibilityCalculatedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_customer_service_profiles" PRIMARY KEY ("ServiceProfileId"),
+    CONSTRAINT "FK_customarr_customer_service_profiles_customarr_customers_Cus~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_dedupe_candidates (
+    "DedupeCandidateId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ImportBatchId" character varying(64),
+    "CandidateTypeKey" character varying(64) NOT NULL,
+    "SourceRecordRef" character varying(256) NOT NULL,
+    "MatchedCustomerId" character varying(64),
+    "MatchReason" character varying(1000) NOT NULL,
+    "ConfidenceScore" numeric(5,4) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_dedupe_candidates" PRIMARY KEY ("DedupeCandidateId")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_eligibility_checks (
+    "EligibilityCheckId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "CustomerLocationId" character varying(64),
+    "CustomerContactId" character varying(64),
+    "WorkflowKey" character varying(128) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceObjectRef" character varying(256),
+    "ResultKey" character varying(64) NOT NULL,
+    "Explanation" character varying(2000) NOT NULL,
+    "Blockers" text[] NOT NULL,
+    "Warnings" text[] NOT NULL,
+    "CheckedAt" timestamp with time zone NOT NULL,
+    "ActorPersonId" character varying(128),
+    CONSTRAINT "PK_customarr_eligibility_checks" PRIMARY KEY ("EligibilityCheckId")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_import_batches (
+    "ImportBatchId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceKey" character varying(64) NOT NULL,
+    "SourceFileName" character varying(256) NOT NULL,
+    "ImporterPersonId" character varying(128) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "TotalRows" integer NOT NULL,
+    "AcceptedRows" integer NOT NULL,
+    "RejectedRows" integer NOT NULL,
+    "MappingSummaryJson" jsonb,
+    "ValidationErrors" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_import_batches" PRIMARY KEY ("ImportBatchId")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_integration_references (
+    "IntegrationReferenceId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "CustomerLocationId" character varying(64),
+    "CustomerContactId" character varying(64),
+    "RelatedEntityType" character varying(128) NOT NULL,
+    "RelatedEntityId" character varying(64) NOT NULL,
+    "ExternalSystemKey" character varying(64) NOT NULL,
+    "ExternalEntityType" character varying(128) NOT NULL,
+    "ExternalId" character varying(256) NOT NULL,
+    "ExternalDisplayName" character varying(256),
+    "SyncDirectionKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "LastVerifiedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_integration_references" PRIMARY KEY ("IntegrationReferenceId"),
+    CONSTRAINT "FK_customarr_integration_references_customarr_customers_Custom~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_leads (
+    "LeadId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LeadNumber" character varying(64) NOT NULL,
+    "CompanyName" character varying(256) NOT NULL,
+    "PersonName" character varying(256) NOT NULL,
+    "Email" character varying(256),
+    "Phone" character varying(64),
+    "SourceKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "FitScore" integer,
+    "NeedSummary" character varying(1000),
+    "BudgetSummary" character varying(1000),
+    "TimingSummary" character varying(1000),
+    "AuthoritySummary" character varying(1000),
+    "ServiceInterest" character varying(1000),
+    "OwnerPersonId" character varying(128),
+    "AssignedTeamId" character varying(128),
+    "NextFollowUpAt" timestamp with time zone,
+    "ConvertedCustomerId" character varying(64),
+    "ConvertedContactId" character varying(64),
+    "ConvertedOpportunityId" character varying(64),
+    "DisqualificationReason" character varying(1000),
+    "ConvertedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_leads" PRIMARY KEY ("LeadId"),
+    CONSTRAINT "FK_customarr_leads_customarr_customers_ConvertedCustomerId" FOREIGN KEY ("ConvertedCustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE SET NULL
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_merge_records (
+    "MergeRecordId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SurvivorCustomerId" character varying(64) NOT NULL,
+    "MergedCustomerIds" text[] NOT NULL,
+    "MergeReason" character varying(1000) NOT NULL,
+    "MergeStrategyKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "FieldResolutionSummary" character varying(4000),
+    "ProposedByPersonId" character varying(128),
+    "ApprovedByPersonId" character varying(128),
+    "CompletedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_merge_records" PRIMARY KEY ("MergeRecordId")
+);
+[00:15:21 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_opportunities (
+    "OpportunityId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OpportunityNumber" character varying(64) NOT NULL,
+    "LeadId" character varying(64),
+    "CustomerId" character varying(64),
+    "OpportunityName" character varying(256) NOT NULL,
+    "StageKey" character varying(64) NOT NULL,
+    "ProbabilityPercent" integer NOT NULL,
+    "ForecastCategoryKey" character varying(64) NOT NULL,
+    "ExpectedCloseDate" timestamp with time zone,
+    "EstimatedRevenue" numeric(18,2),
+    "EstimatedMargin" numeric(18,2),
+    "RecurringRevenue" numeric(18,2),
+    "OneTimeRevenue" numeric(18,2),
+    "ServiceInterestKeys" text[] NOT NULL,
+    "ScopeSummary" character varying(4000),
+    "PrimaryContactId" character varying(64),
+    "StakeholderContactIds" text[] NOT NULL,
+    "Competitor" character varying(256),
+    "IncumbentProvider" character varying(256),
+    "WinLossReason" character varying(1000),
+    "NextStep" character varying(1000),
+    "NextFollowUpAt" timestamp with time zone,
+    "StatusKey" character varying(64) NOT NULL,
+    "OutcomeKey" character varying(64),
+    "HandoffProductKey" character varying(64),
+    "HandoffObjectRef" character varying(256),
+    "ClosedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_opportunities" PRIMARY KEY ("OpportunityId"),
+    CONSTRAINT "FK_customarr_opportunities_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE SET NULL
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_portal_access_records (
+    "PortalAccessId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "ContactId" character varying(64) NOT NULL,
+    "NexArrExternalIdentityRef" character varying(256),
+    "PortalRoleKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "AllowedLocationIds" text[] NOT NULL,
+    "AuthorizationRefs" text[] NOT NULL,
+    "InvitedAt" timestamp with time zone,
+    "InvitedByPersonId" character varying(128),
+    "ActivatedAt" timestamp with time zone,
+    "SuspendedAt" timestamp with time zone,
+    "RevokedAt" timestamp with time zone,
+    "RevokeReason" character varying(1000),
+    "LastAccessSnapshotAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_portal_access_records" PRIMARY KEY ("PortalAccessId"),
+    CONSTRAINT "FK_customarr_portal_access_records_customarr_customers_Custome~" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_proposals (
+    "ProposalId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProposalNumber" character varying(64) NOT NULL,
+    "OpportunityId" character varying(64),
+    "CustomerId" character varying(64) NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "ScopeSummary" character varying(4000) NOT NULL,
+    "PricingSnapshotJson" jsonb,
+    "TermsSnapshot" character varying(4000),
+    "SlaSnapshot" character varying(1000),
+    "ApprovalStatusKey" character varying(64) NOT NULL,
+    "ApprovedByPersonId" character varying(128),
+    "ApprovedAt" timestamp with time zone,
+    "CustomerResponseKey" character varying(64) NOT NULL,
+    "ExternalAccountingQuoteRef" character varying(256),
+    "CreatedOrdArrOrderRef" character varying(256),
+    "ValidUntil" timestamp with time zone,
+    "AcceptedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_customarr_proposals" PRIMARY KEY ("ProposalId"),
+    CONSTRAINT "FK_customarr_proposals_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_tasks (
+    "TaskId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TaskNumber" character varying(64) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "RelatedObjectType" character varying(128),
+    "RelatedObjectId" character varying(64),
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000),
+    "OwnerPersonId" character varying(128) NOT NULL,
+    "DueAt" timestamp with time zone,
+    "PriorityKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_customarr_tasks" PRIMARY KEY ("TaskId"),
+    CONSTRAINT "FK_customarr_tasks_customarr_customers_CustomerId" FOREIGN KEY ("CustomerId") REFERENCES customarr_customers ("CustomerId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_onboarding_checklist_items (
+    "ChecklistItemId" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OnboardingId" character varying(64) NOT NULL,
+    "CustomerId" character varying(64) NOT NULL,
+    "Sequence" integer NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "ItemTypeKey" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "OwnerProductKey" character varying(64) NOT NULL,
+    "StatusKey" character varying(64) NOT NULL,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_customarr_customer_onboarding_checklist_items" PRIMARY KEY ("ChecklistItemId"),
+    CONSTRAINT "FK_customarr_customer_onboarding_checklist_items_customarr_cus~" FOREIGN KEY ("OnboardingId") REFERENCES customarr_customer_onboarding ("OnboardingId") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId_HealthScoreKey" ON customarr_customers ("TenantId", "HealthScoreKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId_OnboardingStatusKey" ON customarr_customers ("TenantId", "OnboardingStatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customers_TenantId_ServiceEligibilityStatusKey" ON customarr_customers ("TenantId", "ServiceEligibilityStatusKey");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_contacts_TenantId_LocationId" ON customarr_customer_contacts ("TenantId", "LocationId");
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_addresses_TenantId_LocationCode" ON customarr_customer_addresses ("TenantId", "LocationCode");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_activity_TenantId_ActivityTypeKey" ON customarr_customer_activity ("TenantId", "ActivityTypeKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_agreements_CustomerId" ON customarr_agreements ("CustomerId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_agreements_TenantId_AgreementNumber" ON customarr_agreements ("TenantId", "AgreementNumber");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_agreements_TenantId_CustomerId" ON customarr_agreements ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_agreements_TenantId_StatusKey" ON customarr_agreements ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_cases_CustomerId" ON customarr_customer_cases ("CustomerId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_cases_TenantId_CaseNumber" ON customarr_customer_cases ("TenantId", "CaseNumber");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_cases_TenantId_CustomerId" ON customarr_customer_cases ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_cases_TenantId_StatusKey" ON customarr_customer_cases ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_health_profiles_CustomerId" ON customarr_customer_health_profiles ("CustomerId");
+[00:15:21 INF] Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_health_profiles_TenantId_CustomerId" ON customarr_customer_health_profiles ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_health_profiles_TenantId_HealthStatusKey" ON customarr_customer_health_profiles ("TenantId", "HealthStatusKey");
+[00:15:21 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_CustomerId" ON customarr_customer_onboarding ("CustomerId");
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_TenantId_CustomerId" ON customarr_customer_onboarding ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_onboarding_TenantId_OnboardingNumber" ON customarr_customer_onboarding ("TenantId", "OnboardingNumber");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_TenantId_StatusKey" ON customarr_customer_onboarding ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_checklist_items_OnboardingId" ON customarr_customer_onboarding_checklist_items ("OnboardingId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_checklist_items_TenantId_Cust~" ON customarr_customer_onboarding_checklist_items ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_checklist_items_TenantId_Onbo~" ON customarr_customer_onboarding_checklist_items ("TenantId", "OnboardingId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_service_profiles_CustomerId" ON customarr_customer_service_profiles ("CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_service_profiles_TenantId_CustomerId" ON customarr_customer_service_profiles ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_service_profiles_TenantId_ServiceEligibi~" ON customarr_customer_service_profiles ("TenantId", "ServiceEligibilityStatusKey");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_dedupe_candidates_TenantId_ImportBatchId" ON customarr_dedupe_candidates ("TenantId", "ImportBatchId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_dedupe_candidates_TenantId_StatusKey" ON customarr_dedupe_candidates ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_eligibility_checks_TenantId_CustomerId_CheckedAt" ON customarr_eligibility_checks ("TenantId", "CustomerId", "CheckedAt");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_eligibility_checks_TenantId_ResultKey" ON customarr_eligibility_checks ("TenantId", "ResultKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_import_batches_TenantId_CreatedAt" ON customarr_import_batches ("TenantId", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_import_batches_TenantId_StatusKey" ON customarr_import_batches ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_integration_references_CustomerId" ON customarr_integration_references ("CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_integration_references_TenantId_CustomerId" ON customarr_integration_references ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_integration_references_TenantId_ExternalSystemKey~" ON customarr_integration_references ("TenantId", "ExternalSystemKey", "ExternalEntityType", "ExternalId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_leads_ConvertedCustomerId" ON customarr_leads ("ConvertedCustomerId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_leads_TenantId_Email" ON customarr_leads ("TenantId", "Email");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_leads_TenantId_LeadNumber" ON customarr_leads ("TenantId", "LeadNumber");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_leads_TenantId_StatusKey" ON customarr_leads ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_merge_records_TenantId_StatusKey" ON customarr_merge_records ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_merge_records_TenantId_SurvivorCustomerId" ON customarr_merge_records ("TenantId", "SurvivorCustomerId");
+[00:15:21 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_opportunities_CustomerId" ON customarr_opportunities ("CustomerId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_opportunities_TenantId_CustomerId" ON customarr_opportunities ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_opportunities_TenantId_OpportunityNumber" ON customarr_opportunities ("TenantId", "OpportunityNumber");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_opportunities_TenantId_StageKey" ON customarr_opportunities ("TenantId", "StageKey");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_opportunities_TenantId_StatusKey" ON customarr_opportunities ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_access_records_CustomerId" ON customarr_portal_access_records ("CustomerId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_access_records_TenantId_ContactId" ON customarr_portal_access_records ("TenantId", "ContactId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_access_records_TenantId_CustomerId" ON customarr_portal_access_records ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_portal_access_records_TenantId_StatusKey" ON customarr_portal_access_records ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_proposals_CustomerId" ON customarr_proposals ("CustomerId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_proposals_TenantId_CustomerId" ON customarr_proposals ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_proposals_TenantId_ProposalNumber" ON customarr_proposals ("TenantId", "ProposalNumber");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_proposals_TenantId_StatusKey" ON customarr_proposals ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tasks_CustomerId" ON customarr_tasks ("CustomerId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tasks_TenantId_CustomerId" ON customarr_tasks ("TenantId", "CustomerId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tasks_TenantId_OwnerPersonId" ON customarr_tasks ("TenantId", "OwnerPersonId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tasks_TenantId_StatusKey" ON customarr_tasks ("TenantId", "StatusKey");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_tasks_TenantId_TaskNumber" ON customarr_tasks ("TenantId", "TaskNumber");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617224339_CustomArrFullCrmSourceOfTruth', '10.0.8');
+[00:15:21 INF] Applying migration '20260618004938_AddCustomArrTenantSettings'.
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_address_types (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "IsRequiredForActiveCustomer" boolean NOT NULL,
+    "RequiresValidation" boolean NOT NULL,
+    "RequiresGeocode" boolean NOT NULL,
+    "UsableForBilling" boolean NOT NULL,
+    "UsableForPickup" boolean NOT NULL,
+    "UsableForDelivery" boolean NOT NULL,
+    "UsableForService" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_address_types" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_classification_catalogs (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CatalogType" character varying(64) NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "IsDefault" boolean NOT NULL,
+    "MetadataKey" character varying(64),
+    "MetadataValue" character varying(256),
+    CONSTRAINT "PK_customarr_customer_classification_catalogs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_contact_roles (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "IsRequiredForActiveCustomer" boolean NOT NULL,
+    "RequiresUniquePrimary" boolean NOT NULL,
+    "AllowsPortalAccess" boolean NOT NULL,
+    "CanReceiveOrderNotifications" boolean NOT NULL,
+    "CanReceiveBillingNotifications" boolean NOT NULL,
+    "CanReceiveComplianceNotifications" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_contact_roles" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_custom_field_definitions (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "FieldType" character varying(64) NOT NULL,
+    "AppliesToCustomerTypeKey" character varying(64),
+    "AppliesToLifecycleStageKey" character varying(64),
+    "Required" boolean NOT NULL,
+    "VisibleInPortal" boolean NOT NULL,
+    "EditableInPortal" boolean NOT NULL,
+    "InternalOnly" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_custom_field_definitions" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_custom_field_options (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FieldKey" character varying(64) NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_custom_field_options" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_document_requirements (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "CustomerTypeKey" character varying(64),
+    "LifecycleStageKey" character varying(64),
+    "Required" boolean NOT NULL,
+    "Expires" boolean NOT NULL,
+    "ExpirationWarningDays" integer,
+    "RecordArrDocumentTypeKey" character varying(128) NOT NULL,
+    "CustomerCanUpload" boolean NOT NULL,
+    "VisibleInPortal" boolean NOT NULL,
+    "BlocksActivation" boolean NOT NULL,
+    "BlocksOrders" boolean NOT NULL,
+    "BlocksPortalAccess" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_document_requirements" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_duplicate_detection_rules (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "Priority" integer NOT NULL,
+    "MatchField" character varying(64) NOT NULL,
+    "MatchType" character varying(64) NOT NULL,
+    "Weight" integer NOT NULL,
+    "AutoBlockThreshold" integer NOT NULL,
+    "ReviewThreshold" integer NOT NULL,
+    CONSTRAINT "PK_customarr_customer_duplicate_detection_rules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_external_id_sources (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "SourceType" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "UniqueWithinTenant" boolean NOT NULL,
+    "VisibleInUi" boolean NOT NULL,
+    "EditableInUi" boolean NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_external_id_sources" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_integration_settings (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ErpSyncMode" character varying(64) NOT NULL,
+    "DefaultConflictResolution" character varying(64) NOT NULL,
+    "EmitEventsForDraftCustomers" boolean NOT NULL,
+    "EmitEventsForProspects" boolean NOT NULL,
+    "EmitEventsOnlyAfterActivation" boolean NOT NULL,
+    "AllowExternalCreate" boolean NOT NULL,
+    "AllowExternalUpdate" boolean NOT NULL,
+    "RequireReviewForExternalUpdate" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_integration_settings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_lifecycle_stages (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "IsInitial" boolean NOT NULL,
+    "IsActiveCustomerStage" boolean NOT NULL,
+    "IsTerminal" boolean NOT NULL,
+    "BlocksOrders" boolean NOT NULL,
+    "BlocksPortalAccess" boolean NOT NULL,
+    "RequiresApprovalToEnter" boolean NOT NULL,
+    "RequiresReasonToExit" boolean NOT NULL,
+    "AllowedNextStageKeys" text[] NOT NULL,
+    "ColorToken" character varying(64),
+    "IsSystemRequired" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_lifecycle_stages" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_lifecycle_transition_rules (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FromStageKey" character varying(64) NOT NULL,
+    "ToStageKey" character varying(64) NOT NULL,
+    "RequiresApproval" boolean NOT NULL,
+    "RequiredPermission" character varying(128),
+    "RequiredChecklistTemplateKey" character varying(64),
+    "RequiredReason" boolean NOT NULL,
+    "BlockIfOpenIssues" boolean NOT NULL,
+    "BlockIfExpiredRequiredDocuments" boolean NOT NULL,
+    "BlockIfMissingRequiredFields" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_lifecycle_transition_rules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_notification_rules (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "EventType" character varying(128) NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "RecipientType" character varying(64) NOT NULL,
+    "RecipientRefId" character varying(128),
+    "RecipientNameSnapshot" character varying(256),
+    "CustomerContactRoleKey" character varying(64),
+    "DelayMinutes" integer NOT NULL,
+    "EscalationAfterMinutes" integer,
+    "TemplateKey" character varying(128),
+    CONSTRAINT "PK_customarr_customer_notification_rules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_numbering_settings (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Prefix" character varying(16) NOT NULL,
+    "SequenceName" character varying(64) NOT NULL,
+    "PaddingLength" integer NOT NULL,
+    "NextNumber" integer NOT NULL,
+    "AllowManualOverride" boolean NOT NULL,
+    "ManualOverrideRequiresPermission" boolean NOT NULL,
+    "DisplayFormat" character varying(64) NOT NULL,
+    "UniquenessScope" character varying(32) NOT NULL,
+    CONSTRAINT "PK_customarr_customer_numbering_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_onboarding_checklist_item_templates (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TemplateKey" character varying(64) NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "ItemType" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    "OwnerType" character varying(64),
+    "OwnerRefId" character varying(128),
+    "OwnerNameSnapshot" character varying(256),
+    "DocumentTypeKey" character varying(64),
+    "ComplianceQuestionnaireKey" character varying(128),
+    "BlocksActivation" boolean NOT NULL,
+    "BlocksOrders" boolean NOT NULL,
+    "BlocksPortalAccess" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_onboarding_checklist_item_templates" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_onboarding_templates (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(64) NOT NULL,
+    "Label" character varying(128) NOT NULL,
+    "Description" character varying(1000) NOT NULL,
+    "CustomerTypeKey" character varying(64),
+    "IndustryKey" character varying(64),
+    "PriorityTierKey" character varying(64),
+    "IsDefault" boolean NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "BlocksActivationUntilComplete" boolean NOT NULL,
+    "SortOrder" integer NOT NULL,
+    CONSTRAINT "PK_customarr_customer_onboarding_templates" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_owner_rules (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RuleName" character varying(128) NOT NULL,
+    "Priority" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "CustomerTypeKey" character varying(64),
+    "TerritoryKey" character varying(64),
+    "IndustryKey" character varying(64),
+    "SourceKey" character varying(64),
+    "DefaultOwnerType" character varying(64) NOT NULL,
+    "DefaultOwnerRefId" character varying(128) NOT NULL,
+    "DefaultOwnerNameSnapshot" character varying(256) NOT NULL,
+    "RequiresOwnerForActiveCustomer" boolean NOT NULL,
+    "RequiresApprovalForReassignment" boolean NOT NULL,
+    "ApprovalPermission" character varying(128),
+    CONSTRAINT "PK_customarr_customer_owner_rules" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_portal_settings (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PortalEnabled" boolean NOT NULL,
+    "InviteOnly" boolean NOT NULL,
+    "SelfRegistrationAllowed" boolean NOT NULL,
+    "RequireEmailVerification" boolean NOT NULL,
+    "RequireInternalApprovalForPortalUsers" boolean NOT NULL,
+    "AllowedEmailDomains" text[] NOT NULL,
+    "SupportContactName" character varying(128) NOT NULL,
+    "SupportContactEmail" character varying(256) NOT NULL,
+    "SupportContactPhone" character varying(64) NOT NULL,
+    "PortalDisplayName" character varying(128) NOT NULL,
+    "LogoRecordArrDocumentId" character varying(128),
+    "CanViewProfile" boolean NOT NULL,
+    "CanRequestQuote" boolean NOT NULL,
+    "CanPlaceOrderRequest" boolean NOT NULL,
+    "CanUploadDocuments" boolean NOT NULL,
+    "CanSubmitIssue" boolean NOT NULL,
+    "CanViewOrderStatus" boolean NOT NULL,
+    "CanViewInvoicesSnapshot" boolean NOT NULL,
+    "DefaultPortalContactRoleKey" character varying(64) NOT NULL,
+    "PortalAdminContactRoleKey" character varying(64) NOT NULL,
+    CONSTRAINT "PK_customarr_customer_portal_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_customer_required_field_rules (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerTypeKey" character varying(64),
+    "LifecycleStageKey" character varying(64),
+    "FieldKey" character varying(64) NOT NULL,
+    "RequirementLevel" character varying(32) NOT NULL,
+    "ValidationMessage" character varying(512) NOT NULL,
+    "AppliesToPortal" boolean NOT NULL,
+    "AppliesToInternalCreate" boolean NOT NULL,
+    "AppliesToInternalEdit" boolean NOT NULL,
+    CONSTRAINT "PK_customarr_customer_required_field_rules" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_tenant_settings (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SettingsVersion" integer NOT NULL,
+    "IsActive" boolean NOT NULL,
+    "EffectiveFrom" timestamp with time zone NOT NULL,
+    "EffectiveTo" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "UpdatedByPersonId" character varying(128),
+    CONSTRAINT "PK_customarr_tenant_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE customarr_tenant_settings_audit_events (
+    "Id" character varying(64) NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SettingsVersion" integer NOT NULL,
+    "Scope" character varying(32) NOT NULL,
+    "SectionKey" character varying(64) NOT NULL,
+    "ChangeSummary" character varying(1000) NOT NULL,
+    "ActorPersonId" character varying(128),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    CONSTRAINT "PK_customarr_tenant_settings_audit_events" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_address_types_TenantId_Key" ON customarr_customer_address_types ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_address_types_TenantId_SortOrder" ON customarr_customer_address_types ("TenantId", "SortOrder");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_classification_catalogs_TenantId_Catalo~1" ON customarr_customer_classification_catalogs ("TenantId", "CatalogType", "SortOrder");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_classification_catalogs_TenantId_Catalog~" ON customarr_customer_classification_catalogs ("TenantId", "CatalogType", "Key");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_contact_roles_TenantId_Key" ON customarr_customer_contact_roles ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_contact_roles_TenantId_SortOrder" ON customarr_customer_contact_roles ("TenantId", "SortOrder");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_custom_field_definitions_TenantId_Key" ON customarr_customer_custom_field_definitions ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_custom_field_definitions_TenantId_SortOr~" ON customarr_customer_custom_field_definitions ("TenantId", "SortOrder");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_custom_field_options_TenantId_FieldKey_K~" ON customarr_customer_custom_field_options ("TenantId", "FieldKey", "Key");
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_custom_field_options_TenantId_FieldKey_S~" ON customarr_customer_custom_field_options ("TenantId", "FieldKey", "SortOrder");
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_document_requirements_TenantId_Key" ON customarr_customer_document_requirements ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_duplicate_detection_rules_TenantId_Key" ON customarr_customer_duplicate_detection_rules ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_duplicate_detection_rules_TenantId_Prior~" ON customarr_customer_duplicate_detection_rules ("TenantId", "Priority");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_external_id_sources_TenantId_Key" ON customarr_customer_external_id_sources ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_integration_settings_TenantId" ON customarr_customer_integration_settings ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_lifecycle_stages_TenantId_IsInitial" ON customarr_customer_lifecycle_stages ("TenantId", "IsInitial");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_lifecycle_stages_TenantId_Key" ON customarr_customer_lifecycle_stages ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_lifecycle_stages_TenantId_SortOrder" ON customarr_customer_lifecycle_stages ("TenantId", "SortOrder");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_lifecycle_transition_rules_TenantId_From~" ON customarr_customer_lifecycle_transition_rules ("TenantId", "FromStageKey", "ToStageKey");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_notification_rules_TenantId_Key" ON customarr_customer_notification_rules ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_numbering_settings_TenantId" ON customarr_customer_numbering_settings ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_checklist_item_templates_Ten~1" ON customarr_customer_onboarding_checklist_item_templates ("TenantId", "TemplateKey", "SortOrder");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_onboarding_checklist_item_templates_Tena~" ON customarr_customer_onboarding_checklist_item_templates ("TenantId", "TemplateKey", "Key");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_onboarding_templates_TenantId_Key" ON customarr_customer_onboarding_templates ("TenantId", "Key");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_onboarding_templates_TenantId_SortOrder" ON customarr_customer_onboarding_templates ("TenantId", "SortOrder");
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_customer_owner_rules_TenantId_Priority" ON customarr_customer_owner_rules ("TenantId", "Priority");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_portal_settings_TenantId" ON customarr_customer_portal_settings ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_customer_required_field_rules_TenantId_FieldKey_C~" ON customarr_customer_required_field_rules ("TenantId", "FieldKey", "CustomerTypeKey", "LifecycleStageKey");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tenant_settings_TenantId_IsActive" ON customarr_tenant_settings ("TenantId", "IsActive");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_customarr_tenant_settings_TenantId_SettingsVersion" ON customarr_tenant_settings ("TenantId", "SettingsVersion");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tenant_settings_audit_events_TenantId_OccurredAt" ON customarr_tenant_settings_audit_events ("TenantId", "OccurredAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_customarr_tenant_settings_audit_events_TenantId_SettingsVer~" ON customarr_tenant_settings_audit_events ("TenantId", "SettingsVersion");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618004938_AddCustomArrTenantSettings', '10.0.8');
+[00:15:22 INF] Applying migration '20260622060127_FixPendingModelChanges'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:22 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622060127_FixPendingModelChanges', '10.0.8');
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,60 +1572,9 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:01 INF] Starting CustomArr API (customarr) on http://localhost:5111
-[22:30:01 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:02 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5111: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at Syste[22:30:11 INF] Request starting HTTP/1.1 GET http://localhost:5111/health - null null
-[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:11 INF] Setting HTTP status code 200.
-[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5111/health - 200 null application/json; charset=utf-8 36.8125ms
-Core.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:30:02 FTL] CustomArr API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5111: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:22 INF] Starting CustomArr API (customarr) on http://localhost:5111
+[00:15:22 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:22 INF] Now listening on: http://localhost:5111
+[00:15:22 INF] Application started. Press Ctrl+C to shut down.
+[00:15:22 INF] Hosting environment: Development
+[00:15:22 INF] Content root path: F:\STLComplianceV2\apps\customarr-api\CustomArr.Api

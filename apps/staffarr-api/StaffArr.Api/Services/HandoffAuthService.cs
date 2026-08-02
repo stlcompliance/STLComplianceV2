@@ -8,7 +8,8 @@ namespace StaffArr.Api.Services;
 public sealed class HandoffAuthService(
     StlNexArrHandoffClient nexArrHandoff,
     StaffArrTokenService tokenService,
-    PersonProvisioningService personProvisioning)
+    PersonProvisioningService personProvisioning,
+    RoleManagementService roleManagementService)
 {
     private const string ProductKey = StlProductKeys.StaffArr;
 
@@ -36,6 +37,11 @@ public sealed class HandoffAuthService(
             redeemed.UserId,
             redeemed.Email,
             redeemed.DisplayName,
+            cancellationToken);
+        await roleManagementService.EnsurePlatformManagedSystemRoleAssignmentsAsync(
+            redeemed.TenantId,
+            person.Id,
+            redeemed.TenantRoleKey,
             cancellationToken);
         var (accessToken, expiresAt) = tokenService.CreateAccessToken(
             redeemed.UserId,

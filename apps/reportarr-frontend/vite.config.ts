@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 const appRoot = path.dirname(fileURLToPath(import.meta.url))
-const reportArrApiTarget = process.env.VITE_REPORTARR_PROXY_TARGET ?? 'http://localhost:5111'
+const reportArrApiTarget = process.env.VITE_REPORTARR_PROXY_TARGET ?? 'http://localhost:5114'
 const routerBase = process.env.VITE_ROUTER_BASENAME?.trim().replace(/\/+$/, '')
 const assetBase = routerBase ? `${routerBase}/` : '/'
 

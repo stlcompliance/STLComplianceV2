@@ -1,45 +1,1775 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj]
+F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj]
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
   LedgArr.Api -> F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\bin\Debug\net10.0\LedgArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api\LedgArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+    4 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:05.61
+Time Elapsed 00:00:45.01
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer ledgarr-api (render=(null)).
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 2 integration token(s) for ledgarr-api from NexArr.
-[22:29:59 INF] Applying EF migrations for LedgArrDbContext (attempt 1/8)
-[22:30:06 INF] Executed DbCommand (89ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for LedgArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (31ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:07 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT 1
-[22:30:07 INF] Executed DbCommand (35ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
-    "MigrationId" character varying(150) NOT NULL,
-    "ProductVersion" character varying(32) NOT NULL,
-    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
-);
-[22:30:07 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:07 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:07 INF] No migrations were applied. The database is already up to date.
-[22:30:07 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Applying migration '20260618023423_LedgArrInitialPlatformFoundation'.
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AccountAliases" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "GLAccountId" uuid NOT NULL,
+    "Alias" text NOT NULL,
+    CONSTRAINT "PK_AccountAliases" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AccountMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "PacketType" text NOT NULL,
+    "GLAccountId" uuid NOT NULL,
+    "MappingRole" text NOT NULL,
+    CONSTRAINT "PK_AccountMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "APAgingSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SnapshotDate" date NOT NULL,
+    "CurrentAmount" numeric(18,2) NOT NULL,
+    "PastDueAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_APAgingSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "APDisputes" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "Reason" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_APDisputes" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "APPaymentLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "APPaymentId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "AppliedAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_APPaymentLines" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "APPayments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "PaymentNumber" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_APPayments" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ApprovalDecisions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TargetType" text NOT NULL,
+    "TargetId" text NOT NULL,
+    "Decision" text NOT NULL,
+    CONSTRAINT "PK_ApprovalDecisions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ApprovalPolicies" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PolicyKey" text NOT NULL,
+    "AppliesTo" text NOT NULL,
+    "RequiresApproval" boolean NOT NULL,
+    CONSTRAINT "PK_ApprovalPolicies" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (35ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ApprovalSteps" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ApprovalPolicyId" uuid NOT NULL,
+    "StepNumber" integer NOT NULL,
+    "RequiredPermissionKey" text NOT NULL,
+    CONSTRAINT "PK_ApprovalSteps" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ARAgingSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SnapshotDate" date NOT NULL,
+    "CurrentAmount" numeric(18,2) NOT NULL,
+    "PastDueAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ARAgingSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetCapitalizationEvents" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_AssetCapitalizationEvents" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetDepreciationBooks" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "BookName" text NOT NULL,
+    CONSTRAINT "PK_AssetDepreciationBooks" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetDepreciationRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_AssetDepreciationRuns" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetDepreciationSchedules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "SequenceNumber" integer NOT NULL,
+    "DepreciationDate" date NOT NULL,
+    "DepreciationAmount" numeric(18,2) NOT NULL,
+    "AccumulatedDepreciation" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    "PostedJournalEntryId" uuid,
+    CONSTRAINT "PK_AssetDepreciationSchedules" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetDisposals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "Proceeds" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_AssetDisposals" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetImpairments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "ImpairmentAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_AssetImpairments" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "AssetRevaluations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FixedAssetFinancialRecordId" uuid NOT NULL,
+    "RevaluedAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_AssetRevaluations" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BudgetActualSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BudgetLineId" uuid NOT NULL,
+    "ActualAmount" numeric(18,2) NOT NULL,
+    "SnapshotDate" date NOT NULL,
+    CONSTRAINT "PK_BudgetActualSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BudgetApprovals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BudgetId" uuid NOT NULL,
+    "Decision" text NOT NULL,
+    CONSTRAINT "PK_BudgetApprovals" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BudgetLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BudgetId" uuid NOT NULL,
+    "AccountCode" text NOT NULL,
+    "DimensionSummary" text,
+    "Amount" numeric(18,2) NOT NULL,
+    "WarningThresholdPercent" numeric(18,2) NOT NULL,
+    "BlockThresholdPercent" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_BudgetLines" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "Budgets" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "BudgetNumber" text NOT NULL,
+    "Name" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_Budgets" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BudgetVarianceSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BudgetLineId" uuid NOT NULL,
+    "BudgetAmount" numeric(18,2) NOT NULL,
+    "ActualAmount" numeric(18,2) NOT NULL,
+    "VarianceAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_BudgetVarianceSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BudgetVersions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BudgetId" uuid NOT NULL,
+    "VersionNumber" integer NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_BudgetVersions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ChartsOfAccounts" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid,
+    "Name" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ChartsOfAccounts" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "COGSPostingRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_COGSPostingRuns" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CollectionStatuses" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerInvoiceId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_CollectionStatuses" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "Currencies" (
+    "Id" uuid NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "MinorUnits" integer NOT NULL,
+    CONSTRAINT "PK_Currencies" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerCreditMemos" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerInvoiceId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_CustomerCreditMemos" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerFinancialProfiles" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerRefProductKey" text NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    "CustomerDisplayName" text NOT NULL,
+    "PaymentTerms" text NOT NULL,
+    CONSTRAINT "PK_CustomerFinancialProfiles" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerInvoiceApprovals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerInvoiceId" uuid NOT NULL,
+    "Decision" text NOT NULL,
+    "ActorPersonId" text NOT NULL,
+    CONSTRAINT "PK_CustomerInvoiceApprovals" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerInvoiceLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerInvoiceId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "Description" text NOT NULL,
+    "Quantity" numeric(18,2) NOT NULL,
+    "UnitPrice" numeric(18,2) NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_CustomerInvoiceLines" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerInvoices" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "CustomerRefProductKey" text NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    "CustomerDisplayName" text NOT NULL,
+    "InvoiceNumber" text NOT NULL,
+    "InvoiceDate" date NOT NULL,
+    "DueDate" date NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "Subtotal" numeric(18,2) NOT NULL,
+    "TaxAmount" numeric(18,2) NOT NULL,
+    "TotalAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    "PostedJournalEntryId" uuid,
+    CONSTRAINT "PK_CustomerInvoices" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerPaymentApplications" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerPaymentId" uuid NOT NULL,
+    "CustomerInvoiceId" uuid NOT NULL,
+    "AppliedAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_CustomerPaymentApplications" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerPayments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    "PaymentNumber" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_CustomerPayments" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "CustomerStatements" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    "StatementDate" date NOT NULL,
+    "Balance" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_CustomerStatements" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "DimensionMappingRules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceField" text NOT NULL,
+    "DimensionKey" text NOT NULL,
+    CONSTRAINT "PK_DimensionMappingRules" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "DimensionRequirementRules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AppliesTo" text NOT NULL,
+    "DimensionKey" text NOT NULL,
+    "Required" boolean NOT NULL,
+    CONSTRAINT "PK_DimensionRequirementRules" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExchangeRates" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FromCurrencyCode" text NOT NULL,
+    "ToCurrencyCode" text NOT NULL,
+    "EffectiveDate" date NOT NULL,
+    "Rate" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ExchangeRates" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalAccountMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "GLAccountId" uuid NOT NULL,
+    "ExternalAccountId" text NOT NULL,
+    CONSTRAINT "PK_ExternalAccountMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (28ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalCustomerMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    "ExternalCustomerId" text NOT NULL,
+    CONSTRAINT "PK_ExternalCustomerMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalDimensionMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "DimensionKey" text NOT NULL,
+    "ExternalDimensionId" text NOT NULL,
+    CONSTRAINT "PK_ExternalDimensionMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalFinanceConnections" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ExternalFinanceConnections" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalFinanceSystems" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SystemKey" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "Mode" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ExternalFinanceSystems" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalItemMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "ExternalItemId" text NOT NULL,
+    CONSTRAINT "PK_ExternalItemMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalPostingBatches" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "BatchNumber" text NOT NULL,
+    "Status" text NOT NULL,
+    "JournalEntryIdsCsv" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ExportedAt" timestamp with time zone,
+    CONSTRAINT "PK_ExternalPostingBatches" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalPostingResults" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalPostingBatchId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "Message" text NOT NULL,
+    CONSTRAINT "PK_ExternalPostingResults" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalSyncIssues" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalSyncRunId" uuid NOT NULL,
+    "IssueCode" text NOT NULL,
+    "Message" text NOT NULL,
+    CONSTRAINT "PK_ExternalSyncIssues" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalSyncRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ExternalSyncRuns" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ExternalVendorMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalFinanceSystemId" uuid NOT NULL,
+    "VendorRefId" text NOT NULL,
+    "ExternalVendorId" text NOT NULL,
+    CONSTRAINT "PK_ExternalVendorMappings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialAuditEvents" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" text NOT NULL,
+    "Action" text NOT NULL,
+    "TargetType" text NOT NULL,
+    "TargetId" text NOT NULL,
+    "ActorId" text NOT NULL,
+    "Summary" text NOT NULL,
+    "Reason" text,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_FinancialAuditEvents" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialCloseRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FiscalPeriodId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_FinancialCloseRuns" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialControlExceptions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ControlKey" text NOT NULL,
+    "TargetType" text NOT NULL,
+    "TargetId" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialControlExceptions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialDimensionCombinations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CombinationKey" text NOT NULL,
+    "DisplayLabel" text NOT NULL,
+    CONSTRAINT "PK_FinancialDimensionCombinations" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialDimensionTypes" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DimensionKey" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialDimensionTypes" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialDimensionValues" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DimensionTypeId" uuid NOT NULL,
+    "ValueKey" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "SourceProductKey" text,
+    "SourceRecordType" text,
+    "SourceRecordId" text,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialDimensionValues" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialLegalEntities" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EntityCode" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "EntityType" text NOT NULL,
+    "BaseCurrencyCode" text NOT NULL,
+    "FiscalCalendarId" uuid,
+    "Status" text NOT NULL,
+    "StaffArrLocationRefId" text,
+    "SnapshotLabel" text,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "DeactivatedAt" timestamp with time zone,
+    CONSTRAINT "PK_FinancialLegalEntities" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialLegalEntityAddressSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "SnapshotLabel" text NOT NULL,
+    "AddressLine1" text NOT NULL,
+    "City" text,
+    "Region" text,
+    "PostalCode" text,
+    "CountryCode" text NOT NULL,
+    CONSTRAINT "PK_FinancialLegalEntityAddressSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialLegalEntityRegistrations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "RegistrationType" text NOT NULL,
+    "RegistrationNumber" text NOT NULL,
+    "JurisdictionLabel" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialLegalEntityRegistrations" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialLegalEntityRelationships" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ParentFinancialLegalEntityId" uuid NOT NULL,
+    "ChildFinancialLegalEntityId" uuid NOT NULL,
+    "RelationshipType" text NOT NULL,
+    "OwnershipPercentage" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialLegalEntityRelationships" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketIdempotencyKeys" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceEventId" text NOT NULL,
+    "SourceEventVersion" integer NOT NULL,
+    "IdempotencyKey" text NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "RecordedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_FinancialPacketIdempotencyKeys" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "SourceLineId" text NOT NULL,
+    "LineType" text NOT NULL,
+    "ItemRefId" text,
+    "VendorRefId" text,
+    "CustomerRefId" text,
+    "AssetRefId" text,
+    "WorkOrderRefId" text,
+    "OrderRefId" text,
+    "ShipmentRefId" text,
+    "TripRefId" text,
+    "LocationRefId" text,
+    "Quantity" numeric(18,2) NOT NULL,
+    "UnitOfMeasure" text NOT NULL,
+    "UnitCost" numeric(18,2) NOT NULL,
+    "ExtendedAmount" numeric(18,2) NOT NULL,
+    "TaxAmount" numeric(18,2) NOT NULL,
+    "TotalAmount" numeric(18,2) NOT NULL,
+    "DimensionSummary" text,
+    "CostBehavior" text,
+    "CapitalizationHint" text,
+    "BillableHint" text,
+    CONSTRAINT "PK_FinancialPacketLines" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketMappingResults" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "Summary" text NOT NULL,
+    CONSTRAINT "PK_FinancialPacketMappingResults" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketPostingResults" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "JournalEntryId" uuid,
+    "Status" text NOT NULL,
+    "Summary" text NOT NULL,
+    CONSTRAINT "PK_FinancialPacketPostingResults" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPackets" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid,
+    "SourceProductKey" text NOT NULL,
+    "SourceEventId" text NOT NULL,
+    "SourceEventVersion" integer NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "SourceRecordId" text NOT NULL,
+    "SourceRecordDisplayName" text NOT NULL,
+    "SourceOccurredAt" timestamp with time zone NOT NULL,
+    "PacketType" text NOT NULL,
+    "PacketSubType" text NOT NULL,
+    "AccountingDate" date NOT NULL,
+    "TransactionCurrency" text NOT NULL,
+    "SourceAmount" numeric(18,2) NOT NULL,
+    "SourceTaxAmount" numeric(18,2) NOT NULL,
+    "SourceTotalAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    "IdempotencyKey" text NOT NULL,
+    "ReceivedAt" timestamp with time zone NOT NULL,
+    "PostedJournalEntryId" uuid,
+    CONSTRAINT "PK_FinancialPackets" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketSourceRefs" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "ProductKey" text NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "SourceRecordId" text NOT NULL,
+    "SourceRecordDisplayName" text NOT NULL,
+    "SourceEventId" text,
+    "SourceVersion" integer,
+    "SnapshotLabel" text NOT NULL,
+    CONSTRAINT "PK_FinancialPacketSourceRefs" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketStatusHistory" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "Summary" text NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_FinancialPacketStatusHistory" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialPacketValidationIssues" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "Code" text NOT NULL,
+    "Message" text NOT NULL,
+    "Severity" text NOT NULL,
+    CONSTRAINT "PK_FinancialPacketValidationIssues" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialProjects" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "ProjectCode" text NOT NULL,
+    "Name" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FinancialProjects" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FinancialProjectTasks" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "TaskCode" text NOT NULL,
+    "Name" text NOT NULL,
+    CONSTRAINT "PK_FinancialProjectTasks" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FiscalCalendars" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Name" text NOT NULL,
+    "FiscalYearStartMonth" integer NOT NULL,
+    "BaseCurrencyCode" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FiscalCalendars" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FiscalPeriods" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FiscalCalendarId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid,
+    "PeriodKey" text NOT NULL,
+    "Name" text NOT NULL,
+    "StartDate" date NOT NULL,
+    "EndDate" date NOT NULL,
+    "Status" text NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "LockedAt" timestamp with time zone,
+    CONSTRAINT "PK_FiscalPeriods" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FiscalYears" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FiscalCalendarId" uuid NOT NULL,
+    "YearNumber" integer NOT NULL,
+    "StartDate" date NOT NULL,
+    "EndDate" date NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FiscalYears" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "FixedAssetFinancialRecords" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "MaintainArrAssetRefId" text NOT NULL,
+    "AssetNumber" text NOT NULL,
+    "AssetClass" text NOT NULL,
+    "InServiceDate" date NOT NULL,
+    "CapitalizedCost" numeric(18,2) NOT NULL,
+    "BookValue" numeric(18,2) NOT NULL,
+    "DepreciationMethod" text NOT NULL,
+    "UsefulLifeMonths" integer NOT NULL,
+    "SalvageValue" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_FixedAssetFinancialRecords" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "GLAccounts" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ChartOfAccountsId" uuid NOT NULL,
+    "AccountCode" text NOT NULL,
+    "Name" text NOT NULL,
+    "AccountType" text NOT NULL,
+    "Category" text NOT NULL,
+    "NormalBalance" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_GLAccounts" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventoryCostLayers" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "ItemRefProductKey" text NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "SourceRecordId" text NOT NULL,
+    "LayerDate" date NOT NULL,
+    "QuantityOriginal" numeric(18,2) NOT NULL,
+    "QuantityRemaining" numeric(18,2) NOT NULL,
+    "UnitCost" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_InventoryCostLayers" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventoryReconciliationRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "IssueCount" integer NOT NULL,
+    CONSTRAINT "PK_InventoryReconciliationRuns" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventorySubledgerBalances" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "Quantity" numeric(18,2) NOT NULL,
+    "Value" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_InventorySubledgerBalances" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventoryValuationAdjustments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "AdjustmentAmount" numeric(18,2) NOT NULL,
+    "Reason" text NOT NULL,
+    CONSTRAINT "PK_InventoryValuationAdjustments" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventoryValuationMovements" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "MovementType" text NOT NULL,
+    "CostMethod" text NOT NULL,
+    "Quantity" numeric(18,2) NOT NULL,
+    "UnitCost" numeric(18,2) NOT NULL,
+    "ExtendedAmount" numeric(18,2) NOT NULL,
+    "JournalEntryId" uuid,
+    CONSTRAINT "PK_InventoryValuationMovements" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "InventoryValuationProfiles" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CostMethod" text NOT NULL,
+    CONSTRAINT "PK_InventoryValuationProfiles" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ItemCostProfiles" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ItemRefProductKey" text NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "CostMethod" text NOT NULL,
+    "StandardCost" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ItemCostProfiles" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JobCostCodes" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CostCode" text NOT NULL,
+    "Name" text NOT NULL,
+    CONSTRAINT "PK_JobCostCodes" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalApprovals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    "Decision" text NOT NULL,
+    "ActorPersonId" text NOT NULL,
+    "DecidedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_JournalApprovals" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalAttachmentRefs" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    "RecordArrDocumentId" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    CONSTRAINT "PK_JournalAttachmentRefs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalAuditTrails" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    "Action" text NOT NULL,
+    "ActorId" text NOT NULL,
+    "Summary" text NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_JournalAuditTrails" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalEntries" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "FiscalPeriodId" uuid NOT NULL,
+    "JournalNumber" text NOT NULL,
+    "FinancialPacketId" uuid,
+    "SourceDocumentType" text NOT NULL,
+    "SourceDocumentId" uuid,
+    "Status" text NOT NULL,
+    "AccountingDate" date NOT NULL,
+    "Description" text NOT NULL,
+    "TotalDebits" numeric(18,2) NOT NULL,
+    "TotalCredits" numeric(18,2) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "PostedAt" timestamp with time zone,
+    "ReversalOfJournalEntryId" uuid,
+    CONSTRAINT "PK_JournalEntries" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (30ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalEntryReversals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OriginalJournalEntryId" uuid NOT NULL,
+    "ReversalJournalEntryId" uuid NOT NULL,
+    "Reason" text NOT NULL,
+    "ReversedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_JournalEntryReversals" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "JournalLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "GLAccountId" uuid NOT NULL,
+    "AccountCode" text NOT NULL,
+    "Debit" numeric(18,2) NOT NULL,
+    "Credit" numeric(18,2) NOT NULL,
+    "Memo" text NOT NULL,
+    "DimensionSummary" text,
+    CONSTRAINT "PK_JournalLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "LandedCostAllocationLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LandedCostAllocationId" uuid NOT NULL,
+    "ItemRefId" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_LandedCostAllocationLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "LandedCostAllocations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "AllocationNumber" text NOT NULL,
+    "TotalAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_LandedCostAllocations" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "NumberingSequences" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SequenceKey" text NOT NULL,
+    "Prefix" text NOT NULL,
+    "NextNumber" bigint NOT NULL,
+    CONSTRAINT "PK_NumberingSequences" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PaymentExportBatches" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PaymentRunId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PaymentExportBatches" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PaymentRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PaymentRunNumber" text NOT NULL,
+    "Status" text NOT NULL,
+    "TotalAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_PaymentRuns" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PeriodLockAudits" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FiscalPeriodId" uuid NOT NULL,
+    "Action" text NOT NULL,
+    "ActorId" text NOT NULL,
+    "Reason" text NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PeriodLockAudits" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (36ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingBatches" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BatchNumber" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_PostingBatches" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingBatchLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PostingBatchId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    CONSTRAINT "PK_PostingBatchLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingPreviewLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PostingPreviewId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "GLAccountId" uuid NOT NULL,
+    "AccountCode" text NOT NULL,
+    "Debit" numeric(18,2) NOT NULL,
+    "Credit" numeric(18,2) NOT NULL,
+    "Memo" text NOT NULL,
+    "DimensionSummary" text,
+    CONSTRAINT "PK_PostingPreviewLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingPreviews" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid,
+    "SourceDocumentId" uuid,
+    "SourceDocumentType" text NOT NULL,
+    "Status" text NOT NULL,
+    "TotalDebits" numeric(18,2) NOT NULL,
+    "TotalCredits" numeric(18,2) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ApprovedAt" timestamp with time zone,
+    "PostedAt" timestamp with time zone,
+    CONSTRAINT "PK_PostingPreviews" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingRuleLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PostingRuleId" uuid NOT NULL,
+    "LineRole" text NOT NULL,
+    "AccountCode" text NOT NULL,
+    "Direction" text NOT NULL,
+    CONSTRAINT "PK_PostingRuleLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PostingRules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PacketType" text NOT NULL,
+    "Name" text NOT NULL,
+    "Status" text NOT NULL,
+    "Version" integer NOT NULL,
+    CONSTRAINT "PK_PostingRules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectActualCosts" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ProjectActualCosts" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectBillingStatuses" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ProjectBillingStatuses" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectBudgetLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProjectBudgetId" uuid NOT NULL,
+    "CostCode" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ProjectBudgetLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectBudgets" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_ProjectBudgets" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectCommittedCosts" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ProjectCommittedCosts" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "ProjectCostAllocations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialProjectId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_ProjectCostAllocations" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SegregationOfDutiesRules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RuleKey" text NOT NULL,
+    "IncompatibleActions" text NOT NULL,
+    CONSTRAINT "PK_SegregationOfDutiesRules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SourceDimensionMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "SourceRecordId" text NOT NULL,
+    "DimensionValueId" uuid NOT NULL,
+    CONSTRAINT "PK_SourceDimensionMappings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SubledgerApplications" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SourceSubledgerDocumentId" uuid NOT NULL,
+    "TargetSubledgerDocumentId" uuid NOT NULL,
+    "AppliedAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_SubledgerApplications" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SubledgerDocumentLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SubledgerDocumentId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_SubledgerDocumentLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SubledgerDocuments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DocumentType" text NOT NULL,
+    "DocumentNumber" text NOT NULL,
+    "Status" text NOT NULL,
+    "JournalEntryId" uuid,
+    CONSTRAINT "PK_SubledgerDocuments" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SubledgerReconciliationIssues" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ReconciliationRunId" uuid NOT NULL,
+    "IssueCode" text NOT NULL,
+    "Message" text NOT NULL,
+    CONSTRAINT "PK_SubledgerReconciliationIssues" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "SubledgerReconciliationRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SubledgerType" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_SubledgerReconciliationRuns" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxCodes" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TaxCodeKey" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_TaxCodes" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxExemptionCertificateRefs" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RecordArrDocumentId" text NOT NULL,
+    "CustomerRefId" text NOT NULL,
+    CONSTRAINT "PK_TaxExemptionCertificateRefs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxJurisdictions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "JurisdictionKey" text NOT NULL,
+    "DisplayName" text NOT NULL,
+    CONSTRAINT "PK_TaxJurisdictions" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxPostings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TaxCodeId" uuid NOT NULL,
+    "JournalEntryId" uuid NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_TaxPostings" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxRates" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TaxCodeId" uuid NOT NULL,
+    "Rate" numeric(18,2) NOT NULL,
+    "EffectiveDate" date NOT NULL,
+    CONSTRAINT "PK_TaxRates" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxReportingRuns" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_TaxReportingRuns" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxRules" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TaxCodeId" uuid NOT NULL,
+    "RuleKey" text NOT NULL,
+    CONSTRAINT "PK_TaxRules" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TenantFinancialProfiles" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequireFinancialLegalEntity" boolean NOT NULL,
+    "LedgerMode" text NOT NULL,
+    "BaseCurrencyCode" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_TenantFinancialProfiles" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorBillApprovals" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "Decision" text NOT NULL,
+    "ActorPersonId" text NOT NULL,
+    "DecidedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_VendorBillApprovals" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorBillLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "Description" text NOT NULL,
+    "Quantity" numeric(18,2) NOT NULL,
+    "UnitCost" numeric(18,2) NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_VendorBillLines" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorBillMatches" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceRecordType" text NOT NULL,
+    "SourceRecordId" text NOT NULL,
+    "Status" text NOT NULL,
+    "ExpectedAmount" numeric(18,2) NOT NULL,
+    "ActualAmount" numeric(18,2) NOT NULL,
+    "VarianceAmount" numeric(18,2) NOT NULL,
+    CONSTRAINT "PK_VendorBillMatches" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorBills" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "VendorRefProductKey" text NOT NULL,
+    "VendorRefId" text NOT NULL,
+    "VendorDisplayName" text NOT NULL,
+    "VendorInvoiceNumber" text NOT NULL,
+    "BillDate" date NOT NULL,
+    "DueDate" date NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "Subtotal" numeric(18,2) NOT NULL,
+    "TaxAmount" numeric(18,2) NOT NULL,
+    "TotalAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    "MatchStatus" text NOT NULL,
+    "PostedJournalEntryId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_VendorBills" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorBillVariances" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorBillId" uuid NOT NULL,
+    "VarianceCode" text NOT NULL,
+    "VarianceAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_VendorBillVariances" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorCredits" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "VendorRefId" text NOT NULL,
+    "CreditAmount" numeric(18,2) NOT NULL,
+    "Status" text NOT NULL,
+    CONSTRAINT "PK_VendorCredits" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "VendorFinancialProfiles" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "VendorRefProductKey" text NOT NULL,
+    "VendorRefId" text NOT NULL,
+    "VendorDisplayName" text NOT NULL,
+    "PaymentTerms" text NOT NULL,
+    CONSTRAINT "PK_VendorFinancialProfiles" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_CustomerInvoices_TenantId_InvoiceNumber" ON "CustomerInvoices" ("TenantId", "InvoiceNumber");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_FinancialLegalEntities_TenantId_EntityCode" ON "FinancialLegalEntities" ("TenantId", "EntityCode");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_FinancialPacketIdempotencyKeys_TenantId_SourceProductKey_So~" ON "FinancialPacketIdempotencyKeys" ("TenantId", "SourceProductKey", "SourceEventId", "SourceEventVersion");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_FinancialPackets_TenantId_SourceProductKey_SourceEventId_So~" ON "FinancialPackets" ("TenantId", "SourceProductKey", "SourceEventId", "SourceEventVersion");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_FiscalPeriods_TenantId_FiscalCalendarId_PeriodKey" ON "FiscalPeriods" ("TenantId", "FiscalCalendarId", "PeriodKey");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_GLAccounts_TenantId_AccountCode" ON "GLAccounts" ("TenantId", "AccountCode");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_JournalEntries_TenantId_JournalNumber" ON "JournalEntries" ("TenantId", "JournalNumber");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_TenantFinancialProfiles_TenantId" ON "TenantFinancialProfiles" ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_VendorBills_TenantId_VendorRefProductKey_VendorRefId_Vendor~" ON "VendorBills" ("TenantId", "VendorRefProductKey", "VendorRefId", "VendorInvoiceNumber");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618023423_LedgArrInitialPlatformFoundation', '10.0.8');
+[00:15:21 INF] Applying migration '20260618050155_AddLedgArrBankingWorkspace'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BankAccounts" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "BankName" text NOT NULL,
+    "AccountDisplayName" text NOT NULL,
+    "AccountType" text NOT NULL,
+    "MaskedAccountNumber" text NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "GLCashAccountId" uuid NOT NULL,
+    "Status" text NOT NULL,
+    "ReconciliationEnabled" boolean NOT NULL,
+    CONSTRAINT "PK_BankAccounts" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BankReconciliations" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BankAccountId" uuid NOT NULL,
+    "PeriodStartDate" date NOT NULL,
+    "PeriodEndDate" date NOT NULL,
+    "BeginningBalance" numeric(18,2) NOT NULL,
+    "EndingBalance" numeric(18,2) NOT NULL,
+    "StatementDate" date NOT NULL,
+    "ClearedTransactionTotal" numeric(18,2) NOT NULL,
+    "AdjustmentTotal" numeric(18,2) NOT NULL,
+    "MatchedTransactionCount" integer NOT NULL,
+    "ExceptionCount" integer NOT NULL,
+    "ApprovalStatus" text NOT NULL,
+    "LockStatus" text NOT NULL,
+    "Status" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ApprovedAt" timestamp with time zone,
+    "LockedAt" timestamp with time zone,
+    CONSTRAINT "PK_BankReconciliations" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BankTransactions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "BankAccountId" uuid NOT NULL,
+    "TransactionDate" date NOT NULL,
+    "Description" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "Direction" text NOT NULL,
+    "SourceType" text NOT NULL,
+    "MatchStatus" text NOT NULL,
+    "MatchedLedgArrTransactionType" text,
+    "MatchedLedgArrTransactionId" text,
+    "ReconciliationStatus" text NOT NULL,
+    "ReconciliationId" uuid,
+    "JournalEntryId" uuid,
+    CONSTRAINT "PK_BankTransactions" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "LedgArrTenantSettingsAudits" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SectionKey" text NOT NULL,
+    "ChangedAtUtc" timestamp with time zone NOT NULL,
+    "ChangedByPersonId" uuid NOT NULL,
+    "ChangeReason" text,
+    "BeforeJson" text,
+    "AfterJson" text,
+    "DiffJson" text,
+    "CorrelationId" text,
+    CONSTRAINT "PK_LedgArrTenantSettingsAudits" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "LedgArrTenantSettingSections" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SectionKey" text NOT NULL,
+    "SettingsVersion" integer NOT NULL,
+    "SettingsJson" text NOT NULL,
+    "CreatedAtUtc" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedAtUtc" timestamp with time zone NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    "RowVersion" text NOT NULL,
+    CONSTRAINT "PK_LedgArrTenantSettingSections" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollBatches" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LegalEntityId" uuid NOT NULL,
+    "PayrollCalendarId" uuid NOT NULL,
+    "PeriodStartDate" date NOT NULL,
+    "PeriodEndDate" date NOT NULL,
+    "PayDate" date NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceStaffArrSnapshotId" uuid,
+    "SourceSnapshotHash" character varying(128),
+    "TotalWorkers" integer NOT NULL,
+    "TotalHours" numeric(18,2) NOT NULL,
+    "TotalGrossEstimate" numeric(18,2),
+    "ExportProvider" character varying(64) NOT NULL,
+    "ExportedAt" timestamp with time zone,
+    "ApprovedByPersonId" uuid,
+    "ApprovedAt" timestamp with time zone,
+    "CorrectionReason" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PayrollBatches" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollBatchLines" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PayrollBatchId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "WorkerNumber" character varying(64) NOT NULL,
+    "LegalEntityId" uuid NOT NULL,
+    "PayrollCalendarId" uuid NOT NULL,
+    "PayCodeRef" character varying(64) NOT NULL,
+    "ProviderEarningCode" character varying(64) NOT NULL,
+    "DurationMinutes" integer NOT NULL,
+    "RateSnapshot" numeric(18,2),
+    "GrossEstimate" numeric(18,2),
+    "AllocationSnapshot" text NOT NULL,
+    "SourceTimesheetPeriodRef" character varying(128) NOT NULL,
+    "SourceTimeEntryRefs" text NOT NULL,
+    "ValidationStatus" character varying(32) NOT NULL,
+    CONSTRAINT "PK_PayrollBatchLines" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollCalendars" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LegalEntityId" uuid NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Frequency" character varying(32) NOT NULL,
+    "PeriodStartDate" date NOT NULL,
+    "PeriodEndDate" date NOT NULL,
+    "PayDate" date NOT NULL,
+    "CutoffDate" date NOT NULL,
+    "Timezone" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PayrollCalendars" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollCodeMappings" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LegalEntityId" uuid NOT NULL,
+    "StaffArrPayCodeRef" character varying(64) NOT NULL,
+    "PayrollProviderRef" character varying(64),
+    "ProviderEarningCode" character varying(64) NOT NULL,
+    "ProviderDeductionCode" character varying(64),
+    "GlAccountRef" character varying(64) NOT NULL,
+    "CostCenterRef" character varying(128),
+    "DepartmentRef" character varying(128),
+    "TaxableTreatmentSnapshot" character varying(1024),
+    "Active" boolean NOT NULL,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    CONSTRAINT "PK_PayrollCodeMappings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollExportPackets" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PayrollBatchId" uuid NOT NULL,
+    "ProviderKey" character varying(64) NOT NULL,
+    "ExportFormat" character varying(64) NOT NULL,
+    "FileRef" character varying(512),
+    "PayloadHash" character varying(128) NOT NULL,
+    "ExportedByPersonId" uuid NOT NULL,
+    "ExportedAt" timestamp with time zone NOT NULL,
+    "ProviderResponseStatus" character varying(64) NOT NULL,
+    "ProviderResponseRef" character varying(256),
+    "Errors" text,
+    "ReplayProtectionKey" character varying(128) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PayrollExportPackets" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "PayrollJournalSnapshots" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PayrollBatchId" uuid NOT NULL,
+    "LegalEntityId" uuid NOT NULL,
+    "GlAccountRef" character varying(64) NOT NULL,
+    "CostCenterRef" character varying(128),
+    "DepartmentRef" character varying(128),
+    "ProductKey" character varying(64) NOT NULL,
+    "CostObjectType" character varying(64) NOT NULL,
+    "CostObjectRef" character varying(256) NOT NULL,
+    "DebitAmount" numeric(18,2) NOT NULL,
+    "CreditAmount" numeric(18,2) NOT NULL,
+    "Currency" character varying(8) NOT NULL,
+    "SourcePayrollBatchLineRefs" text NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_PayrollJournalSnapshots" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_BankAccounts_TenantId_AccountDisplayName" ON "BankAccounts" ("TenantId", "AccountDisplayName");
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_LedgArrTenantSettingSections_TenantId_SectionKey" ON "LedgArrTenantSettingSections" ("TenantId", "SectionKey");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_PayrollBatches_TenantId_LegalEntityId_PayrollCalendarId_Per~" ON "PayrollBatches" ("TenantId", "LegalEntityId", "PayrollCalendarId", "PeriodStartDate", "PeriodEndDate");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_PayrollBatchLines_TenantId_PayrollBatchId_PersonId_PayCodeR~" ON "PayrollBatchLines" ("TenantId", "PayrollBatchId", "PersonId", "PayCodeRef", "SourceTimesheetPeriodRef");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_PayrollCalendars_TenantId_LegalEntityId_Name" ON "PayrollCalendars" ("TenantId", "LegalEntityId", "Name");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_PayrollCodeMappings_TenantId_LegalEntityId_StaffArrPayCodeR~" ON "PayrollCodeMappings" ("TenantId", "LegalEntityId", "StaffArrPayCodeRef", "ProviderEarningCode");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_PayrollExportPackets_TenantId_PayrollBatchId_PayloadHash" ON "PayrollExportPackets" ("TenantId", "PayrollBatchId", "PayloadHash");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_PayrollExportPackets_TenantId_ReplayProtectionKey" ON "PayrollExportPackets" ("TenantId", "ReplayProtectionKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_PayrollJournalSnapshots_TenantId_PayrollBatchId" ON "PayrollJournalSnapshots" ("TenantId", "PayrollBatchId");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618050155_AddLedgArrBankingWorkspace', '10.0.8');
+[00:15:22 INF] Applying migration '20260618051433_AddLedgArrTaxAdjustments'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "TaxAdjustments" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid NOT NULL,
+    "TaxCodeId" uuid NOT NULL,
+    "AdjustmentNumber" text NOT NULL,
+    "AdjustmentDate" date NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "Reason" text NOT NULL,
+    "Status" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_TaxAdjustments" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_TaxAdjustments_TenantId_AdjustmentNumber" ON "TaxAdjustments" ("TenantId", "AdjustmentNumber");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618051433_AddLedgArrTaxAdjustments', '10.0.8');
+[00:15:22 INF] Applying migration '20260618052004_AddLedgArrIntercompanyTransactions'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "IntercompanyTransactions" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RelationshipId" uuid NOT NULL,
+    "FromFinancialLegalEntityId" uuid NOT NULL,
+    "ToFinancialLegalEntityId" uuid NOT NULL,
+    "TransactionNumber" text NOT NULL,
+    "TransactionDate" date NOT NULL,
+    "DueDate" date,
+    "Amount" numeric(18,2) NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "Description" text NOT NULL,
+    "TransactionType" text NOT NULL,
+    "Status" text NOT NULL,
+    "SettlementStatus" text NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "SettledAt" timestamp with time zone,
+    CONSTRAINT "PK_IntercompanyTransactions" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_IntercompanyTransactions_TenantId_TransactionNumber" ON "IntercompanyTransactions" ("TenantId", "TransactionNumber");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618052004_AddLedgArrIntercompanyTransactions', '10.0.8');
+[00:15:22 INF] Applying migration '20260618052916_AddLedgArrBillableEvents'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE "BillableEvents" (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "FinancialPacketId" uuid NOT NULL,
+    "FinancialLegalEntityId" uuid,
+    "EventNumber" text NOT NULL,
+    "SourceProductKey" text NOT NULL,
+    "SourceRecordDisplayName" text NOT NULL,
+    "ChargeType" text NOT NULL,
+    "CustomerRefId" text,
+    "CustomerDisplayName" text NOT NULL,
+    "Amount" numeric(18,2) NOT NULL,
+    "CurrencyCode" text NOT NULL,
+    "ApprovalStatus" text NOT NULL,
+    "InvoiceStatus" text NOT NULL,
+    "HoldReason" text,
+    "ExceptionReason" text,
+    "AccountingDate" date NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_BillableEvents" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_BillableEvents_TenantId_EventNumber" ON "BillableEvents" ("TenantId", "EventNumber");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618052916_AddLedgArrBillableEvents', '10.0.8');
+[00:15:22 INF] Applying migration '20260622060420_AddPrintExportLogs'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622060420_AddPrintExportLogs', '10.0.8');
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,60 +1801,9 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:07 INF] Starting LedgArr API (ledgarr) on http://localhost:5113
-[22:30:07 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:08 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5113: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at S[22:30:11 INF] Request starting HTTP/1.1 GET http://localhost:5113/health - null null
-[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:11 INF] Setting HTTP status code 200.
-[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5113/health - 200 null application/json; charset=utf-8 19.5667ms
-pNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:30:08 FTL] LedgArr API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5113: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:22 INF] Starting LedgArr API (ledgarr) on http://localhost:5113
+[00:15:22 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:23 INF] Now listening on: http://localhost:5113
+[00:15:23 INF] Application started. Press Ctrl+C to shut down.
+[00:15:23 INF] Hosting environment: Development
+[00:15:23 INF] Content root path: F:\STLComplianceV2\apps\ledgarr-api\LedgArr.Api

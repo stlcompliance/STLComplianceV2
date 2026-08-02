@@ -27,8 +27,6 @@ vi.mock('../api/client', () => ({
       openWarrantyClaimCount: 1,
       supplierDocumentExpiringSoonCount: 1,
       blockedSupplierCount: 1,
-      supplierDocumentExpiringSoonCount: 1,
-      blockedSupplierCount: 1,
       averageLeadTimeDays: 8,
       estimatedSpendThisMonth: 25,
     },

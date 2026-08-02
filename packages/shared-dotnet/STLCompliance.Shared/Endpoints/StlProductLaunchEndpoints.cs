@@ -9,6 +9,9 @@ public static class StlProductLaunchEndpoints
 {
     public static void MapStlProductLaunchEndpoints(this WebApplication app)
     {
+        // Check if dev mode is enabled (disables nexarr/login)
+        var disableNexarrLogin = app.Configuration["DISABLE_NEXARR_LOGIN"]?.ToLower() == "true";
+        
         static async Task<IResult> GetLaunchContextAsync(
             string productKey,
             HttpContext context,
@@ -34,7 +37,7 @@ public static class StlProductLaunchEndpoints
             var path = "/api/launch/catalog";
             if (!string.IsNullOrWhiteSpace(currentProductKey))
             {
-                path += $"?currentProductKey={Uri.EscapeDataString(currentProductKey)}";
+                path += $"?productKey={Uri.EscapeDataString(currentProductKey)}";
             }
 
             var (statusCode, body, contentType) = await client.ForwardAsync(
@@ -65,7 +68,12 @@ public static class StlProductLaunchEndpoints
             return Results.Content(body, "application/json", statusCode: statusCode);
         }
 
-        var group = app.MapGroup("/api/launch").WithTags("Launch").RequireAuthorization();
+        // Only apply authorization when not in dev mode
+        var group = app.MapGroup("/api/launch").WithTags("Launch");
+        if (!disableNexarrLogin)
+        {
+            group.RequireAuthorization();
+        }
 
         group.MapGet("/context", GetLaunchContextAsync)
         .WithName("GetProductLaunchContext");
@@ -76,7 +84,11 @@ public static class StlProductLaunchEndpoints
         group.MapPost("/handoff", CreateLaunchHandoffAsync)
         .WithName("CreateProductLaunchHandoff");
 
-        var v1Group = app.MapGroup("/api/v1/launch").WithTags("Launch").RequireAuthorization();
+        var v1Group = app.MapGroup("/api/v1/launch").WithTags("Launch");
+        if (!disableNexarrLogin)
+        {
+            v1Group.RequireAuthorization();
+        }
 
         v1Group.MapGet("/context", GetLaunchContextAsync)
             .WithName("GetProductLaunchContextV1");

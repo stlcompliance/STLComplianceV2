@@ -1,45 +1,1074 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj]
+F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj]
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
   AssurArr.Api -> F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\bin\Debug\net10.0\AssurArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api\AssurArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+    4 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:02.98
+Time Elapsed 00:00:07.60
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer assurarr-api (render=(null)).
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 1/40 failed for assurarr-api; retrying in 4s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
+warn: StlIntegrationTokenProvisioning[0]
+      Integration token provision attempt 2/40 failed for assurarr-api; retrying in 5s.
+      System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:5101)
+       ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+         at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionPool.InjectNewHttp11ConnectionAsync(QueueItem queueItem)
+         at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellation(CancellationToken cancellationToken)
+         at System.Net.Http.HttpConnectionWaiter`1.WaitForConnectionAsync(HttpRequestMessage request, HttpConnectionPool pool, Boolean async, CancellationToken requestCancellationToken)
+         at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.Metrics.MetricsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.DiagnosticsHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+         at System.Net.Http.HttpMessageHandlerStage.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.SocketsHttpHandler.Send(HttpRequestMessage request, CancellationToken cancellationToken)
+         at System.Net.Http.HttpClient.Send(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
+         at STLCompliance.Shared.Integration.StlIntegrationTokenProvisioner.ProvisionSynchronously(IConfiguration configuration, ILogger logger) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Integration\StlIntegrationTokenProvisioner.cs:line 150
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 2 integration token(s) for assurarr-api from NexArr.
-[22:29:49 INF] Applying EF migrations for AssurArrDbContext (attempt 1/8)
-[22:29:56 INF] Executed DbCommand (60ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for AssurArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (29ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:29:57 INF] Executed DbCommand (22ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT 1
-[22:29:57 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
-    "MigrationId" character varying(150) NOT NULL,
-    "ProductVersion" character varying(32) NOT NULL,
-    CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
+[00:15:19 INF] Applying migration '20260609060127_CurrentSchemaBaseline'.
+[00:15:19 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_audit_findings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "SourceRequirementRef" character varying(256),
+    "RecordRefs" text[] NOT NULL,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "FindingType" character varying(64) NOT NULL,
+    "AuditRef" character varying(256),
+    "NonconformanceRef" character varying(256),
+    "CapaRef" character varying(256),
+    "DueAt" timestamp with time zone,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_audit_findings" PRIMARY KEY ("Id")
 );
-[22:29:58 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:19 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_capa_action_blockers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "CapaActionId" uuid NOT NULL,
+    "BlockerType" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ResolvedAt" timestamp with time zone,
+    "ResolvedByPersonId" uuid,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_capa_action_blockers" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_capa_actions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "CapaId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ActionType" character varying(64) NOT NULL,
+    "AssignedPersonId" uuid,
+    "AssignedTeamRef" character varying(256),
+    "SourceProductActionRef" character varying(256),
+    "TargetProduct" character varying(64) NOT NULL,
+    "TargetObjectRef" character varying(256),
+    "DueAt" timestamp with time zone,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "CompletedByPersonId" uuid,
+    "VerificationRequired" boolean NOT NULL,
+    "VerifiedAt" timestamp with time zone,
+    "VerifiedByPersonId" uuid,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "BlockerRefs" text[] NOT NULL,
+    "Notes" character varying(4000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_capa_actions" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_capas (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "StaffArrSiteId" uuid,
+    "StaffArrLocationId" uuid,
+    "SourceRefs" text[] NOT NULL,
+    "RecordRefs" text[] NOT NULL,
+    "ActionPlanRefs" text[] NOT NULL,
+    "VerificationPlanRef" character varying(256),
+    "RelatedCustomerComplaintRefs" text[] NOT NULL,
+    "RelatedSupplierIssueRefs" text[] NOT NULL,
+    "ComplianceRefs" text[] NOT NULL,
+    "AuditTrail" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "OpenedAt" timestamp with time zone,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "CapaType" character varying(64) NOT NULL,
+    "SourceType" character varying(64) NOT NULL,
+    "SponsorPersonId" uuid,
+    "RootCauseSummary" character varying(4000),
+    "DueAt" timestamp with time zone,
+    "RelatedNonconformanceRefs" text[] NOT NULL,
+    "RelatedAuditFindingRefs" text[] NOT NULL,
+    "EffectivenessVerificationRefs" text[] NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_capas" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_containment_actions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "NonconformanceRef" character varying(256),
+    "ActionType" character varying(64) NOT NULL,
+    "AssignedPersonId" uuid,
+    "AssignedTeamRef" character varying(256),
+    "SourceProductActionRef" character varying(256),
+    "DueAt" timestamp with time zone,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "CompletedByPersonId" uuid,
+    "VerificationRequired" boolean NOT NULL,
+    "VerifiedByPersonId" uuid,
+    "VerifiedAt" timestamp with time zone,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "Notes" character varying(4000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_containment_actions" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_customer_complaint_quality_cases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedOrderRefs" text[] NOT NULL,
+    "AffectedShipmentRefs" text[] NOT NULL,
+    "AffectedItemRefs" text[] NOT NULL,
+    "AffectedAssetRefs" text[] NOT NULL,
+    "CustomerRef" character varying(256),
+    "CustomerContactSnapshot" character varying(4000),
+    "CustomerLocationRef" character varying(256),
+    "NonconformanceRef" character varying(256),
+    "HoldRefs" text[] NOT NULL,
+    "CapaRefs" text[] NOT NULL,
+    "CustomerResponseRecordRefs" text[] NOT NULL,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "ComplaintType" character varying(64) NOT NULL,
+    "OwnerPersonId" uuid,
+    "ReceivedAt" timestamp with time zone,
+    "ReceivedByPersonId" uuid,
+    "CustomerResponseDueAt" timestamp with time zone,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_customer_complaint_quality_cases" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_dispositions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "NonconformanceRef" character varying(256),
+    "DispositionType" character varying(64) NOT NULL,
+    "DecisionByPersonId" uuid,
+    "DecisionAt" timestamp with time zone,
+    "ApprovedByPersonId" uuid,
+    "ApprovedAt" timestamp with time zone,
+    "Rationale" character varying(4000),
+    "RequiredActions" text[] NOT NULL,
+    "ExecutionProduct" character varying(64),
+    "ExecutionObjectRef" character varying(256),
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "Notes" character varying(4000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_dispositions" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_effectiveness_verifications (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "CapaId" uuid NOT NULL,
+    "VerificationPlanId" uuid,
+    "Status" character varying(32) NOT NULL,
+    "PerformedByPersonId" uuid,
+    "PerformedAt" timestamp with time zone,
+    "ResultSummary" character varying(4000),
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "MetricResults" text[] NOT NULL,
+    "RecurrenceFound" boolean NOT NULL,
+    "FollowUpRequired" boolean NOT NULL,
+    "ReopenedCapaRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_effectiveness_verifications" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_nonconformances (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "DiscoveredAt" timestamp with time zone,
+    "DiscoveredByPersonId" uuid,
+    "StaffArrSiteId" uuid,
+    "StaffArrLocationId" uuid,
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "ContainmentRefs" text[] NOT NULL,
+    "AffectedItemRefs" text[] NOT NULL,
+    "AffectedAssetRefs" text[] NOT NULL,
+    "AffectedOrderRefs" text[] NOT NULL,
+    "AffectedSupplierRefs" text[] NOT NULL,
+    "AffectedCustomerRefs" text[] NOT NULL,
+    "AffectedShipmentRefs" text[] NOT NULL,
+    "DispositionRefs" text[] NOT NULL,
+    "CapaRefs" text[] NOT NULL,
+    "ComplianceRefs" text[] NOT NULL,
+    "FinancialImpactSnapshot" character varying(4000),
+    "AuditTrail" text[] NOT NULL,
+    "HoldRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "NonconformanceType" character varying(64) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "CustomerImpact" character varying(4000),
+    "SupplierImpact" character varying(4000),
+    "SafetyImpact" character varying(4000),
+    "ComplianceImpact" character varying(4000),
+    "RecurrenceFlag" boolean NOT NULL,
+    "RepeatOfNonconformanceRef" character varying(256),
+    "RootCauseRef" character varying(256),
+    "BlockerRefs" text[] NOT NULL,
+    "DueAt" timestamp with time zone,
+    CONSTRAINT "PK_assurarr_nonconformances" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_audit_checklist_items (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "ChecklistId" uuid NOT NULL,
+    "Sequence" integer NOT NULL,
+    "Prompt" character varying(4000) NOT NULL,
+    "HelpText" character varying(4000),
+    "RequirementRef" character varying(256),
+    "ResponseType" character varying(64) NOT NULL,
+    "Required" boolean NOT NULL,
+    "ResponseValue" character varying(4000),
+    "Result" character varying(64),
+    "FindingCreated" boolean NOT NULL,
+    "FindingRef" character varying(256),
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "AnsweredAt" timestamp with time zone,
+    "AnsweredByPersonId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_audit_checklist_items" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_audit_checklists (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "AuditId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ItemRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_audit_checklists" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_audits (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "AuditType" character varying(64) NOT NULL,
+    "AuditScope" character varying(4000),
+    "StandardRefs" text[] NOT NULL,
+    "ComplianceRefs" text[] NOT NULL,
+    "AuditorPersonIds" text[] NOT NULL,
+    "LeadAuditorPersonId" uuid,
+    "AuditeeRefs" text[] NOT NULL,
+    "StaffArrSiteId" uuid,
+    "StaffArrLocationId" uuid,
+    "SupplierRef" character varying(256),
+    "CustomerRef" character varying(256),
+    "PlannedStartAt" timestamp with time zone,
+    "PlannedEndAt" timestamp with time zone,
+    "ActualStartAt" timestamp with time zone,
+    "ActualEndAt" timestamp with time zone,
+    "ChecklistRefs" text[] NOT NULL,
+    "FindingRefs" text[] NOT NULL,
+    "AuditTrail" text[] NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_audits" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_holds (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceNonconformanceRef" character varying(256),
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "StaffArrSiteId" uuid,
+    "StaffArrLocationId" uuid,
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "AuditTrail" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "HoldType" character varying(64) NOT NULL,
+    "HoldScope" character varying(64) NOT NULL,
+    "HoldReason" character varying(4000),
+    "ReleaseReason" character varying(4000),
+    "RejectionReason" character varying(4000),
+    "ConditionalReleaseTerms" character varying(4000),
+    "ReleaseRequirements" text[] NOT NULL,
+    "ReleaseApprovalRefs" text[] NOT NULL,
+    "QuantityHeld" numeric,
+    "UnitOfMeasure" character varying(64),
+    "LotNumber" character varying(128),
+    "SerialNumber" character varying(128),
+    "PlacedAt" timestamp with time zone,
+    "PlacedByPersonId" uuid,
+    "ReleasedAt" timestamp with time zone,
+    "ReleasedByPersonId" uuid,
+    "RejectedAt" timestamp with time zone,
+    "RejectedByPersonId" uuid,
+    "ExpiresAt" timestamp with time zone,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_holds" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_metrics (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScorecardId" uuid NOT NULL,
+    "MetricKey" character varying(128) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "Value" numeric(18,4),
+    "Numerator" numeric(18,4),
+    "Denominator" numeric(18,4),
+    "Unit" character varying(64),
+    "TargetValue" numeric(18,4),
+    "WarningThreshold" numeric(18,4),
+    "CriticalThreshold" numeric(18,4),
+    "Status" character varying(32) NOT NULL,
+    "SourceProductRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_metrics" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_releases (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "HoldRef" character varying(256) NOT NULL,
+    "ReleaseType" character varying(64) NOT NULL,
+    "RequestedByPersonId" uuid,
+    "RequestedAt" timestamp with time zone,
+    "ApprovedByPersonId" uuid,
+    "ApprovedAt" timestamp with time zone,
+    "ExecutedAt" timestamp with time zone,
+    "Conditions" character varying(4000),
+    "ExpirationAt" timestamp with time zone,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "Notes" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_releases" PRIMARY KEY ("Id")
+);
+[00:15:19 INF] Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_reviews (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "ReviewType" character varying(64) NOT NULL,
+    "SourceReviewRef" character varying(256),
+    "ReviewerPersonId" uuid,
+    "RequestedAt" timestamp with time zone,
+    "DueAt" timestamp with time zone,
+    "DecisionAt" timestamp with time zone,
+    "DecisionReason" character varying(4000),
+    "RequiredEvidenceRefs" text[] NOT NULL,
+    "SubmittedEvidenceRefs" text[] NOT NULL,
+    "Notes" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_reviews" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (34ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_risk_profiles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TargetType" character varying(64) NOT NULL,
+    "TargetRef" character varying(256) NOT NULL,
+    "RiskLevel" character varying(32) NOT NULL,
+    "RiskFactors" text[] NOT NULL,
+    "OpenIssueCount" integer NOT NULL,
+    "RepeatIssueCount" integer NOT NULL,
+    "CriticalIssueCount" integer NOT NULL,
+    "LastIncidentAt" timestamp with time zone,
+    "MitigationActions" text[] NOT NULL,
+    "ReviewedAt" timestamp with time zone,
+    "ReviewedByPersonId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_risk_profiles" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (21ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_scorecards (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "TargetType" text NOT NULL,
+    "TargetRef" text NOT NULL,
+    "PeriodStart" timestamp with time zone NOT NULL,
+    "PeriodEnd" timestamp with time zone NOT NULL,
+    "OverallScore" numeric,
+    "QualityStatus" text NOT NULL,
+    "Trend" text NOT NULL,
+    "GeneratedAt" timestamp with time zone NOT NULL,
+    "GeneratedBy" text NOT NULL,
+    "ReviewedByPersonId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "MetricRefs" text[] NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_scorecards" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_quality_status_snapshots (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "TargetProduct" text NOT NULL,
+    "TargetObjectRef" text NOT NULL,
+    "QualityStatus" text NOT NULL,
+    "ActiveHoldRefs" text[] NOT NULL,
+    "OpenNonconformanceRefs" text[] NOT NULL,
+    "OpenCapaRefs" text[] NOT NULL,
+    "OpenFindingRefs" text[] NOT NULL,
+    "LastReviewedAt" timestamp with time zone,
+    "ReviewedByPersonId" uuid,
+    "ExpiresAt" timestamp with time zone,
+    "Notes" character varying(4000),
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_quality_status_snapshots" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_root_cause_analyses (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "NonconformanceId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Method" character varying(64) NOT NULL,
+    "PrimaryCauseCategory" character varying(64) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "OwnerPersonId" uuid,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "RootCauseSummary" character varying(4000),
+    "ContributingFactors" text[] NOT NULL,
+    "AnalyzedByPersonId" uuid,
+    "CompletedAt" timestamp with time zone,
+    "EvidenceRecordRefs" text[] NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_root_cause_analyses" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_supplier_corrective_action_requests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedObjectRefs" text[] NOT NULL,
+    "SupplierRef" character varying(256),
+    "SourceNonconformanceRef" character varying(256),
+    "SourceCapaRef" character varying(256),
+    "RequestedByPersonId" uuid,
+    "RequestedAt" timestamp with time zone,
+    "SupplierDueAt" timestamp with time zone,
+    "SupplierResponseRecordRefs" text[] NOT NULL,
+    "ReviewPersonId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "ReviewDecision" character varying(128),
+    "FollowUpCapaRef" character varying(256),
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "OwnerPersonId" uuid,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_supplier_corrective_action_requests" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_supplier_quality_issues (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceProduct" character varying(64),
+    "SourceObjectRef" character varying(256),
+    "AffectedReceiptRefs" text[] NOT NULL,
+    "AffectedPurchaseOrderRefs" text[] NOT NULL,
+    "AffectedItemRefs" text[] NOT NULL,
+    "SupplierRef" character varying(256),
+    "NonconformanceRef" character varying(256),
+    "ScarRef" character varying(256),
+    "HoldRefs" text[] NOT NULL,
+    "RecordRefs" text[] NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "ClosedAt" timestamp with time zone,
+    "ClosedByPersonId" uuid,
+    "ClosureSummary" character varying(4000),
+    "IssueType" character varying(64) NOT NULL,
+    "OwnerPersonId" uuid,
+    "OpenedAt" timestamp with time zone,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_supplier_quality_issues" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_timeline_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "SubjectType" character varying(128) NOT NULL,
+    "SubjectId" uuid NOT NULL,
+    "EventType" character varying(128) NOT NULL,
+    "Details" character varying(2048),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_assurarr_timeline_events" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE assurarr_verification_plans (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Number" character varying(64) NOT NULL,
+    "CapaId" uuid NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Description" character varying(4000) NOT NULL,
+    "VerificationType" character varying(64) NOT NULL,
+    "SuccessCriteria" character varying(4000) NOT NULL,
+    "SampleSize" integer,
+    "ObservationPeriodDays" integer,
+    "RequiredEvidenceTypes" text[] NOT NULL,
+    "ResponsiblePersonId" uuid,
+    "PlannedVerificationAt" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    "CreatedByPersonId" uuid NOT NULL,
+    "UpdatedByPersonId" uuid NOT NULL,
+    CONSTRAINT "PK_assurarr_verification_plans" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (27ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_audit_findings_TenantId" ON assurarr_audit_findings ("TenantId");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_audit_findings_TenantId_Number" ON assurarr_audit_findings ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_audit_findings_TenantId_Status" ON assurarr_audit_findings ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_action_blockers_TenantId" ON assurarr_capa_action_blockers ("TenantId");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_action_blockers_TenantId_CapaActionId" ON assurarr_capa_action_blockers ("TenantId", "CapaActionId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_capa_action_blockers_TenantId_Number" ON assurarr_capa_action_blockers ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_action_blockers_TenantId_Status" ON assurarr_capa_action_blockers ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_actions_TenantId" ON assurarr_capa_actions ("TenantId");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_actions_TenantId_CapaId" ON assurarr_capa_actions ("TenantId", "CapaId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_capa_actions_TenantId_Number" ON assurarr_capa_actions ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capa_actions_TenantId_Status" ON assurarr_capa_actions ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capas_TenantId" ON assurarr_capas ("TenantId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_capas_TenantId_Number" ON assurarr_capas ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_capas_TenantId_Status" ON assurarr_capas ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_containment_actions_TenantId" ON assurarr_containment_actions ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_containment_actions_TenantId_NonconformanceRef" ON assurarr_containment_actions ("TenantId", "NonconformanceRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_containment_actions_TenantId_Number" ON assurarr_containment_actions ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_containment_actions_TenantId_Status" ON assurarr_containment_actions ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_customer_complaint_quality_cases_TenantId" ON assurarr_customer_complaint_quality_cases ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_customer_complaint_quality_cases_TenantId_Customer~" ON assurarr_customer_complaint_quality_cases ("TenantId", "CustomerRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_customer_complaint_quality_cases_TenantId_Number" ON assurarr_customer_complaint_quality_cases ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_customer_complaint_quality_cases_TenantId_Status" ON assurarr_customer_complaint_quality_cases ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_dispositions_TenantId" ON assurarr_dispositions ("TenantId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_dispositions_TenantId_NonconformanceRef" ON assurarr_dispositions ("TenantId", "NonconformanceRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_dispositions_TenantId_Number" ON assurarr_dispositions ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_dispositions_TenantId_Status" ON assurarr_dispositions ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_effectiveness_verifications_TenantId" ON assurarr_effectiveness_verifications ("TenantId");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_effectiveness_verifications_TenantId_CapaId" ON assurarr_effectiveness_verifications ("TenantId", "CapaId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_effectiveness_verifications_TenantId_Number" ON assurarr_effectiveness_verifications ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_effectiveness_verifications_TenantId_Status" ON assurarr_effectiveness_verifications ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_nonconformances_TenantId" ON assurarr_nonconformances ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_nonconformances_TenantId_Number" ON assurarr_nonconformances ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_nonconformances_TenantId_Status" ON assurarr_nonconformances ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklist_items_TenantId" ON assurarr_quality_audit_checklist_items ("TenantId");
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklist_items_TenantId_ChecklistId" ON assurarr_quality_audit_checklist_items ("TenantId", "ChecklistId");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_audit_checklist_items_TenantId_Number" ON assurarr_quality_audit_checklist_items ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklist_items_TenantId_Sequence" ON assurarr_quality_audit_checklist_items ("TenantId", "Sequence");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklists_TenantId" ON assurarr_quality_audit_checklists ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklists_TenantId_AuditId" ON assurarr_quality_audit_checklists ("TenantId", "AuditId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_audit_checklists_TenantId_Number" ON assurarr_quality_audit_checklists ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audit_checklists_TenantId_Status" ON assurarr_quality_audit_checklists ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audits_TenantId" ON assurarr_quality_audits ("TenantId");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_audits_TenantId_Number" ON assurarr_quality_audits ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_audits_TenantId_Status" ON assurarr_quality_audits ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_holds_TenantId" ON assurarr_quality_holds ("TenantId");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_holds_TenantId_Number" ON assurarr_quality_holds ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_holds_TenantId_Status" ON assurarr_quality_holds ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_metrics_TenantId_MetricKey" ON assurarr_quality_metrics ("TenantId", "MetricKey");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_metrics_TenantId_ScorecardId" ON assurarr_quality_metrics ("TenantId", "ScorecardId");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_releases_TenantId" ON assurarr_quality_releases ("TenantId");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_releases_TenantId_HoldRef" ON assurarr_quality_releases ("TenantId", "HoldRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_releases_TenantId_Number" ON assurarr_quality_releases ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_releases_TenantId_Status" ON assurarr_quality_releases ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_reviews_TenantId" ON assurarr_quality_reviews ("TenantId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_reviews_TenantId_Number" ON assurarr_quality_reviews ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_reviews_TenantId_Status" ON assurarr_quality_reviews ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_risk_profiles_TenantId_RiskLevel" ON assurarr_quality_risk_profiles ("TenantId", "RiskLevel");
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_risk_profiles_TenantId_TargetType_TargetRef" ON assurarr_quality_risk_profiles ("TenantId", "TargetType", "TargetRef");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_scorecards_TenantId" ON assurarr_quality_scorecards ("TenantId");
+[00:15:20 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_scorecards_TenantId_Number" ON assurarr_quality_scorecards ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_scorecards_TenantId_Status" ON assurarr_quality_scorecards ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_status_snapshots_TenantId" ON assurarr_quality_status_snapshots ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_quality_status_snapshots_TenantId_Number" ON assurarr_quality_status_snapshots ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_quality_status_snapshots_TenantId_Status" ON assurarr_quality_status_snapshots ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_root_cause_analyses_TenantId" ON assurarr_root_cause_analyses ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_root_cause_analyses_TenantId_NonconformanceId" ON assurarr_root_cause_analyses ("TenantId", "NonconformanceId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_root_cause_analyses_TenantId_Number" ON assurarr_root_cause_analyses ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_root_cause_analyses_TenantId_Status" ON assurarr_root_cause_analyses ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_corrective_action_requests_TenantId" ON assurarr_supplier_corrective_action_requests ("TenantId");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_supplier_corrective_action_requests_TenantId_Number" ON assurarr_supplier_corrective_action_requests ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_corrective_action_requests_TenantId_Sourc~" ON assurarr_supplier_corrective_action_requests ("TenantId", "SourceNonconformanceRef");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_corrective_action_requests_TenantId_Status" ON assurarr_supplier_corrective_action_requests ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_corrective_action_requests_TenantId_Suppl~" ON assurarr_supplier_corrective_action_requests ("TenantId", "SupplierRef");
+[00:15:20 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_quality_issues_TenantId" ON assurarr_supplier_quality_issues ("TenantId");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_supplier_quality_issues_TenantId_Number" ON assurarr_supplier_quality_issues ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_quality_issues_TenantId_Status" ON assurarr_supplier_quality_issues ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_supplier_quality_issues_TenantId_SupplierRef" ON assurarr_supplier_quality_issues ("TenantId", "SupplierRef");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_timeline_events_TenantId_OccurredAt" ON assurarr_timeline_events ("TenantId", "OccurredAt");
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_timeline_events_TenantId_SubjectType_SubjectId" ON assurarr_timeline_events ("TenantId", "SubjectType", "SubjectId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_verification_plans_TenantId" ON assurarr_verification_plans ("TenantId");
+[00:15:20 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_verification_plans_TenantId_CapaId" ON assurarr_verification_plans ("TenantId", "CapaId");
+[00:15:20 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_assurarr_verification_plans_TenantId_Number" ON assurarr_verification_plans ("TenantId", "Number");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_assurarr_verification_plans_TenantId_Status" ON assurarr_verification_plans ("TenantId", "Status");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260609060127_CurrentSchemaBaseline', '10.0.8');
+[00:15:20 INF] Applying migration '20260617062841_AddSmartImportDestinationRecords'.
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:29:58 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-SELECT "MigrationId", "ProductVersion"
-FROM "__EFMigrationsHistory"
-ORDER BY "MigrationId";
-[22:29:58 INF] No migrations were applied. The database is already up to date.
-[22:29:58 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:20 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:20 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617062841_AddSmartImportDestinationRecords', '10.0.8');
+[00:15:20 INF] Applying migration '20260622055513_AddPrintExportLogs'.
+[00:15:20 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:21 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622055513_AddPrintExportLogs', '10.0.8');
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,60 +1100,9 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:29:58 INF] Starting AssurArr API (assurarr) on http://localhost:5109
-[22:29:58 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:29:59 ERR] Hosting failed to start
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5109: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at Syst[22:30:11 INF] Request starting HTTP/1.1 GET http://localhost:5109/health - null null
-[22:30:11 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:11 INF] Setting HTTP status code 200.
-[22:30:11 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:11 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:11 INF] Request finished HTTP/1.1 GET http://localhost:5109/health - 200 null application/json; charset=utf-8 25.4401ms
-tCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-[22:29:59 FTL] AssurArr API terminated unexpectedly
-System.IO.IOException: Failed to bind to address http://127.0.0.1:5109: address already in use.
- ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
- ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
-   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
-   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
-   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
-   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
---- End of stack trace from previous location ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
-   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
-   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
-   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
-   at STLCompliance.Shared.Hosting.StlApiHost.RunAsync[TContext](ProductDescriptor product, String[] args, Action`1 configure, Action`1 configurePipeline, Func`2 mapEndpoints) in F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\Hosting\StlApiHost.cs:line 260
+[00:15:21 INF] Starting AssurArr API (assurarr) on http://localhost:5109
+[00:15:21 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:21 INF] Now listening on: http://localhost:5109
+[00:15:21 INF] Application started. Press Ctrl+C to shut down.
+[00:15:21 INF] Hosting environment: Development
+[00:15:21 INF] Content root path: F:\STLComplianceV2\apps\assurarr-api\AssurArr.Api

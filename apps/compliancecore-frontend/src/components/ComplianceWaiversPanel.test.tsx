@@ -19,8 +19,21 @@ vi.mock('../api/client', () => ({
 }))
 
 vi.mock('@stl/shared-ui', () => ({
+  ApiErrorCallout: ({
+    title,
+    retryLabel,
+  }: {
+    title: string
+    retryLabel?: string
+  }) => (
+    <div>
+      <div>{title}</div>
+      {retryLabel ? <button type="button">{retryLabel}</button> : null}
+    </div>
+  ),
   buildSemanticKey: () => 'waiver-test-key',
   GeneratedKeyField: () => <div data-testid="generated-key-field" />,
+  getErrorMessage: (error: Error, fallback: string) => error.message || fallback,
 }))
 
 describe('ComplianceWaiversPanel', () => {
@@ -58,7 +71,12 @@ describe('ComplianceWaiversPanel', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <ComplianceWaiversPanel accessToken="token" rulePacks={[]} canManage={true} />
+        <ComplianceWaiversPanel
+          accessToken="token"
+          rulePacks={[]}
+          canManage={true}
+          canApprove={true}
+        />
       </QueryClientProvider>,
     )
 
@@ -122,6 +140,7 @@ describe('ComplianceWaiversPanel', () => {
             } as never,
           ]}
           canManage={true}
+          canApprove={true}
         />
       </QueryClientProvider>,
     )
@@ -152,5 +171,70 @@ describe('ComplianceWaiversPanel', () => {
         expiresAt: new Date('2026-07-01T00:00:00').toISOString(),
       }),
     )
+  })
+
+  it('allows reviewer approval without waiver management access', async () => {
+    mockListComplianceWaivers.mockResolvedValueOnce([
+      {
+        waiverId: 'waiver-3',
+        waiverKey: 'waiver-reviewer-test',
+        rulePackId: 'pack-1',
+        packKey: 'pack-key',
+        ruleKey: null,
+        gateKey: null,
+        subjectScopeKey: 'tenant',
+        reasonCode: 'temporary_ops_override',
+        explanation: 'Reviewer can approve this pending waiver.',
+        status: 'pending',
+        effectiveAt: '2026-06-01T00:00:00Z',
+        expiresAt: '2026-06-30T00:00:00Z',
+        createdByUserId: null,
+        approvedByUserId: null,
+        approvedAt: null,
+        revokedByUserId: null,
+        revokedAt: null,
+        createdAt: '2026-06-01T00:00:00Z',
+        updatedAt: '2026-06-01T00:00:00Z',
+      },
+    ])
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ComplianceWaiversPanel
+          accessToken="token"
+          rulePacks={[]}
+          canManage={false}
+          canApprove={true}
+        />
+      </QueryClientProvider>,
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Approve' }))
+
+    await waitFor(() => {
+      expect(mockApproveComplianceWaiver).toHaveBeenCalledWith('token', 'waiver-3')
+    })
+  })
+
+  it('shows a retryable error state when waiver loading fails', async () => {
+    mockListComplianceWaivers.mockRejectedValueOnce(new Error('waiver list down'))
+
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ComplianceWaiversPanel
+          accessToken="token"
+          rulePacks={[]}
+          canManage={false}
+          canApprove={false}
+        />
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByText('Waivers unavailable')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry waivers' })).toBeInTheDocument()
   })
 })

@@ -1,0 +1,65 @@
+services:
+  nexarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=nexarr;Username=stl;Password=WesRay060622!"
+      REDIS_URL: "10.66.185.43:6379:6379"
+
+  staffarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=staffarr;Username=stl;Password=WesRay060622!"
+
+  trainarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=trainarr;Username=stl;Password=WesRay060622!"
+
+  maintainarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=maintainarr;Username=stl;Password=WesRay060622!"
+
+  routarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=routarr;Username=stl;Password=WesRay060622!"
+
+  supplyarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=supplyarr;Username=stl;Password=WesRay060622!"
+
+  customarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=customarr;Username=stl;Password=WesRay060622!"
+
+  ordarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=ordarr;Username=stl;Password=WesRay060622!"
+
+  ledgarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=ledgarr;Username=stl;Password=WesRay060622!"
+
+  reportarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=reportarr;Username=stl;Password=WesRay060622!"
+
+  compliancecore-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=compliancecore;Username=stl;Password=WesRay060622!"
+
+  recordarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=recordarr;Username=stl;Password=WesRay060622!"
+
+  assurarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=assurarr;Username=stl;Password=WesRay060622!"
+
+  loadarr-api:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=loadarr;Username=stl;Password=WesRay060622!"
+
+  ledgarr-worker:
+    environment:
+      DATABASE_URL: "Host=stl-compliance:us-central1:stl-compliance-v1;Port=5432;Database=ledgarr;Username=stl;Password=WesRay060622!"
+
+  shared-worker:
+    environment:
+      REDIS_URL: "10.66.185.43:6379:6379"

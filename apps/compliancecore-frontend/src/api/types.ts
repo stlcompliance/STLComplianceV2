@@ -27,6 +27,8 @@ export interface ComplianceCoreMeResponse {
   productKey: string
   launchableProductKeys: string[]
   canManageVocabulary: boolean
+  canManageWaivers: boolean
+  canApproveWaivers: boolean
   canExportAuditPackage: boolean
   canEvaluateRiskScores: boolean
   canEvaluateMissingEvidenceWarnings: boolean
@@ -46,6 +48,8 @@ export interface ComplianceCoreSessionBootstrapResponse {
   productKey: string
   launchableProductKeys: string[]
   canManageVocabulary: boolean
+  canManageWaivers: boolean
+  canApproveWaivers: boolean
   canExportAuditPackage: boolean
   canEvaluateRiskScores: boolean
   canEvaluateMissingEvidenceWarnings: boolean

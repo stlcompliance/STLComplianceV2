@@ -9,7 +9,8 @@ namespace StaffArr.Api.Services;
 
 public sealed class MeService(
     StaffArrDbContext db,
-    PersonProvisioningService provisioning)
+    PersonProvisioningService provisioning,
+    RoleManagementService roleManagementService)
 {
     private const string ProductKey = StlProductKeys.StaffArr;
 
@@ -65,10 +66,21 @@ public sealed class MeService(
             .FirstOrDefaultAsync(p => p.TenantId == tenantId && p.Id == personFromClaim, cancellationToken);
         if (byId is not null)
         {
+            await roleManagementService.EnsurePlatformManagedSystemRoleAssignmentsAsync(
+                tenantId,
+                byId.Id,
+                principal.GetTenantRoleKey(),
+                cancellationToken);
             return byId;
         }
 
-        return await provisioning.EnsurePersonAsync(tenantId, userId, email, displayName, cancellationToken);
+        var person = await provisioning.EnsurePersonAsync(tenantId, userId, email, displayName, cancellationToken);
+        await roleManagementService.EnsurePlatformManagedSystemRoleAssignmentsAsync(
+            tenantId,
+            person.Id,
+            principal.GetTenantRoleKey(),
+            cancellationToken);
+        return person;
     }
 }
 

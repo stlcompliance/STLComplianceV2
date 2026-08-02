@@ -19,7 +19,7 @@ public static class StlIntegrationTokenCatalog
             "NexArr__ServiceToken",
             "staffarr",
             ["nexarr"],
-            "nexarr.identities.create,nexarr.users.login_disable,nexarr.users.login_enable"),
+            "nexarr.identities.read,nexarr.identities.create,nexarr.users.login_disable,nexarr.users.login_enable"),
         Profile(
             "staffarr-trainarr",
             "staffarr-api",

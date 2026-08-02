@@ -1,5 +1,6 @@
 import { ApprovalRemindersPanel } from '../../components/ApprovalRemindersPanel'
 import { SupplierOnboardingPanel } from '../../components/SupplierOnboardingPanel'
+import { SupplierOnboardingRequirementsPanel } from '../../components/SupplierOnboardingRequirementsPanel'
 import { SupplyReadinessCheckPanel } from '../../components/SupplyReadinessCheckPanel'
 import { SupplierRestrictionsPanel } from '../../components/SupplierRestrictionsPanel'
 import type { SupplyArrWorkspaceState } from '../useSupplyArrWorkspaceState'
@@ -21,6 +22,7 @@ export function OnboardingSection({ state: s }: Props) {
         canReview={s.canApprovePr}
         onboardableSuppliers={suppliers}
       />
+      <SupplierOnboardingRequirementsPanel accessToken={s.accessToken} canManage={s.canManage} />
       <SupplyReadinessCheckPanel
         accessToken={s.accessToken}
         canRead={s.canReadSupplyReadiness}

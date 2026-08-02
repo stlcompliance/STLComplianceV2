@@ -70,6 +70,21 @@ services:
       compliancecore-api:
         condition: service_started
 
+  customarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: customarr-frontend
+        PREVIEW_PORT: 5186
+        API_PROXY_TARGET: http://customarr-api:8080
+    ports:
+      - "5186:5186"
+    depends_on:
+      customarr-api:
+        condition: service_started
+
   assurarr-frontend-e2e:
     <<: *frontend-e2e
     build:
@@ -188,4 +203,34 @@ services:
       - "5184:5184"
     depends_on:
       recordarr-api:
+        condition: service_started
+
+  reportarr-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: reportarr-frontend
+        PREVIEW_PORT: 5185
+        API_PROXY_TARGET: http://reportarr-api:8080
+    ports:
+      - "5185:5185"
+    depends_on:
+      reportarr-api:
+        condition: service_started
+
+  fieldcompanion-frontend-e2e:
+    <<: *frontend-e2e
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend-e2e
+      args:
+        FRONTEND_APP: fieldcompanion-frontend
+        PREVIEW_PORT: 5181
+        API_PROXY_TARGET: http://nexarr-api:8080
+    ports:
+      - "5181:5181"
+    depends_on:
+      nexarr-api:
         condition: service_started

@@ -19,6 +19,7 @@ public static class InternalPersonProvisioningEndpoints
             HttpContext context,
             StlServiceTokenValidator tokenValidator,
             PersonProvisioningService provisioningService,
+            RoleManagementService roleManagementService,
             IStaffArrAuditService audit,
             CancellationToken cancellationToken) =>
         {
@@ -29,6 +30,11 @@ public static class InternalPersonProvisioningEndpoints
                 request.ExternalUserId,
                 request.Email,
                 request.DisplayName,
+                cancellationToken);
+            await roleManagementService.EnsurePlatformManagedSystemRoleAssignmentsAsync(
+                request.TenantId,
+                result.Person.Id,
+                request.RoleKey,
                 cancellationToken);
 
             await audit.WriteAsync(

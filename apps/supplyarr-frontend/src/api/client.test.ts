@@ -14,6 +14,7 @@ import {
   listPendingSupplierOnboarding,
   startSupplierOnboarding,
   getSupplierOnboarding,
+  upsertSupplierOnboardingDocumentRequirements,
   listSupplierComplianceDocuments,
   approveSupplierComplianceDocument,
   getEmergencyPurchases,
@@ -1739,17 +1740,27 @@ describe('supplyarr api client', () => {
           updatedAt: '2026-01-01T00:00:00Z',
         }),
       })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          requirements: [{ documentTypeKey: 'w9', label: 'W-9 tax form', isRequired: true }],
+        }),
+      })
     vi.stubGlobal('fetch', fetchMock)
 
     await getSupplierOnboardingDocumentRequirements('token')
     const pending = await listPendingSupplierOnboarding('token')
     const started = await startSupplierOnboarding('token', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
     const onboarding = await getSupplierOnboarding('token', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+    const updated = await upsertSupplierOnboardingDocumentRequirements('token', {
+      requiredDocumentTypeKeys: ['w9'],
+    })
 
     expect(pending[0].supplierId).toBe('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
     expect(pending[0].supplierKey).toBe('ACME')
     expect(started.supplierId).toBe('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
     expect(onboarding.supplierKey).toBe('ACME')
+    expect(updated.requirements[0].documentTypeKey).toBe('w9')
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -1775,6 +1786,14 @@ describe('supplyarr api client', () => {
       4,
       '/api/v1/supplier-onboarding/suppliers/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
       expect.any(Object),
+    )
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      5,
+      '/api/v1/supplier-onboarding/document-requirements',
+      expect.objectContaining({
+        method: 'PUT',
+        body: JSON.stringify({ requiredDocumentTypeKeys: ['w9'] }),
+      }),
     )
   })
 

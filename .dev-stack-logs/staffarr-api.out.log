@@ -1,45 +1,2406 @@
   Determining projects to restore...
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj]
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj]
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc [F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj]
+F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   All projects are up-to-date for restore.
+F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
   STLCompliance.Shared -> F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\bin\Debug\net10.0\STLCompliance.Shared.dll
   StaffArr.Api -> F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\bin\Debug\net10.0\StaffArr.Api.dll
 
 Build succeeded.
 
+F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api\StaffArr.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.AspNetCore.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
 F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1510: PackageReference Microsoft.Extensions.Diagnostics.HealthChecks will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
-    2 Warning(s)
+F:\STLComplianceV2\packages\shared-dotnet\STLCompliance.Shared\STLCompliance.Shared.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+    4 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:01.76
+Time Elapsed 00:01:13.18
 info: StlIntegrationTokenProvisioning[0]
       Resolving integration tokens for consumer staffarr-api (render=(null)).
 info: StlIntegrationTokenProvisioning[0]
       Provisioned 5 integration token(s) for staffarr-api from NexArr.
-[22:29:49 INF] Applying EF migrations for StaffArrDbContext (attempt 1/8)
-[22:30:01 INF] Executed DbCommand (37ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:17 INF] Applying EF migrations for StaffArrDbContext (attempt 1/8)
+[00:15:19 ERR] Failed executing DbCommand (28ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:02 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT 1
-[22:30:03 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (20ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS "__EFMigrationsHistory" (
     "MigrationId" character varying(150) NOT NULL,
     "ProductVersion" character varying(32) NOT NULL,
     CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY ("MigrationId")
 );
-[22:30:03 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
-[22:30:03 INF] Executed DbCommand (138ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 SELECT "MigrationId", "ProductVersion"
 FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
-[22:30:03 INF] No migrations were applied. The database is already up to date.
-[22:30:03 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+[00:15:20 INF] Applying migration '20260609060256_CurrentSchemaBaseline'.
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE platform_metadata (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Key" character varying(128) NOT NULL,
+    "Value" character varying(2048) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "ModifiedAt" timestamp with time zone NOT NULL,
+    "CreatedBy" character varying(128),
+    "ModifiedBy" character varying(128),
+    CONSTRAINT "PK_platform_metadata" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_audit_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorUserId" uuid,
+    "Action" character varying(128) NOT NULL,
+    "TargetType" character varying(64) NOT NULL,
+    "TargetId" character varying(128),
+    "Result" character varying(32) NOT NULL,
+    "ReasonCode" character varying(64),
+    "CorrelationId" uuid NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_audit_events" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_audit_package_generation_jobs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequestedByUserId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Format" character varying(16) NOT NULL,
+    "FromUtc" timestamp with time zone,
+    "ToUtc" timestamp with time zone,
+    "FilterJson" character varying(4096),
+    "PackageId" uuid,
+    "ArtifactZip" bytea,
+    "ArtifactJson" text,
+    "ErrorMessage" character varying(2000),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "StartedAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    CONSTRAINT "PK_staffarr_audit_package_generation_jobs" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (27ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_certification_definitions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "CertificationKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512),
+    "Category" character varying(32) NOT NULL,
+    "DefaultValidityDays" integer,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_certification_definitions" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_incident_supply_demand_status_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "StaffarrPublicationId" uuid NOT NULL,
+    "SupplyarrDemandRefId" uuid NOT NULL,
+    "SupplyarrCallbackPublicationId" uuid NOT NULL,
+    "EventType" character varying(32) NOT NULL,
+    "ProcurementStatus" character varying(32) NOT NULL,
+    "SupplyarrPurchaseRequestId" uuid,
+    "SupplyarrPurchaseOrderId" uuid,
+    "SupplyarrReceivingReceiptId" uuid,
+    "Message" character varying(512) NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_incident_supply_demand_status_events" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_permission_templates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PermissionKey" character varying(128) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512),
+    "Status" character varying(32) NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "PermissionScope" character varying(64) NOT NULL,
+    "Sensitivity" character varying(32) NOT NULL,
+    "LastSyncedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_permission_templates" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_export_delivery_notifications (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DeliveryRunId" uuid,
+    "EventKind" character varying(32) NOT NULL,
+    "DeliveryStatus" character varying(32) NOT NULL,
+    "WebhookHost" character varying(256),
+    "HttpStatusCode" integer,
+    "ErrorMessage" character varying(512),
+    "ExportId" uuid,
+    "PersonCount" integer,
+    "AttemptedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_export_delivery_notifications" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_export_delivery_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExportId" uuid NOT NULL,
+    "PersonCount" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "IntervalHours" integer NOT NULL,
+    "EmploymentStatus" character varying(32),
+    "OrgUnitId" uuid,
+    "SkipReason" character varying(256),
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_export_delivery_runs" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_role_templates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RoleKey" character varying(64) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512),
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_role_templates" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (19ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_tenant_person_export_schedules (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "IntervalHours" integer NOT NULL,
+    "LastDeliveredAt" timestamp with time zone,
+    "NotificationWebhookUrl" character varying(2048),
+    "NotifyOnSuccess" boolean NOT NULL,
+    "NotifyOnFailure" boolean NOT NULL,
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_tenant_person_export_schedules" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_tenant_worker_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkerKey" character varying(64) NOT NULL,
+    "IsEnabled" boolean NOT NULL,
+    "ScanIntervalMinutes" integer NOT NULL,
+    "BatchSize" integer NOT NULL,
+    "StalenessHours" integer,
+    "LastRunAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_tenant_worker_settings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_worker_runs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "WorkerKey" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CandidatesFound" integer NOT NULL,
+    "ProcessedCount" integer NOT NULL,
+    "SkippedCount" integer NOT NULL,
+    "Summary" character varying(512),
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_worker_runs" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_role_template_permissions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RoleTemplateId" uuid NOT NULL,
+    "PermissionTemplateId" uuid NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "ScopeValue" character varying(128),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_role_template_permissions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_role_template_permissions_staffarr_permission_temp~" FOREIGN KEY ("PermissionTemplateId") REFERENCES staffarr_permission_templates ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_role_template_permissions_staffarr_role_templates_~" FOREIGN KEY ("RoleTemplateId") REFERENCES staffarr_role_templates ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_incident_attachments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IncidentId" uuid NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "FileName" character varying(255) NOT NULL,
+    "ContentType" character varying(128) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Description" character varying(1024),
+    "UploadedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_incident_attachments" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_incident_notes (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IncidentId" uuid NOT NULL,
+    "NoteTypeKey" character varying(32) NOT NULL,
+    "Subject" character varying(200) NOT NULL,
+    "Body" character varying(8192) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "DueAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_incident_notes" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_incident_supply_demand_lines (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IncidentId" uuid NOT NULL,
+    "LineNumber" integer NOT NULL,
+    "SupplyarrPartId" uuid,
+    "PartNumber" character varying(128) NOT NULL,
+    "Description" character varying(256) NOT NULL,
+    "QuantityRequested" numeric(18,4) NOT NULL,
+    "UnitOfMeasure" character varying(32) NOT NULL,
+    "Notes" character varying(1024) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "StaffarrPublicationId" uuid,
+    "SupplyarrDemandRefId" uuid,
+    "PublishedAt" timestamp with time zone,
+    "ProcurementStatus" character varying(32) NOT NULL,
+    "SupplyarrPurchaseRequestId" uuid,
+    "SupplyarrPurchaseOrderId" uuid,
+    "QuantityReceived" numeric(18,4) NOT NULL,
+    "ProcurementStatusMessage" character varying(512) NOT NULL,
+    "LastProcurementStatusAt" timestamp with time zone,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_incident_supply_demand_lines" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_incident_trainarr_routings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IncidentId" uuid NOT NULL,
+    "TrainarrRemediationId" uuid NOT NULL,
+    "RoutingStatus" character varying(32) NOT NULL,
+    "RoutedAt" timestamp with time zone NOT NULL,
+    "RoutedByUserId" uuid NOT NULL,
+    "FailureReason" character varying(1024),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_incident_trainarr_routings" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_internal_locations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "LocationNumber" character varying(64) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(512),
+    "LocationType" character varying(64) NOT NULL,
+    "ParentLocationId" uuid,
+    "SiteOrgUnitId" uuid,
+    "Status" character varying(32) NOT NULL,
+    "AllowedProductUsage" character varying(64) NOT NULL,
+    "ArchivedAt" timestamp with time zone,
+    "ArchivedByUserId" uuid,
+    "ArchiveReason" character varying(512),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_internal_locations" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_internal_locations_staffarr_internal_locations_Par~" FOREIGN KEY ("ParentLocationId") REFERENCES staffarr_internal_locations ("Id")
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_org_unit_assignments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "SiteOrgUnitId" uuid NOT NULL,
+    "DepartmentOrgUnitId" uuid NOT NULL,
+    "TeamOrgUnitId" uuid NOT NULL,
+    "PositionOrgUnitId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "IsPrimary" boolean NOT NULL DEFAULT FALSE,
+    "EffectiveAt" timestamp with time zone NOT NULL,
+    "EndsAt" timestamp with time zone,
+    "Reason" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_org_unit_assignments" PRIMARY KEY ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_org_units (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "UnitType" character varying(32) NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Code" character varying(64),
+    "Description" character varying(512),
+    "ParentOrgUnitId" uuid,
+    "ManagerPersonId" uuid,
+    "EffectiveStartDate" timestamp with time zone,
+    "EffectiveEndDate" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "SiteType" character varying(32),
+    "Timezone" character varying(64),
+    "Phone" character varying(32),
+    "EmergencyContact" character varying(256),
+    "TeamType" character varying(32),
+    "PositionCode" character varying(64),
+    "DefaultSiteOrgUnitId" uuid,
+    "ComplianceSensitive" boolean NOT NULL DEFAULT FALSE,
+    "SafetySensitive" boolean NOT NULL DEFAULT FALSE,
+    "CanSupervise" boolean NOT NULL DEFAULT FALSE,
+    "CanApprove" boolean NOT NULL DEFAULT FALSE,
+    "ArchivedAt" timestamp with time zone,
+    "ArchivedByUserId" uuid,
+    "ArchiveReason" character varying(512),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_org_units" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_org_units_staffarr_org_units_DefaultSiteOrgUnitId" FOREIGN KEY ("DefaultSiteOrgUnitId") REFERENCES staffarr_org_units ("Id"),
+    CONSTRAINT "FK_staffarr_org_units_staffarr_org_units_ParentOrgUnitId" FOREIGN KEY ("ParentOrgUnitId") REFERENCES staffarr_org_units ("Id")
+);
+[00:15:20 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_people (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ExternalUserId" uuid,
+    "GivenName" character varying(100) NOT NULL,
+    "FamilyName" character varying(100) NOT NULL,
+    "LegalFirstName" character varying(100) NOT NULL,
+    "LegalMiddleName" character varying(100),
+    "LegalLastName" character varying(100) NOT NULL,
+    "PreferredName" character varying(100),
+    "Pronouns" character varying(64),
+    "DisplayName" character varying(200) NOT NULL,
+    "PrimaryEmail" character varying(320) NOT NULL,
+    "AlternateEmail" character varying(320),
+    "PrimaryPhone" character varying(32),
+    "AlternatePhone" character varying(32),
+    "EmploymentStatus" character varying(32) NOT NULL,
+    "WorkRelationshipType" character varying(32),
+    "EmploymentType" character varying(32),
+    "PrimaryOrgUnitId" uuid,
+    "ManagerPersonId" uuid,
+    "JobTitle" character varying(128),
+    "WorkPhone" character varying(32),
+    "StartDate" timestamp with time zone,
+    "ExpectedStartDate" timestamp with time zone,
+    "HomeBaseLocationId" uuid,
+    "CanLoginSnapshot" boolean NOT NULL DEFAULT FALSE,
+    "HasUserAccountSnapshot" boolean NOT NULL DEFAULT FALSE,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_people" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_people_staffarr_internal_locations_HomeBaseLocatio~" FOREIGN KEY ("HomeBaseLocationId") REFERENCES staffarr_internal_locations ("Id"),
+    CONSTRAINT "FK_staffarr_people_staffarr_org_units_PrimaryOrgUnitId" FOREIGN KEY ("PrimaryOrgUnitId") REFERENCES staffarr_org_units ("Id"),
+    CONSTRAINT "FK_staffarr_people_staffarr_people_ManagerPersonId" FOREIGN KEY ("ManagerPersonId") REFERENCES staffarr_people ("Id")
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_readiness_rollups (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ScopeType" character varying(16) NOT NULL,
+    "OrgUnitId" uuid NOT NULL,
+    "OrgUnitName" character varying(128) NOT NULL,
+    "TotalMembers" integer NOT NULL,
+    "ReadyCount" integer NOT NULL,
+    "NotReadyCount" integer NOT NULL,
+    "OverrideCount" integer NOT NULL,
+    "ReadyPercent" numeric(5,1) NOT NULL,
+    "ConfidenceLevel" character varying(16) NOT NULL DEFAULT 'low',
+    "ConfidenceScore" integer NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_readiness_rollups" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_readiness_rollups_staffarr_org_units_OrgUnitId" FOREIGN KEY ("OrgUnitId") REFERENCES staffarr_org_units ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_tenant_person_export_presets (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EmploymentStatus" character varying(32),
+    "OrgUnitId" uuid,
+    "PresetKey" character varying(64),
+    "UpdatedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_tenant_person_export_presets" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_tenant_person_export_presets_staffarr_org_units_Or~" FOREIGN KEY ("OrgUnitId") REFERENCES staffarr_org_units ("Id")
+);
+[00:15:20 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_certifications (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "CertificationDefinitionId" uuid NOT NULL,
+    "SourceType" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "GrantedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "Notes" character varying(1024),
+    "GrantedByUserId" uuid,
+    "ExternalPublicationId" uuid,
+    "LastExternalLifecyclePublicationId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_certifications" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_certifications_staffarr_certification_defin~" FOREIGN KEY ("CertificationDefinitionId") REFERENCES staffarr_certification_definitions ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_person_certifications_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_offboarding_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SeparationDate" timestamp with time zone NOT NULL,
+    "SeparationReason" character varying(512),
+    "TargetEmploymentStatus" character varying(32) NOT NULL,
+    "DisableLoginRequested" boolean NOT NULL,
+    "NewManagerPersonIdForReports" uuid,
+    "StartedByUserId" uuid NOT NULL,
+    "StartedAt" timestamp with time zone NOT NULL,
+    "CompletedByUserId" uuid,
+    "CompletedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_offboarding_records" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_offboarding_records_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_permission_projections (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PermissionCount" integer NOT NULL,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_permission_projections" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_permission_projections_staffarr_people_Pers~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_readiness_overrides (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Reason" character varying(1024) NOT NULL,
+    "GrantedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "GrantedByUserId" uuid NOT NULL,
+    "ClearedAt" timestamp with time zone,
+    "ClearedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_readiness_overrides" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_readiness_overrides_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:20 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_role_assignments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "RoleTemplateId" uuid NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "ScopeValue" character varying(128),
+    "Status" character varying(32) NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_role_assignments" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_role_assignments_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_person_role_assignments_staffarr_role_templates_Ro~" FOREIGN KEY ("RoleTemplateId") REFERENCES staffarr_role_templates ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (17ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_training_acknowledgements (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "TrainarrAcknowledgementRequestId" uuid NOT NULL,
+    "TrainarrAssignmentId" uuid NOT NULL,
+    "TrainingTitle" character varying(256) NOT NULL,
+    "AssignmentReason" character varying(64) NOT NULL,
+    "Summary" character varying(2048) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "DueAt" timestamp with time zone,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "AcknowledgedAt" timestamp with time zone,
+    "AcknowledgedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_training_acknowledgements" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_training_acknowledgements_staffarr_people_P~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_training_blockers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "TrainarrPublicationId" uuid NOT NULL,
+    "QualificationKey" character varying(128) NOT NULL,
+    "QualificationName" character varying(128) NOT NULL,
+    "BlockerType" character varying(64) NOT NULL,
+    "Message" character varying(1024) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "PublishedAt" timestamp with time zone NOT NULL,
+    "ExpiresAt" timestamp with time zone,
+    "ClearedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_training_blockers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_training_blockers_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_documents (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "DocumentTypeKey" character varying(64) NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "FileName" character varying(255) NOT NULL,
+    "ContentType" character varying(128) NOT NULL,
+    "SizeBytes" bigint NOT NULL,
+    "StorageKey" character varying(512) NOT NULL,
+    "Description" character varying(1024),
+    "ExpiresAt" timestamp with time zone,
+    "Status" character varying(32) NOT NULL,
+    "UploadedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_personnel_documents" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_documents_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_history_rollups (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "EventCount" integer NOT NULL,
+    "IncidentCount" integer NOT NULL,
+    "CertificationCount" integer NOT NULL,
+    "PermissionCount" integer NOT NULL,
+    "ReadinessCount" integer NOT NULL,
+    "TrainingBlockerCount" integer NOT NULL,
+    "PersonnelNoteCount" integer NOT NULL,
+    "PersonnelDocumentCount" integer NOT NULL,
+    "LastEventAt" timestamp with time zone,
+    "ComputedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_personnel_history_rollups" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_history_rollups_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_incidents (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "ReasonCategoryKey" character varying(64) NOT NULL,
+    "Severity" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "Description" character varying(4096) NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "DiscoveredAt" timestamp with time zone,
+    "ReportedAt" timestamp with time zone NOT NULL,
+    "ReportedByUserId" uuid NOT NULL,
+    "ReporterPersonId" uuid,
+    "ManagerPersonId" uuid,
+    "IncidentSource" character varying(64),
+    "IncidentType" character varying(64),
+    "SiteOrgUnitId" uuid,
+    "DepartmentOrgUnitId" uuid,
+    "LocationDetail" character varying(256),
+    "WitnessPersonIdsJson" character varying(2048),
+    "AdditionalInvolvedPersonIdsJson" character varying(2048),
+    "EmployeeSelfReport" boolean NOT NULL,
+    "ImmediateActionsTaken" character varying(2000),
+    "RootCause" character varying(2000),
+    "CategoryKeysJson" character varying(1024),
+    "ReadinessDecision" character varying(32),
+    "WorkRestriction" character varying(64),
+    "ReturnToWorkNeeded" character varying(32),
+    "PpeConcern" character varying(64),
+    "MedicalAttention" character varying(64),
+    "OutOfServiceRemoveFromDuty" character varying(32),
+    "FollowUpRequired" character varying(32),
+    "TrainingReviewRequired" boolean NOT NULL,
+    "TrainingReviewReason" character varying(128),
+    "RelatedAssetReference" character varying(128),
+    "RelatedWorkOrderReference" character varying(128),
+    "RelatedRouteReference" character varying(128),
+    "RelatedSupplierReference" character varying(128),
+    "RelatedDocumentReference" character varying(128),
+    "RelatedPolicyReference" character varying(128),
+    "EvidencePackageRequested" boolean NOT NULL,
+    "NotifyManager" boolean NOT NULL,
+    "NotifySafetyCompliance" boolean NOT NULL,
+    "NotifyHr" boolean NOT NULL,
+    "CreateFollowUpTask" boolean NOT NULL,
+    "FollowUpDueAt" timestamp with time zone,
+    "SourceProduct" character varying(64),
+    "SourceIncidentId" uuid,
+    "SourceEventKind" character varying(64),
+    "SourceReferenceKey" character varying(128),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_personnel_incidents" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_incidents_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_notes (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "CategoryKey" character varying(64) NOT NULL,
+    "VisibilityKey" character varying(32) NOT NULL,
+    "Subject" character varying(200) NOT NULL,
+    "Body" character varying(8192) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedByUserId" uuid NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_personnel_notes" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_notes_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_update_requests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "RequestType" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "FieldKey" character varying(64) NOT NULL,
+    "CurrentValue" character varying(512),
+    "RequestedValue" character varying(512) NOT NULL,
+    "Details" character varying(2048),
+    "SubmittedByUserId" uuid NOT NULL,
+    "SubmittedAt" timestamp with time zone NOT NULL,
+    "ReviewedByUserId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "ReviewNotes" character varying(1024),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_personnel_update_requests" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_update_requests_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_offboarding_steps (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "OffboardingRecordId" uuid NOT NULL,
+    "StepKey" character varying(64) NOT NULL,
+    "Title" character varying(128) NOT NULL,
+    "Detail" character varying(2048) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "BlockerDetail" character varying(1024),
+    "SortOrder" integer NOT NULL,
+    "CompletedAt" timestamp with time zone,
+    "CompletedByUserId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_offboarding_steps" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_offboarding_steps_staffarr_person_offboardi~" FOREIGN KEY ("OffboardingRecordId") REFERENCES staffarr_person_offboarding_records ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_permission_projection_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "ProjectionId" uuid NOT NULL,
+    "PermissionKey" character varying(128) NOT NULL,
+    "PermissionName" character varying(128) NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "ScopeValue" character varying(128),
+    CONSTRAINT "PK_staffarr_person_permission_projection_entries" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_person_permission_projection_entries_staffarr_peop~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_person_permission_projection_entries_staffarr_pers~" FOREIGN KEY ("ProjectionId") REFERENCES staffarr_person_permission_projections ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_permission_history_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "AssignmentId" uuid NOT NULL,
+    "RoleTemplateId" uuid NOT NULL,
+    "PermissionTemplateId" uuid NOT NULL,
+    "ActorUserId" uuid,
+    "EventType" character varying(64) NOT NULL,
+    "AssignmentStatus" character varying(32) NOT NULL,
+    "RoleKey" character varying(64) NOT NULL,
+    "RoleName" character varying(128) NOT NULL,
+    "PermissionKey" character varying(128) NOT NULL,
+    "PermissionName" character varying(128) NOT NULL,
+    "ScopeType" character varying(32) NOT NULL,
+    "ScopeValue" character varying(128),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_permission_history_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_permission_history_events_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_permission_history_events_staffarr_permission_temp~" FOREIGN KEY ("PermissionTemplateId") REFERENCES staffarr_permission_templates ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_permission_history_events_staffarr_person_role_ass~" FOREIGN KEY ("AssignmentId") REFERENCES staffarr_person_role_assignments ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_permission_history_events_staffarr_role_templates_~" FOREIGN KEY ("RoleTemplateId") REFERENCES staffarr_role_templates ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_personnel_history_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "RollupId" uuid NOT NULL,
+    "EntryId" character varying(256) NOT NULL,
+    "Category" character varying(64) NOT NULL,
+    "EventType" character varying(64) NOT NULL,
+    "Title" character varying(256) NOT NULL,
+    "Detail" character varying(2048),
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "ActorUserId" uuid,
+    "SourceEntityType" character varying(64) NOT NULL,
+    "SourceEntityId" character varying(128) NOT NULL,
+    "ExternalReferenceId" character varying(128),
+    CONSTRAINT "PK_staffarr_personnel_history_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_personnel_history_events_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_personnel_history_events_staffarr_personnel_histor~" FOREIGN KEY ("RollupId") REFERENCES staffarr_personnel_history_rollups ("Id") ON DELETE CASCADE
+);
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_platform_metadata_TenantId" ON platform_metadata ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_platform_metadata_TenantId_Key" ON platform_metadata ("TenantId", "Key");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_audit_events_OccurredAt" ON staffarr_audit_events ("OccurredAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_audit_events_TenantId" ON staffarr_audit_events ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_audit_package_generation_jobs_CreatedAt" ON staffarr_audit_package_generation_jobs ("CreatedAt");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_audit_package_generation_jobs_TenantId_Status_Crea~" ON staffarr_audit_package_generation_jobs ("TenantId", "Status", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_certification_definitions_TenantId" ON staffarr_certification_definitions ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_certification_definitions_TenantId_CertificationKey" ON staffarr_certification_definitions ("TenantId", "CertificationKey");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_attachments_IncidentId" ON staffarr_incident_attachments ("IncidentId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_attachments_TenantId" ON staffarr_incident_attachments ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_attachments_TenantId_IncidentId_CreatedAt" ON staffarr_incident_attachments ("TenantId", "IncidentId", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_notes_IncidentId" ON staffarr_incident_notes ("IncidentId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_notes_TenantId" ON staffarr_incident_notes ("TenantId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_notes_TenantId_IncidentId_CreatedAt" ON staffarr_incident_notes ("TenantId", "IncidentId", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_notes_TenantId_IncidentId_Status" ON staffarr_incident_notes ("TenantId", "IncidentId", "Status");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_IncidentId" ON staffarr_incident_supply_demand_lines ("IncidentId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_TenantId" ON staffarr_incident_supply_demand_lines ("TenantId");
+[00:15:21 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_TenantId_IncidentId" ON staffarr_incident_supply_demand_lines ("TenantId", "IncidentId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_TenantId_IncidentId_L~" ON staffarr_incident_supply_demand_lines ("TenantId", "IncidentId", "LineNumber");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_TenantId_ProcurementS~" ON staffarr_incident_supply_demand_lines ("TenantId", "ProcurementStatus");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_lines_TenantId_StaffarrPubl~" ON staffarr_incident_supply_demand_lines ("TenantId", "StaffarrPublicationId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_status_events_TenantId" ON staffarr_incident_supply_demand_status_events ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_supply_demand_status_events_TenantId_Staf~" ON staffarr_incident_supply_demand_status_events ("TenantId", "StaffarrPublicationId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_incident_supply_demand_status_events_TenantId_Supp~" ON staffarr_incident_supply_demand_status_events ("TenantId", "SupplyarrCallbackPublicationId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_trainarr_routings_IncidentId" ON staffarr_incident_trainarr_routings ("IncidentId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_incident_trainarr_routings_TenantId" ON staffarr_incident_trainarr_routings ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_incident_trainarr_routings_TenantId_IncidentId" ON staffarr_incident_trainarr_routings ("TenantId", "IncidentId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_incident_trainarr_routings_TenantId_TrainarrRemedi~" ON staffarr_incident_trainarr_routings ("TenantId", "TrainarrRemediationId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_internal_locations_ArchivedByUserId" ON staffarr_internal_locations ("ArchivedByUserId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_internal_locations_ParentLocationId" ON staffarr_internal_locations ("ParentLocationId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_internal_locations_SiteOrgUnitId" ON staffarr_internal_locations ("SiteOrgUnitId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_internal_locations_Status" ON staffarr_internal_locations ("Status");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_internal_locations_TenantId" ON staffarr_internal_locations ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_internal_locations_TenantId_LocationNumber" ON staffarr_internal_locations ("TenantId", "LocationNumber") WHERE "ParentLocationId" IS NULL;
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_internal_locations_TenantId_ParentLocationId_Locat~" ON staffarr_internal_locations ("TenantId", "ParentLocationId", "LocationNumber") WHERE "ParentLocationId" IS NOT NULL;
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_DepartmentOrgUnitId" ON staffarr_org_unit_assignments ("DepartmentOrgUnitId");
+[00:15:21 INF] Executed DbCommand (23ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_PersonId" ON staffarr_org_unit_assignments ("PersonId");
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_PositionOrgUnitId" ON staffarr_org_unit_assignments ("PositionOrgUnitId");
+[00:15:21 INF] Executed DbCommand (27ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_SiteOrgUnitId" ON staffarr_org_unit_assignments ("SiteOrgUnitId");
+[00:15:21 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_TeamOrgUnitId" ON staffarr_org_unit_assignments ("TeamOrgUnitId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_TenantId" ON staffarr_org_unit_assignments ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_org_unit_assignments_TenantId_PersonId" ON staffarr_org_unit_assignments ("TenantId", "PersonId") WHERE "IsPrimary" = TRUE AND "Status" IN ('planned','active');
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_org_unit_assignments_TenantId_PersonId_SiteOrgUnit~" ON staffarr_org_unit_assignments ("TenantId", "PersonId", "SiteOrgUnitId", "DepartmentOrgUnitId", "TeamOrgUnitId", "PositionOrgUnitId") WHERE "Status" IN ('planned','active');
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_unit_assignments_TenantId_PersonId_Status" ON staffarr_org_unit_assignments ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_units_ArchivedByUserId" ON staffarr_org_units ("ArchivedByUserId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_units_DefaultSiteOrgUnitId" ON staffarr_org_units ("DefaultSiteOrgUnitId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_units_ManagerPersonId" ON staffarr_org_units ("ManagerPersonId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_units_ParentOrgUnitId" ON staffarr_org_units ("ParentOrgUnitId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_org_units_TenantId" ON staffarr_org_units ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_org_units_TenantId_Code" ON staffarr_org_units ("TenantId", "Code") WHERE "Code" IS NOT NULL AND "ParentOrgUnitId" IS NULL;
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_org_units_TenantId_ParentOrgUnitId_Code" ON staffarr_org_units ("TenantId", "ParentOrgUnitId", "Code") WHERE "Code" IS NOT NULL AND "ParentOrgUnitId" IS NOT NULL;
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_org_units_TenantId_UnitType_Name" ON staffarr_org_units ("TenantId", "UnitType", "Name");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_HomeBaseLocationId" ON staffarr_people ("HomeBaseLocationId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_ManagerPersonId" ON staffarr_people ("ManagerPersonId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_PrimaryOrgUnitId" ON staffarr_people ("PrimaryOrgUnitId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_TenantId" ON staffarr_people ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_people_TenantId_ExternalUserId" ON staffarr_people ("TenantId", "ExternalUserId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_TenantId_ManagerPersonId" ON staffarr_people ("TenantId", "ManagerPersonId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_people_TenantId_PrimaryEmail" ON staffarr_people ("TenantId", "PrimaryEmail");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_AssignmentId" ON staffarr_permission_history_events ("AssignmentId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_PermissionTemplateId" ON staffarr_permission_history_events ("PermissionTemplateId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_PersonId" ON staffarr_permission_history_events ("PersonId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_RoleTemplateId" ON staffarr_permission_history_events ("RoleTemplateId");
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_TenantId" ON staffarr_permission_history_events ("TenantId");
+[00:15:21 INF] Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_TenantId_AssignmentId_Oc~" ON staffarr_permission_history_events ("TenantId", "AssignmentId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_history_events_TenantId_PersonId_Occurr~" ON staffarr_permission_history_events ("TenantId", "PersonId", "OccurredAt");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_templates_TenantId" ON staffarr_permission_templates ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_permission_templates_TenantId_PermissionKey" ON staffarr_permission_templates ("TenantId", "PermissionKey");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_permission_templates_TenantId_ProductKey_Permissio~" ON staffarr_permission_templates ("TenantId", "ProductKey", "PermissionKey");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_CertificationDefinitionId" ON staffarr_person_certifications ("CertificationDefinitionId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_PersonId" ON staffarr_person_certifications ("PersonId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_TenantId" ON staffarr_person_certifications ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_certifications_TenantId_ExternalPublication~" ON staffarr_person_certifications ("TenantId", "ExternalPublicationId") WHERE "ExternalPublicationId" IS NOT NULL;
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_certifications_TenantId_LastExternalLifecyc~" ON staffarr_person_certifications ("TenantId", "LastExternalLifecyclePublicationId") WHERE "LastExternalLifecyclePublicationId" IS NOT NULL;
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_TenantId_PersonId_Certificat~" ON staffarr_person_certifications ("TenantId", "PersonId", "CertificationDefinitionId", "Status");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_TenantId_PersonId_Status" ON staffarr_person_certifications ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_certifications_TenantId_Status_ExpiresAt" ON staffarr_person_certifications ("TenantId", "Status", "ExpiresAt");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_export_delivery_notifications_AttemptedAt" ON staffarr_person_export_delivery_notifications ("AttemptedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_export_delivery_notifications_TenantId" ON staffarr_person_export_delivery_notifications ("TenantId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_export_delivery_runs_StartedAt" ON staffarr_person_export_delivery_runs ("StartedAt");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_export_delivery_runs_TenantId" ON staffarr_person_export_delivery_runs ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_records_PersonId" ON staffarr_person_offboarding_records ("PersonId");
+[00:15:21 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_records_TenantId" ON staffarr_person_offboarding_records ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_records_TenantId_PersonId_Start~" ON staffarr_person_offboarding_records ("TenantId", "PersonId", "StartedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_records_TenantId_PersonId_Status" ON staffarr_person_offboarding_records ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_steps_OffboardingRecordId" ON staffarr_person_offboarding_steps ("OffboardingRecordId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_offboarding_steps_TenantId" ON staffarr_person_offboarding_steps ("TenantId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_offboarding_steps_TenantId_OffboardingRecor~" ON staffarr_person_offboarding_steps ("TenantId", "OffboardingRecordId", "StepKey");
+[00:15:21 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projection_entries_PersonId" ON staffarr_person_permission_projection_entries ("PersonId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projection_entries_ProjectionId" ON staffarr_person_permission_projection_entries ("ProjectionId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projection_entries_TenantId" ON staffarr_person_permission_projection_entries ("TenantId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_permission_projection_entries_TenantId_Pers~" ON staffarr_person_permission_projection_entries ("TenantId", "PersonId", "PermissionKey", "ScopeType", "ScopeValue");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projections_PersonId" ON staffarr_person_permission_projections ("PersonId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projections_TenantId" ON staffarr_person_permission_projections ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_permission_projections_TenantId_ComputedAt" ON staffarr_person_permission_projections ("TenantId", "ComputedAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_permission_projections_TenantId_PersonId" ON staffarr_person_permission_projections ("TenantId", "PersonId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_readiness_overrides_PersonId" ON staffarr_person_readiness_overrides ("PersonId");
+[00:15:21 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_readiness_overrides_TenantId" ON staffarr_person_readiness_overrides ("TenantId");
+[00:15:21 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_readiness_overrides_TenantId_PersonId_Grant~" ON staffarr_person_readiness_overrides ("TenantId", "PersonId", "GrantedAt");
+[00:15:21 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_readiness_overrides_TenantId_PersonId_Status" ON staffarr_person_readiness_overrides ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_role_assignments_PersonId" ON staffarr_person_role_assignments ("PersonId");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_role_assignments_RoleTemplateId" ON staffarr_person_role_assignments ("RoleTemplateId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_role_assignments_TenantId" ON staffarr_person_role_assignments ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_role_assignments_TenantId_PersonId_RoleTemp~" ON staffarr_person_role_assignments ("TenantId", "PersonId", "RoleTemplateId", "ScopeType", "ScopeValue");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_role_assignments_TenantId_PersonId_Status" ON staffarr_person_role_assignments ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_role_assignments_TenantId_PersonId_Status_E~" ON staffarr_person_role_assignments ("TenantId", "PersonId", "Status", "ExpiresAt");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_acknowledgements_PersonId" ON staffarr_person_training_acknowledgements ("PersonId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_acknowledgements_TenantId" ON staffarr_person_training_acknowledgements ("TenantId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_acknowledgements_TenantId_PersonId~" ON staffarr_person_training_acknowledgements ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_training_acknowledgements_TenantId_Trainarr~" ON staffarr_person_training_acknowledgements ("TenantId", "TrainarrAcknowledgementRequestId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_blockers_PersonId" ON staffarr_person_training_blockers ("PersonId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_blockers_TenantId" ON staffarr_person_training_blockers ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_training_blockers_TenantId_PersonId_Status" ON staffarr_person_training_blockers ("TenantId", "PersonId", "Status");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_training_blockers_TenantId_TrainarrPublicat~" ON staffarr_person_training_blockers ("TenantId", "TrainarrPublicationId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_documents_PersonId" ON staffarr_personnel_documents ("PersonId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_documents_TenantId" ON staffarr_personnel_documents ("TenantId");
+[00:15:21 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_documents_TenantId_DocumentTypeKey_Status" ON staffarr_personnel_documents ("TenantId", "DocumentTypeKey", "Status");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_documents_TenantId_PersonId_CreatedAt" ON staffarr_personnel_documents ("TenantId", "PersonId", "CreatedAt");
+[00:15:21 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_events_PersonId" ON staffarr_personnel_history_events ("PersonId");
+[00:15:21 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_events_RollupId" ON staffarr_personnel_history_events ("RollupId");
+[00:15:21 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_events_TenantId" ON staffarr_personnel_history_events ("TenantId");
+[00:15:21 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_personnel_history_events_TenantId_PersonId_EntryId" ON staffarr_personnel_history_events ("TenantId", "PersonId", "EntryId");
+[00:15:21 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_events_TenantId_PersonId_Occurre~" ON staffarr_personnel_history_events ("TenantId", "PersonId", "OccurredAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_rollups_PersonId" ON staffarr_personnel_history_rollups ("PersonId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_rollups_TenantId" ON staffarr_personnel_history_rollups ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_history_rollups_TenantId_ComputedAt" ON staffarr_personnel_history_rollups ("TenantId", "ComputedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_personnel_history_rollups_TenantId_PersonId" ON staffarr_personnel_history_rollups ("TenantId", "PersonId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_PersonId" ON staffarr_personnel_incidents ("PersonId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_personnel_incidents_source_incident" ON staffarr_personnel_incidents ("TenantId", "SourceProduct", "SourceIncidentId") WHERE "SourceIncidentId" IS NOT NULL;
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_TenantId" ON staffarr_personnel_incidents ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_TenantId_IncidentType_Reported~" ON staffarr_personnel_incidents ("TenantId", "IncidentType", "ReportedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_TenantId_PersonId_ReportedAt" ON staffarr_personnel_incidents ("TenantId", "PersonId", "ReportedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_TenantId_ReadinessDecision_Rep~" ON staffarr_personnel_incidents ("TenantId", "ReadinessDecision", "ReportedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_incidents_TenantId_Status_ReportedAt" ON staffarr_personnel_incidents ("TenantId", "Status", "ReportedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_notes_PersonId" ON staffarr_personnel_notes ("PersonId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_notes_TenantId" ON staffarr_personnel_notes ("TenantId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_notes_TenantId_PersonId_CreatedAt" ON staffarr_personnel_notes ("TenantId", "PersonId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_update_requests_PersonId" ON staffarr_personnel_update_requests ("PersonId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_update_requests_TenantId" ON staffarr_personnel_update_requests ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_update_requests_TenantId_PersonId_Submit~" ON staffarr_personnel_update_requests ("TenantId", "PersonId", "SubmittedAt");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_personnel_update_requests_TenantId_Status_Submitte~" ON staffarr_personnel_update_requests ("TenantId", "Status", "SubmittedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_readiness_rollups_OrgUnitId" ON staffarr_readiness_rollups ("OrgUnitId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_readiness_rollups_TenantId" ON staffarr_readiness_rollups ("TenantId");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_readiness_rollups_TenantId_ScopeType_ComputedAt" ON staffarr_readiness_rollups ("TenantId", "ScopeType", "ComputedAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_readiness_rollups_TenantId_ScopeType_OrgUnitId" ON staffarr_readiness_rollups ("TenantId", "ScopeType", "OrgUnitId");
+[00:15:22 INF] Executed DbCommand (15ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_template_permissions_PermissionTemplateId" ON staffarr_role_template_permissions ("PermissionTemplateId");
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_template_permissions_RoleTemplateId" ON staffarr_role_template_permissions ("RoleTemplateId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_template_permissions_TenantId" ON staffarr_role_template_permissions ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_role_template_permissions_TenantId_RoleTemplateId_~" ON staffarr_role_template_permissions ("TenantId", "RoleTemplateId", "PermissionTemplateId", "ScopeType", "ScopeValue");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_templates_TenantId" ON staffarr_role_templates ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_role_templates_TenantId_RoleKey" ON staffarr_role_templates ("TenantId", "RoleKey");
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_tenant_person_export_presets_OrgUnitId" ON staffarr_tenant_person_export_presets ("OrgUnitId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_tenant_person_export_presets_TenantId" ON staffarr_tenant_person_export_presets ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_tenant_person_export_schedules_TenantId" ON staffarr_tenant_person_export_schedules ("TenantId");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_tenant_person_export_schedules_TenantId_IsEnabled_~" ON staffarr_tenant_person_export_schedules ("TenantId", "IsEnabled", "LastDeliveredAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_tenant_worker_settings_TenantId" ON staffarr_tenant_worker_settings ("TenantId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_tenant_worker_settings_TenantId_WorkerKey" ON staffarr_tenant_worker_settings ("TenantId", "WorkerKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_worker_runs_TenantId" ON staffarr_worker_runs ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_worker_runs_TenantId_WorkerKey_StartedAt" ON staffarr_worker_runs ("TenantId", "WorkerKey", "StartedAt");
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_incident_attachments ADD CONSTRAINT "FK_staffarr_incident_attachments_staffarr_personnel_incidents_~" FOREIGN KEY ("IncidentId") REFERENCES staffarr_personnel_incidents ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_incident_notes ADD CONSTRAINT "FK_staffarr_incident_notes_staffarr_personnel_incidents_Incide~" FOREIGN KEY ("IncidentId") REFERENCES staffarr_personnel_incidents ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_incident_supply_demand_lines ADD CONSTRAINT "FK_staffarr_incident_supply_demand_lines_staffarr_personnel_in~" FOREIGN KEY ("IncidentId") REFERENCES staffarr_personnel_incidents ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_incident_trainarr_routings ADD CONSTRAINT "FK_staffarr_incident_trainarr_routings_staffarr_personnel_inci~" FOREIGN KEY ("IncidentId") REFERENCES staffarr_personnel_incidents ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_internal_locations ADD CONSTRAINT "FK_staffarr_internal_locations_staffarr_org_units_SiteOrgUnitId" FOREIGN KEY ("SiteOrgUnitId") REFERENCES staffarr_org_units ("Id");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_internal_locations ADD CONSTRAINT "FK_staffarr_internal_locations_staffarr_people_ArchivedByUserId" FOREIGN KEY ("ArchivedByUserId") REFERENCES staffarr_people ("Id");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_unit_assignments ADD CONSTRAINT "FK_staffarr_org_unit_assignments_staffarr_org_units_Department~" FOREIGN KEY ("DepartmentOrgUnitId") REFERENCES staffarr_org_units ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_unit_assignments ADD CONSTRAINT "FK_staffarr_org_unit_assignments_staffarr_org_units_PositionOr~" FOREIGN KEY ("PositionOrgUnitId") REFERENCES staffarr_org_units ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_unit_assignments ADD CONSTRAINT "FK_staffarr_org_unit_assignments_staffarr_org_units_SiteOrgUni~" FOREIGN KEY ("SiteOrgUnitId") REFERENCES staffarr_org_units ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_unit_assignments ADD CONSTRAINT "FK_staffarr_org_unit_assignments_staffarr_org_units_TeamOrgUni~" FOREIGN KEY ("TeamOrgUnitId") REFERENCES staffarr_org_units ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_unit_assignments ADD CONSTRAINT "FK_staffarr_org_unit_assignments_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE;
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_units ADD CONSTRAINT "FK_staffarr_org_units_staffarr_people_ArchivedByUserId" FOREIGN KEY ("ArchivedByUserId") REFERENCES staffarr_people ("Id");
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_org_units ADD CONSTRAINT "FK_staffarr_org_units_staffarr_people_ManagerPersonId" FOREIGN KEY ("ManagerPersonId") REFERENCES staffarr_people ("Id");
+[00:15:22 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260609060256_CurrentSchemaBaseline', '10.0.8');
+[00:15:22 INF] Applying migration '20260611081543_StaffRoleManagementV1'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_permission_audit_log (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid,
+    "Action" character varying(128) NOT NULL,
+    "RoleId" uuid,
+    "BeforeJson" text,
+    "AfterJson" text,
+    "Reason" character varying(1024),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_permission_audit_log" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_permission_catalog_cache (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "CatalogVersion" character varying(128) NOT NULL,
+    "CatalogJson" text NOT NULL,
+    "FetchedAt" timestamp with time zone NOT NULL,
+    "IsActive" boolean NOT NULL,
+    CONSTRAINT "PK_staffarr_permission_catalog_cache" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_person_roles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "RoleId" uuid NOT NULL,
+    "AssignmentScopeType" character varying(64) NOT NULL,
+    "AssignmentScopeRefId" character varying(128),
+    "StartsAt" timestamp with time zone,
+    "EndsAt" timestamp with time zone,
+    "AssignedByPersonId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_person_roles" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_role_permissions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RoleId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "PermissionKey" character varying(256) NOT NULL,
+    "Effect" character varying(16) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_role_permissions" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_role_scopes (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RoleId" uuid NOT NULL,
+    "ScopeType" character varying(64) NOT NULL,
+    "ScopeRefId" character varying(128),
+    "ScopeRefSnapshot" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_role_scopes" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_roles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(1024),
+    "RoleType" character varying(64) NOT NULL,
+    "IsSystem" boolean NOT NULL,
+    "IsArchived" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_roles" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_audit_log_TenantId" ON staffarr_permission_audit_log ("TenantId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_audit_log_TenantId_ActorPersonId_Create~" ON staffarr_permission_audit_log ("TenantId", "ActorPersonId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_audit_log_TenantId_RoleId_CreatedAt" ON staffarr_permission_audit_log ("TenantId", "RoleId", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_catalog_cache_TenantId" ON staffarr_permission_catalog_cache ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_permission_catalog_cache_TenantId_ProductKey_Catal~" ON staffarr_permission_catalog_cache ("TenantId", "ProductKey", "CatalogVersion");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_permission_catalog_cache_TenantId_ProductKey_IsAct~" ON staffarr_permission_catalog_cache ("TenantId", "ProductKey", "IsActive");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_roles_TenantId" ON staffarr_person_roles ("TenantId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_roles_TenantId_PersonId" ON staffarr_person_roles ("TenantId", "PersonId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_person_roles_TenantId_PersonId_RoleId_AssignmentSc~" ON staffarr_person_roles ("TenantId", "PersonId", "RoleId", "AssignmentScopeType", "AssignmentScopeRefId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_person_roles_TenantId_RoleId" ON staffarr_person_roles ("TenantId", "RoleId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_permissions_TenantId" ON staffarr_role_permissions ("TenantId");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_permissions_TenantId_RoleId" ON staffarr_role_permissions ("TenantId", "RoleId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_role_permissions_TenantId_RoleId_ProductKey_Permis~" ON staffarr_role_permissions ("TenantId", "RoleId", "ProductKey", "PermissionKey", "Effect");
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_scopes_TenantId" ON staffarr_role_scopes ("TenantId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_role_scopes_TenantId_RoleId" ON staffarr_role_scopes ("TenantId", "RoleId");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_role_scopes_TenantId_RoleId_ScopeType_ScopeRefId" ON staffarr_role_scopes ("TenantId", "RoleId", "ScopeType", "ScopeRefId");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_roles_TenantId" ON staffarr_roles ("TenantId");
+[00:15:22 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_roles_TenantId_IsArchived" ON staffarr_roles ("TenantId", "IsArchived");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_roles_TenantId_Name" ON staffarr_roles ("TenantId", "Name");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260611081543_StaffRoleManagementV1', '10.0.8');
+[00:15:22 INF] Applying migration '20260617062949_AddSmartImportDestinationRecords'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE smart_import_destination_records (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ActorPersonId" uuid NOT NULL,
+    "ApprovedByPersonId" uuid NOT NULL,
+    "ImportBatchId" uuid NOT NULL,
+    "CommitPlanId" uuid NOT NULL,
+    "CommitStepId" uuid NOT NULL,
+    "DestinationProduct" character varying(64) NOT NULL,
+    "EntityType" character varying(128) NOT NULL,
+    "Operation" character varying(32) NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "PayloadJson" jsonb NOT NULL,
+    "RecordArrSourceRecordId" character varying(128),
+    "DisplayName" character varying(256) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_smart_import_destination_records" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_smart_import_destination_records_idempotency" ON smart_import_destination_records ("TenantId", "DestinationProduct", "IdempotencyKey");
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_product_entity_created" ON smart_import_destination_records ("TenantId", "DestinationProduct", "EntityType", "CreatedAt");
+[00:15:22 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_smart_import_destination_records_TenantId" ON smart_import_destination_records ("TenantId");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617062949_AddSmartImportDestinationRecords', '10.0.8');
+[00:15:22 INF] Applying migration '20260617100158_ExpandIncidentReferenceSnapshotFields'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_personnel_incidents ALTER COLUMN "RelatedSupplierReference" TYPE character varying(2048);
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_personnel_incidents ALTER COLUMN "RelatedAssetReference" TYPE character varying(2048);
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260617100158_ExpandIncidentReferenceSnapshotFields', '10.0.8');
+[00:15:22 INF] Applying migration '20260618004258_AddStaffArrTenantSettings'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_audit_events ADD "MetadataJson" character varying(16384);
+[00:15:22 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_tenant_settings (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "DisplayNameFormat" character varying(64) NOT NULL,
+    "PreferredNameEnabled" boolean NOT NULL,
+    "EmployeeNumberLabel" character varying(64) NOT NULL,
+    "EmployeeNumberRequired" boolean NOT NULL,
+    "EmployeeNumberUniquenessScope" character varying(32) NOT NULL,
+    "ProfilePhotoEnabled" boolean NOT NULL,
+    "ContactVisibilityMode" character varying(64) NOT NULL,
+    "EmergencyContactEnabled" boolean NOT NULL,
+    "PersonalAddressEnabled" boolean NOT NULL,
+    "DefaultPersonStatusOnCreate" character varying(32) NOT NULL,
+    "RequireManagerBeforeActivation" boolean NOT NULL,
+    "RequirePositionBeforeActivation" boolean NOT NULL,
+    "RequireHomeLocationBeforeActivation" boolean NOT NULL,
+    "AllowInactivePeopleToBeAssignedWork" boolean NOT NULL,
+    "RehireMatchBehavior" character varying(64) NOT NULL,
+    "DeactivationReasonRequired" boolean NOT NULL,
+    "AutoRemoveRolesOnDeactivation" boolean NOT NULL,
+    "AutoEndTeamAssignmentsOnDeactivation" boolean NOT NULL,
+    "OrgHierarchyMode" character varying(64) NOT NULL,
+    "RequireEveryPersonInOrgUnit" boolean NOT NULL,
+    "RequireDepartmentUnderSite" boolean NOT NULL,
+    "AllowMatrixMembership" boolean NOT NULL,
+    "PrimaryAssignmentRequired" boolean NOT NULL,
+    "ManagerHierarchyRequired" boolean NOT NULL,
+    "AllowSkipLevelManagers" boolean NOT NULL,
+    "PreventCircularReporting" boolean NOT NULL,
+    "LocationHierarchyMode" character varying(64) NOT NULL,
+    "RequireLocationCode" boolean NOT NULL,
+    "LocationCodeUniquenessScope" character varying(32) NOT NULL,
+    "AllowOperationalLocations" boolean NOT NULL,
+    "AllowAddressableBinsShelves" boolean NOT NULL,
+    "AllowMobileLocations" boolean NOT NULL,
+    "RequireParentLocationExceptRoot" boolean NOT NULL,
+    "ArchivedLocationAssignmentBehavior" character varying(64) NOT NULL,
+    "RoleAssignmentApprovalRequired" boolean NOT NULL,
+    "AllowSelfServiceRoleRequests" boolean NOT NULL,
+    "RoleExpirationEnabled" boolean NOT NULL,
+    "DefaultRoleGrantDurationDays" integer,
+    "RequireAssignmentReason" boolean NOT NULL,
+    "PermissionReviewCadence" character varying(32) NOT NULL,
+    "AutoRemoveRolesOnInactivePerson" boolean NOT NULL,
+    "AllowDirectPermissions" boolean NOT NULL,
+    "PreferRolesOverDirectPermissions" boolean NOT NULL,
+    "SiteScopedRoleAssignmentsEnabled" boolean NOT NULL,
+    "TeamMembershipMode" character varying(64) NOT NULL,
+    "RequireTeamLead" boolean NOT NULL,
+    "AllowTemporaryAssignments" boolean NOT NULL,
+    "TemporaryAssignmentMaxDurationDays" integer,
+    "AssignmentEffectiveDatingEnabled" boolean NOT NULL,
+    "HistoricalAssignmentVisibilityMode" character varying(64) NOT NULL,
+    "AllowOpenPositions" boolean NOT NULL,
+    "IncidentIntakeEnabled" boolean NOT NULL,
+    "RequireIncidentCategory" boolean NOT NULL,
+    "RequireInvolvedPerson" boolean NOT NULL,
+    "ManagerNotificationMode" character varying(64) NOT NULL,
+    "TrainArrRoutingEnabled" boolean NOT NULL,
+    "RetrainingRecommendationThreshold" integer,
+    "IncidentVisibilityMode" character varying(64) NOT NULL,
+    "ClosureApprovalRequired" boolean NOT NULL,
+    "RequiredProfileSectionsCsv" character varying(256) NOT NULL,
+    "OptionalProfileSectionsCsv" character varying(256) NOT NULL,
+    "CustomProfileFieldsEnabled" boolean NOT NULL,
+    "FieldVisibilityByRoleEnabled" boolean NOT NULL,
+    "FieldEditabilityByRoleEnabled" boolean NOT NULL,
+    "FieldReviewRequired" boolean NOT NULL,
+    "FieldHistoryEnabled" boolean NOT NULL,
+    "NotifyManagerOnNewPerson" boolean NOT NULL,
+    "NotifyOnManagerChange" boolean NOT NULL,
+    "NotifyOnRoleGrantRemoval" boolean NOT NULL,
+    "NotifyBeforeRoleExpiration" boolean NOT NULL,
+    "NotifyOnInactiveAssignmentConflict" boolean NOT NULL,
+    "ReviewRemindersEnabled" boolean NOT NULL,
+    "DigestFrequency" character varying(32) NOT NULL,
+    "AuditProfileChanges" boolean NOT NULL,
+    "AuditRoleChanges" boolean NOT NULL,
+    "AuditOrgLocationChanges" boolean NOT NULL,
+    "RequireChangeReasonForSensitiveEdits" boolean NOT NULL,
+    "SoftArchiveOnly" boolean NOT NULL,
+    "RecordRetentionHintDays" integer,
+    "ExportEnabled" boolean NOT NULL,
+    "BulkImportEnabled" boolean NOT NULL,
+    "BulkImportReviewRequired" boolean NOT NULL,
+    "ExposePeopleReferenceApi" boolean NOT NULL,
+    "ExposeLocationReferenceApi" boolean NOT NULL,
+    "ExposeOrgUnitReferenceApi" boolean NOT NULL,
+    "PublishPersonLifecycleEvents" boolean NOT NULL,
+    "PublishOrgLocationEvents" boolean NOT NULL,
+    "AllowProductOriginatedPersonProposals" boolean NOT NULL,
+    "RequireReviewForProductOriginatedProposals" boolean NOT NULL,
+    "SnapshotLabelPolicy" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_tenant_settings" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_tenant_settings_TenantId" ON staffarr_tenant_settings ("TenantId");
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618004258_AddStaffArrTenantSettings', '10.0.8');
+[00:15:22 INF] Applying migration '20260618220433_AddStaffArrTimekeeping'.
+[00:15:22 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:22 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_clock_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceDeviceType" character varying(64) NOT NULL,
+    "SourceDeviceId" character varying(128),
+    "EventType" character varying(32) NOT NULL,
+    "EventTimestamp" timestamp with time zone NOT NULL,
+    "CapturedTimestamp" timestamp with time zone NOT NULL,
+    "Timezone" character varying(64) NOT NULL,
+    "GeoPoint" character varying(128),
+    "SiteRef" character varying(256),
+    "LocationRef" character varying(256),
+    "SourceRef" character varying(256),
+    "EnteredByPersonId" uuid,
+    "Notes" character varying(2048),
+    "AnomalyFlagsCsv" character varying(1024) NOT NULL,
+    "ImmutableAuditHash" character varying(128) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_clock_events" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_labor_allocations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TimeEntryId" uuid NOT NULL,
+    "AllocationPercent" numeric(5,2) NOT NULL,
+    "AllocationMinutes" integer NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "CostObjectType" character varying(64) NOT NULL,
+    "CostObjectRef" character varying(256) NOT NULL,
+    "LegalEntityRef" character varying(256) NOT NULL,
+    "SiteRef" character varying(256) NOT NULL,
+    "DepartmentRef" character varying(256) NOT NULL,
+    "CustomerRef" character varying(256),
+    "OrderRef" character varying(256),
+    "AssetRef" character varying(256),
+    "WorkOrderRef" character varying(256),
+    "TripRef" character varying(256),
+    "RouteRef" character varying(256),
+    "WarehouseTaskRef" character varying(256),
+    "TrainingSessionRef" character varying(256),
+    "QualityCaseRef" character varying(256),
+    "ProjectRef" character varying(256),
+    "GlDimensionSnapshot" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_labor_allocations" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_labor_evidence_inbox (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "IdempotencyKey" character varying(256) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(64) NOT NULL,
+    "SourceEntityId" character varying(128) NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "ActivityType" character varying(64) NOT NULL,
+    "SuggestedPayCodeKey" character varying(64),
+    "StartedAt" timestamp with time zone,
+    "EndedAt" timestamp with time zone,
+    "DurationMinutes" integer,
+    "Timezone" character varying(64) NOT NULL,
+    "SiteRef" character varying(256),
+    "LocationRef" character varying(256),
+    "LegalEntityRef" character varying(256),
+    "CostObjectRefsJson" text NOT NULL,
+    "Confidence" character varying(32) NOT NULL,
+    "Notes" character varying(2048),
+    "EmittedAt" timestamp with time zone NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "TimeEntryId" uuid,
+    "TimesheetPeriodId" uuid,
+    "ConflictDetected" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_labor_evidence_inbox" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_pay_codes (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Code" character varying(64) NOT NULL,
+    "DisplayName" character varying(128) NOT NULL,
+    "Category" character varying(32) NOT NULL,
+    "CountsTowardWorkedHours" boolean NOT NULL,
+    "CountsTowardOvertimeBase" boolean NOT NULL,
+    "RequiresAllocation" boolean NOT NULL,
+    "RequiresApproval" boolean NOT NULL,
+    "RequiresReason" boolean NOT NULL,
+    "Active" boolean NOT NULL,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    CONSTRAINT "PK_staffarr_pay_codes" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_pay_policies (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "Name" character varying(128) NOT NULL,
+    "Description" character varying(1024),
+    "JurisdictionRefs" text NOT NULL,
+    "RoundingPolicy" text,
+    "MealBreakPolicy" text,
+    "RestBreakPolicy" text,
+    "OvertimePolicy" text,
+    "DoubleTimePolicy" text,
+    "HolidayPolicy" text,
+    "ShiftDifferentialPolicy" text,
+    "TravelTimePolicy" text,
+    "StandbyCalloutPolicy" text,
+    "ApprovalPolicy" text,
+    "CorrectionPolicy" text,
+    "AttestationPolicy" text,
+    "ComplianceRulepackRefs" text,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    "Status" character varying(32) NOT NULL,
+    CONSTRAINT "PK_staffarr_pay_policies" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_time_attestations (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "TimesheetPeriodId" uuid NOT NULL,
+    "AttestationType" character varying(32) NOT NULL,
+    "StatementText" character varying(2048) NOT NULL,
+    "Response" character varying(512) NOT NULL,
+    "AttestedAt" timestamp with time zone NOT NULL,
+    "AttestedByPersonId" uuid NOT NULL,
+    "SourceDeviceType" character varying(64) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_time_attestations" PRIMARY KEY ("Id")
+);
+[00:15:22 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_time_corrections (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "TargetType" character varying(64) NOT NULL,
+    "TargetId" uuid NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "ReasonCode" character varying(64) NOT NULL,
+    "ReasonText" character varying(2048) NOT NULL,
+    "OldSnapshot" text NOT NULL,
+    "NewSnapshot" text NOT NULL,
+    "ApprovalStatus" character varying(32) NOT NULL,
+    "ApprovedByPersonId" uuid,
+    "ApprovedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_time_corrections" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_time_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "WorkSessionId" uuid,
+    "TimesheetPeriodId" uuid NOT NULL,
+    "EntryDate" date NOT NULL,
+    "StartTime" timestamp with time zone,
+    "EndTime" timestamp with time zone,
+    "DurationMinutes" integer NOT NULL,
+    "PayCodeId" uuid NOT NULL,
+    "PayPolicyId" uuid,
+    "Classification" character varying(32) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceRef" character varying(256),
+    "SourceConfidence" character varying(32) NOT NULL,
+    "Description" character varying(2048),
+    "RequiresApproval" boolean NOT NULL,
+    "ApprovalStatus" character varying(32) NOT NULL,
+    "PayrollLockStatus" character varying(32) NOT NULL,
+    "CreatedByPersonId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_time_entries" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_time_exceptions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "TimesheetPeriodId" uuid NOT NULL,
+    "WorkSessionId" uuid,
+    "TimeEntryId" uuid,
+    "Severity" character varying(16) NOT NULL,
+    "ExceptionType" character varying(64) NOT NULL,
+    "Message" character varying(2048) NOT NULL,
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceRef" character varying(256),
+    "ResolutionStatus" character varying(32) NOT NULL,
+    "ResolvedByPersonId" uuid,
+    "ResolvedAt" timestamp with time zone,
+    "ResolutionNotes" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_time_exceptions" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_timekeeping_profiles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "WorkerNumber" character varying(64) NOT NULL,
+    "DefaultLegalEntityRef" character varying(256),
+    "DefaultSiteRef" character varying(256),
+    "DefaultDepartmentRef" character varying(256),
+    "DefaultPositionRef" character varying(256),
+    "DefaultSupervisorPersonId" uuid,
+    "PayPolicyId" uuid,
+    "PayrollEligibilityStatus" character varying(32) NOT NULL,
+    "TimeEntryMode" character varying(32) NOT NULL,
+    "OvertimeEligible" boolean NOT NULL,
+    "RequiresMealBreakAttestation" boolean NOT NULL,
+    "RequiresEndOfShiftAttestation" boolean NOT NULL,
+    "AllowMobileClock" boolean NOT NULL,
+    "AllowKioskClock" boolean NOT NULL,
+    "AllowManualCorrections" boolean NOT NULL,
+    "DefaultLaborAllocationTemplateId" uuid,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    "Status" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_timekeeping_profiles" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_timesheet_periods (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PayrollCalendarRef" character varying(256) NOT NULL,
+    "PeriodStartDate" date NOT NULL,
+    "PeriodEndDate" date NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SubmittedAt" timestamp with time zone,
+    "ApprovedAt" timestamp with time zone,
+    "ApprovedByPersonId" uuid,
+    "PayrollReadyAt" timestamp with time zone,
+    "ExportedAt" timestamp with time zone,
+    "TotalWorkedMinutes" integer NOT NULL,
+    "TotalPaidMinutes" integer NOT NULL,
+    "TotalUnpaidMinutes" integer NOT NULL,
+    "OvertimeMinutes" integer NOT NULL,
+    "ExceptionCount" integer NOT NULL,
+    "AttestationStatus" character varying(32) NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_timesheet_periods" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_work_sessions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "SessionDate" date NOT NULL,
+    "StartTime" timestamp with time zone NOT NULL,
+    "EndTime" timestamp with time zone,
+    "Timezone" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "SourceType" character varying(32) NOT NULL,
+    "PrimarySourceProductKey" character varying(64) NOT NULL,
+    "PrimarySourceRef" character varying(256),
+    "SiteRef" character varying(256),
+    "LocationRef" character varying(256),
+    "SupervisorPersonId" uuid,
+    "AnomalyFlagsCsv" character varying(1024) NOT NULL,
+    "CalculatedDurationMinutes" integer NOT NULL,
+    "PaidDurationMinutes" integer NOT NULL,
+    "UnpaidBreakMinutes" integer NOT NULL,
+    "RequiresReview" boolean NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_work_sessions" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_clock_events_TenantId_PersonId_EventTimestamp" ON staffarr_clock_events ("TenantId", "PersonId", "EventTimestamp");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_labor_allocations_TenantId_TimeEntryId" ON staffarr_labor_allocations ("TenantId", "TimeEntryId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_labor_evidence_inbox_TenantId_IdempotencyKey" ON staffarr_labor_evidence_inbox ("TenantId", "IdempotencyKey");
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_labor_evidence_inbox_TenantId_PersonId_EmittedAt" ON staffarr_labor_evidence_inbox ("TenantId", "PersonId", "EmittedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_pay_codes_TenantId_Code" ON staffarr_pay_codes ("TenantId", "Code");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_pay_policies_TenantId_Name" ON staffarr_pay_policies ("TenantId", "Name");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_time_attestations_TenantId_TimesheetPeriodId_Attes~" ON staffarr_time_attestations ("TenantId", "TimesheetPeriodId", "AttestationType");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_time_corrections_TenantId_PersonId_CreatedAt" ON staffarr_time_corrections ("TenantId", "PersonId", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_time_entries_TenantId_PersonId_EntryDate" ON staffarr_time_entries ("TenantId", "PersonId", "EntryDate");
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_time_entries_TenantId_TimesheetPeriodId" ON staffarr_time_entries ("TenantId", "TimesheetPeriodId");
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_time_exceptions_TenantId_TimesheetPeriodId_Resolut~" ON staffarr_time_exceptions ("TenantId", "TimesheetPeriodId", "ResolutionStatus");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_timekeeping_profiles_TenantId_PersonId" ON staffarr_timekeeping_profiles ("TenantId", "PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_timekeeping_profiles_TenantId_WorkerNumber" ON staffarr_timekeeping_profiles ("TenantId", "WorkerNumber");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_timesheet_periods_TenantId_PersonId_PeriodStartDat~" ON staffarr_timesheet_periods ("TenantId", "PersonId", "PeriodStartDate", "PeriodEndDate");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_timesheet_periods_TenantId_Status_PayrollReadyAt" ON staffarr_timesheet_periods ("TenantId", "Status", "PayrollReadyAt");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_work_sessions_TenantId_PersonId_SessionDate" ON staffarr_work_sessions ("TenantId", "PersonId", "SessionDate");
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260618220433_AddStaffArrTimekeeping', '10.0.8');
+[00:15:23 INF] Applying migration '20260619010320_AddEmploymentApplications'.
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:23 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_employment_application_templates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "TemplateKey" character varying(128) NOT NULL,
+    "TemplateName" character varying(200) NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "Subtitle" character varying(512) NOT NULL,
+    "SubmitLabel" character varying(64) NOT NULL,
+    "Version" integer NOT NULL DEFAULT 1,
+    "Status" character varying(32) NOT NULL,
+    "PublicToken" character varying(128) NOT NULL,
+    "PublicLinkExpiresAt" timestamp with time zone,
+    "TemplateJson" character varying(32768) NOT NULL,
+    "CreatedByPersonId" character varying(128),
+    "UpdatedByPersonId" character varying(128),
+    "PublishedByPersonId" character varying(128),
+    "PublishedAt" timestamp with time zone,
+    "RetiredByPersonId" character varying(128),
+    "RetiredAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_employment_application_templates" PRIMARY KEY ("Id")
+);
+[00:15:23 INF] Executed DbCommand (57ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_employment_application_submissions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "EmploymentApplicationTemplateId" uuid NOT NULL,
+    "TemplateKey" character varying(128) NOT NULL,
+    "TemplateVersion" integer NOT NULL DEFAULT 1,
+    "CreatedPersonId" uuid,
+    "Status" character varying(32) NOT NULL,
+    "ApplicantDisplayName" character varying(200) NOT NULL,
+    "ApplicantEmail" character varying(320) NOT NULL,
+    "RawAnswersJson" character varying(32768) NOT NULL,
+    "CreateRequestJson" character varying(32768) NOT NULL,
+    "EventualProfileJson" character varying(32768) NOT NULL,
+    "SourceIpAddress" character varying(64),
+    "UserAgent" character varying(256),
+    "ReviewerNotes" character varying(1024),
+    "SubmittedAt" timestamp with time zone NOT NULL,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_employment_application_submissions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_employment_application_submissions_staffarr_employment_application_templates_EmploymentApplicationTemplateId" FOREIGN KEY ("EmploymentApplicationTemplateId") REFERENCES staffarr_employment_application_templates ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_employment_application_submissions_staffarr_people_CreatedPersonId" FOREIGN KEY ("CreatedPersonId") REFERENCES staffarr_people ("Id")
+);
+[00:15:23 INF] Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_employment_application_templates_PublicToken" ON staffarr_employment_application_templates ("PublicToken");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_templates_TenantId" ON staffarr_employment_application_templates ("TenantId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_employment_application_templates_TenantId_TemplateKey_Version" ON staffarr_employment_application_templates ("TenantId", "TemplateKey", "Version");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_CreatedPersonId" ON staffarr_employment_application_submissions ("CreatedPersonId");
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_EmploymentApplicationTemplateId" ON staffarr_employment_application_submissions ("EmploymentApplicationTemplateId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_TenantId" ON staffarr_employment_application_submissions ("TenantId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_TenantId_SubmittedAt" ON staffarr_employment_application_submissions ("TenantId", "SubmittedAt");
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260619010320_AddEmploymentApplications', '10.0.8');
+[00:15:23 INF] Applying migration '20260619012834_RemoveEmploymentApplicationTemplateVersionDefault'.
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_employment_application_templates ALTER COLUMN "Version" DROP DEFAULT;
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260619012834_RemoveEmploymentApplicationTemplateVersionDefault', '10.0.8');
+[00:15:23 INF] Applying migration '20260619022918_AddRecruitingAndApplicationBridge'.
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_personnel_documents ADD "AccessLevel" character varying(32) NOT NULL DEFAULT '';
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_personnel_documents ADD "RestrictedData" boolean NOT NULL DEFAULT FALSE;
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_personnel_documents ADD "RetentionCategory" character varying(32) NOT NULL DEFAULT '';
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "CurrentEmploymentAction" character varying(64);
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "CurrentEmploymentActionAt" timestamp with time zone;
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "EligibleForRehire" boolean NOT NULL DEFAULT TRUE;
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "FlsaStatus" character varying(64);
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "LeaveStatus" character varying(64);
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "PositionNumber" character varying(64);
+[00:15:23 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_people ADD "WorkerCategory" character varying(64);
+[00:15:23 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_employment_application_submissions ADD "CreatedCandidateId" uuid;
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_availability_blocks (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "AvailabilityType" character varying(64) NOT NULL,
+    "DayOfWeekMaskCsv" character varying(64) NOT NULL,
+    "StartLocalTime" time without time zone NOT NULL,
+    "EndLocalTime" time without time zone NOT NULL,
+    "Timezone" character varying(64) NOT NULL,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    "Status" character varying(32) NOT NULL,
+    "Notes" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_availability_blocks" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_availability_blocks_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_benefit_beneficiaries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "FirstName" character varying(100) NOT NULL,
+    "LastName" character varying(100) NOT NULL,
+    "Relationship" character varying(64) NOT NULL,
+    "AllocationPercent" numeric(5,2) NOT NULL,
+    "DesignationType" character varying(64),
+    "Status" character varying(32) NOT NULL,
+    "EffectiveStartDate" date,
+    "EffectiveEndDate" date,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_benefit_beneficiaries" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_benefit_beneficiaries_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_benefit_dependents (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "FirstName" character varying(100) NOT NULL,
+    "LastName" character varying(100) NOT NULL,
+    "Relationship" character varying(64) NOT NULL,
+    "DateOfBirth" date,
+    "IsStudent" boolean NOT NULL,
+    "IsDisabled" boolean NOT NULL,
+    "CoverageStatus" character varying(32) NOT NULL,
+    "CoverageStartDate" date,
+    "CoverageEndDate" date,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_benefit_dependents" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_benefit_dependents_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_benefit_enrollments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "BenefitType" character varying(64) NOT NULL,
+    "PlanName" character varying(128) NOT NULL,
+    "BenefitClass" character varying(128) NOT NULL,
+    "CoverageLevel" character varying(32) NOT NULL,
+    "EligibilityStatus" character varying(32) NOT NULL,
+    "EnrollmentStatus" character varying(32) NOT NULL,
+    "CarrierExportStatus" character varying(32) NOT NULL,
+    "CarrierMemberId" character varying(128),
+    "CarrierGroupId" character varying(128),
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    "OpenEnrollmentYear" date,
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_benefit_enrollments" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_benefit_enrollments_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_compensation_change_requests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "RequestType" character varying(64) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ReasonCode" character varying(64) NOT NULL,
+    "ReasonText" character varying(2048) NOT NULL,
+    "OldSnapshot" character varying(4096) NOT NULL,
+    "NewSnapshot" character varying(4096) NOT NULL,
+    "RequestedByPersonId" uuid,
+    "ApprovedByPersonId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "EffectiveDate" date,
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_compensation_change_requests" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_compensation_change_requests_staffarr_people_Perso~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_compensation_profiles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PayBasis" character varying(32) NOT NULL,
+    "PayGrade" character varying(64) NOT NULL,
+    "PayBand" character varying(64) NOT NULL,
+    "StepProgression" character varying(64),
+    "BaseRate" numeric(18,4),
+    "AnnualSalary" numeric(18,2),
+    "CurrencyCode" character varying(8) NOT NULL,
+    "OvertimeEligible" boolean NOT NULL,
+    "ShiftDifferentialEligible" boolean NOT NULL,
+    "BonusEligible" boolean NOT NULL,
+    "AllowanceEligible" boolean NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "EffectiveStartDate" date NOT NULL,
+    "EffectiveEndDate" date,
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_compensation_profiles" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_compensation_profiles_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_leave_requests (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "LeaveType" character varying(64) NOT NULL,
+    "StartDate" date NOT NULL,
+    "EndDate" date NOT NULL,
+    "StartTime" time without time zone,
+    "EndTime" time without time zone,
+    "Timezone" character varying(64) NOT NULL,
+    "IsIntermittent" boolean NOT NULL,
+    "IsPaid" boolean NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid,
+    "RequestedAt" timestamp with time zone NOT NULL,
+    "ApprovedByPersonId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "ReviewNotes" character varying(2048),
+    "Reason" character varying(2048),
+    "PayrollLockStatus" character varying(32) NOT NULL,
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_leave_requests" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_leave_requests_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_performance_improvement_plans (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PlanName" character varying(200) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "StartDate" date NOT NULL,
+    "TargetDate" date,
+    "CheckInCadence" character varying(64),
+    "NextCheckInAt" timestamp with time zone,
+    "ManagerPersonId" uuid,
+    "HrOwnerPersonId" uuid,
+    "Summary" character varying(2048),
+    "Expectations" character varying(4096),
+    "SuccessCriteria" character varying(4096),
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_performance_improvement_plans" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_performance_improvement_plans_staffarr_people_Pers~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_performance_review_cycles (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "CycleName" character varying(128) NOT NULL,
+    "CycleType" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "StartDate" date NOT NULL,
+    "EndDate" date NOT NULL,
+    "SelfReviewDueDate" date,
+    "ManagerReviewDueDate" date,
+    "ManagerPersonId" uuid,
+    "SelfReviewCompletedAt" timestamp with time zone,
+    "ManagerReviewCompletedAt" timestamp with time zone,
+    "OverallRating" character varying(64),
+    "PromotionReady" boolean NOT NULL,
+    "SuccessionReady" boolean NOT NULL,
+    "NextCheckInAt" timestamp with time zone,
+    "Summary" character varying(2048),
+    "DevelopmentPlan" character varying(4096),
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_performance_review_cycles" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_performance_review_cycles_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_recruiting_requisitions (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RequisitionNumber" character varying(64) NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "JobCode" character varying(64) NOT NULL,
+    "JobFamily" character varying(128) NOT NULL,
+    "DepartmentRef" character varying(256),
+    "SiteRef" character varying(256),
+    "LocationRef" character varying(256),
+    "HiringManagerPersonId" uuid,
+    "RecruiterPersonId" uuid,
+    "Status" character varying(32) NOT NULL,
+    "HeadcountRequested" integer NOT NULL,
+    "FilledCount" integer NOT NULL,
+    "OpenDate" date,
+    "TargetStartDate" date,
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_recruiting_requisitions" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_requisitions_staffarr_people_HiringMana~" FOREIGN KEY ("HiringManagerPersonId") REFERENCES staffarr_people ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_requisitions_staffarr_people_RecruiterP~" FOREIGN KEY ("RecruiterPersonId") REFERENCES staffarr_people ("Id")
+);
+[00:15:23 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_attendance_events (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "OccurredAt" timestamp with time zone NOT NULL,
+    "EventType" character varying(64) NOT NULL,
+    "Severity" character varying(16) NOT NULL,
+    "PointValue" integer NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Notes" character varying(2048),
+    "SourceProductKey" character varying(64) NOT NULL,
+    "SourceRef" character varying(256),
+    "RelatedLeaveRequestId" uuid,
+    "RelatedTimesheetPeriodId" uuid,
+    "ReviewedByPersonId" uuid,
+    "ReviewedAt" timestamp with time zone,
+    "ResolutionNotes" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_attendance_events" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_attendance_events_staffarr_leave_requests_RelatedL~" FOREIGN KEY ("RelatedLeaveRequestId") REFERENCES staffarr_leave_requests ("Id"),
+    CONSTRAINT "FK_staffarr_attendance_events_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_attendance_events_staffarr_timesheet_periods_Relat~" FOREIGN KEY ("RelatedTimesheetPeriodId") REFERENCES staffarr_timesheet_periods ("Id")
+);
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_performance_competency_assessments (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PerformanceReviewCycleId" uuid,
+    "CompetencyKey" character varying(128) NOT NULL,
+    "CompetencyName" character varying(200) NOT NULL,
+    "ExpectedLevel" character varying(32) NOT NULL,
+    "CurrentLevel" character varying(32) NOT NULL,
+    "Rating" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Notes" character varying(2048),
+    "AssessedByPersonId" uuid,
+    "AssessedAt" timestamp with time zone,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_performance_competency_assessments" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_performance_competency_assessments_staffarr_people~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_performance_competency_assessments_staffarr_perfor~" FOREIGN KEY ("PerformanceReviewCycleId") REFERENCES staffarr_performance_review_cycles ("Id")
+);
+[00:15:23 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_performance_feedback_entries (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PerformanceReviewCycleId" uuid,
+    "FeedbackType" character varying(32) NOT NULL,
+    "Visibility" character varying(32) NOT NULL,
+    "Subject" character varying(200) NOT NULL,
+    "Body" character varying(4096) NOT NULL,
+    "Sentiment" character varying(32),
+    "AuthorPersonId" uuid,
+    "RelatedPersonId" uuid,
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_performance_feedback_entries" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_performance_feedback_entries_staffarr_people_Perso~" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_performance_feedback_entries_staffarr_performance_~" FOREIGN KEY ("PerformanceReviewCycleId") REFERENCES staffarr_performance_review_cycles ("Id")
+);
+[00:15:23 INF] Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_performance_goals (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "PersonId" uuid NOT NULL,
+    "PerformanceReviewCycleId" uuid,
+    "GoalTitle" character varying(200) NOT NULL,
+    "GoalType" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Priority" character varying(16) NOT NULL,
+    "ProgressPercent" numeric(5,2) NOT NULL,
+    "StartDate" date NOT NULL,
+    "TargetDate" date,
+    "CompletedAt" timestamp with time zone,
+    "OwnerPersonId" uuid,
+    "SuccessMetric" character varying(1024),
+    "Summary" character varying(2048),
+    "ResultSummary" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_performance_goals" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_performance_goals_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id") ON DELETE CASCADE,
+    CONSTRAINT "FK_staffarr_performance_goals_staffarr_performance_review_cycl~" FOREIGN KEY ("PerformanceReviewCycleId") REFERENCES staffarr_performance_review_cycles ("Id")
+);
+[00:15:23 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_recruiting_candidates (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RecruitingRequisitionId" uuid,
+    "EmploymentApplicationSubmissionId" uuid,
+    "PersonId" uuid,
+    "CandidateName" character varying(200) NOT NULL,
+    "CandidateEmail" character varying(320) NOT NULL,
+    "CandidatePhone" character varying(32),
+    "SourceType" character varying(32) NOT NULL,
+    "Stage" character varying(32) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "BackgroundCheckStatus" character varying(32),
+    "DrugScreenStatus" character varying(32),
+    "PhysicalStatus" character varying(32),
+    "OfferStatus" character varying(32),
+    "Score" numeric,
+    "Notes" character varying(2048),
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_recruiting_candidates" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_candidates_staffarr_employment_applicat~" FOREIGN KEY ("EmploymentApplicationSubmissionId") REFERENCES staffarr_employment_application_submissions ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_candidates_staffarr_people_PersonId" FOREIGN KEY ("PersonId") REFERENCES staffarr_people ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_candidates_staffarr_recruiting_requisit~" FOREIGN KEY ("RecruitingRequisitionId") REFERENCES staffarr_recruiting_requisitions ("Id")
+);
+[00:15:23 INF] Executed DbCommand (12ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_recruiting_interview_stages (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RecruitingCandidateId" uuid NOT NULL,
+    "StageName" character varying(128) NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "ScheduledAt" timestamp with time zone,
+    "CompletedAt" timestamp with time zone,
+    "InterviewerPersonId" uuid,
+    "Score" numeric,
+    "Recommendation" character varying(64),
+    "Notes" character varying(2048),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_recruiting_interview_stages" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_interview_stages_staffarr_people_Interv~" FOREIGN KEY ("InterviewerPersonId") REFERENCES staffarr_people ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_interview_stages_staffarr_recruiting_ca~" FOREIGN KEY ("RecruitingCandidateId") REFERENCES staffarr_recruiting_candidates ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE staffarr_recruiting_offers (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "RecruitingCandidateId" uuid NOT NULL,
+    "Status" character varying(32) NOT NULL,
+    "Title" character varying(200) NOT NULL,
+    "PayBasis" character varying(32) NOT NULL,
+    "AnnualSalary" numeric(18,2),
+    "HourlyRate" numeric(18,4),
+    "StartDate" date,
+    "ApprovedAt" timestamp with time zone,
+    "ApprovedByPersonId" uuid,
+    "AcceptedAt" timestamp with time zone,
+    "DeclinedAt" timestamp with time zone,
+    "Notes" character varying(2048),
+    "SourceProductKey" character varying(64),
+    "SourceRef" character varying(256),
+    "CreatedAt" timestamp with time zone NOT NULL,
+    "UpdatedAt" timestamp with time zone NOT NULL,
+    CONSTRAINT "PK_staffarr_recruiting_offers" PRIMARY KEY ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_offers_staffarr_people_ApprovedByPerson~" FOREIGN KEY ("ApprovedByPersonId") REFERENCES staffarr_people ("Id"),
+    CONSTRAINT "FK_staffarr_recruiting_offers_staffarr_recruiting_candidates_R~" FOREIGN KEY ("RecruitingCandidateId") REFERENCES staffarr_recruiting_candidates ("Id") ON DELETE CASCADE
+);
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_CreatedCandidat~" ON staffarr_employment_application_submissions ("CreatedCandidateId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_attendance_events_PersonId" ON staffarr_attendance_events ("PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_attendance_events_RelatedLeaveRequestId" ON staffarr_attendance_events ("RelatedLeaveRequestId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_attendance_events_RelatedTimesheetPeriodId" ON staffarr_attendance_events ("RelatedTimesheetPeriodId");
+[00:15:23 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_attendance_events_TenantId_PersonId_EventType_Stat~" ON staffarr_attendance_events ("TenantId", "PersonId", "EventType", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_attendance_events_TenantId_PersonId_OccurredAt" ON staffarr_attendance_events ("TenantId", "PersonId", "OccurredAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_availability_blocks_PersonId" ON staffarr_availability_blocks ("PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_availability_blocks_TenantId_PersonId_EffectiveSta~" ON staffarr_availability_blocks ("TenantId", "PersonId", "EffectiveStartDate", "EffectiveEndDate");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_availability_blocks_TenantId_PersonId_Status" ON staffarr_availability_blocks ("TenantId", "PersonId", "Status");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_beneficiaries_PersonId" ON staffarr_benefit_beneficiaries ("PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_beneficiaries_TenantId_PersonId_Status" ON staffarr_benefit_beneficiaries ("TenantId", "PersonId", "Status");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_dependents_PersonId" ON staffarr_benefit_dependents ("PersonId");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_dependents_TenantId_PersonId_Relationship" ON staffarr_benefit_dependents ("TenantId", "PersonId", "Relationship");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_enrollments_PersonId" ON staffarr_benefit_enrollments ("PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_enrollments_TenantId_PersonId_BenefitType_~" ON staffarr_benefit_enrollments ("TenantId", "PersonId", "BenefitType", "EnrollmentStatus");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_benefit_enrollments_TenantId_PersonId_EnrollmentSt~" ON staffarr_benefit_enrollments ("TenantId", "PersonId", "EnrollmentStatus");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_change_requests_PersonId" ON staffarr_compensation_change_requests ("PersonId");
+[00:15:23 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_change_requests_TenantId_PersonId_Req~" ON staffarr_compensation_change_requests ("TenantId", "PersonId", "RequestType", "CreatedAt");
+[00:15:23 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_change_requests_TenantId_PersonId_Sta~" ON staffarr_compensation_change_requests ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_profiles_PersonId" ON staffarr_compensation_profiles ("PersonId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_profiles_TenantId_PersonId_EffectiveS~" ON staffarr_compensation_profiles ("TenantId", "PersonId", "EffectiveStartDate", "EffectiveEndDate");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_compensation_profiles_TenantId_PersonId_Status" ON staffarr_compensation_profiles ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_leave_requests_PersonId" ON staffarr_leave_requests ("PersonId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_leave_requests_TenantId_PersonId_StartDate_EndDate" ON staffarr_leave_requests ("TenantId", "PersonId", "StartDate", "EndDate");
+[00:15:24 INF] Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_leave_requests_TenantId_PersonId_Status" ON staffarr_leave_requests ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_competency_assessments_PerformanceRevi~" ON staffarr_performance_competency_assessments ("PerformanceReviewCycleId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_competency_assessments_PersonId" ON staffarr_performance_competency_assessments ("PersonId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_performance_competency_assessments_TenantId_Perso~1" ON staffarr_performance_competency_assessments ("TenantId", "PersonId", "PerformanceReviewCycleId", "CompetencyKey");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_competency_assessments_TenantId_Person~" ON staffarr_performance_competency_assessments ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_feedback_entries_PerformanceReviewCycl~" ON staffarr_performance_feedback_entries ("PerformanceReviewCycleId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_feedback_entries_PersonId" ON staffarr_performance_feedback_entries ("PersonId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_feedback_entries_TenantId_PersonId_Cre~" ON staffarr_performance_feedback_entries ("TenantId", "PersonId", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_feedback_entries_TenantId_PersonId_Per~" ON staffarr_performance_feedback_entries ("TenantId", "PersonId", "PerformanceReviewCycleId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_goals_PerformanceReviewCycleId" ON staffarr_performance_goals ("PerformanceReviewCycleId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_goals_PersonId" ON staffarr_performance_goals ("PersonId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_goals_TenantId_PersonId_PerformanceRev~" ON staffarr_performance_goals ("TenantId", "PersonId", "PerformanceReviewCycleId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_goals_TenantId_PersonId_Status" ON staffarr_performance_goals ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_improvement_plans_PersonId" ON staffarr_performance_improvement_plans ("PersonId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_improvement_plans_TenantId_PersonId_S~1" ON staffarr_performance_improvement_plans ("TenantId", "PersonId", "StartDate", "TargetDate");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_improvement_plans_TenantId_PersonId_St~" ON staffarr_performance_improvement_plans ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_review_cycles_PersonId" ON staffarr_performance_review_cycles ("PersonId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_review_cycles_TenantId_PersonId_StartD~" ON staffarr_performance_review_cycles ("TenantId", "PersonId", "StartDate", "EndDate");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_performance_review_cycles_TenantId_PersonId_Status" ON staffarr_performance_review_cycles ("TenantId", "PersonId", "Status");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_candidates_EmploymentApplicationSubmiss~" ON staffarr_recruiting_candidates ("EmploymentApplicationSubmissionId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_candidates_PersonId" ON staffarr_recruiting_candidates ("PersonId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_candidates_RecruitingRequisitionId" ON staffarr_recruiting_candidates ("RecruitingRequisitionId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_candidates_TenantId_RecruitingRequisiti~" ON staffarr_recruiting_candidates ("TenantId", "RecruitingRequisitionId", "Stage");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_interview_stages_InterviewerPersonId" ON staffarr_recruiting_interview_stages ("InterviewerPersonId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_interview_stages_RecruitingCandidateId" ON staffarr_recruiting_interview_stages ("RecruitingCandidateId");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_interview_stages_TenantId_RecruitingCan~" ON staffarr_recruiting_interview_stages ("TenantId", "RecruitingCandidateId", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_offers_ApprovedByPersonId" ON staffarr_recruiting_offers ("ApprovedByPersonId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_offers_RecruitingCandidateId" ON staffarr_recruiting_offers ("RecruitingCandidateId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_offers_TenantId_RecruitingCandidateId_S~" ON staffarr_recruiting_offers ("TenantId", "RecruitingCandidateId", "Status");
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_requisitions_HiringManagerPersonId" ON staffarr_recruiting_requisitions ("HiringManagerPersonId");
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_requisitions_RecruiterPersonId" ON staffarr_recruiting_requisitions ("RecruiterPersonId");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE UNIQUE INDEX "IX_staffarr_recruiting_requisitions_TenantId_RequisitionNumber" ON staffarr_recruiting_requisitions ("TenantId", "RequisitionNumber");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_recruiting_requisitions_TenantId_Status_CreatedAt" ON staffarr_recruiting_requisitions ("TenantId", "Status", "CreatedAt");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260619022918_AddRecruitingAndApplicationBridge', '10.0.8');
+[00:15:24 INF] Applying migration '20260619052948_DropLegacyRoleTemplateTables'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+DROP TABLE staffarr_permission_history_events;
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+DROP TABLE staffarr_role_template_permissions;
+[00:15:24 INF] Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+DROP TABLE staffarr_person_role_assignments;
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+DROP TABLE staffarr_role_templates;
+[00:15:24 INF] Executed DbCommand (0ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260619052948_DropLegacyRoleTemplateTables', '10.0.8');
+[00:15:24 INF] Applying migration '20260620053627_LinkApplicationSubmissionsToRequisitions'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_employment_application_submissions ADD "RecruitingRequisitionId" uuid;
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+
+UPDATE "staffarr_employment_application_submissions" AS s
+SET "RecruitingRequisitionId" = c."RecruitingRequisitionId"
+FROM "staffarr_recruiting_candidates" AS c
+WHERE s."CreatedCandidateId" = c."Id"
+  AND s."RecruitingRequisitionId" IS NULL
+  AND c."RecruitingRequisitionId" IS NOT NULL;
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_RecruitingRequi~" ON staffarr_employment_application_submissions ("RecruitingRequisitionId");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_staffarr_employment_application_submissions_TenantId_Recrui~" ON staffarr_employment_application_submissions ("TenantId", "RecruitingRequisitionId", "SubmittedAt");
+[00:15:24 INF] Executed DbCommand (5ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+ALTER TABLE staffarr_employment_application_submissions ADD CONSTRAINT "FK_staffarr_employment_application_submissions_staffarr_recrui~" FOREIGN KEY ("RecruitingRequisitionId") REFERENCES staffarr_recruiting_requisitions ("Id");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260620053627_LinkApplicationSubmissionsToRequisitions', '10.0.8');
+[00:15:24 INF] Applying migration '20260622060445_AddPrintExportLogs'.
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+LOCK TABLE "__EFMigrationsHistory" IN ACCESS EXCLUSIVE MODE
+[00:15:24 INF] Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE TABLE print_export_logs (
+    "Id" uuid NOT NULL,
+    "TenantId" uuid NOT NULL,
+    "ProductKey" character varying(64) NOT NULL,
+    "SourceEntityType" character varying(128) NOT NULL,
+    "SourceEntityId" character varying(256) NOT NULL,
+    "SourceDisplayRef" character varying(256) NOT NULL,
+    "TemplateKey" character varying(160) NOT NULL,
+    "TemplateVersion" character varying(64) NOT NULL,
+    "Action" character varying(32) NOT NULL,
+    "DocumentStatus" character varying(32) NOT NULL,
+    "RequestedByPersonId" uuid NOT NULL,
+    "RequestedAtUtc" timestamp with time zone NOT NULL,
+    "CompletedAtUtc" timestamp with time zone,
+    "RecordArrDocumentId" character varying(128),
+    "FileName" character varying(256),
+    "ContentHash" character varying(128),
+    "ReprintReason" character varying(1024),
+    "FailureReason" character varying(1024),
+    "MetadataJson" jsonb,
+    CONSTRAINT "PK_print_export_logs" PRIMARY KEY ("Id")
+);
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_action_lookup" ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_lookup" ON print_export_logs ("TenantId", "ProductKey", "SourceEntityType", "SourceEntityId", "RequestedAtUtc");
+[00:15:24 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+CREATE INDEX "IX_print_export_logs_TenantId" ON print_export_logs ("TenantId");
+[00:15:24 INF] Executed DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20260622060445_AddPrintExportLogs', '10.0.8');
+[00:15:24 INF] Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
 CREATE TABLE IF NOT EXISTS print_export_logs (
     "Id" uuid NOT NULL,
     "TenantId" uuid NOT NULL,
@@ -71,142 +2432,15 @@ CREATE INDEX IF NOT EXISTS "IX_print_export_logs_lookup"
 
 CREATE INDEX IF NOT EXISTS "IX_print_export_logs_action_lookup"
     ON print_export_logs ("TenantId", "ProductKey", "Action", "RequestedAtUtc");
-[22:30:03 INF] Starting StaffArr API (staffarr) on http://localhost:5102
-[22:30:03 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
-[22:30:06 INF] Now listening on: http://localhost:5102
-[22:30:06 INF] Application started. Press Ctrl+C to shut down.
-[22:30:06 INF] Hosting environment: Development
-[22:30:06 INF] Content root path: F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api
-[22:30:06 INF] Request starting HTTP/1.1 GET http://localhost:5102/health - null null
-[22:30:10 INF] Executing endpoint 'HTTP: GET /health'
-[22:30:10 INF] Setting HTTP status code 200.
-[22:30:10 INF] Writing value of type 'HealthResponse' as Json.
-[22:30:10 INF] Executed endpoint 'HTTP: GET /health'
-[22:30:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/health - 200 null application/json; charset=utf-8 4025.4639ms
-[22:39:09 INF] Request starting HTTP/1.1 POST http://localhost:5102/api/auth/nexarr/redeem - application/json 61
-[22:39:09 INF] CORS policy execution successful.
-[22:39:09 INF] Executing endpoint 'HTTP: POST /api/auth/nexarr/redeem => RedeemHandoffAsync'
-[22:39:09 INF] Start processing HTTP request POST http://localhost:5101/api/launch/handoff/redeem
-[22:39:09 INF] Sending HTTP request POST http://localhost:5101/api/launch/handoff/redeem
-[22:39:09 INF] Received HTTP response headers after 160.3457ms - 200
-[22:39:09 INF] End processing HTTP request after 166.0499ms - 200
-[22:39:10 INF] Executed DbCommand (23ms) [Parameters=[@tenantId='?' (DbType = Guid), @externalUserId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."AlternateEmail", s."AlternatePhone", s."CanLoginSnapshot", s."CreatedAt", s."CurrentEmploymentAction", s."CurrentEmploymentActionAt", s."DisplayName", s."EligibleForRehire", s."EmploymentStatus", s."EmploymentType", s."ExpectedStartDate", s."ExternalUserId", s."FamilyName", s."FlsaStatus", s."GivenName", s."HasUserAccountSnapshot", s."HomeBaseLocationId", s."JobTitle", s."LeaveStatus", s."LegalFirstName", s."LegalLastName", s."LegalMiddleName", s."ManagerPersonId", s."PositionNumber", s."PreferredName", s."PrimaryEmail", s."PrimaryOrgUnitId", s."PrimaryPhone", s."Pronouns", s."StartDate", s."TenantId", s."UpdatedAt", s."WorkPhone", s."WorkRelationshipType", s."WorkerCategory"
-FROM staffarr_people AS s
-WHERE s."TenantId" = @tenantId AND s."ExternalUserId" = @externalUserId
-LIMIT 1
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Writing value of type 'HandoffSessionResponse' as Json.
-[22:39:10 INF] Executed endpoint 'HTTP: POST /api/auth/nexarr/redeem => RedeemHandoffAsync'
-[22:39:10 INF] Request finished HTTP/1.1 POST http://localhost:5102/api/auth/nexarr/redeem - 200 null application/json; charset=utf-8 832.3517ms
-[22:39:10 INF] Request starting HTTP/1.1 GET http://localhost:5102/api/session - application/json null
-[22:39:10 INF] Request starting HTTP/1.1 GET http://localhost:5102/api/v1/launch/catalog?currentProductKey=staffarr - application/json null
-[22:39:10 INF] Executing endpoint 'HTTP: GET /api/session/'
-[22:39:10 INF] Executing endpoint 'HTTP: GET /api/v1/launch/catalog => GetLaunchCatalogAsync'
-[22:39:10 INF] Start processing HTTP request GET http://localhost:5101/api/launch/catalog?*
-[22:39:10 INF] Sending HTTP request GET http://localhost:5101/api/launch/catalog?*
-[22:39:10 INF] Executed DbCommand (9ms) [Parameters=[@tenantId='?' (DbType = Guid), @personFromClaim='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."AlternateEmail", s."AlternatePhone", s."CanLoginSnapshot", s."CreatedAt", s."CurrentEmploymentAction", s."CurrentEmploymentActionAt", s."DisplayName", s."EligibleForRehire", s."EmploymentStatus", s."EmploymentType", s."ExpectedStartDate", s."ExternalUserId", s."FamilyName", s."FlsaStatus", s."GivenName", s."HasUserAccountSnapshot", s."HomeBaseLocationId", s."JobTitle", s."LeaveStatus", s."LegalFirstName", s."LegalLastName", s."LegalMiddleName", s."ManagerPersonId", s."PositionNumber", s."PreferredName", s."PrimaryEmail", s."PrimaryOrgUnitId", s."PrimaryPhone", s."Pronouns", s."StartDate", s."TenantId", s."UpdatedAt", s."WorkPhone", s."WorkRelationshipType", s."WorkerCategory", s0."Id", s0."ArchiveReason", s0."ArchivedAt", s0."ArchivedByUserId", s0."CanApprove", s0."CanSupervise", s0."Code", s0."ComplianceSensitive", s0."CreatedAt", s0."DefaultSiteOrgUnitId", s0."Description", s0."EffectiveEndDate", s0."EffectiveStartDate", s0."EmergencyContact", s0."ManagerPersonId", s0."Name", s0."ParentOrgUnitId", s0."Phone", s0."PositionCode", s0."SafetySensitive", s0."SiteType", s0."Status", s0."TeamType", s0."TenantId", s0."Timezone", s0."UnitType", s0."UpdatedAt"
-FROM staffarr_people AS s
-LEFT JOIN staffarr_org_units AS s0 ON s."PrimaryOrgUnitId" = s0."Id"
-WHERE s."TenantId" = @tenantId AND s."Id" = @personFromClaim
-LIMIT 1
-[22:39:10 INF] Received HTTP response headers after 77.9168ms - 200
-[22:39:10 INF] End processing HTTP request after 78.9472ms - 200
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Write content with HTTP Response ContentType of application/json; charset=utf-8
-[22:39:10 INF] Executed endpoint 'HTTP: GET /api/v1/launch/catalog => GetLaunchCatalogAsync'
-[22:39:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/api/v1/launch/catalog?currentProductKey=staffarr - 200 3885 application/json; charset=utf-8 140.9392ms
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Writing value of type 'StaffArrSessionBootstrapResponse' as Json.
-[22:39:10 INF] Executed endpoint 'HTTP: GET /api/session/'
-[22:39:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/api/session - 200 null application/json; charset=utf-8 151.2702ms
-[22:39:10 INF] Request starting HTTP/1.1 GET http://localhost:5102/api/me - application/json null
-[22:39:10 INF] Request starting HTTP/1.1 GET http://localhost:5102/api/v1/org-units - application/json null
-[22:39:10 INF] Request starting HTTP/1.1 GET http://localhost:5102/api/people - application/json null
-[22:39:10 INF] Executing endpoint 'HTTP: GET /api/me/'
-[22:39:10 INF] Executing endpoint 'HTTP: GET /api/people/'
-[22:39:10 INF] Executing endpoint 'HTTP: GET /api/v1/org-units/'
-[22:39:10 INF] Executed DbCommand (2ms) [Parameters=[@tenantId='?' (DbType = Guid), @personFromClaim='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."AlternateEmail", s."AlternatePhone", s."CanLoginSnapshot", s."CreatedAt", s."CurrentEmploymentAction", s."CurrentEmploymentActionAt", s."DisplayName", s."EligibleForRehire", s."EmploymentStatus", s."EmploymentType", s."ExpectedStartDate", s."ExternalUserId", s."FamilyName", s."FlsaStatus", s."GivenName", s."HasUserAccountSnapshot", s."HomeBaseLocationId", s."JobTitle", s."LeaveStatus", s."LegalFirstName", s."LegalLastName", s."LegalMiddleName", s."ManagerPersonId", s."PositionNumber", s."PreferredName", s."PrimaryEmail", s."PrimaryOrgUnitId", s."PrimaryPhone", s."Pronouns", s."StartDate", s."TenantId", s."UpdatedAt", s."WorkPhone", s."WorkRelationshipType", s."WorkerCategory", s0."Id", s0."ArchiveReason", s0."ArchivedAt", s0."ArchivedByUserId", s0."CanApprove", s0."CanSupervise", s0."Code", s0."ComplianceSensitive", s0."CreatedAt", s0."DefaultSiteOrgUnitId", s0."Description", s0."EffectiveEndDate", s0."EffectiveStartDate", s0."EmergencyContact", s0."ManagerPersonId", s0."Name", s0."ParentOrgUnitId", s0."Phone", s0."PositionCode", s0."SafetySensitive", s0."SiteType", s0."Status", s0."TeamType", s0."TenantId", s0."Timezone", s0."UnitType", s0."UpdatedAt"
-FROM staffarr_people AS s
-LEFT JOIN staffarr_org_units AS s0 ON s."PrimaryOrgUnitId" = s0."Id"
-WHERE s."TenantId" = @tenantId AND s."Id" = @personFromClaim
-LIMIT 1
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Writing value of type 'StaffArrMeResponse' as Json.
-[22:39:10 INF] Executed endpoint 'HTTP: GET /api/me/'
-[22:39:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/api/me - 200 null application/json; charset=utf-8 17.5585ms
-[22:39:10 INF] Executed DbCommand (3ms) [Parameters=[@tenantId='?' (DbType = Guid), @p='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
-SELECT s1."Id", s1."ExternalUserId", s1."GivenName", s1."FamilyName", s1."DisplayName", s1."PrimaryEmail", s1."EmploymentStatus", s1."PrimaryOrgUnitId", s0."Name", s1."ManagerPersonId", s1."JobTitle", s1."PreferredName", s1."WorkRelationshipType", s1."EmploymentType", s1."WorkerCategory", s1."FlsaStatus", s1."PositionNumber", s1."CurrentEmploymentAction", s1."CurrentEmploymentActionAt", s1."LeaveStatus", s1."EligibleForRehire", s1."CanLoginSnapshot", s1."HasUserAccountSnapshot"
-FROM (
-    SELECT s."Id", s."CanLoginSnapshot", s."CurrentEmploymentAction", s."CurrentEmploymentActionAt", s."DisplayName", s."EligibleForRehire", s."EmploymentStatus", s."EmploymentType", s."ExternalUserId", s."FamilyName", s."FlsaStatus", s."GivenName", s."HasUserAccountSnapshot", s."JobTitle", s."LeaveStatus", s."ManagerPersonId", s."PositionNumber", s."PreferredName", s."PrimaryEmail", s."PrimaryOrgUnitId", s."WorkRelationshipType", s."WorkerCategory"
-    FROM staffarr_people AS s
-    WHERE s."TenantId" = @tenantId
-    ORDER BY s."DisplayName"
-    LIMIT @p
-) AS s1
-LEFT JOIN staffarr_org_units AS s0 ON s1."PrimaryOrgUnitId" = s0."Id"
-ORDER BY s1."DisplayName"
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Writing value of type 'List`1' as Json.
-[22:39:10 INF] Executed endpoint 'HTTP: GET /api/people/'
-[22:39:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/api/people - 200 null application/json; charset=utf-8 43.0402ms
-[22:39:10 INF] Executed DbCommand (5ms) [Parameters=[@tenantId='?' (DbType = Guid), @personId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s1."Id", s1."ComputedAt", s1."CreatedAt", s1."PermissionCount", s1."PersonId", s1."TenantId", s1."UpdatedAt", s0."Id", s0."PermissionKey", s0."PermissionName", s0."PersonId", s0."ProjectionId", s0."ScopeType", s0."ScopeValue", s0."TenantId"
-FROM (
-    SELECT s."Id", s."ComputedAt", s."CreatedAt", s."PermissionCount", s."PersonId", s."TenantId", s."UpdatedAt"
-    FROM staffarr_person_permission_projections AS s
-    WHERE s."TenantId" = @tenantId AND s."PersonId" = @personId
-    LIMIT 1
-) AS s1
-LEFT JOIN staffarr_person_permission_projection_entries AS s0 ON s1."Id" = s0."ProjectionId"
-ORDER BY s1."Id"
-[22:39:10 INF] Executed DbCommand (1ms) [Parameters=[@tenantId='?' (DbType = Guid), @personId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT EXISTS (
-    SELECT 1
-    FROM staffarr_people AS s
-    WHERE s."TenantId" = @tenantId AND s."Id" = @personId)
-[22:39:10 INF] Executed DbCommand (5ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."Description", s."IsArchived", s."IsSystem", s."Name", s."RoleType", s."TenantId", s."UpdatedAt"
-FROM staffarr_roles AS s
-WHERE s."TenantId" = @tenantId AND s."IsSystem"
-ORDER BY s."CreatedAt", s."Id"
-[22:39:10 INF] Executed DbCommand (1ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Name"
-FROM staffarr_roles AS s
-WHERE s."TenantId" = @tenantId AND s."IsSystem"
-[22:39:10 INF] Executed DbCommand (1ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."Description", s."IsArchived", s."IsSystem", s."Name", s."RoleType", s."TenantId", s."UpdatedAt"
-FROM staffarr_roles AS s
-WHERE s."TenantId" = @tenantId AND s."IsSystem"
-ORDER BY s."CreatedAt", s."Id"
-[22:39:10 INF] Executed DbCommand (1ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."Description", s."IsArchived", s."IsSystem", s."Name", s."RoleType", s."TenantId", s."UpdatedAt"
-FROM staffarr_roles AS s
-WHERE s."TenantId" = @tenantId AND s."IsSystem" AND NOT (s."IsArchived")
-[22:39:10 INF] Executed DbCommand (4ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."Description", s."LastSyncedAt", s."Name", s."PermissionKey", s."PermissionScope", s."ProductKey", s."Sensitivity", s."Status", s."TenantId", s."UpdatedAt"
-FROM staffarr_permission_templates AS s
-WHERE s."TenantId" = @tenantId AND lower(s."Status") = 'active'
-[22:39:10 INF] Executed DbCommand (51ms) [Parameters=[@tenantId='?' (DbType = Guid), @roleIds='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."Effect", s."PermissionKey", s."ProductKey", s."RoleId", s."TenantId"
-FROM staffarr_role_permissions AS s
-WHERE s."TenantId" = @tenantId AND s."RoleId" = ANY (@roleIds)
-[22:39:10 INF] Executed DbCommand (2ms) [Parameters=[@tenantId='?' (DbType = Guid), @roleIds='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."CreatedAt", s."RoleId", s."ScopeRefId", s."ScopeRefSnapshot", s."ScopeType", s."TenantId"
-FROM staffarr_role_scopes AS s
-WHERE s."TenantId" = @tenantId AND s."RoleId" = ANY (@roleIds)
-[22:39:10 INF] Executed DbCommand (3ms) [Parameters=[@tenantId='?' (DbType = Guid), @personId='?' (DbType = Guid), @asOf='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."AssignedByPersonId", s."AssignmentScopeRefId", s."AssignmentScopeType", s."CreatedAt", s."EndsAt", s."PersonId", s."RoleId", s."StartsAt", s."TenantId"
-FROM staffarr_person_roles AS s
-WHERE s."TenantId" = @tenantId AND s."PersonId" = @personId AND (s."StartsAt" IS NULL OR s."StartsAt" <= @asOf) AND (s."EndsAt" IS NULL OR s."EndsAt" > @asOf)
-ORDER BY s."CreatedAt" DESC
-[22:39:10 INF] Executed DbCommand (1ms) [Parameters=[@tenantId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
-SELECT s."Id", s."ArchiveReason", s."ArchivedAt", s."ArchivedByUserId", s."CanApprove", s."CanSupervise", s."Code", s."ComplianceSensitive", s."CreatedAt", s."DefaultSiteOrgUnitId", s."Description", s."EffectiveEndDate", s."EffectiveStartDate", s."EmergencyContact", s."ManagerPersonId", s."Name", s."ParentOrgUnitId", s."Phone", s."PositionCode", s."SafetySensitive", s."SiteType", s."Status", s."TeamType", s."TenantId", s."Timezone", s."UnitType", s."UpdatedAt"
-FROM staffarr_org_units AS s
-WHERE s."TenantId" = @tenantId AND s."Status" <> 'archived'
-[22:39:10 INF] Setting HTTP status code 200.
-[22:39:10 INF] Writing value of type 'OrgUnitResponse[]' as Json.
-[22:39:10 INF] Executed endpoint 'HTTP: GET /api/v1/org-units/'
-[22:39:10 INF] Request finished HTTP/1.1 GET http://localhost:5102/api/v1/org-units - 200 null application/json; charset=utf-8 293.3748ms
+[00:15:24 INF] Starting StaffArr API (staffarr) on http://localhost:5102
+[00:15:24 INF] User profile is available. Using 'C:\Users\tsede\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+[00:15:25 INF] Now listening on: http://localhost:5102
+[00:15:25 INF] Application started. Press Ctrl+C to shut down.
+[00:15:25 INF] Hosting environment: Development
+[00:15:25 INF] Content root path: F:\STLComplianceV2\apps\staffarr-api\StaffArr.Api
+[00:15:26 INF] Request starting HTTP/1.1 GET http://localhost:5102/health - null null
+[00:15:27 INF] Executing endpoint 'HTTP: GET /health'
+[00:15:27 INF] Setting HTTP status code 200.
+[00:15:27 INF] Writing value of type 'HealthResponse' as Json.
+[00:15:27 INF] Executed endpoint 'HTTP: GET /health'
+[00:15:27 INF] Request finished HTTP/1.1 GET http://localhost:5102/health - 200 null application/json; charset=utf-8 1661.485ms

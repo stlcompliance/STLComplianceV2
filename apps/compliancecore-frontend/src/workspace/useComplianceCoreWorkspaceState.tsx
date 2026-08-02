@@ -544,7 +544,8 @@ export function useComplianceCoreWorkspaceState() {
 
   const ready = Boolean(session && meQuery.data)
   const me = meQuery.data!
-  const canManage = meQuery.data ? me.canManageVocabulary : false
+  const canManage = meQuery.data ? me.canManageWaivers : false
+  const canApproveWaivers = meQuery.data ? me.canApproveWaivers : false
   const canExportAudit = meQuery.data ? me.canExportAuditPackage : false
   const canReadOrchestration = canExportAudit
   const canEvaluateRisk = meQuery.data ? me.canEvaluateRiskScores : false
@@ -600,6 +601,7 @@ export function useComplianceCoreWorkspaceState() {
     checkWorkflowGateMutation,
     checkWorkflowGateBatchMutation,
     canManage,
+    canApproveWaivers,
     canExportAudit,
     canReadOrchestration,
     canEvaluateRisk,

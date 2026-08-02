@@ -163,6 +163,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.Id,
             user.Email,
             user.DisplayName,
+            roleKey,
             actorUserId,
             cancellationToken);
 
@@ -272,6 +273,7 @@ public sealed class PlatformIdentityIntegrationService(
             user.Id,
             user.Email,
             user.DisplayName,
+            roleKey,
             actorUserId,
             cancellationToken);
 

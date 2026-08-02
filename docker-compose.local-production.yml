@@ -1,0 +1,120 @@
+x-production-api-env: &production-api-env
+  AUTH_SIGNING_KEY: stl-local-production-auth-signing-key-2026-minimum-32
+  SERVICE_TOKEN_SIGNING_KEY: stl-local-production-service-token-signing-key-2026
+  SERVICE_TOKEN_ISSUER: stl-local-production
+  SERVICE_TOKEN_AUDIENCE: stl-local-production-services
+  ASPNETCORE_ENVIRONMENT: Production
+  STL_ENV: production
+  NODE_ENV: production
+
+x-production-worker-env: &production-worker-env
+  AUTH_SIGNING_KEY: stl-local-production-auth-signing-key-2026-minimum-32
+  SERVICE_TOKEN_SIGNING_KEY: stl-local-production-service-token-signing-key-2026
+  SERVICE_TOKEN_ISSUER: stl-local-production
+  SERVICE_TOKEN_AUDIENCE: stl-local-production-services
+  DOTNET_ENVIRONMENT: Production
+  STL_ENV: production
+
+services:
+  nexarr-api:
+    environment:
+      <<: *production-api-env
+      TENANT_INTEGRATION_ENCRYPTION_KEY: stl-local-production-tenant-integration-encryption-key
+      Cors__SuiteFrontendOrigin: http://127.0.0.1:5174
+      Cors__FieldCompanionFrontendOrigin: http://127.0.0.1:5181
+      Seed__FirstAdminEmail: admin@localprod.stl
+      Seed__FirstAdminPassword: ChangeMe!LocalProdAdmin2026
+      Seed__FirstAdminDisplayName: Local Production Platform Admin
+      Seed__BootstrapTenantSlug: stl-local-prod
+      Seed__BootstrapTenantDisplayName: STL Local Production Tenant
+      Seed__BootstrapTenantAdminEmail: tenant-admin@localprod.stl
+      Seed__BootstrapTenantAdminPassword: ChangeMe!LocalProdTenant2026
+      Seed__BootstrapTenantAdminDisplayName: Local Production Tenant Admin
+
+  staffarr-api:
+    environment:
+      <<: *production-api-env
+
+  trainarr-api:
+    environment:
+      <<: *production-api-env
+
+  maintainarr-api:
+    environment:
+      <<: *production-api-env
+
+  routarr-api:
+    environment:
+      <<: *production-api-env
+
+  supplyarr-api:
+    environment:
+      <<: *production-api-env
+
+  customarr-api:
+    environment:
+      <<: *production-api-env
+
+  ordarr-api:
+    environment:
+      <<: *production-api-env
+
+  ledgarr-api:
+    environment:
+      <<: *production-api-env
+
+  reportarr-api:
+    environment:
+      <<: *production-api-env
+
+  compliancecore-api:
+    environment:
+      <<: *production-api-env
+
+  recordarr-api:
+    environment:
+      <<: *production-api-env
+
+  assurarr-api:
+    environment:
+      <<: *production-api-env
+
+  loadarr-api:
+    environment:
+      <<: *production-api-env
+
+  nexarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  staffarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  trainarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  maintainarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  routarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  supplyarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  ledgarr-worker:
+    environment:
+      <<: *production-worker-env
+
+  compliancecore-worker:
+    environment:
+      <<: *production-worker-env
+
+  shared-worker:
+    environment:
+      <<: *production-worker-env

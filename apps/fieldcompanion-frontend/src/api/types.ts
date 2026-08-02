@@ -113,6 +113,8 @@ export interface FieldCompanionSessionResponse {
   callbackUrl: string | null
 }
 
+export type HandoffSessionResponse = FieldCompanionSessionResponse
+
 export interface FieldCompanionOfflineActionPayload {
   idempotencyKey: string
   actionKind: string

@@ -237,6 +237,60 @@ public sealed class RoleManagementServiceTests
     }
 
     [Fact]
+    public async Task Platform_managed_role_sync_assigns_tenant_admin_template_without_platform_admin_permissions()
+    {
+        var options = new DbContextOptionsBuilder<StaffArrDbContext>()
+            .UseInMemoryDatabase($"staffarr-platform-managed-role-sync-{Guid.NewGuid():N}")
+            .Options;
+
+        await using var db = new StaffArrDbContext(options);
+        var tenantId = Guid.NewGuid();
+        var personId = Guid.NewGuid();
+        var now = DateTimeOffset.UtcNow;
+
+        db.People.Add(new StaffPerson
+        {
+            Id = personId,
+            TenantId = tenantId,
+            GivenName = "Tenant",
+            FamilyName = "Admin",
+            DisplayName = "Tenant Admin",
+            PrimaryEmail = "tenant.admin@example.com",
+            EmploymentStatus = "active",
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+        await db.SaveChangesAsync();
+
+        var audit = new NoOpStaffArrAuditService();
+        var service = new RoleManagementService(db, audit, new StaffArrTenantSettingsService(db, audit));
+
+        await service.EnsurePlatformManagedSystemRoleAssignmentsAsync(
+            tenantId,
+            personId,
+            TenantAdminPermissionInheritanceRules.TenantAdminRoleKey);
+
+        var roles = await db.StaffRoles
+            .Where(role => role.TenantId == tenantId && role.IsSystem)
+            .ToListAsync();
+        var tenantAdminRole = Assert.Single(
+            roles,
+            role => TenantAdminPermissionInheritanceRules.IsTenantAdminSystemTemplateName(role.Name));
+        var assignments = await db.StaffPersonRoles
+            .Where(x => x.TenantId == tenantId && x.PersonId == personId)
+            .ToListAsync();
+        Assert.Contains(assignments, assignment =>
+            assignment.RoleId == tenantAdminRole.Id
+            && assignment.AssignmentScopeType == "tenant"
+            && assignment.AssignmentScopeRefId is null);
+
+        var projection = await service.ComputeEffectivePermissionProjectionAsync(tenantId, personId);
+        Assert.NotEmpty(projection.Permissions);
+        Assert.DoesNotContain(projection.Permissions, permission =>
+            TenantAdminPermissionInheritanceRules.IsPlatformAdminPermission("staffarr", permission.PermissionKey));
+    }
+
+    [Fact]
     public async Task ListRolesAsync_collapses_duplicate_system_templates()
     {
         var options = new DbContextOptionsBuilder<StaffArrDbContext>()

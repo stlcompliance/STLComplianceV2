@@ -5,6 +5,7 @@ public sealed record ProvisionStaffArrPersonRequest(
     Guid ExternalUserId,
     string Email,
     string DisplayName,
+    string? RoleKey = null,
     Guid? RequestedByUserId = null);
 
 public sealed record ProvisionStaffArrPersonResponse(

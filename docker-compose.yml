@@ -1,30 +1,9 @@
 x-stl-integration-bootstrap: &stl-integration-bootstrap
   STL_INTEGRATION_TOKEN_AUTO_PROVISION: "true"
-  STL_INTEGRATION_BOOTSTRAP_SECRET: stl-local-bootstrap-secret
-  NexArr__BaseUrl: http://nexarr-api:8080
+  STL_INTEGRATION_BOOTSTRAP_SECRET: "${STL_BOOTSTRAP_SECRET:-stl-production-bootstrap-secret}"
+  NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: stl
-      POSTGRES_PASSWORD: stl_dev_password
-      POSTGRES_DB: postgres
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./docker/postgres/init-databases.sql:/docker-entrypoint-initdb.d/01-init-databases.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stl"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
   nexarr-api:
     build:
       context: .
@@ -33,19 +12,16 @@ services:
         PROJECT_PATH: apps/nexarr-api/NexArr.Api/NexArr.Api.csproj
         ASSEMBLY_NAME: NexArr.Api
     ports:
-      - "5101:8080"
+      - "8080:8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=nexarr;Username=stl;Password=stl_dev_password
-      REDIS_URL: redis:6379
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_NEXARR}"
+      REDIS_URL: "${REDIS_URL}"
       OPENAI_ASSISTANT_MODEL: gpt-5.5
       OPENAI_SMART_IMPORT_MODEL: gpt-5.5
-      TENANT_INTEGRATION_ENCRYPTION_KEY: stl-local-tenant-integration-encryption-key
+      TENANT_INTEGRATION_ENCRYPTION_KEY: "${TENANT_INTEGRATION_ENCRYPTION_KEY}"
       STL_SERVICE_NAME: nexarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   staffarr-api:
     build:
@@ -55,15 +31,12 @@ services:
         PROJECT_PATH: apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj
         ASSEMBLY_NAME: StaffArr.Api
     ports:
-      - "5102:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=staffarr;Username=stl;Password=stl_dev_password
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_STAFFARR}"
       STL_SERVICE_NAME: staffarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   trainarr-api:
     build:
@@ -73,16 +46,13 @@ services:
         PROJECT_PATH: apps/trainarr-api/TrainArr.Api/TrainArr.Api.csproj
         ASSEMBLY_NAME: TrainArr.Api
     ports:
-      - "5103:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=trainarr;Username=stl;Password=stl_dev_password
-      TrainArr__FrontendBaseUrl: http://127.0.0.1:5176
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_TRAINARR}"
+      TrainArr__FrontendBaseUrl: "${TRAINARR_FRONTEND_URL}"
       STL_SERVICE_NAME: trainarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   maintainarr-api:
     build:
@@ -92,16 +62,13 @@ services:
         PROJECT_PATH: apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj
         ASSEMBLY_NAME: MaintainArr.Api
     ports:
-      - "5104:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=maintainarr;Username=stl;Password=stl_dev_password
-      MaintainArr__FrontendBaseUrl: http://127.0.0.1:5178
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_MAINTAINARR}"
+      MaintainArr__FrontendBaseUrl: "${MAINTAINARR_FRONTEND_URL}"
       STL_SERVICE_NAME: maintainarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   routarr-api:
     build:
@@ -111,16 +78,13 @@ services:
         PROJECT_PATH: apps/routarr-api/RoutArr.Api/RoutArr.Api.csproj
         ASSEMBLY_NAME: RoutArr.Api
     ports:
-      - "5105:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=routarr;Username=stl;Password=stl_dev_password
-      RoutArr__FrontendBaseUrl: http://127.0.0.1:5180
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_ROUTARR}"
+      RoutArr__FrontendBaseUrl: "${ROUTARR_FRONTEND_URL}"
       STL_SERVICE_NAME: routarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   supplyarr-api:
     build:
@@ -130,16 +94,30 @@ services:
         PROJECT_PATH: apps/supplyarr-api/SupplyArr.Api/SupplyArr.Api.csproj
         ASSEMBLY_NAME: SupplyArr.Api
     ports:
-      - "5106:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=supplyarr;Username=stl;Password=stl_dev_password
-      SupplyArr__FrontendBaseUrl: http://127.0.0.1:5179
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_SUPPLYARR}"
+      SupplyArr__FrontendBaseUrl: "${SUPPLYARR_FRONTEND_URL}"
       STL_SERVICE_NAME: supplyarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
+
+  customarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/customarr-api/CustomArr.Api/CustomArr.Api.csproj
+        ASSEMBLY_NAME: CustomArr.Api
+    ports:
+      - "8080"
+    environment:
+      <<: *stl-integration-bootstrap
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_CUSTOMARR}"
+      Cors__CustomArrFrontendOrigin: "${CUSTOMARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
+      STL_SERVICE_NAME: customarr-api
 
   ordarr-api:
     build:
@@ -149,17 +127,14 @@ services:
         PROJECT_PATH: apps/ordarr-api/OrdArr.Api/OrdArr.Api.csproj
         ASSEMBLY_NAME: OrdArr.Api
     ports:
-      - "5112:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=ordarr;Username=stl;Password=stl_dev_password
-      Cors__OrdArrFrontendOrigin: http://127.0.0.1:5187
-      NexArr__BaseUrl: http://nexarr-api:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_ORDARR}"
+      Cors__OrdArrFrontendOrigin: "${ORDARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
       STL_SERVICE_NAME: ordarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   ledgarr-api:
     build:
@@ -169,18 +144,32 @@ services:
         PROJECT_PATH: apps/ledgarr-api/LedgArr.Api/LedgArr.Api.csproj
         ASSEMBLY_NAME: LedgArr.Api
     ports:
-      - "5113:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=ledgarr;Username=stl;Password=stl_dev_password
-      Cors__LedgArrFrontendOrigin: http://127.0.0.1:5188
-      LedgArr__FrontendBaseUrl: http://127.0.0.1:5188
-      NexArr__BaseUrl: http://nexarr-api:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_LEDGARR}"
+      Cors__LedgArrFrontendOrigin: "${LEDGARR_FRONTEND_URL}"
+      LedgArr__FrontendBaseUrl: "${LEDGARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
       STL_SERVICE_NAME: ledgarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
+
+  reportarr-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+      args:
+        PROJECT_PATH: apps/reportarr-api/ReportArr.Api/ReportArr.Api.csproj
+        ASSEMBLY_NAME: ReportArr.Api
+    ports:
+      - "8080"
+    environment:
+      <<: *stl-integration-bootstrap
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_REPORTARR}"
+      Cors__ReportArrFrontendOrigin: "${REPORTARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
+      STL_SERVICE_NAME: reportarr-api
 
   compliancecore-api:
     build:
@@ -190,15 +179,12 @@ services:
         PROJECT_PATH: apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj
         ASSEMBLY_NAME: ComplianceCore.Api
     ports:
-      - "5107:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=compliancecore;Username=stl;Password=stl_dev_password
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_COMPLIANCECORE}"
       STL_SERVICE_NAME: compliancecore-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   recordarr-api:
     build:
@@ -208,17 +194,14 @@ services:
         PROJECT_PATH: apps/recordarr-api/RecordArr.Api/RecordArr.Api.csproj
         ASSEMBLY_NAME: RecordArr.Api
     ports:
-      - "5110:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=recordarr;Username=stl;Password=stl_dev_password
-      Cors__RecordArrFrontendOrigin: http://127.0.0.1:5184
-      NexArr__BaseUrl: http://nexarr-api:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_RECORDARR}"
+      Cors__RecordArrFrontendOrigin: "${RECORDARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
       STL_SERVICE_NAME: recordarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   assurarr-api:
     build:
@@ -228,17 +211,14 @@ services:
         PROJECT_PATH: apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj
         ASSEMBLY_NAME: AssurArr.Api
     ports:
-      - "5109:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=assurarr;Username=stl;Password=stl_dev_password
-      Cors__AssurArrFrontendOrigin: http://127.0.0.1:5183
-      NexArr__BaseUrl: http://nexarr-api:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_ASSURARR}"
+      Cors__AssurArrFrontendOrigin: "${ASSURARR_FRONTEND_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
       STL_SERVICE_NAME: assurarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   loadarr-api:
     build:
@@ -248,16 +228,13 @@ services:
         PROJECT_PATH: apps/loadarr-api/LoadArr.Api/LoadArr.Api.csproj
         ASSEMBLY_NAME: LoadArr.Api
     ports:
-      - "5108:8080"
+      - "8080"
     environment:
       <<: *stl-integration-bootstrap
-      ASPNETCORE_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=loadarr;Username=stl;Password=stl_dev_password
-      LoadArr__FrontendBaseUrl: http://127.0.0.1:5182
+      ASPNETCORE_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_LOADARR}"
+      LoadArr__FrontendBaseUrl: "${LOADARR_FRONTEND_URL}"
       STL_SERVICE_NAME: loadarr-api
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   nexarr-worker:
     build:
@@ -267,12 +244,9 @@ services:
         PROJECT_PATH: workers/nexarr-worker/NexArr.Worker/NexArr.Worker.csproj
         ASSEMBLY_NAME: NexArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-      NexArrTenantIntegrations__NexArrBaseUrl: http://nexarr-api:8080
-      NexArrTenantIntegrations__ServiceToken: ""
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
+      NexArrTenantIntegrations__NexArrBaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
+      NexArrTenantIntegrations__ServiceToken: "${NEXARR_SERVICE_TOKEN}"
 
   staffarr-worker:
     build:
@@ -282,10 +256,7 @@ services:
         PROJECT_PATH: workers/staffarr-worker/StaffArr.Worker/StaffArr.Worker.csproj
         ASSEMBLY_NAME: StaffArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   trainarr-worker:
     build:
@@ -295,10 +266,7 @@ services:
         PROJECT_PATH: workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj
         ASSEMBLY_NAME: TrainArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   maintainarr-worker:
     build:
@@ -308,10 +276,7 @@ services:
         PROJECT_PATH: workers/maintainarr-worker/MaintainArr.Worker/MaintainArr.Worker.csproj
         ASSEMBLY_NAME: MaintainArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   routarr-worker:
     build:
@@ -321,10 +286,7 @@ services:
         PROJECT_PATH: workers/routarr-worker/RoutArr.Worker/RoutArr.Worker.csproj
         ASSEMBLY_NAME: RoutArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   supplyarr-worker:
     build:
@@ -334,10 +296,7 @@ services:
         PROJECT_PATH: workers/supplyarr-worker/SupplyArr.Worker/SupplyArr.Worker.csproj
         ASSEMBLY_NAME: SupplyArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   ledgarr-worker:
     build:
@@ -347,11 +306,8 @@ services:
         PROJECT_PATH: workers/ledgarr-worker/LedgArr.Worker/LedgArr.Worker.csproj
         ASSEMBLY_NAME: LedgArr.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-      DATABASE_URL: Host=postgres;Port=5432;Database=ledgarr;Username=stl;Password=stl_dev_password
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
+      DATABASE_URL: "${DATABASE_URL_LEDGARR}"
 
   compliancecore-worker:
     build:
@@ -361,10 +317,7 @@ services:
         PROJECT_PATH: workers/compliancecore-worker/ComplianceCore.Worker/ComplianceCore.Worker.csproj
         ASSEMBLY_NAME: ComplianceCore.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-    depends_on:
-      - postgres
-      - redis
+      DOTNET_ENVIRONMENT: Production
 
   shared-worker:
     build:
@@ -374,14 +327,10 @@ services:
         PROJECT_PATH: workers/shared-worker/Shared.Worker/Shared.Worker.csproj
         ASSEMBLY_NAME: Shared.Worker
     environment:
-      DOTNET_ENVIRONMENT: Development
-      REDIS_URL: redis:6379
-      NexArr__BaseUrl: http://nexarr-api:8080
-      NexArrSmartImport__NexArrBaseUrl: http://nexarr-api:8080
-      NexArrSmartImport__ServiceToken: ""
+      DOTNET_ENVIRONMENT: Production
+      REDIS_URL: "${REDIS_URL}"
+      NexArr__BaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
+      NexArrSmartImport__NexArrBaseUrl: "${NEXARR_BASE_URL:-http://nexarr-api:8080}"
+      NexArrSmartImport__ServiceToken: "${NEXARR_SERVICE_TOKEN}"
       OPENAI_ASSISTANT_MODEL: gpt-5.5
       OPENAI_SMART_IMPORT_MODEL: gpt-5.5
-    depends_on:
-      - postgres
-      - redis
-      - nexarr-api

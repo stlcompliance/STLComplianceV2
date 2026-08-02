@@ -1,9 +1,41 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { SuppliersSection } from './SuppliersSection'
+
+vi.mock('../../api/client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../api/client')>()
+
+  return {
+    ...actual,
+    getSupplierOnboarding: vi.fn().mockResolvedValue({
+      onboardingId: 'onb-1',
+      supplierId: 'supplier-1',
+      supplierKey: 'sup-2048',
+      supplierUnitKind: 'identity',
+      parentSupplierId: null,
+      parentSupplierDisplayName: null,
+      displayName: 'Midwest Fleet Parts & Service',
+      onboardingStatus: 'draft',
+      notes: 'Awaiting insurance certificate',
+      submittedAt: null,
+      reviewedAt: null,
+      rejectionReason: '',
+      documentRequirements: [
+        { documentTypeKey: 'w9', label: 'W-9 tax form', isRequired: true, isSatisfied: true, satisfyingDocumentId: 'doc-1', satisfyingReviewStatus: 'approved' },
+        { documentTypeKey: 'insurance_certificate', label: 'Certificate of insurance', isRequired: true, isSatisfied: false, satisfyingDocumentId: null, satisfyingReviewStatus: null },
+      ],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-06-01T00:00:00Z',
+    }),
+    getSupplierDirectoryMetadata: vi.fn().mockResolvedValue({
+      unitKindOptions: [],
+      serviceTypeOptions: [],
+    }),
+  }
+})
 
 const supplier = {
   supplierId: 'supplier-1',
@@ -150,11 +182,12 @@ describe('SuppliersSection', () => {
     expect(screen.getByText('0 supplier identities · 0 supplier sub-units')).toBeInTheDocument()
   })
 
-  it('renders the replacement supplier profile detail view', () => {
+  it('renders the replacement supplier profile detail view', async () => {
     const view = renderSuppliersSection('/suppliers/details', {
       ...baseState,
-      suppliersQuery: { data: [supplier, subUnit], isLoading: false },
+      accessToken: 'token',
       supplierDirectory: [supplier, subUnit],
+      suppliersQuery: { data: [supplier, subUnit], isLoading: false },
       contractsQuery: { data: [contract], isLoading: false },
     } as never)
 
@@ -170,5 +203,8 @@ describe('SuppliersSection', () => {
     expect(page.getByText('Use this identity when sourcing can route across multiple supplier sub-units.')).toBeInTheDocument()
     expect(page.getByText('Midwest Fleet Parts & Service - Kansas City')).toBeInTheDocument()
     expect(page.getAllByText(/Products, Parts/i).length).toBeGreaterThan(0)
+    expect(page.getByText('Onboarding posture')).toBeInTheDocument()
+    expect(await page.findByText('Draft')).toBeInTheDocument()
+    expect(await page.findByText('1/2 approved')).toBeInTheDocument()
   })
 })
