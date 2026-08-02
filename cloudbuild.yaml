@@ -1,14 +1,20 @@
 # cloudbuild.yaml
 steps:
+  # Step 1: Merge the compose files inside the Linux runner
+  - name: 'docker/compose'
+    entrypoint: sh
+    args:
+      - -c
+      - "docker compose -f docker-compose.yml -f compose.override.yml config > docker-compose.prod.yml"
+
+  # Step 2: Install compose plugin and deploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # 1. Install the compose component
         apt-get update && apt-get install -y google-cloud-cli-run-compose
         
-        # 2. Deploy the stack
         gcloud run compose up docker-compose.prod.yml \
           --region us-central1 \
 options:
