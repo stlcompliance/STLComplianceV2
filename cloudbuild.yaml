@@ -119,16 +119,16 @@ steps:
         CLOUDSQL_INSTANCE_NAME=$(echo "$_CLOUDSQL_INSTANCE" | awk -F':' '{print $$NF}')
 
         echo "Ensuring Cloud SQL user 'stl' exists..."
-        if gcloud sql users list --project="$PROJECT_ID" --instance="$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "stl"; then
+        if gcloud sql users list --project="$PROJECT_ID" --instance="$$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "stl"; then
           echo "User 'stl' already exists; updating password."
           gcloud sql users set-password stl \
             --project="$PROJECT_ID" \
-            --instance="$CLOUDSQL_INSTANCE_NAME" \
+            --instance="$$CLOUDSQL_INSTANCE_NAME" \
             --password="${_DB_PASS}"
         else
           gcloud sql users create stl \
             --project="$PROJECT_ID" \
-            --instance="$CLOUDSQL_INSTANCE_NAME" \
+            --instance="$$CLOUDSQL_INSTANCE_NAME" \
             --password="${_DB_PASS}"
         fi
 
@@ -152,12 +152,12 @@ steps:
 
         for DB_NAME in "$${DB_NAMES[@]}"; do
           echo "Ensuring database '$$DB_NAME' exists..."
-          if gcloud sql databases list --project="$PROJECT_ID" --instance="$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "$$DB_NAME"; then
+          if gcloud sql databases list --project="$PROJECT_ID" --instance="$$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "$${DB_NAME}"; then
             echo "Database '$$DB_NAME' already exists."
           else
-            gcloud sql databases create "$$DB_NAME" \
+            gcloud sql databases create "$${DB_NAME}" \
               --project="$PROJECT_ID" \
-              --instance="$CLOUDSQL_INSTANCE_NAME"
+              --instance="$$CLOUDSQL_INSTANCE_NAME"
           fi
         done
 
