@@ -1,60 +1,166 @@
+# STL Compliance / Arr Suite — Google Cloud Build & Cloud Run Pipeline
+# Docs: https://cloud.google.com/build/docs/deploying-builds/deploy-cloud-run
+
+substitutions:
+  _REGION: 'us-central1'
+  _ARTIFACT_REPO: 'stl-compliance'
+  _DB_HOST: 'stl-compliance:us-central1:stl-compliance-v1'
+  _DB_PASS: 'WesRay060622!'
+  _REDIS_URL: '10.66.185.43:6379'
+  _BOOTSTRAP_SECRET: 'stl-production-bootstrap-secret'
+  _CLOUDSQL_INSTANCE: 'stl-compliance:us-central1:stl-compliance-v1'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s
+
 steps:
+  # Step 0: Ensure Artifact Registry Repository Exists
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud config set run/region us-central1
-        
-        # 1. Set your master connection details here
-        DB_HOST="=stl-compliance:us-central1:stl-compliance-v1"
-        DB_PASS="WesRay060622!"
-        REDIS_URL="10.66.185.43:6379"
-        BOOTSTRAP_SECRET="stl-production-bootstrap-secret"
+        echo "Ensuring Artifact Registry repository '${_ARTIFACT_REPO}' exists in ${_REGION}..."
+        gcloud artifacts repositories describe ${_ARTIFACT_REPO} --location=${_REGION} >/dev/null 2>&1 || \
+        gcloud artifacts repositories create ${_ARTIFACT_REPO} \
+          --repository-format=docker \
+          --location=${_REGION} \
+          --description="STL Compliance Docker Repository"
 
-        # 2. Define APIs
+  # Step 1: Build & Push API Container Images
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
+        APIS=(
+          "nexarr-api:apps/nexarr-api/NexArr.Api/NexArr.Api.csproj:NexArr.Api"
+          "staffarr-api:apps/staffarr-api/StaffArr.Api/StaffArr.Api.csproj:StaffArr.Api"
+          "trainarr-api:apps/trainarr-api/TrainArr.Api/TrainArr.Api.csproj:TrainArr.Api"
+          "maintainarr-api:apps/maintainarr-api/MaintainArr.Api/MaintainArr.Api.csproj:MaintainArr.Api"
+          "routarr-api:apps/routarr-api/RoutArr.Api/RoutArr.Api.csproj:RoutArr.Api"
+          "supplyarr-api:apps/supplyarr-api/SupplyArr.Api/SupplyArr.Api.csproj:SupplyArr.Api"
+          "customarr-api:apps/customarr-api/CustomArr.Api/CustomArr.Api.csproj:CustomArr.Api"
+          "ordarr-api:apps/ordarr-api/OrdArr.Api/OrdArr.Api.csproj:OrdArr.Api"
+          "ledgarr-api:apps/ledgarr-api/LedgArr.Api/LedgArr.Api.csproj:LedgArr.Api"
+          "reportarr-api:apps/reportarr-api/ReportArr.Api/ReportArr.Api.csproj:ReportArr.Api"
+          "compliancecore-api:apps/compliancecore-api/ComplianceCore.Api/ComplianceCore.Api.csproj:ComplianceCore.Api"
+          "recordarr-api:apps/recordarr-api/RecordArr.Api/RecordArr.Api.csproj:RecordArr.Api"
+          "assurarr-api:apps/assurarr-api/AssurArr.Api/AssurArr.Api.csproj:AssurArr.Api"
+          "loadarr-api:apps/loadarr-api/LoadArr.Api/LoadArr.Api.csproj:LoadArr.Api"
+        )
+
+        for ENTRY in "$${APIS[@]}"; do
+          IFS=":" read -r NAME PROJ_PATH ASSM_NAME <<< "$$ENTRY"
+          echo "=== Building $$NAME ($$PROJ_PATH) ==="
+          docker build -f docker/Dockerfile.api \
+            --build-arg PROJECT_PATH="$$PROJ_PATH" \
+            --build-arg ASSEMBLY_NAME="$$ASSM_NAME" \
+            -t "$$REPO_URL/$$NAME:$COMMIT_SHA" \
+            -t "$$REPO_URL/$$NAME:latest" .
+          
+          docker push "$$REPO_URL/$$NAME:$COMMIT_SHA"
+          docker push "$$REPO_URL/$$NAME:latest"
+        done
+
+  # Step 2: Build & Push Worker Container Images
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
+        WORKERS=(
+          "nexarr-worker:workers/nexarr-worker/NexArr.Worker/NexArr.Worker.csproj:NexArr.Worker"
+          "staffarr-worker:workers/staffarr-worker/StaffArr.Worker/StaffArr.Worker.csproj:StaffArr.Worker"
+          "trainarr-worker:workers/trainarr-worker/TrainArr.Worker/TrainArr.Worker.csproj:TrainArr.Worker"
+          "maintainarr-worker:workers/maintainarr-worker/MaintainArr.Worker/MaintainArr.Worker.csproj:MaintainArr.Worker"
+          "routarr-worker:workers/routarr-worker/RoutArr.Worker/RoutArr.Worker.csproj:RoutArr.Worker"
+          "supplyarr-worker:workers/supplyarr-worker/SupplyArr.Worker/SupplyArr.Worker.csproj:SupplyArr.Worker"
+          "ledgarr-worker:workers/ledgarr-worker/LedgArr.Worker/LedgArr.Worker.csproj:LedgArr.Worker"
+          "compliancecore-worker:workers/compliancecore-worker/ComplianceCore.Worker/ComplianceCore.Worker.csproj:ComplianceCore.Worker"
+          "shared-worker:workers/shared-worker/Shared.Worker/Shared.Worker.csproj:Shared.Worker"
+        )
+
+        for ENTRY in "$${WORKERS[@]}"; do
+          IFS=":" read -r NAME PROJ_PATH ASSM_NAME <<< "$$ENTRY"
+          echo "=== Building $$NAME ($$PROJ_PATH) ==="
+          docker build -f docker/Dockerfile.worker \
+            --build-arg PROJECT_PATH="$$PROJ_PATH" \
+            --build-arg ASSEMBLY_NAME="$$ASSM_NAME" \
+            -t "$$REPO_URL/$$NAME:$COMMIT_SHA" \
+            -t "$$REPO_URL/$$NAME:latest" .
+
+          docker push "$$REPO_URL/$$NAME:$COMMIT_SHA"
+          docker push "$$REPO_URL/$$NAME:latest"
+        done
+
+  # Step 3: Deploy API Services to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud config set run/region ${_REGION}
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
         APIS=("nexarr-api" "staffarr-api" "trainarr-api" "maintainarr-api" "routarr-api" "supplyarr-api" "customarr-api" "ordarr-api" "ledgarr-api" "reportarr-api" "compliancecore-api" "recordarr-api" "assurarr-api" "loadarr-api")
-        
-        # 3. Deploy APIs
-        for API in "$${APIS[@]}"; do
-          echo "Deploying $$API..."
-          
-          # Extract the prefix (removes '-api' to get 'nexarr', 'staffarr', etc.)
-          DB_NAME="$${API%-api}"
-          
-          # Construct the exact database string for this specific service
-          DB_URL="Host=$$DB_HOST;Port=5432;Database=$$DB_NAME;Username=stl;Password=$$DB_PASS"
 
-          # Deploy and inject variables
-          gcloud run deploy $$API \
-            --source . \
+        for API in "$${APIS[@]}"; do
+          echo "=== Deploying $$API to Cloud Run ==="
+          DB_NAME="$${API%-api}"
+          DB_URL="Host=${_DB_HOST};Port=5432;Database=$$DB_NAME;Username=stl;Password=${_DB_PASS}"
+
+          gcloud run deploy "$$API" \
+            --image="$$REPO_URL/$$API:$COMMIT_SHA" \
+            --region="${_REGION}" \
             --allow-unauthenticated \
+            --port=8080 \
+            --cpu=1 \
+            --memory=512Mi \
+            --add-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
             --update-env-vars="ASPNETCORE_ENVIRONMENT=Production" \
             --update-env-vars="STL_SERVICE_NAME=$$API" \
             --update-env-vars="DATABASE_URL=$$DB_URL" \
-            --update-env-vars="REDIS_URL=$$REDIS_URL" \
+            --update-env-vars="REDIS_URL=${_REDIS_URL}" \
             --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
-            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=$$BOOTSTRAP_SECRET"
+            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}"
         done
 
-        # 4. Define Workers
+  # Step 4: Deploy Worker Services to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud config set run/region ${_REGION}
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
         WORKERS=("nexarr-worker" "staffarr-worker" "trainarr-worker" "maintainarr-worker" "routarr-worker" "supplyarr-worker" "ledgarr-worker" "compliancecore-worker" "shared-worker")
 
-        # 5. Deploy Workers
         for WORKER in "$${WORKERS[@]}"; do
-          echo "Deploying $$WORKER..."
-          
-          # Extract prefix (removes '-worker')
+          echo "=== Deploying $$WORKER to Cloud Run ==="
           DB_NAME="$${WORKER%-worker}"
-          DB_URL="Host=$$DB_HOST;Port=5432;Database=$$DB_NAME;Username=stl;Password=$$DB_PASS"
+          DB_URL="Host=${_DB_HOST};Port=5432;Database=$$DB_NAME;Username=stl;Password=${_DB_PASS}"
 
-          gcloud run deploy $$WORKER \
-            --source . \
+          gcloud run deploy "$$WORKER" \
+            --image="$$REPO_URL/$$WORKER:$COMMIT_SHA" \
+            --region="${_REGION}" \
             --no-allow-unauthenticated \
             --no-cpu-throttling \
+            --min-instances=1 \
+            --cpu=1 \
+            --memory=512Mi \
+            --add-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
             --update-env-vars="DOTNET_ENVIRONMENT=Production" \
             --update-env-vars="DATABASE_URL=$$DB_URL" \
-            --update-env-vars="REDIS_URL=$$REDIS_URL"
+            --update-env-vars="REDIS_URL=${_REDIS_URL}"
         done
-options:
-  logging: CLOUD_LOGGING_ONLY
