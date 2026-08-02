@@ -5,11 +5,8 @@ steps:
     args:
       - '-c'
       - |
-        gcloud run compose up \
-          --file docker-compose.yml \
-          --file compose.override.yml \
+        gcloud run compose up docker-compose.prod.yml \
           --region us-central1 \
-
-# Add this block:
+          --quiet
 options:
   logging: CLOUD_LOGGING_ONLY
