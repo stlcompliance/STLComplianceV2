@@ -141,7 +141,7 @@ steps:
             --update-env-vars="AUTH_SIGNING_KEY=${_AUTH_SIGNING_KEY}" \
             --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}" \
             --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
-            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}"
+            --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}" \
             --cpu-boost
         done
 
@@ -175,6 +175,6 @@ steps:
             --update-env-vars="DATABASE_URL=$$DB_URL" \
             --update-env-vars="REDIS_URL=${_REDIS_URL}" \
             --update-env-vars="AUTH_SIGNING_KEY=${_AUTH_SIGNING_KEY}" \
-            --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}"
+            --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}" \
             --cpu-boost
         done
