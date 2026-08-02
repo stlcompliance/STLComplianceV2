@@ -109,7 +109,72 @@ steps:
           docker push "$$REPO_URL/$$NAME:latest"
         done
 
-  # Step 3: Provision Cloud SQL databases and user
+  # Step 3: Build & Push Frontend Container Images
+  - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'DOCKER_BUILDKIT=1'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
+        FRONTENDS=(
+          "suite-frontend"
+          "fieldcompanion-frontend"
+          "staffarr-frontend"
+          "trainarr-frontend"
+          "maintainarr-frontend"
+          "routarr-frontend"
+          "supplyarr-frontend"
+          "ledgarr-frontend"
+          "compliancecore-frontend"
+          "loadarr-frontend"
+          "assurarr-frontend"
+          "recordarr-frontend"
+          "customarr-frontend"
+          "ordarr-frontend"
+          "reportarr-frontend"
+        )
+
+        for FRONTEND in "$${FRONTENDS[@]}"; do
+          echo "=== Building $$FRONTEND ==="
+          docker build -f docker/Dockerfile.frontend \
+            --build-arg FRONTEND_APP="$$FRONTEND" \
+            -t "$$REPO_URL/$$FRONTEND:$COMMIT_SHA" \
+            -t "$$REPO_URL/$$FRONTEND:latest" .
+
+          docker push "$$REPO_URL/$$FRONTEND:$COMMIT_SHA"
+          docker push "$$REPO_URL/$$FRONTEND:latest"
+        done
+
+  # Step 4: Deploy Frontend Services to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud config set run/region ${_REGION}
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+
+        FRONTENDS=("suite-frontend" "fieldcompanion-frontend" "staffarr-frontend" "trainarr-frontend" "maintainarr-frontend" "routarr-frontend" "supplyarr-frontend" "ledgarr-frontend" "compliancecore-frontend" "loadarr-frontend" "assurarr-frontend" "recordarr-frontend" "customarr-frontend" "ordarr-frontend" "reportarr-frontend")
+
+        for FRONTEND in "$${FRONTENDS[@]}"; do
+          echo "=== Deploying $$FRONTEND to Cloud Run ==="
+          gcloud run deploy "$$FRONTEND" \
+            --image="$$REPO_URL/$$FRONTEND:$COMMIT_SHA" \
+            --region="${_REGION}" \
+            --startup-probe="tcpSocket.port=8080,initialDelaySeconds=10,periodSeconds=20,failureThreshold=30" \
+            --allow-unauthenticated \
+            --port=8080 \
+            --cpu=1 \
+            --memory=512Mi \
+            --update-env-vars="PORT=8080" \
+            --cpu-boost
+        done
+
+  # Step 5: Provision Cloud SQL databases and user
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -161,7 +226,7 @@ steps:
           fi
         done
 
-  # Step 4: Deploy API Services to Google Cloud Run
+  # Step 6: Deploy API Services to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -197,7 +262,7 @@ steps:
             --cpu-boost
         done
 
-  # Step 5: Deploy Worker Services to Google Cloud Run
+  # Step 7: Deploy Worker Services to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
