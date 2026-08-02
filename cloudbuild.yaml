@@ -226,7 +226,7 @@ steps:
           fi
         done
 
-  # Step 6: Deploy API Services to Google Cloud Run
+  # Step 6: Deploy NexArr API to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -235,7 +235,41 @@ steps:
         gcloud config set run/region ${_REGION}
         REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
 
-        APIS=("nexarr-api" "staffarr-api" "trainarr-api" "maintainarr-api" "routarr-api" "supplyarr-api" "customarr-api" "ordarr-api" "ledgarr-api" "reportarr-api" "compliancecore-api" "recordarr-api" "assurarr-api" "loadarr-api")
+        API="nexarr-api"
+        DB_NAME="nexarr"
+        DB_URL="Host=${_DB_HOST};Port=5432;Database=$$DB_NAME;Username=stl;Password=${_DB_PASS}"
+
+        echo "=== Deploying $$API to Cloud Run ==="
+        gcloud run deploy "$$API" \
+          --image="$$REPO_URL/$$API:$COMMIT_SHA" \
+          --region="${_REGION}" \
+          --startup-probe="tcpSocket.port=8080,initialDelaySeconds=10,periodSeconds=20,failureThreshold=30" \
+          --allow-unauthenticated \
+          --port=8080 \
+          --cpu=1 \
+          --memory=512Mi \
+          --add-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
+          --update-env-vars="ASPNETCORE_ENVIRONMENT=Production" \
+          --update-env-vars="STL_SERVICE_NAME=$$API" \
+          --update-env-vars="DATABASE_URL=$$DB_URL" \
+          --update-env-vars="REDIS_URL=${_REDIS_URL}" \
+          --update-env-vars="AUTH_SIGNING_KEY=${_AUTH_SIGNING_KEY}" \
+          --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}" \
+          --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
+          --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}" \
+          --cpu-boost
+
+  # Step 7: Deploy Remaining API Services to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud config set run/region ${_REGION}
+        REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
+        NEXARR_BASE_URL=$(gcloud run services describe nexarr-api --region ${_REGION} --format='value(status.url)')
+
+        APIS=("staffarr-api" "trainarr-api" "maintainarr-api" "routarr-api" "supplyarr-api" "customarr-api" "ordarr-api" "ledgarr-api" "reportarr-api" "compliancecore-api" "recordarr-api" "assurarr-api" "loadarr-api")
 
         for API in "$${APIS[@]}"; do
           echo "=== Deploying $$API to Cloud Run ==="
@@ -259,10 +293,11 @@ steps:
             --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}" \
             --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
             --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}" \
+            --update-env-vars="NexArr__BaseUrl=$${NEXARR_BASE_URL}" \
             --cpu-boost
         done
 
-  # Step 7: Deploy Worker Services to Google Cloud Run
+  # Step 8: Deploy Worker Services to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
