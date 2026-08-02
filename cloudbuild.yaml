@@ -158,7 +158,7 @@ steps:
         gcloud config set run/region ${_REGION}
         REPO_URL="${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}"
 
-        FRONTENDS=("suite-frontend" "fieldcompanion-frontend" "staffarr-frontend" "trainarr-frontend" "maintainarr-frontend" "routarr-frontend" "supplyarr-frontend" "ledgarr-frontend" "compliancecore-frontend" "loadarr-frontend" "assurarr-frontend" "recordarr-frontend" "customarr-frontend" "ordarr-frontend" "reportarr-frontend")
+        FRONTENDS=("suite-frontend" "fieldcompanion-frontend" "staffarr-frontend" "trainarr-frontend" "maintainarr-frontend" "routarr-frontend" "supplyarr-frontend" "ledgarr-frontend" "compliancecore-frontend" "loadarr-frontend" "assurarr-frontend" "recordarr-frontend" "customarr-frontend" "ordarr-frontend" "reportarr-frontend" "stlcompliancesite" "stlcompliancekb")
 
         for FRONTEND in "$${FRONTENDS[@]}"; do
           echo "=== Deploying $$FRONTEND to Cloud Run ==="
