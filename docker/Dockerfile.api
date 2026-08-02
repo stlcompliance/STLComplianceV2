@@ -6,8 +6,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG PROJECT_PATH
 WORKDIR /src
 COPY . .
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore "${PROJECT_PATH}"
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish "${PROJECT_PATH}" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet restore "${PROJECT_PATH}"
+RUN dotnet publish "${PROJECT_PATH}" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 ARG ASSEMBLY_NAME

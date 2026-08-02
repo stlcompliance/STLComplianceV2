@@ -32,6 +32,8 @@ steps:
 
   # Step 1: Build & Push API Container Images
   - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'DOCKER_BUILDKIT=1'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -71,6 +73,8 @@ steps:
 
   # Step 2: Build & Push Worker Container Images
   - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'DOCKER_BUILDKIT=1'
     entrypoint: 'bash'
     args:
       - '-c'
