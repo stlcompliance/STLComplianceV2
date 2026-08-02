@@ -9,7 +9,6 @@ steps:
           --file docker-compose.yml \
           --file compose.override.yml \
           --region us-central1 \
-          --quiet
 
 # Add this block:
 options:
