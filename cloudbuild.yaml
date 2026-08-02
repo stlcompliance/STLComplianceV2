@@ -170,7 +170,6 @@ steps:
             --port=8080 \
             --cpu=1 \
             --memory=512Mi \
-            --update-env-vars="PORT=8080" \
             --cpu-boost
         done
 
