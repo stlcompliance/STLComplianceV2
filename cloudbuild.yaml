@@ -4,11 +4,13 @@
 substitutions:
   _REGION: 'us-central1'
   _ARTIFACT_REPO: 'stl-compliance'
-  _DB_HOST: 'stl-compliance:us-central1:stl-compliance-v1'
+  _DB_HOST: '/cloudsql/stl-compliance:us-central1:stl-compliance-v1'
   _DB_PASS: 'WesRay060622!'
   _REDIS_URL: '10.66.185.43:6379'
   _BOOTSTRAP_SECRET: 'stl-production-bootstrap-secret'
   _CLOUDSQL_INSTANCE: 'stl-compliance:us-central1:stl-compliance-v1'
+  _AUTH_SIGNING_KEY: 'stl-production-auth-signing-key-minimum-32-chars-2026'
+  _SERVICE_TOKEN_SIGNING_KEY: 'stl-production-service-token-signing-key-minimum-32-chars-2026'
 
 options:
   machineType: 'E2_HIGHCPU_8'
@@ -135,6 +137,8 @@ steps:
             --update-env-vars="STL_SERVICE_NAME=$$API" \
             --update-env-vars="DATABASE_URL=$$DB_URL" \
             --update-env-vars="REDIS_URL=${_REDIS_URL}" \
+            --update-env-vars="AUTH_SIGNING_KEY=${_AUTH_SIGNING_KEY}" \
+            --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}" \
             --update-env-vars="STL_INTEGRATION_TOKEN_AUTO_PROVISION=true" \
             --update-env-vars="STL_INTEGRATION_BOOTSTRAP_SECRET=${_BOOTSTRAP_SECRET}"
         done
@@ -166,5 +170,7 @@ steps:
             --add-cloudsql-instances="${_CLOUDSQL_INSTANCE}" \
             --update-env-vars="DOTNET_ENVIRONMENT=Production" \
             --update-env-vars="DATABASE_URL=$$DB_URL" \
-            --update-env-vars="REDIS_URL=${_REDIS_URL}"
+            --update-env-vars="REDIS_URL=${_REDIS_URL}" \
+            --update-env-vars="AUTH_SIGNING_KEY=${_AUTH_SIGNING_KEY}" \
+            --update-env-vars="SERVICE_TOKEN_SIGNING_KEY=${_SERVICE_TOKEN_SIGNING_KEY}"
         done
