@@ -1,11 +1,11 @@
 # cloudbuild.yaml
 steps:
-  # Step 1: Merge the compose files inside the Linux runner
-  - name: 'docker/compose'
-    entrypoint: sh
+  # Step 1: Merge the compose files using the standard Docker image
+  - name: 'docker'
+    entrypoint: 'sh'
     args:
-      - -c
-      - "docker compose -f docker-compose.yml -f compose.override.yml config > docker-compose.prod.yml"
+      - '-c'
+      - 'docker compose -f docker-compose.yml -f compose.override.yml config > docker-compose.prod.yml'
 
   # Step 2: Install compose plugin and deploy
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
