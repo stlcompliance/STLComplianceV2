@@ -109,7 +109,59 @@ steps:
           docker push "$$REPO_URL/$$NAME:latest"
         done
 
-  # Step 3: Deploy API Services to Google Cloud Run
+  # Step 3: Provision Cloud SQL databases and user
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        CLOUDSQL_INSTANCE_NAME="${_CLOUDSQL_INSTANCE##*:}"
+
+        echo "Ensuring Cloud SQL user 'stl' exists..."
+        if gcloud sql users list --project="$PROJECT_ID" --instance="$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "stl"; then
+          echo "User 'stl' already exists; updating password."
+          gcloud sql users set-password stl \
+            --project="$PROJECT_ID" \
+            --instance="$CLOUDSQL_INSTANCE_NAME" \
+            --password="${_DB_PASS}"
+        else
+          gcloud sql users create stl \
+            --project="$PROJECT_ID" \
+            --instance="$CLOUDSQL_INSTANCE_NAME" \
+            --password="${_DB_PASS}"
+        fi
+
+        DB_NAMES=(
+          "nexarr"
+          "staffarr"
+          "trainarr"
+          "maintainarr"
+          "routarr"
+          "supplyarr"
+          "customarr"
+          "ordarr"
+          "ledgarr"
+          "reportarr"
+          "compliancecore"
+          "recordarr"
+          "assurarr"
+          "loadarr"
+          "shared"
+        )
+
+        for DB_NAME in "$${DB_NAMES[@]}"; do
+          echo "Ensuring database '$$DB_NAME' exists..."
+          if gcloud sql databases list --project="$PROJECT_ID" --instance="$CLOUDSQL_INSTANCE_NAME" --format='value(name)' | grep -Fxq "$$DB_NAME"; then
+            echo "Database '$$DB_NAME' already exists."
+          else
+            gcloud sql databases create "$$DB_NAME" \
+              --project="$PROJECT_ID" \
+              --instance="$CLOUDSQL_INSTANCE_NAME"
+          fi
+        done
+
+  # Step 4: Deploy API Services to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -145,7 +197,7 @@ steps:
             --cpu-boost
         done
 
-  # Step 4: Deploy Worker Services to Google Cloud Run
+  # Step 5: Deploy Worker Services to Google Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
