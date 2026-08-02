@@ -13,7 +13,7 @@ substitutions:
   _SERVICE_TOKEN_SIGNING_KEY: 'stl-production-service-token-signing-key-minimum-32-chars-2026'
 
 options:
-  machineType: 'E2_HIGHCPU_8'
+  machineType: 'E2_HIGHCPU_32'
   logging: CLOUD_LOGGING_ONLY
 
 timeout: 3600s
