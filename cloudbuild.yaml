@@ -136,6 +136,8 @@ steps:
           "customarr-frontend"
           "ordarr-frontend"
           "reportarr-frontend"
+          "stlcompliancesite"
+          "stlcompliancekb"
         )
 
         for FRONTEND in "$${FRONTENDS[@]}"; do
