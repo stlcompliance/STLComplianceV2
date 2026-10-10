@@ -25,6 +25,10 @@ public static class StlWorkerHost
         {
             var builder = Host.CreateApplicationBuilder(args);
             builder.Services.AddSingleton(product);
+            if (!string.IsNullOrWhiteSpace(builder.Configuration["PORT"]))
+            {
+                builder.Services.AddHostedService<WorkerHealthServer>();
+            }
             builder.Services.AddHostedService<HeartbeatWorker>();
             builder.AddStlIntegrationTokenProvisioning();
             builder.AddStlOpenTelemetry(product);

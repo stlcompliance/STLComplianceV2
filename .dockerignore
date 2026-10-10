@@ -30,3 +30,10 @@ artifacts
 branding
 trainarr-evidence
 maintainarr-evidence
+**/.env.local
+**/.env.*.local
+**/secrets.json
+**/appsettings.*.local.json
+.codex-logs
+.dev-stack-logs
+tools/gcp/deployment.json

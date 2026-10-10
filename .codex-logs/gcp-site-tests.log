@@ -1,0 +1,29 @@
+
+> @stl/stlcompliancesite@0.1.0 pretest
+> npm ci --prefix ../../packages/shared-ui
+
+
+added 121 packages, and audited 122 packages in 6s
+
+29 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (3 moderate, 6 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> @stl/stlcompliancesite@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.7 F:/STLComplianceV2-main/apps/stlcompliancesite
+
+
+ Test Files  13 passed (13)
+      Tests  38 passed (38)
+   Start at  18:49:54
+   Duration  14.09s (transform 2.60s, setup 12.57s, import 11.45s, tests 2.88s, environment 113.31s)
+

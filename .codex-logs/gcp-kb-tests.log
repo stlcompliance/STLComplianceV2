@@ -1,0 +1,13 @@
+
+> @stl/stlcompliancekb@0.1.0 test
+> vitest run
+
+
+ RUN  v4.1.9 F:/STLComplianceV2-main/apps/stlcompliancekb
+
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  18:49:27
+   Duration  19.47s (transform 283ms, setup 3.65s, import 2.61s, tests 1.58s, environment 26.09s)
+

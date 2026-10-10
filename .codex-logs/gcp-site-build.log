@@ -1,0 +1,58 @@
+
+> @stl/stlcompliancesite@0.1.0 prebuild
+> npm ci --prefix ../../packages/shared-ui
+
+
+added 121 packages, and audited 122 packages in 7s
+
+29 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (3 moderate, 6 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> @stl/stlcompliancesite@0.1.0 build
+> tsc -b && vite build
+
+vite v8.0.14 building client environment for production...
+[2K
+transforming...✓ 3611 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                  1.45 kB │ gzip:   0.67 kB
+dist/assets/ledgarr-light-EySwD7Qn.png           7.41 kB
+dist/assets/ledgarr-dark-CCJT0xMT.png            7.44 kB
+dist/assets/customarr-light-ejfZatMl.png        18.57 kB
+dist/assets/ordarr-light-CiE2jgL3.png           18.79 kB
+dist/assets/ordarr-dark-Cfs4pBl3.png            19.22 kB
+dist/assets/customarr-dark-BPobhl5k.png         19.22 kB
+dist/assets/reportarr-light-BLnzhGzl.png        19.56 kB
+dist/assets/recordarr-light-B7TZjiT3.png        19.97 kB
+dist/assets/reportarr-dark-DOWZ-BeK.png         19.99 kB
+dist/assets/recordarr-dark-OkXLmBP4.png         20.30 kB
+dist/assets/trainarr-light-CsL7mMc8.png         21.28 kB
+dist/assets/trainarr-dark-C_9Yp-BX.png          21.29 kB
+dist/assets/loadarr-light-KmC0vJlX.png          21.33 kB
+dist/assets/loadarr-dark-CsIv3LRc.png           21.65 kB
+dist/assets/routarr-light-Bp5ZoPMl.png          22.46 kB
+dist/assets/routarr-dark-DNTFk1-b.png           22.61 kB
+dist/assets/staffarr-light-CmR5RT3P.png         23.34 kB
+dist/assets/staffarr-dark-7TyVmUdf.png          23.78 kB
+dist/assets/supplyarr-light-B2XoMLU9.png        24.14 kB
+dist/assets/assurarr-light-CsDYw__2.png         24.22 kB
+dist/assets/assurarr-dark-D1-kn7tL.png          24.68 kB
+dist/assets/supplyarr-dark-AujPSCmW.png         24.74 kB
+dist/assets/maintainarr-light-C3nuZtDH.png      26.08 kB
+dist/assets/maintainarr-dark-fG_rVnk-.png       26.67 kB
+dist/assets/compliancecore-light-C4S9Qf0L.png   26.71 kB
+dist/assets/compliancecore-dark-DfMrZsPv.png    27.21 kB
+dist/assets/stl-light-uerUBeml.png              28.13 kB
+dist/assets/stl-dark-ah8LTQKC.png               28.30 kB
+dist/assets/index-Do1PZS9g.css                  40.68 kB │ gzip:   7.27 kB
+dist/assets/index-D5C7IdhX.js                  416.47 kB │ gzip: 121.47 kB
+
+✓ built in 4.40s

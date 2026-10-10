@@ -1,0 +1,32 @@
+{
+  "runtimeServiceAccount": "REPLACE@stl-compliance.iam.gserviceaccount.com",
+  "cloudSqlInstance": "stl-compliance:us-central1:stl-compliance-v1",
+  "redisUrl": "10.66.185.43:6379",
+  "vpcConnector": "REPLACE",
+  "sharedSecrets": {
+    "AUTH_SIGNING_KEY": "auth-signing-key:1",
+    "SERVICE_TOKEN_SIGNING_KEY": "service-token-signing-key:1",
+    "STL_INTEGRATION_BOOTSTRAP_SECRET": "integration-bootstrap-secret:1"
+  },
+  "nexarrSecrets": {
+    "TENANT_INTEGRATION_ENCRYPTION_KEY": "tenant-integration-encryption-key:1"
+  },
+  "databaseSecrets": {
+    "nexarr": "nexarr-database-url:1",
+    "staffarr": "staffarr-database-url:1",
+    "trainarr": "trainarr-database-url:1",
+    "maintainarr": "maintainarr-database-url:1",
+    "routarr": "routarr-database-url:1",
+    "supplyarr": "supplyarr-database-url:1",
+    "customarr": "customarr-database-url:1",
+    "ordarr": "ordarr-database-url:1",
+    "ledgarr": "ledgarr-database-url:1",
+    "reportarr": "reportarr-database-url:1",
+    "compliancecore": "compliancecore-database-url:1",
+    "recordarr": "recordarr-database-url:1",
+    "assurarr": "assurarr-database-url:1",
+    "loadarr": "loadarr-database-url:1"
+  },
+  "urls": {},
+  "serviceEnvironment": {}
+}

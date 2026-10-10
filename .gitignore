@@ -16,6 +16,8 @@ dist/
 .env.local
 .tmp-*
 artifacts/
+tools/gcp/deployment.json
+__pycache__/
 
 # OS / IDE
 .DS_Store

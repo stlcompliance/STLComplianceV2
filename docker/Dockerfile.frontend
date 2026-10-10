@@ -6,25 +6,25 @@ WORKDIR /repo
 ARG FRONTEND_APP=suite-frontend
 COPY apps/${FRONTEND_APP}/package.json apps/${FRONTEND_APP}/package-lock.json ./apps/${FRONTEND_APP}/
 COPY packages/shared-ui/ ./packages/shared-ui/
+COPY docs/user/ ./docs/user/
+RUN npm ci --prefix /repo/packages/shared-ui --no-audit --no-fund
 WORKDIR /repo/apps/${FRONTEND_APP}
 RUN npm ci
-RUN ln -s /repo/apps/${FRONTEND_APP}/node_modules /repo/packages/shared-ui/node_modules || true
 COPY apps/${FRONTEND_APP}/ ./
+ARG FRONTEND_ENV_JSON={}
+RUN node -e 'const fs = require("fs"); const values = JSON.parse(process.env.FRONTEND_ENV_JSON); for (const key of Object.keys(values)) { if (!/^VITE_[A-Z0-9_]+$/.test(key)) throw new Error("Invalid frontend setting"); } fs.writeFileSync(".env.production.local", Object.entries(values).map(([key, value]) => key + "=" + JSON.stringify(value)).join("\n"));'
 RUN npm run build
+ARG RUN_TESTS=false
+RUN if [ "$RUN_TESTS" = "true" ]; then npm test; fi
 
 FROM nginx:alpine
 ARG FRONTEND_APP=suite-frontend
 COPY --from=build /repo/apps/${FRONTEND_APP}/dist /usr/share/nginx/html
 
-# Replace default Nginx configuration to support SPA routing & PORT environment variable
-RUN echo 'server { \
-    listen 8080; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+ENV PORT=8080
+ENV API_UPSTREAM=http://127.0.0.1:1
+ENV NGINX_ENVSUBST_FILTER=^(PORT|API_UPSTREAM)$
+COPY docker/frontend.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

@@ -1,0 +1,16 @@
+
+> @stl/stlcompliancekb@0.1.0 build
+> tsc -b && vite build
+
+vite v8.0.16 building client environment for production...
+[2K
+transforming...✓ 1759 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   2.50 kB │ gzip:   0.94 kB
+dist/assets/index-D8Rt-XD8.css   11.26 kB │ gzip:   2.73 kB
+dist/assets/index-C-KQ_96Y.js   491.33 kB │ gzip: 138.09 kB
+
+[PLUGIN_TIMINGS] Your build spent significant time in plugin `virtual-kb-docs`. See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 4.60s

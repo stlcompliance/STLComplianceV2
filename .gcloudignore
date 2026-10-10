@@ -1,0 +1,16 @@
+.gcloudignore
+.git
+.git/**
+#!include:.gitignore
+**/bin/**
+**/obj/**
+**/node_modules/**
+**/dist/**
+**/*.log
+.codex-logs/**
+.dev-stack-logs/**
+**/.env.local
+**/.env.*.local
+**/secrets.json
+**/appsettings.*.local.json
+!tools/gcp/deployment.json
