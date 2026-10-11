@@ -37,3 +37,6 @@ maintainarr-evidence
 .codex-logs
 .dev-stack-logs
 tools/gcp/deployment.json
+compose.override.yml
+**/Data/personnel-documents
+**/data/personnel-documents

@@ -1,8 +1,9 @@
 {
   "runtimeServiceAccount": "REPLACE@stl-compliance.iam.gserviceaccount.com",
-  "cloudSqlInstance": "stl-compliance:us-central1:stl-compliance-v1",
+  "cloudSqlInstance": "stl-compliance:us-central1:stl-compliance-v2",
   "redisUrl": "10.66.185.43:6379",
-  "vpcConnector": "REPLACE",
+  "network": "default",
+  "subnet": "default",
   "sharedSecrets": {
     "AUTH_SIGNING_KEY": "auth-signing-key:1",
     "SERVICE_TOKEN_SIGNING_KEY": "service-token-signing-key:1",

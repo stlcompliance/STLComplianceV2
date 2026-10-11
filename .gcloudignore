@@ -14,3 +14,6 @@
 **/secrets.json
 **/appsettings.*.local.json
 !tools/gcp/deployment.json
+compose.override.yml
+**/Data/personnel-documents/**
+**/data/personnel-documents/**

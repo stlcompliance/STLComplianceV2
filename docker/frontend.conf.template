@@ -3,6 +3,8 @@ server {
     root /usr/share/nginx/html;
     index index.html;
     server_tokens off;
+    include /etc/nginx/snippets/stl-document-security.conf;
+    client_max_body_size 32m;
 
     add_header X-Content-Type-Options nosniff always;
     add_header Referrer-Policy strict-origin-when-cross-origin always;
@@ -15,6 +17,8 @@ server {
         proxy_ssl_trusted_certificate /etc/ssl/certs/ca-certificates.crt;
         proxy_set_header Host $proxy_host;
         proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
         proxy_cookie_flags ~ secure httponly samesite=lax;
     }
 

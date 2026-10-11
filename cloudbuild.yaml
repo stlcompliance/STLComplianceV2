@@ -29,7 +29,12 @@ steps:
     args:
       - -ceu
       - |
-        dotnet test STLCompliance.slnx --configuration Release --filter 'Category!=Live' --verbosity minimal
+        dotnet test STLCompliance.slnx --configuration Release --filter 'Category!=Live' --verbosity minimal --blame-hang --blame-hang-timeout 5m
+        for PROJECT in tests/*/*.csproj; do
+          if ! grep -Fq "Path=\"$$PROJECT\"" STLCompliance.slnx; then
+            dotnet test "$$PROJECT" --configuration Release --filter 'Category!=Live' --verbosity minimal --blame-hang --blame-hang-timeout 5m
+          fi
+        done
 
   - id: build-and-push
     name: gcr.io/cloud-builders/docker

@@ -53,6 +53,8 @@ vi.mock('../auth/sessionStorage', () => ({
 
 describe('ProfilePage', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-07-23T17:00:00Z'))
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: {
@@ -65,6 +67,7 @@ describe('ProfilePage', () => {
 
   afterEach(() => {
     cleanup()
+    vi.useRealTimers()
     vi.mocked(clearSession).mockClear()
     Object.defineProperty(window, 'location', {
       configurable: true,

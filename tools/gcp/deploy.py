@@ -14,6 +14,9 @@ FRONTENDS = ["suite-frontend", "fieldcompanion-frontend"] + [
     product.lower() + "-frontend" for product in PRODUCTS if product != "NexArr"
 ] + ["stlcompliancesite", "stlcompliancekb"]
 GCLOUD = shutil.which("gcloud") or "gcloud"
+STORAGE_SETTINGS = {"staffarr-api": "DocumentStorage", "trainarr-api": "EvidenceStorage",
+                    "maintainarr-api": "EvidenceStorage", "routarr-api": "CaptureAttachmentStorage",
+                    "supplyarr-api": "DocumentStorage", "recordarr-api": "DocumentStorage"}
 
 
 def gcloud(*arguments):
@@ -21,6 +24,8 @@ def gcloud(*arguments):
 
 
 def frontend_api(frontend):
+    if frontend == "stlcompliancesite":
+        return "staffarr-api"
     if frontend in ("suite-frontend", "fieldcompanion-frontend", "stlcompliancesite", "stlcompliancekb"):
         return "nexarr-api"
     return frontend.replace("-frontend", "-api")
@@ -62,6 +67,7 @@ def runtime_environment(service, urls, root=ROOT):
             environment[f"{display}__FrontendBaseUrl"] = urls[frontend]
     environment["Launch__Products__nexarr__BaseUrl"] = urls["suite-frontend"]
     environment["Launch__Products__nexarr__LaunchPath"] = "/app"
+    environment["Cors__PublicSiteOrigin"] = urls["stlcompliancesite"]
     if service.endswith("-worker"):
         product = next(product for product in WORKERS if service == product.lower() + "-worker")
         settings_path = root / "workers" / service / f"{product}.Worker" / "appsettings.json"
@@ -82,7 +88,16 @@ def prepare(options, config, output):
     for value in urls.values():
         if value and not re.fullmatch(r"https://[a-zA-Z0-9.-]+", value):
             raise ValueError("Service URLs must be HTTPS origins without paths.")
-    frontend_env = {"VITE_SUITE_URL": urls["suite-frontend"]}
+    frontend_env = {
+        "VITE_SUITE_URL": urls["suite-frontend"],
+        "VITE_SUITE_LOGIN_URL": urls["suite-frontend"] + "/login",
+        "VITE_KB_URL": urls["stlcompliancekb"],
+        "VITE_KB_BASE_URL": urls["stlcompliancekb"],
+        "VITE_SITE_BASE_URL": urls["stlcompliancesite"],
+        "VITE_MARKETING_SITE_URL": urls["stlcompliancesite"],
+        "VITE_PUBLIC_SITE_BASE": urls["stlcompliancesite"],
+        "VITE_STAFFARR_API_BASE": "",
+    }
     for frontend in FRONTENDS:
         if frontend.endswith("-frontend") and frontend != "suite-frontend":
             key = frontend.removesuffix("-frontend").upper()
@@ -105,6 +120,8 @@ def prepare(options, config, output):
             environment["STL_INTEGRATION_TOKEN_AUTO_PROVISION"] = (
                 "true" if kind == "api" or service in ("nexarr-worker", "shared-worker") else "false")
         environment.update(config.get("serviceEnvironment", {}).get(service, {}))
+        if service in config.get("storageBuckets", {}):
+            environment[f"{STORAGE_SETTINGS[service]}__RootPath"] = "/mnt/documents"
         (output / f"{service}.json").write_text(json.dumps(environment), encoding="utf-8")
 
 
@@ -126,13 +143,21 @@ def deploy(options, config, output):
             if service == "nexarr-api":
                 secrets.update(config["nexarrSecrets"])
             command.extend(["--service-account", config["runtimeServiceAccount"],
-                            "--add-cloudsql-instances", config["cloudSqlInstance"],
-                            "--vpc-connector", config["vpcConnector"], "--vpc-egress=private-ranges-only",
-                            "--update-secrets", ",".join(f"{key}={value}" for key, value in secrets.items())])
+                            "--set-cloudsql-instances", config["cloudSqlInstance"],
+                            "--vpc-egress=private-ranges-only",
+                            "--set-secrets", ",".join(f"{key}={value}" for key, value in secrets.items())])
+            if config.get("vpcConnector"):
+                command.extend(["--vpc-connector", config["vpcConnector"]])
+            else:
+                command.extend(["--network", config["network"], "--subnet", config["subnet"]])
             if kind == "worker":
                 command.extend(["--no-allow-unauthenticated", "--no-cpu-throttling", "--min-instances=1", "--max-instances=1"])
             else:
                 command.append("--allow-unauthenticated")
+            if service in config.get("storageBuckets", {}):
+                bucket = config["storageBuckets"][service]
+                command.extend(["--add-volume", f"name=documents,type=cloud-storage,bucket={bucket},mount-options=metadata-cache-ttl-secs=0",
+                                "--add-volume-mount", "volume=documents,mount-path=/mnt/documents"])
         subprocess.run([GCLOUD, *command], check=True)
 
 
@@ -142,10 +167,16 @@ def preflight(options, config):
                    "--project", sql_project, "--format=value(state)")
     if state != "RUNNABLE":
         raise RuntimeError(f"Cloud SQL {instance_name} is {state}; restore database service before deploying.")
-    state = gcloud("compute", "networks", "vpc-access", "connectors", "describe", config["vpcConnector"],
-                   "--project", options.project, "--region", options.region, "--format=value(state)")
-    if state != "READY":
-        raise RuntimeError("The Redis VPC connector must be READY before deploying.")
+    if config.get("vpcConnector"):
+        state = gcloud("compute", "networks", "vpc-access", "connectors", "describe", config["vpcConnector"],
+                       "--project", options.project, "--region", options.region, "--format=value(state)")
+        if state != "READY":
+            raise RuntimeError("The Redis VPC connector must be READY before deploying.")
+    else:
+        network = gcloud("compute", "networks", "subnets", "describe", config["subnet"],
+                         "--project", options.project, "--region", options.region, "--format=value(network)")
+        if network.rsplit("/", 1)[-1] != config["network"]:
+            raise RuntimeError("The Direct VPC subnet does not belong to the configured network.")
     references = {reference for section in ("sharedSecrets", "nexarrSecrets", "databaseSecrets")
                   for reference in config[section].values()}
     for reference in sorted(references):
@@ -157,9 +188,14 @@ def preflight(options, config):
 
 
 def validate(config):
-    for key in ("runtimeServiceAccount", "cloudSqlInstance", "redisUrl", "vpcConnector"):
+    for service, bucket in config.get("storageBuckets", {}).items():
+        if service not in STORAGE_SETTINGS or not re.fullmatch(r"[a-z0-9][a-z0-9.-]{1,220}[a-z0-9]", bucket):
+            raise ValueError("Document buckets must target supported storage services with valid bucket names.")
+    for key in ("runtimeServiceAccount", "cloudSqlInstance", "redisUrl"):
         if not config.get(key) or "REPLACE" in config[key]:
             raise ValueError(f"Configure {key} before submitting a deployment.")
+    if not config.get("vpcConnector") and not (config.get("network") and config.get("subnet")):
+        raise ValueError("Configure a VPC connector or a Direct VPC network and subnet.")
     required_shared = {"AUTH_SIGNING_KEY", "SERVICE_TOKEN_SIGNING_KEY", "STL_INTEGRATION_BOOTSTRAP_SECRET"}
     if not required_shared <= config.get("sharedSecrets", {}).keys():
         raise ValueError("Missing shared signing/bootstrap secret references.")
