@@ -36,6 +36,8 @@ These changes have not been deployed to Cloud Run. A ready revision alone does n
 
 ### Release gate status
 
+The owner subsequently approved the scoped temporary [Render-only exception](docs/operations/GCP_RELEASE_EXCEPTION_2026-10-11.md). Cloud Build `f4d743fd-f33f-4f33-9eaf-a8d25c6ef1fc` passed infrastructure preflight with that exception, but reported eight health-test failures and four OpenAPI snapshot mismatches. It was cancelled before image builds or deployment. These application-test failures are not exempted; no Cloud Run cutover occurred.
+
 The focused CI contract run passed 21 tests and failed two pre-existing checks because these files are absent:
 
 - `docs/operations/RENDER_STAGING_SHIP_GATE_V1.md`

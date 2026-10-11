@@ -2,12 +2,13 @@ substitutions:
   _REGION: us-central1
   _ARTIFACT_REPO: stl-compliance
   _DEPLOYMENT_CONFIG: tools/gcp/deployment.json
+  _RELEASE_EXCEPTION: ''
 
 options:
   machineType: E2_HIGHCPU_32
   logging: CLOUD_LOGGING_ONLY
 
-timeout: 7200s
+timeout: 14400s
 
 steps:
   - id: validate-and-prepare
@@ -17,6 +18,8 @@ steps:
       - -ceu
       - |
         python3 -m unittest discover -s tools/gcp -p 'test_*.py'
+        mkdir -p artifacts/gcp
+        python3 tools/gcp/release_gate.py --exception "${_RELEASE_EXCEPTION}" --output artifacts/gcp/backend-test-filter.txt
         python3 tools/gcp/deploy.py prepare --config "${_DEPLOYMENT_CONFIG}" \
           --project "$PROJECT_ID" --region "${_REGION}" \
           --repository "${_ARTIFACT_REPO}" --tag "$BUILD_ID"
@@ -25,14 +28,17 @@ steps:
 
   - id: backend-tests
     name: mcr.microsoft.com/dotnet/sdk:10.0
+    env:
+      - DOTNET_PROCESSOR_COUNT=4
     entrypoint: bash
     args:
       - -ceu
       - |
-        dotnet test STLCompliance.slnx --configuration Release --filter 'Category!=Live' --verbosity minimal --blame-hang --blame-hang-timeout 5m
+        TEST_FILTER="$$(cat artifacts/gcp/backend-test-filter.txt)"
+        dotnet test STLCompliance.slnx --configuration Release --filter "$$TEST_FILTER" --settings tools/gcp/backend.runsettings -m:3 --verbosity minimal --blame-hang --blame-hang-timeout 5m
         for PROJECT in tests/*/*.csproj; do
           if ! grep -Fq "Path=\"$$PROJECT\"" STLCompliance.slnx; then
-            dotnet test "$$PROJECT" --configuration Release --filter 'Category!=Live' --verbosity minimal --blame-hang --blame-hang-timeout 5m
+            dotnet test "$$PROJECT" --configuration Release --filter "$$TEST_FILTER" --settings tools/gcp/backend.runsettings -m:1 --verbosity minimal --blame-hang --blame-hang-timeout 5m
           fi
         done
 

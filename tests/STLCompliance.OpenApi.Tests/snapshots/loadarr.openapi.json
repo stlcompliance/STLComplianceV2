@@ -4828,6 +4828,29 @@
         }
       }
     },
+    "/api/v1/receiving/draft/complete": {
+      "post": {
+        "tags": [
+          "Receiving"
+        ],
+        "operationId": "CompleteLoadArrReceivingDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLoadArrReceivingSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/receiving/{id}": {
       "get": {
         "tags": [
@@ -5001,6 +5024,29 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateLoadArrTransferOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/transfers/draft/complete": {
+      "post": {
+        "tags": [
+          "Transfers"
+        ],
+        "operationId": "CompleteLoadArrTransferDraft",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteLoadArrTransferOrderRequest"
               }
             }
           },
@@ -6420,6 +6466,7 @@
       },
       "CreateLoadArrReceivingSessionRequest": {
         "required": [
+          "clientRequestId",
           "receivingType",
           "sourceProductKey",
           "sourceObjectType",
@@ -6438,6 +6485,12 @@
         ],
         "type": "object",
         "properties": {
+          "clientRequestId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "receivingType": {
             "type": "string"
           },
@@ -6509,6 +6562,7 @@
       },
       "CreateLoadArrTransferOrderRequest": {
         "required": [
+          "clientRequestId",
           "transferType",
           "fromLocationId",
           "toLocationId",
@@ -6521,6 +6575,12 @@
         ],
         "type": "object",
         "properties": {
+          "clientRequestId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "transferType": {
             "type": "string"
           },

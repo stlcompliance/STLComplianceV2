@@ -2096,6 +2096,29 @@
         }
       }
     },
+    "/api/internal/people/provision": {
+      "post": {
+        "tags": [
+          "Internal"
+        ],
+        "operationId": "InternalProvisionStaffArrPerson",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvisionStaffArrPersonRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/internal/permission-projections/pending": {
       "get": {
         "tags": [
@@ -17381,6 +17404,44 @@
           "syncWorkEmail": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "ProvisionStaffArrPersonRequest": {
+        "required": [
+          "tenantId",
+          "externalUserId",
+          "email",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "roleKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedByUserId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },

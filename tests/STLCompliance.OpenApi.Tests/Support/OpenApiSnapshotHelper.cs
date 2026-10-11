@@ -78,6 +78,12 @@ internal static class OpenApiSnapshotHelper
             $"Missing OpenAPI snapshot for {productKey}. Run with OPENAPI_UPDATE_SNAPSHOTS=1 to generate {repoSnapshotPath}.");
 
         var expected = Normalize(File.ReadAllText(repoSnapshotPath));
+        if (!string.Equals(expected, actualNormalized, StringComparison.Ordinal))
+        {
+            var artifactDirectory = Path.Combine(FindRepoRoot(), "artifacts", "openapi");
+            Directory.CreateDirectory(artifactDirectory);
+            File.WriteAllText(Path.Combine(artifactDirectory, $"{productKey}.actual.json"), actualNormalized);
+        }
         Assert.Equal(expected, actualNormalized);
     }
 

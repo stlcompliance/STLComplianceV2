@@ -5542,13 +5542,15 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
     public async Task Receiving_post_requires_serial_lot_tracking_when_part_is_configured()
     {
         var token = await RedeemSupplyArrTokenAsync();
-        var (_, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
+        var (part, bin, purchaseOrder) = await CreateIssuedPurchaseOrderAsync(
             token,
             "pr-rcv-seriallot-001",
             "po-rcv-seriallot-001",
             "rcv-seriallot",
             2m,
             requiresSerialLotTracking: true);
+
+        Assert.True(part.RequiresSerialLotTracking);
 
         var receipt = await CreateDraftReceivingReceiptAsync(
             token,
@@ -6567,7 +6569,7 @@ public sealed class SupplyArrHandoffApiTests : IAsyncLifetime
             "each",
             string.Empty,
             string.Empty,
-            requiresSerialLotTracking));
+            RequiresSerialLotTracking: requiresSerialLotTracking));
         var createPartResponse = await _supplyarrClient.SendAsync(createPartRequest);
         createPartResponse.EnsureSuccessStatusCode();
         var part = (await createPartResponse.Content.ReadFromJsonAsync<PartResponse>())!;

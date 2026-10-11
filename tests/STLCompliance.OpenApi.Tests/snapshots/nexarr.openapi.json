@@ -34,6 +34,29 @@
         }
       }
     },
+    "/api/auth/local-dev-bypass": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthLocalDevBypass",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDevBypassLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -5943,6 +5966,29 @@
         }
       }
     },
+    "/api/v1/auth/local-dev-bypass": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "operationId": "AuthLocalDevBypassV1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDevBypassLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -11648,6 +11694,29 @@
         }
       },
       "JsonElement": {},
+      "LocalDevBypassLoginRequest": {
+        "required": [
+          "email",
+          "tenantId"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "rememberDevice": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "LogFieldCompanionFieldWorkOrderLaborRequest": {
         "required": [
           "taskKey",

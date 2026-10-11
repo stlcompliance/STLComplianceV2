@@ -46,7 +46,7 @@ public abstract class ApiHealthEndpointTests<TProgram>(
             builder.UseSetting("ConnectionStrings:Database", string.Empty);
             builder.UseSetting("DATABASE_URL", string.Empty);
             builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
-            builder.UseEnvironment("Production");
+            builder.UseEnvironment("Testing");
         }).CreateClient();
 
     [Fact]
@@ -109,5 +109,27 @@ public abstract class ApiHealthEndpointTests<TProgram>(
         Assert.Equal("strict-origin-when-cross-origin", response.Headers.GetValues("Referrer-Policy").Single());
         Assert.Equal("camera=(), microphone=(), geolocation=()", response.Headers.GetValues("Permissions-Policy").Single());
         Assert.Equal("default-src 'none'; base-uri 'none'; frame-ancestors 'none'", response.Headers.GetValues("Content-Security-Policy").Single());
+    }
+}
+
+public class ProductionDatabaseRequirementTests
+{
+    [Fact]
+    public void OrdArr_requires_a_database_in_production() => AssertDatabaseRequired<OrdArr.Api.Program>("OrdArr");
+
+    [Fact]
+    public void AssurArr_requires_a_database_in_production() => AssertDatabaseRequired<AssurArr.Api.Program>("AssurArr");
+
+    private static void AssertDatabaseRequired<TProgram>(string product) where TProgram : class
+    {
+        using var factory = new WebApplicationFactory<TProgram>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Production");
+            builder.UseSetting("ConnectionStrings:Database", string.Empty);
+            builder.UseSetting("DATABASE_URL", string.Empty);
+            builder.UseSetting("Auth:SigningKey", "test-signing-key-at-least-32-chars-long");
+        });
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
+        Assert.Contains($"{product} requires DATABASE_URL or ConnectionStrings:Database outside Testing.", exception.Message);
     }
 }
